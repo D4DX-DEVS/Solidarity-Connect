@@ -265,46 +265,50 @@ const Members = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2"
-                  onClick={() => {
+                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedMember(member);
                     setShowEdit(true);
                   }}
                 >
                   <Edit className="h-5 w-5 text-primary" />
-                  <span className="text-xs">Request Edit</span>
+                  <span className="text-xs text-center leading-tight">Edit Request</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2"
+                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <Phone className="h-5 w-5 text-primary" />
-                  <span className="text-xs">Change Phone</span>
+                  <span className="text-xs text-center leading-tight">Change Phone</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2"
-                  onClick={() => {
+                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedMember(member);
                     setShowTransfer(true);
                   }}
                 >
                   <ArrowRightLeft className="h-5 w-5 text-success" />
-                  <span className="text-xs">Transfer Member</span>
+                  <span className="text-xs text-center leading-tight">Transfer</span>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2"
-                  onClick={() => {
+                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setSelectedMember(member);
                     setShowBaithul(true);
                   }}
                 >
                   <Wallet className="h-5 w-5 text-primary" />
-                  <span className="text-xs">Baithul Maal</span>
+                  <span className="text-xs text-center leading-tight">Baithul Maal</span>
                 </Button>
               </div>
             </div>
