@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Plus, Calendar, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Plus, Calendar, Bell } from "lucide-react";
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ const BottomNav = () => {
     { icon: Users, label: "Members", path: "/members" },
     { icon: Plus, label: "Add", path: "/add-member" },
     { icon: Calendar, label: "Meetings", path: "/meetings" },
-    { icon: FileText, label: "Requests", path: "/requests" },
+    { icon: Bell, label: "Alerts", path: "/notifications" },
   ];
 
   return (

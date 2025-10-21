@@ -16,6 +16,9 @@ const AddMember = () => {
     email: "",
     dateOfBirth: "",
     bloodGroup: "",
+    profession: "",
+    education: "",
+    address: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -123,6 +126,33 @@ const AddMember = () => {
                 <option value="AB+">AB+</option>
                 <option value="AB-">AB-</option>
               </select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Profession (Optional)</label>
+              <Input
+                placeholder="e.g. Engineer, Teacher"
+                value={formData.profession}
+                onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Education (Optional)</label>
+              <Input
+                placeholder="e.g. B.Tech, Masters"
+                value={formData.education}
+                onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Address (Optional)</label>
+              <Input
+                placeholder="Full address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              />
             </div>
 
             <div className="flex gap-3 pt-4">

@@ -10,9 +10,13 @@ import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
 import DistrictAdmin from "./pages/DistrictAdmin";
 import Members from "./pages/Members";
+import MemberDetail from "./pages/MemberDetail";
 import AddMember from "./pages/AddMember";
+import BulkImport from "./pages/BulkImport";
 import Meetings from "./pages/Meetings";
 import Requests from "./pages/Requests";
+import Notifications from "./pages/Notifications";
+import SendNotification from "./pages/SendNotification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,9 +36,13 @@ const App = () => (
             <Route path="/state-admin" element={<StateAdmin />} />
             <Route path="/district-admin" element={<DistrictAdmin />} />
             <Route path="/members" element={<Members />} />
+            <Route path="/member/:id" element={<MemberDetail />} />
             <Route path="/add-member" element={<AddMember />} />
+            <Route path="/bulk-import" element={<BulkImport />} />
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/requests" element={<Requests />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/state-admin/send-notification" element={<SendNotification />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

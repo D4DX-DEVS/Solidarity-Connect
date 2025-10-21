@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Users, Edit, Phone, ArrowRightLeft, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import RequestEditDialog from "@/components/RequestEditDialog";
 
 const Members = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showTransfer, setShowTransfer] = useState(false);
@@ -72,11 +74,18 @@ const Members = () => {
 
       <main className="p-4 space-y-3">
         {members.map((member) => (
-          <Card key={member.id} className="shadow-sm">
-            <div className="p-4">
+          <Card key={member.id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+            <div 
+              className="p-4"
+              onClick={() => navigate(`/member/${member.id}`)}
+            >
               <h3 className="font-semibold text-lg mb-1">{member.name}</h3>
               <p className="text-sm text-muted-foreground mb-1">{member.email}</p>
-              <a href={`tel:${member.phone}`} className="text-sm text-primary flex items-center gap-1 mb-2">
+              <a 
+                href={`tel:${member.phone}`} 
+                className="text-sm text-primary flex items-center gap-1 mb-2"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {member.phone}
                 <Phone className="h-3 w-3" />
               </a>

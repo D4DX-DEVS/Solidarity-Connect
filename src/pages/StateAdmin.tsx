@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
@@ -14,7 +14,8 @@ const StateAdmin = () => {
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
     { icon: FileCheck, label: "Edit Approvals", path: "/state-admin/edit-approvals", color: "text-orange-500" },
     { icon: Settings, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-primary" },
-    { icon: Bell, label: "Send Notifications", path: "/state-admin/notifications", color: "text-destructive" },
+    { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
+    { icon: Upload, label: "Bulk Import", path: "/bulk-import", color: "text-success" },
   ];
 
   return (

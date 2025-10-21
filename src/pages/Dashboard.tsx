@@ -1,5 +1,6 @@
 import { Users, CheckCircle, Clock, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +35,13 @@ const Dashboard = () => {
       />
 
       <main className="p-4 space-y-4">
+        <Button
+          onClick={() => navigate("/bulk-import")}
+          className="w-full bg-success hover:bg-success/90"
+        >
+          Bulk Import Members
+        </Button>
+
         <div className="grid grid-cols-2 gap-3">
           {stats.map((stat, index) => (
             <Card key={index} className="shadow-sm">
