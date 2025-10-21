@@ -3,10 +3,18 @@ import { ArrowLeft, Plus, Users, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import GroupDialog from "@/components/GroupDialog";
+import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 
 const ManageGroups = () => {
   const navigate = useNavigate();
   const [selectedDistrict, setSelectedDistrict] = useState("Thrissur");
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<any>(null);
 
   const groups = [
     { id: 1, name: "Varantharappalli", members: 17, district: "Thrissur" },
@@ -16,6 +24,32 @@ const ManageGroups = () => {
   ];
 
   const filteredGroups = groups.filter(g => g.district === selectedDistrict);
+
+  const handleAdd = () => {
+    setDialogMode("add");
+    setSelectedGroup(null);
+    setShowDialog(true);
+  };
+
+  const handleEdit = (group: any) => {
+    setDialogMode("edit");
+    setSelectedGroup(group);
+    setShowDialog(true);
+  };
+
+  const handleDeleteClick = (group: any) => {
+    setGroupToDelete(group);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    toast({
+      title: "Group Deleted",
+      description: `${groupToDelete?.name} has been deleted successfully.`,
+    });
+    setShowDeleteDialog(false);
+    setGroupToDelete(null);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +77,7 @@ const ManageGroups = () => {
       </header>
 
       <main className="p-4 space-y-4">
-        <Button className="w-full bg-primary hover:bg-primary/90">
+        <Button className="w-full bg-primary hover:bg-primary/90" onClick={handleAdd}>
           <Plus className="h-4 w-4 mr-2" />
           Add New Group
         </Button>
@@ -67,11 +101,11 @@ const ManageGroups = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(group)}>
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button size="sm" variant="outline" className="text-destructive">
+                  <Button size="sm" variant="outline" className="text-destructive" onClick={() => handleDeleteClick(group)}>
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
@@ -80,6 +114,22 @@ const ManageGroups = () => {
             </Card>
           ))}
         </div>
+
+        <GroupDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          group={selectedGroup}
+          mode={dialogMode}
+          selectedDistrict={selectedDistrict}
+        />
+
+        <DeleteConfirmDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Group"
+          description={`Are you sure you want to delete ${groupToDelete?.name}? This will also delete all members in this group. This action cannot be undone.`}
+        />
       </main>
     </div>
   );

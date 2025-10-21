@@ -12,9 +12,8 @@ import DistrictAdmin from "./pages/DistrictAdmin";
 import ManageDistricts from "./pages/ManageDistricts";
 import ManageGroups from "./pages/ManageGroups";
 import TransferApprovals from "./pages/TransferApprovals";
-import EditApprovals from "./pages/EditApprovals";
-import UserManagement from "./pages/UserManagement";
 import MeetingAgenda from "./pages/MeetingAgenda";
+import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
 import Members from "./pages/Members";
 import MemberDetail from "./pages/MemberDetail";
 import AddMember from "./pages/AddMember";
@@ -43,9 +42,8 @@ const App = () => (
             <Route path="/state-admin/districts" element={<ManageDistricts />} />
             <Route path="/state-admin/groups" element={<ManageGroups />} />
             <Route path="/state-admin/transfer-approvals" element={<TransferApprovals />} />
-            <Route path="/state-admin/edit-approvals" element={<EditApprovals />} />
-            <Route path="/state-admin/users" element={<UserManagement />} />
             <Route path="/state-admin/meeting-agenda" element={<MeetingAgenda />} />
+            <Route path="/state-admin/create-meeting" element={<CreateMeetingAgenda />} />
             <Route path="/state-admin/send-notification" element={<SendNotification />} />
             <Route path="/district-admin" element={<DistrictAdmin />} />
             <Route path="/members" element={<Members />} />

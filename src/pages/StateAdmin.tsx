@@ -10,9 +10,7 @@ const StateAdmin = () => {
   const adminActions = [
     { icon: Building2, label: "Manage Districts", path: "/state-admin/districts", color: "text-primary" },
     { icon: Users, label: "Manage Groups", path: "/state-admin/groups", color: "text-primary" },
-    { icon: Users, label: "User Management", path: "/state-admin/users", color: "text-success" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
-    { icon: FileCheck, label: "Edit Approvals", path: "/state-admin/edit-approvals", color: "text-orange-500" },
     { icon: Settings, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-primary" },
     { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
     { icon: Upload, label: "Bulk Import", path: "/bulk-import", color: "text-success" },
