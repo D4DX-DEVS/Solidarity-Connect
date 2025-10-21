@@ -1,24 +1,71 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Plus, Calendar, Bell } from "lucide-react";
+import { LayoutDashboard, Users, Plus, Calendar, Bell, Menu } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userRole } = useAuth();
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: Users, label: "Members", path: "/members" },
     { icon: Plus, label: "Add", path: "/add-member" },
-    { icon: Calendar, label: "Meetings", path: "/meetings" },
+    { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true },
     { icon: Bell, label: "Alerts", path: "/notifications" },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg z-50">
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+                          (item.path === "/meetings" && location.pathname.includes("/meeting"));
+
+          if (item.hasMenu && (userRole === "state_admin" || userRole === "district_admin")) {
+            return (
+              <DropdownMenu key={item.path}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Icon className={`h-6 w-6 ${isActive ? "text-primary" : ""}`} />
+                    <span className="text-xs mt-1">{item.label}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" side="top" className="mb-2">
+                  <DropdownMenuItem onClick={() => navigate("/meetings")}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    View Meetings
+                  </DropdownMenuItem>
+                  {userRole === "state_admin" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
+                        <Menu className="h-4 w-4 mr-2" />
+                        Meeting Agendas
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/state-admin/create-meeting")}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Agenda
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
           return (
             <button
               key={item.path}

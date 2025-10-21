@@ -1,10 +1,19 @@
-import { Building2, FileCheck, Users, CheckCircle, XCircle } from "lucide-react";
+import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import BottomNav from "@/components/BottomNav";
+import { useNavigate } from "react-router-dom";
 
 const DistrictAdmin = () => {
+  const navigate = useNavigate();
   const pendingApprovals = [
     {
       id: 1,
@@ -112,9 +121,29 @@ const DistrictAdmin = () => {
 
         <Card className="shadow-sm">
           <CardContent className="p-4">
-            <h2 className="font-semibold mb-3">Supervision Tools</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold">Tools & Reports</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="h-4 w-4 mr-2" />
+                    Master Data
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/bulk-import")}>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Bulk Import Members
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/state-admin/send-notification")}>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Send Notifications
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/members")}>
                 <Users className="h-4 w-4 mr-2" />
                 View All District Members
               </Button>

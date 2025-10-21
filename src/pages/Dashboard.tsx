@@ -1,6 +1,13 @@
-import { Users, CheckCircle, Clock, Calendar } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, Upload, Bell, Menu } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,12 +42,38 @@ const Dashboard = () => {
       />
 
       <main className="p-4 space-y-4">
-        <Button
-          onClick={() => navigate("/bulk-import")}
-          className="w-full bg-success hover:bg-success/90"
-        >
-          Bulk Import Members
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => navigate("/bulk-import")}
+            className="flex-1 bg-success hover:bg-success/90"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Bulk Import
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex-1">
+                <Menu className="h-4 w-4 mr-2" />
+                Master Data
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate("/bulk-import")}>
+                <Upload className="h-4 w-4 mr-2" />
+                Bulk Import Members
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/state-admin/send-notification")}>
+                <Bell className="h-4 w-4 mr-2" />
+                Send Notifications
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled>
+                <Menu className="h-4 w-4 mr-2" />
+                More Options
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           {stats.map((stat, index) => (
