@@ -14,13 +14,18 @@ const BottomNav = () => {
   const location = useLocation();
   const { userRole } = useAuth();
 
-  const navItems = [
+  // Filter nav items based on role
+  const baseNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: Users, label: "Members", path: "/members" },
-    { icon: Plus, label: "Add", path: "/add-member" },
+    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin"] },
     { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true },
     { icon: Bell, label: "Alerts", path: "/notifications" },
   ];
+
+  const navItems = baseNavItems.filter(
+    item => !item.hideForRoles?.includes(userRole || "")
+  );
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-lg z-50">
@@ -66,7 +71,7 @@ const BottomNav = () => {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                         <Menu className="h-4 w-4 mr-2" />
-                        Meeting Agendas
+                        View Meeting Agendas
                       </DropdownMenuItem>
                     </>
                   )}
