@@ -9,7 +9,7 @@ import logo from "@/assets/logo.png";
 const Login = () => {
   const [userType, setUserType] = useState<"state_admin" | "district_admin" | "group_admin" | "">("");
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [showOtp, setShowOtp] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -34,7 +34,7 @@ const Login = () => {
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (value && index < 3) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
     }
@@ -50,7 +50,7 @@ const Login = () => {
 
   const handleVerifyOtp = () => {
     const otpValue = otp.join("");
-    if (otpValue.length === 6 && userType) {
+    if (otpValue.length === 4 && userType) {
       login(userType);
       navigate("/dashboard");
     }
@@ -130,7 +130,7 @@ const Login = () => {
               <Button 
                 onClick={handleVerifyOtp} 
                 className="w-full bg-success hover:bg-success/90"
-                disabled={otp.join("").length !== 6}
+                disabled={otp.join("").length !== 4}
               >
                 Verify & Login
               </Button>
@@ -138,7 +138,7 @@ const Login = () => {
                 variant="ghost"
                 onClick={() => {
                   setShowOtp(false);
-                  setOtp(["", "", "", "", "", ""]);
+                  setOtp(["", "", "", ""]);
                 }}
                 className="w-full"
               >
