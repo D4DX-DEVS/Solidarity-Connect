@@ -1,9 +1,23 @@
 import { Users, CheckCircle, Clock, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
-import logo from "@/assets/logo.png";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const { userRole } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect based on role
+    if (userRole === "state_admin") {
+      navigate("/state-admin");
+    } else if (userRole === "district_admin") {
+      navigate("/district-admin");
+    }
+  }, [userRole, navigate]);
   const stats = [
     { label: "Total Members", value: "17", icon: Users, color: "text-primary" },
     { label: "Active Members", value: "3", icon: CheckCircle, color: "text-success" },
@@ -13,17 +27,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg">
-            <Users className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Murabbi Panel</h1>
-            <p className="text-sm text-muted-foreground">Applicant - Thrissur</p>
-          </div>
-        </div>
-      </header>
+      <HeaderWithLogout
+        icon={<Users className="h-6 w-6 text-primary-foreground" />}
+        title="Murabbi Panel"
+        subtitle="Applicant - Thrissur"
+      />
 
       <main className="p-4 space-y-4">
         <div className="grid grid-cols-2 gap-3">

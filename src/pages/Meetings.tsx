@@ -1,18 +1,15 @@
 import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import BottomNav from "@/components/BottomNav";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 
 const Meetings = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg">
-            <Calendar className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <h1 className="text-xl font-bold">Meetings</h1>
-        </div>
-      </header>
+      <HeaderWithLogout
+        icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
+        title="Meetings"
+      />
 
       <main className="p-4">
         <Card className="p-8 shadow-sm text-center">

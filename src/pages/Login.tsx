@@ -20,7 +20,7 @@ const Login = () => {
   const handleVerifyOtp = () => {
     // Mock login - in real app, verify OTP with backend
     if (otp.length === 6) {
-      navigate("/dashboard");
+      navigate("/role-selection");
     }
   };
 

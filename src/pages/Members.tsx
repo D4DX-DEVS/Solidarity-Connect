@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BottomNav from "@/components/BottomNav";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import RequestEditDialog from "@/components/RequestEditDialog";
@@ -37,13 +38,12 @@ const Members = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="bg-primary p-2 rounded-lg">
-            <Users className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <h1 className="text-xl font-bold">Members</h1>
-        </div>
+      <HeaderWithLogout
+        icon={<Users className="h-6 w-6 text-primary-foreground" />}
+        title="Members"
+      />
+
+      <div className="p-4 pb-0 bg-card border-b">{/* Search container moved */}
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -68,7 +68,7 @@ const Members = () => {
             <option>Abroad</option>
           </select>
         </div>
-      </header>
+      </div>
 
       <main className="p-4 space-y-3">
         {members.map((member) => (
