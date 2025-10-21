@@ -45,6 +45,13 @@ const DistrictAdmin = () => {
             <h1 className="text-xl font-bold">District Admin Panel</h1>
             <p className="text-sm text-muted-foreground">Thrissur District</p>
           </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate("/login")}
+          >
+            Logout
+          </Button>
         </div>
       </header>
 
@@ -122,30 +129,16 @@ const DistrictAdmin = () => {
         <Card className="shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold">Tools & Reports</h2>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Menu className="h-4 w-4 mr-2" />
-                    Master Data
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/bulk-import")}>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Bulk Import Members
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/send-notification")}>
-                    <Bell className="h-4 w-4 mr-2" />
-                    Send Notifications
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <h2 className="font-semibold">District Tools</h2>
             </div>
             <div className="space-y-2">
               <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/members")}>
                 <Users className="h-4 w-4 mr-2" />
                 View All District Members
+              </Button>
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/state-admin/meeting-agenda")}>
+                <Menu className="h-4 w-4 mr-2" />
+                Meeting Agendas
               </Button>
               <Button variant="outline" className="w-full justify-start">
                 <FileCheck className="h-4 w-4 mr-2" />

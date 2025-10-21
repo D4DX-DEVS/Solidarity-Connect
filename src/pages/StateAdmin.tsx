@@ -18,7 +18,6 @@ const StateAdmin = () => {
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
-    { icon: Settings, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-primary" },
     { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
     { icon: Upload, label: "Bulk Import", path: "/bulk-import", color: "text-success" },
   ];
@@ -34,6 +33,15 @@ const StateAdmin = () => {
             <h1 className="text-xl font-bold">State Admin Panel</h1>
             <p className="text-sm text-muted-foreground">Full System Control</p>
           </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              navigate("/login");
+            }}
+          >
+            Logout
+          </Button>
         </div>
       </header>
 
@@ -78,7 +86,7 @@ const StateAdmin = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <Menu className="h-4 w-4 mr-2" />
-                    Settings
+                    Manage
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -91,9 +99,9 @@ const StateAdmin = () => {
                     Manage Groups
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>
+                  <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                     <Settings className="h-4 w-4 mr-2" />
-                    Master Data Management
+                    Meeting Agenda
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

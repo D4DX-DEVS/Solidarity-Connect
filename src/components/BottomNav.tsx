@@ -61,6 +61,15 @@ const BottomNav = () => {
                       </DropdownMenuItem>
                     </>
                   )}
+                  {userRole === "district_admin" && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
+                        <Menu className="h-4 w-4 mr-2" />
+                        Meeting Agendas
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
