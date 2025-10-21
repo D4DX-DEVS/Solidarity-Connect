@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Search, Users, Edit, Phone, ArrowRightLeft, Wallet } from "lucide-react";
+import { Search, Users, Edit, Phone, ArrowRightLeft, Wallet, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
@@ -262,19 +268,42 @@ const Members = () => {
               <p className="text-sm text-muted-foreground mt-2">{member.group}</p>
 
               <div className="grid grid-cols-4 gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedMember(member);
-                    setShowEdit(true);
-                  }}
-                >
-                  <Edit className="h-5 w-5 text-primary" />
-                  <span className="text-xs text-center leading-tight">Edit Request</span>
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Edit className="h-5 w-5 text-primary" />
+                      <span className="text-xs text-center leading-tight flex items-center gap-0.5">
+                        Edit Request
+                        <ChevronDown className="h-3 w-3" />
+                      </span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMember(member);
+                        setShowEdit(true);
+                      }}
+                    >
+                      Personal Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedMember(member);
+                        setShowEdit(true);
+                      }}
+                    >
+                      Status Change
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="ghost"
                   size="sm"
