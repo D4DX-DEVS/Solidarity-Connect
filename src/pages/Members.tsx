@@ -10,10 +10,15 @@ import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import RequestEditDialog from "@/components/RequestEditDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Members = () => {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showBaithul, setShowBaithul] = useState(false);
@@ -27,6 +32,7 @@ const Members = () => {
       email: "No email",
       status: "Active",
       group: "Varantharappalli",
+      district: "Thrissur",
     },
     {
       id: 2,
@@ -35,8 +41,47 @@ const Members = () => {
       email: "No email",
       status: "Applicant",
       group: "Varantharappalli",
+      district: "Thrissur",
+    },
+    {
+      id: 3,
+      name: "Mohammed Ali",
+      phone: "+919876543210",
+      email: "mohammed@example.com",
+      status: "Active",
+      group: "Perumpilavu",
+      district: "Thrissur",
+    },
+    {
+      id: 4,
+      name: "Ahmed Hassan",
+      phone: "+919123456789",
+      email: "ahmed@example.com",
+      status: "Abroad",
+      group: "Varantharappalli",
+      district: "Thrissur",
+    },
+    {
+      id: 5,
+      name: "Ibrahim Khan",
+      phone: "+919998887776",
+      email: "No email",
+      status: "Inactive",
+      group: "Perumpilavu",
+      district: "Thrissur",
     },
   ];
+
+  // Calculate status counts
+  const statusCounts = {
+    total: members.length,
+    active: members.filter(m => m.status === "Active").length,
+    inactive: members.filter(m => m.status === "Inactive").length,
+    abroad: members.filter(m => m.status === "Abroad").length,
+    applicant: members.filter(m => m.status === "Applicant").length,
+    ageOver: members.filter(m => m.status === "Age over").length,
+    dismissed: members.filter(m => m.status === "Dismissed").length,
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -45,9 +90,8 @@ const Members = () => {
         title="Members"
       />
 
-      <div className="p-4 pb-0 bg-card border-b">{/* Search container moved */}
-
-        <div className="relative">
+      <div className="p-4 pb-0 bg-card border-b">
+        <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search name, phone, email..."
@@ -57,18 +101,94 @@ const Members = () => {
           />
         </div>
 
-        <div className="flex gap-2 mt-3">
-          <select className="flex-1 px-3 py-2 border rounded-md text-sm bg-background">
-            <option>All Members</option>
-            <option>Active</option>
-            <option>Applicant</option>
-          </select>
-          <select className="flex-1 px-3 py-2 border rounded-md text-sm bg-background">
-            <option>All Statuses</option>
-            <option>Active</option>
-            <option>Inactive</option>
-            <option>Abroad</option>
-          </select>
+        <div className="space-y-2 mb-3">
+          {(userRole === "state_admin" || userRole === "district_admin") && (
+            <select 
+              className="w-full px-3 py-2 border rounded-md text-sm bg-background"
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value)}
+            >
+              <option value="">All Districts</option>
+              <option value="Thrissur">Thrissur</option>
+              <option value="Malappuram">Malappuram</option>
+              <option value="Kozhikode">Kozhikode</option>
+            </select>
+          )}
+          
+          <div className="grid grid-cols-2 gap-2">
+            <select 
+              className="px-3 py-2 border rounded-md text-sm bg-background"
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+            >
+              <option value="">All Groups</option>
+              <option value="Varantharappalli">Varantharappalli</option>
+              <option value="Perumpilavu">Perumpilavu</option>
+            </select>
+            <select 
+              className="px-3 py-2 border rounded-md text-sm bg-background"
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Abroad">Abroad</option>
+              <option value="Applicant">Applicant</option>
+              <option value="Age over">Age over</option>
+              <option value="Dismissed">Dismissed</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Count Cards */}
+      <div className="p-4 pb-0">
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <Card className="shadow-sm">
+            <div className="p-3 text-center">
+              <p className="text-2xl font-bold text-primary">{statusCounts.total}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+            </div>
+          </Card>
+          <Card className="shadow-sm">
+            <div className="p-3 text-center">
+              <p className="text-2xl font-bold text-success">{statusCounts.active}</p>
+              <p className="text-xs text-muted-foreground">Active</p>
+            </div>
+          </Card>
+          <Card className="shadow-sm">
+            <div className="p-3 text-center">
+              <p className="text-2xl font-bold text-orange-500">{statusCounts.applicant}</p>
+              <p className="text-xs text-muted-foreground">Applicant</p>
+            </div>
+          </Card>
+        </div>
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          <Card className="shadow-sm">
+            <div className="p-2 text-center">
+              <p className="text-lg font-bold text-muted-foreground">{statusCounts.inactive}</p>
+              <p className="text-xs text-muted-foreground">Inactive</p>
+            </div>
+          </Card>
+          <Card className="shadow-sm">
+            <div className="p-2 text-center">
+              <p className="text-lg font-bold text-blue-500">{statusCounts.abroad}</p>
+              <p className="text-xs text-muted-foreground">Abroad</p>
+            </div>
+          </Card>
+          <Card className="shadow-sm">
+            <div className="p-2 text-center">
+              <p className="text-lg font-bold text-muted-foreground">{statusCounts.ageOver}</p>
+              <p className="text-xs text-muted-foreground">Age over</p>
+            </div>
+          </Card>
+          <Card className="shadow-sm">
+            <div className="p-2 text-center">
+              <p className="text-lg font-bold text-destructive">{statusCounts.dismissed}</p>
+              <p className="text-xs text-muted-foreground">Dismissed</p>
+            </div>
+          </Card>
         </div>
       </div>
 

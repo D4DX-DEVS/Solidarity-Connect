@@ -9,6 +9,12 @@ import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
 import DistrictAdmin from "./pages/DistrictAdmin";
+import ManageDistricts from "./pages/ManageDistricts";
+import ManageGroups from "./pages/ManageGroups";
+import TransferApprovals from "./pages/TransferApprovals";
+import EditApprovals from "./pages/EditApprovals";
+import UserManagement from "./pages/UserManagement";
+import MeetingAgenda from "./pages/MeetingAgenda";
 import Members from "./pages/Members";
 import MemberDetail from "./pages/MemberDetail";
 import AddMember from "./pages/AddMember";
@@ -34,6 +40,13 @@ const App = () => (
             <Route path="/role-selection" element={<RoleSelection />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/state-admin" element={<StateAdmin />} />
+            <Route path="/state-admin/districts" element={<ManageDistricts />} />
+            <Route path="/state-admin/groups" element={<ManageGroups />} />
+            <Route path="/state-admin/transfer-approvals" element={<TransferApprovals />} />
+            <Route path="/state-admin/edit-approvals" element={<EditApprovals />} />
+            <Route path="/state-admin/users" element={<UserManagement />} />
+            <Route path="/state-admin/meeting-agenda" element={<MeetingAgenda />} />
+            <Route path="/state-admin/send-notification" element={<SendNotification />} />
             <Route path="/district-admin" element={<DistrictAdmin />} />
             <Route path="/members" element={<Members />} />
             <Route path="/member/:id" element={<MemberDetail />} />
@@ -42,7 +55,6 @@ const App = () => (
             <Route path="/meetings" element={<Meetings />} />
             <Route path="/requests" element={<Requests />} />
             <Route path="/notifications" element={<Notifications />} />
-            <Route path="/state-admin/send-notification" element={<SendNotification />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
