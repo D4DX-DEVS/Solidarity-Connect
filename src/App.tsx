@@ -15,6 +15,8 @@ import MeetingAgenda from "./pages/MeetingAgenda";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
 import Members from "./pages/Members";
 import MemberDetail from "./pages/MemberDetail";
+import EditMemberDetails from "./pages/EditMemberDetails";
+import EditMemberStatus from "./pages/EditMemberStatus";
 import AddMember from "./pages/AddMember";
 import BulkImport from "./pages/BulkImport";
 import Meetings from "./pages/Meetings";
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/district-admin" element={<DistrictAdmin />} />
             <Route path="/members" element={<Members />} />
             <Route path="/member/:id" element={<MemberDetail />} />
+            <Route path="/member/:id/edit" element={<EditMemberDetails />} />
+            <Route path="/member/:id/edit-status" element={<EditMemberStatus />} />
             <Route path="/add-member" element={<AddMember />} />
             <Route path="/bulk-import" element={<BulkImport />} />
             <Route path="/meetings" element={<Meetings />} />

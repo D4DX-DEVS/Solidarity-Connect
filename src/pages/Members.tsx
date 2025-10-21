@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Users, Edit, Phone, ArrowRightLeft, Wallet, ChevronDown } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
-import RequestEditDialog from "@/components/RequestEditDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Members = () => {
@@ -28,7 +27,6 @@ const Members = () => {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showBaithul, setShowBaithul] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
 
   const allMembers = [
     {
@@ -257,7 +255,6 @@ const Members = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 {member.phone}
-                <Phone className="h-3 w-3" />
               </a>
               <Badge
                 variant={member.status === "Active" ? "default" : "secondary"}
@@ -267,7 +264,7 @@ const Members = () => {
               </Badge>
               <p className="text-sm text-muted-foreground mt-2">{member.group}</p>
 
-              <div className="grid grid-cols-4 gap-2 mt-4">
+              <div className="grid grid-cols-3 gap-2 mt-4">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -287,8 +284,7 @@ const Members = () => {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedMember(member);
-                        setShowEdit(true);
+                        navigate(`/member/${member.id}/edit`);
                       }}
                     >
                       Personal Details
@@ -296,23 +292,13 @@ const Members = () => {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedMember(member);
-                        setShowEdit(true);
+                        navigate(`/member/${member.id}/edit-status`);
                       }}
                     >
                       Status Change
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Phone className="h-5 w-5 text-primary" />
-                  <span className="text-xs text-center leading-tight">Change Phone</span>
-                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -353,11 +339,6 @@ const Members = () => {
       <BaithulMaalDialog
         open={showBaithul}
         onOpenChange={setShowBaithul}
-        member={selectedMember}
-      />
-      <RequestEditDialog
-        open={showEdit}
-        onOpenChange={setShowEdit}
         member={selectedMember}
       />
 
