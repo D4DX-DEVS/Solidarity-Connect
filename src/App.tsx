@@ -21,6 +21,8 @@ import Meetings from "./pages/Meetings";
 import Requests from "./pages/Requests";
 import Notifications from "./pages/Notifications";
 import SendNotification from "./pages/SendNotification";
+import BaithulDataView from "./pages/BaithulDataView";
+import MembersGroupReport from "./pages/MembersGroupReport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +45,8 @@ const App = () => (
             <Route path="/state-admin/meeting-agenda" element={<MeetingAgenda />} />
             <Route path="/state-admin/create-meeting" element={<CreateMeetingAgenda />} />
             <Route path="/state-admin/send-notification" element={<SendNotification />} />
+            <Route path="/state-admin/baithul-data" element={<BaithulDataView />} />
+            <Route path="/state-admin/group-reports" element={<MembersGroupReport />} />
             <Route path="/district-admin" element={<DistrictAdmin />} />
             <Route path="/members" element={<Members />} />
             <Route path="/member/:id" element={<MemberDetail />} />

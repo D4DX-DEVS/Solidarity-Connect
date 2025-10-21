@@ -1,6 +1,13 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 
@@ -8,8 +15,8 @@ const StateAdmin = () => {
   const navigate = useNavigate();
 
   const adminActions = [
-    { icon: Building2, label: "Manage Districts", path: "/state-admin/districts", color: "text-primary" },
-    { icon: Users, label: "Manage Groups", path: "/state-admin/groups", color: "text-primary" },
+    { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
+    { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
     { icon: Settings, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-primary" },
     { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
@@ -31,9 +38,66 @@ const StateAdmin = () => {
       </header>
 
       <main className="p-4 space-y-4">
+        {/* Quick Analysis Section */}
+        <Card className="shadow-sm bg-gradient-to-br from-primary/10 to-primary/5">
+          <CardContent className="p-4">
+            <h2 className="font-semibold mb-3 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Quick Analysis
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
+                <p className="text-2xl font-bold text-primary">1,247</p>
+                <p className="text-xs text-muted-foreground">Total Members</p>
+                <p className="text-xs text-success mt-1">↑ 12% this month</p>
+              </div>
+              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
+                <p className="text-2xl font-bold text-success">1,089</p>
+                <p className="text-xs text-muted-foreground">Active Members</p>
+                <p className="text-xs text-muted-foreground mt-1">87.3% of total</p>
+              </div>
+              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
+                <p className="text-2xl font-bold text-orange-500">₹4.2L</p>
+                <p className="text-xs text-muted-foreground">Baithul Maal</p>
+                <p className="text-xs text-success mt-1">↑ ₹45k this month</p>
+              </div>
+              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
+                <p className="text-2xl font-bold text-destructive">23</p>
+                <p className="text-xs text-muted-foreground">Pending Actions</p>
+                <p className="text-xs text-orange-500 mt-1">Needs attention</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="shadow-sm">
           <CardContent className="p-4">
-            <h2 className="font-semibold mb-3">Administrative Controls</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-semibold">Administrative Controls</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Menu className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/state-admin/districts")}>
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Manage Districts
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/state-admin/groups")}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Groups
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Master Data Management
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {adminActions.map((action, index) => (
                 <Button
