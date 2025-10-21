@@ -52,7 +52,7 @@ const TransferApprovals = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b px-4 py-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">

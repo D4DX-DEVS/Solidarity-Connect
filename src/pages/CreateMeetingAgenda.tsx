@@ -96,7 +96,7 @@ const CreateMeetingAgenda = () => {
     <div className="min-h-screen bg-background pb-6">
       <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin/meeting-agenda")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Create Meeting Agenda</h1>
@@ -222,7 +222,7 @@ const CreateMeetingAgenda = () => {
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/state-admin/meeting-agenda")}
             >
               Cancel
             </Button>

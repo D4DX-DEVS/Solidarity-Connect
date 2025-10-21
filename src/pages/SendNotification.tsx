@@ -32,7 +32,7 @@ const SendNotification = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b px-4 py-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Send Notification</h1>
@@ -128,7 +128,7 @@ const SendNotification = () => {
             )}
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/notifications")}>
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">

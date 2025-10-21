@@ -90,7 +90,7 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
     <div className="min-h-screen bg-background">
       <header className="bg-card border-b px-4 py-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/members")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Bulk Import Members</h1>
@@ -189,7 +189,7 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
                 type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate("/members")}
               >
                 Cancel
               </Button>

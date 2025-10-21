@@ -32,7 +32,7 @@ const AddMember = () => {
     <div className="min-h-screen bg-background pb-20">
       <header className="bg-card border-b px-4 py-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/members")}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Add New Member</h1>
@@ -156,7 +156,7 @@ const AddMember = () => {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/members")}>
                 Cancel
               </Button>
               <Button type="submit" className="flex-1 bg-success hover:bg-success/90">
