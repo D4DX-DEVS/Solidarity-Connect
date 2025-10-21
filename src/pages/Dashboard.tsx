@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { userRole } = useAuth();
+  const { userRole, userDistrict, userGroup } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const Dashboard = () => {
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title="Murabbi Panel"
-        subtitle="Applicant - Thrissur"
+        subtitle={userGroup ? `${userGroup} - ${userDistrict}` : "Applicant - Thrissur"}
       />
 
       <main className="p-4 space-y-4">

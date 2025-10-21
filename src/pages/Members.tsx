@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Members = () => {
   const navigate = useNavigate();
-  const { userRole } = useAuth();
+  const { userRole, userDistrict, userGroup } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
@@ -24,7 +24,7 @@ const Members = () => {
   const [showBaithul, setShowBaithul] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
 
-  const members = [
+  const allMembers = [
     {
       id: 1,
       name: "Abdullah nadeer",
@@ -70,9 +70,53 @@ const Members = () => {
       group: "Perumpilavu",
       district: "Thrissur",
     },
+    {
+      id: 6,
+      name: "Yusuf Ahmed",
+      phone: "+919887776665",
+      email: "yusuf@example.com",
+      status: "Active",
+      group: "Manjeri",
+      district: "Malappuram",
+    },
+    {
+      id: 7,
+      name: "Ismail Rahman",
+      phone: "+919776665554",
+      email: "No email",
+      status: "Active",
+      group: "Manjeri",
+      district: "Malappuram",
+    },
   ];
 
-  // Calculate status counts
+  // Filter members based on user role
+  let members = allMembers;
+
+  if (userRole === "group_admin" && userGroup) {
+    // Group admin sees only their group
+    members = allMembers.filter(m => m.group === userGroup);
+  } else if (userRole === "district_admin" && userDistrict) {
+    // District admin sees only their district
+    members = allMembers.filter(m => m.district === userDistrict);
+  }
+  // State admin sees all members (no filter)
+
+  // Apply additional filters
+  const filteredMembers = members.filter(member => {
+    const matchesSearch = 
+      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.phone.includes(searchQuery) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesDistrict = !selectedDistrict || member.district === selectedDistrict;
+    const matchesGroup = !selectedGroup || member.group === selectedGroup;
+    const matchesStatus = !selectedStatus || member.status === selectedStatus;
+
+    return matchesSearch && matchesDistrict && matchesGroup && matchesStatus;
+  });
+
+  // Calculate status counts based on filtered members
   const statusCounts = {
     total: members.length,
     active: members.filter(m => m.status === "Active").length,
@@ -193,7 +237,7 @@ const Members = () => {
       </div>
 
       <main className="p-4 space-y-3">
-        {members.map((member) => (
+        {filteredMembers.map((member) => (
           <Card key={member.id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
             <div 
               className="p-4"
