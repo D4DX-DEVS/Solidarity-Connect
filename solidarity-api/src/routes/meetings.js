@@ -3344,11 +3344,6 @@ router.get('/admin/overview',
             // Calculate overall meeting completion status
             const totalGroups = Object.keys(groupProgress).length;
             const completedGroups = Object.values(groupProgress).filter(g => g.status === 'completed').length;
-            const inProgressGroups = Object.values(groupProgress).filter(g => g.status === 'in_progress').length;
-            const pendingGroups = Object.values(groupProgress).filter(g => g.status === 'pending').length;
-
-            // Calculate program conducted statistics
-            const completedGroups = Object.values(groupProgress).filter(g => g.status === 'completed').length;
             const pendingGroups = Object.values(groupProgress).filter(g => g.status === 'pending').length;
             
             meetingObj.overallProgress = {

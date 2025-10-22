@@ -469,7 +469,6 @@ const AdminMeetingsView = () => {
                 <SelectContent>
                   <SelectItem value="all">All Completion</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
@@ -674,7 +673,6 @@ const AdminMeetingsView = () => {
                               </div>
                               <Badge variant="outline" className={`text-xs ${
                                 group.status === 'completed' ? 'border-green-500 text-green-700' :
-                                group.status === 'in_progress' ? 'border-yellow-500 text-yellow-700' :
                                 'border-red-500 text-red-700'
                               }`}>
                                 {group.status.replace('_', ' ')}

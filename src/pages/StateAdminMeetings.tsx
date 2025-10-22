@@ -103,7 +103,6 @@ interface SummaryStats {
   totalMeetings: number;
   monthlySeriesMeetings: number;
   completedMeetings: number;
-  inProgressMeetings: number;
   pendingMeetings: number;
   notStartedMeetings: number;
   meetingsNeedingAttention: number;
@@ -471,7 +470,7 @@ const StateAdminMeetings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <div className="text-center p-2 bg-muted/50 rounded-lg">
                   <p className="text-lg font-bold text-primary">{summaryStats.totalMeetings}</p>
                   <p className="text-xs text-muted-foreground">Total</p>
@@ -480,10 +479,7 @@ const StateAdminMeetings = () => {
                   <p className="text-lg font-bold text-green-600">{summaryStats.completedMeetings}</p>
                   <p className="text-xs text-muted-foreground">Completed</p>
                 </div>
-                <div className="text-center p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <p className="text-lg font-bold text-yellow-600">{summaryStats.inProgressMeetings}</p>
-                  <p className="text-xs text-muted-foreground">In Progress</p>
-                </div>
+
                 <div className="text-center p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <p className="text-lg font-bold text-red-600">{summaryStats.pendingMeetings}</p>
                   <p className="text-xs text-muted-foreground">Pending</p>
@@ -571,8 +567,7 @@ const StateAdminMeetings = () => {
                 <SelectContent>
                   <SelectItem value="all">All Completion</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="not_started">Not Started</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
 
