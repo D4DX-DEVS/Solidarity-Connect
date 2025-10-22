@@ -3466,19 +3466,19 @@ router.get('/admin/overview',
 
             meetingObj.groupProgress = groupProgress;
             
-            const completedGroups = groupProgress.filter(g => g.status === 'completed').length;
             const totalGroups = groupProgress.length;
-            const pendingGroups = totalGroups - completedGroups;
+            const completedGroupsCount = groupProgress.filter(g => g.status === 'completed').length;
+            const pendingGroupsCount = totalGroups - completedGroupsCount;
             
             meetingObj.overallProgress = {
               totalGroups,
-              completedGroups,
-              pendingGroups,
-              programsConducted: completedGroups, // Same as completed groups
-              programsNotConducted: pendingGroups, // Same as pending groups
-              completionRate: totalGroups > 0 ? ((completedGroups / totalGroups) * 100).toFixed(1) : 0,
-              conductionRate: totalGroups > 0 ? ((completedGroups / totalGroups) * 100).toFixed(1) : 0, // Same as completion rate
-              status: completedGroups === totalGroups ? 'completed' : 'pending'
+              completedGroups: completedGroupsCount,
+              pendingGroups: pendingGroupsCount,
+              programsConducted: completedGroupsCount, // Same as completed groups
+              programsNotConducted: pendingGroupsCount, // Same as pending groups
+              completionRate: totalGroups > 0 ? ((completedGroupsCount / totalGroups) * 100).toFixed(1) : 0,
+              conductionRate: totalGroups > 0 ? ((completedGroupsCount / totalGroups) * 100).toFixed(1) : 0, // Same as completion rate
+              status: completedGroupsCount === totalGroups ? 'completed' : 'pending'
             };
           }
 
