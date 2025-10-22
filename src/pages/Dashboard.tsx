@@ -1,22 +1,34 @@
-import { Users, CheckCircle, Clock, Calendar, Upload, Bell, Menu } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+
+interface DashboardData {
+  memberStatistics: {
+    totalMembers: number;
+    activeMembers: number;
+    pendingMembers: number;
+    applicantMembers: number;
+  };
+  upcomingMeetings: Array<{
+    _id: string;
+    title: string;
+    scheduledDate: string;
+  }>;
+  pendingRequestsCount: number;
+}
 
 const Dashboard = () => {
   const { userRole, userDistrict, userGroup } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Redirect based on role
@@ -26,11 +38,76 @@ const Dashboard = () => {
       navigate("/district-admin");
     }
   }, [userRole, navigate]);
-  const stats = [
-    { label: "Total Members", value: "17", icon: Users, color: "text-primary" },
-    { label: "Active Members", value: "3", icon: CheckCircle, color: "text-success" },
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/reports/dashboard', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          setDashboardData(result.data);
+        } else {
+          toast({
+            title: "Error",
+            description: result.message || "Failed to fetch dashboard data",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Dashboard fetch error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userRole === 'group_admin') {
+      fetchDashboardData();
+    }
+  }, [userRole, toast]);
+
+  const stats = dashboardData ? [
+    { 
+      label: "Total Members", 
+      value: dashboardData.memberStatistics.totalMembers.toString(), 
+      icon: Users, 
+      color: "text-primary" 
+    },
+    { 
+      label: "Active Members", 
+      value: dashboardData.memberStatistics.activeMembers.toString(), 
+      icon: CheckCircle, 
+      color: "text-success" 
+    },
+    { 
+      label: "Pending Requests", 
+      value: dashboardData.pendingRequestsCount.toString(), 
+      icon: Clock, 
+      color: "text-destructive" 
+    },
+    { 
+      label: "Upcoming Meetings", 
+      value: dashboardData.upcomingMeetings.length.toString(), 
+      icon: Calendar, 
+      color: "text-foreground" 
+    },
+  ] : [
+    { label: "Total Members", value: "0", icon: Users, color: "text-primary" },
+    { label: "Active Members", value: "0", icon: CheckCircle, color: "text-success" },
     { label: "Pending Requests", value: "0", icon: Clock, color: "text-destructive" },
-    { label: "Pending Meetings", value: "4", icon: Calendar, color: "text-foreground" },
+    { label: "Upcoming Meetings", value: "0", icon: Calendar, color: "text-foreground" },
   ];
 
   return (
@@ -42,37 +119,14 @@ const Dashboard = () => {
       />
 
       <main className="p-4 space-y-4">
-        <div className="flex gap-3">
+        <div className="flex justify-center">
           <Button
             onClick={() => navigate("/bulk-import")}
-            className="flex-1 bg-success hover:bg-success/90"
+            className="w-full max-w-sm bg-success hover:bg-success/90"
           >
             <Upload className="h-4 w-4 mr-2" />
             Bulk Import
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex-1">
-                <Menu className="h-4 w-4 mr-2" />
-                Master Data
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate("/bulk-import")}>
-                <Upload className="h-4 w-4 mr-2" />
-                Bulk Import Members
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/state-admin/send-notification")}>
-                <Bell className="h-4 w-4 mr-2" />
-                Send Notifications
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled>
-                <Menu className="h-4 w-4 mr-2" />
-                More Options
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -83,11 +137,31 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
-                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className={`text-3xl font-bold ${stat.color}`}>
+                  {loading ? "..." : stat.value}
+                </p>
               </CardContent>
             </Card>
           ))}
         </div>
+
+        {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
+          <Card className="shadow-sm">
+            <CardContent className="p-4">
+              <h2 className="font-semibold mb-2">Upcoming Meetings</h2>
+              <div className="space-y-2">
+                {dashboardData.upcomingMeetings.slice(0, 3).map((meeting) => (
+                  <div key={meeting._id} className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">{meeting.title}</span>
+                    <span className="text-foreground">
+                      {new Date(meeting.scheduledDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="shadow-sm">
           <CardContent className="p-4">

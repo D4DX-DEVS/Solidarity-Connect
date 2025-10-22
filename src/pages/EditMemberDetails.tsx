@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,31 +8,201 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
+interface Member {
+  _id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  status: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  profession?: string;
+  education?: string;
+  baithulMaal?: {
+    monthlyAmount: number;
+    totalPaid: number;
+  };
+  district: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  group: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+}
+
 const EditMemberDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
 
+  const [member, setMember] = useState<Member | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    name: "Abdullah nadeer",
-    email: "abdullah@example.com",
-    phone: "+919846058901",
-    address: "Varantharappalli, Thrissur",
-    currentStatus: "Active",
-    newStatus: "",
-    remarks: "",
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    status: "",
+    dateOfBirth: "",
+    bloodGroup: "",
+    profession: "",
+    education: "",
+    monthlyBaithulMaal: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch member data
+  useEffect(() => {
+    const fetchMember = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/members/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const memberData = result.data;
+          setMember(memberData);
+          
+          // Populate form with existing data
+          setFormData({
+            name: memberData.name || "",
+            email: memberData.email || "",
+            phone: memberData.phone ? memberData.phone.replace('+91', '') : "", // Remove +91 for editing
+            address: memberData.address || "",
+            status: memberData.status || "",
+            dateOfBirth: memberData.dateOfBirth ? memberData.dateOfBirth.split('T')[0] : "", // Format date for input
+            bloodGroup: memberData.bloodGroup || "",
+            profession: memberData.profession || "",
+            education: memberData.education || "",
+            monthlyBaithulMaal: memberData.baithulMaal?.monthlyAmount?.toString() || "",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch member details",
+            variant: "destructive"
+          });
+          navigate("/members");
+        }
+      } catch (error) {
+        console.error('Failed to fetch member:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load member details",
+          variant: "destructive"
+        });
+        navigate("/members");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchMember();
+    }
+  }, [id, navigate, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    toast({
-      title: "Edit request submitted",
-      description: "Your request has been sent for approval",
-    });
-    
-    navigate("/members");
+    setSaving(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Clean the form data - remove empty optional fields
+      const cleanedData = { ...formData };
+      if (!cleanedData.email) delete cleanedData.email;
+      if (!cleanedData.dateOfBirth) delete cleanedData.dateOfBirth;
+      if (!cleanedData.bloodGroup) delete cleanedData.bloodGroup;
+      if (!cleanedData.profession) delete cleanedData.profession;
+      if (!cleanedData.education) delete cleanedData.education;
+      if (!cleanedData.address) delete cleanedData.address;
+      if (!cleanedData.monthlyBaithulMaal) delete cleanedData.monthlyBaithulMaal;
+
+      console.log('Updating member with data:', cleanedData);
+
+      const response = await fetch(`/api/members/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cleanedData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Member updated successfully",
+        });
+        navigate("/members");
+      } else {
+        // Handle validation errors
+        if (result.errors && Array.isArray(result.errors)) {
+          const errorMessages = result.errors.map((error: any) => error.msg).join(', ');
+          toast({
+            title: "Validation Error",
+            description: errorMessages,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.message || "Failed to update member",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update member",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <header className="bg-card border-b px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/members")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold">Edit Member</h1>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading member details...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -47,7 +217,7 @@ const EditMemberDetails = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-xl font-bold">Edit Member</h1>
-            <p className="text-sm text-muted-foreground">Request to edit member information</p>
+            <p className="text-sm text-muted-foreground">{member?.name}</p>
           </div>
         </div>
       </header>
@@ -60,9 +230,10 @@ const EditMemberDetails = () => {
                 <h3 className="font-semibold mb-3">Personal Details</h3>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                       id="name"
+                      placeholder="Enter full name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
@@ -70,7 +241,27 @@ const EditMemberDetails = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="9876543210"
+                      maxLength={10}
+                      value={formData.phone}
+                      onChange={(e) => {
+                        // Only allow digits and max 10 characters
+                        const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setFormData({ ...formData, phone: cleaned });
+                      }}
+                      required
+                    />
+                    {formData.phone && formData.phone.length !== 10 && (
+                      <p className="text-xs text-destructive">Please enter 10 digits</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email (Optional)</Label>
                     <Input
                       id="email"
                       type="email"
@@ -80,67 +271,100 @@ const EditMemberDetails = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
                     <Input
-                      id="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      required
+                      id="dateOfBirth"
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="bloodGroup">Blood Group (Optional)</Label>
+                    <select
+                      id="bloodGroup"
+                      className="w-full px-3 py-2 border rounded-md bg-background"
+                      value={formData.bloodGroup}
+                      onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="profession">Profession (Optional)</Label>
+                    <Input
+                      id="profession"
+                      placeholder="e.g. Engineer, Teacher"
+                      value={formData.profession}
+                      onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="education">Education (Optional)</Label>
+                    <Input
+                      id="education"
+                      placeholder="e.g. B.Tech, Masters"
+                      value={formData.education}
+                      onChange={(e) => setFormData({ ...formData, education: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="monthlyBaithulMaal">Monthly Baithul Maal (Optional)</Label>
+                    <Input
+                      id="monthlyBaithulMaal"
+                      type="number"
+                      placeholder="Enter monthly amount (e.g., 100)"
+                      min="0"
+                      step="1"
+                      value={formData.monthlyBaithulMaal}
+                      onChange={(e) => setFormData({ ...formData, monthlyBaithulMaal: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address (Optional)</Label>
                     <Textarea
                       id="address"
+                      placeholder="Enter full address"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       rows={3}
+                      className="min-h-[80px] resize-vertical"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="font-semibold mb-3">Status Change (Optional)</h3>
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label>Current Status</Label>
-                    <div className="p-3 bg-muted rounded-md">
-                      <p className="font-semibold text-success">{formData.currentStatus}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="newStatus">New Status</Label>
-                    <select
-                      id="newStatus"
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-                      value={formData.newStatus}
-                      onChange={(e) => setFormData({ ...formData, newStatus: e.target.value })}
-                    >
-                      <option value="">Keep current status</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Abroad">Abroad</option>
-                      <option value="Applicant">Applicant</option>
-                      <option value="Age over">Age over</option>
-                      <option value="Dismissed">Dismissed</option>
-                    </select>
-                  </div>
+                <h3 className="font-semibold mb-3">Status</h3>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Member Status</Label>
+                  <select
+                    id="status"
+                    className="w-full px-3 py-2 border rounded-md text-sm bg-background"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Abroad">Abroad</option>
+                    <option value="Applicant">Applicant</option>
+                    <option value="Age over">Age over</option>
+                    <option value="Dismissed">Dismissed</option>
+                  </select>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="remarks">Remarks (Optional)</Label>
-                <Textarea
-                  id="remarks"
-                  value={formData.remarks}
-                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  placeholder="Add any additional notes about this edit request..."
-                  rows={3}
-                />
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -149,14 +373,16 @@ const EditMemberDetails = () => {
                   variant="outline"
                   className="flex-1"
                   onClick={() => navigate("/members")}
+                  disabled={saving}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-primary/90"
+                  className="flex-1 bg-success hover:bg-success/90"
+                  disabled={saving}
                 >
-                  Submit Request
+                  {saving ? "Updating..." : "Update Member"}
                 </Button>
               </div>
             </form>

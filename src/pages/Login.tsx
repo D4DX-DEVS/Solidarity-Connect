@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
@@ -11,8 +12,11 @@ const Login = () => {
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [showOtp, setShowOtp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const handlePhoneChange = (value: string) => {
     // Only allow digits and max 10 characters
@@ -20,9 +24,59 @@ const Login = () => {
     setPhone(cleaned);
   };
 
-  const handleSendOtp = () => {
-    if (phone.length === 10 && userType) {
-      setShowOtp(true);
+  const handleSendOtp = async () => {
+    if (phone.length !== 10 || !userType) return;
+    
+    setLoading(true);
+    try {
+      console.log('Sending OTP request with phone:', phone, 'userType:', userType);
+      
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: phone,
+          userType
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setShowOtp(true);
+        setOtpExpiry(new Date(result.data.expiresAt));
+        
+        toast({
+          title: "OTP Sent",
+          description: result.message,
+        });
+
+        // Show demo OTP in development
+        if (result.data.demoOTP) {
+          toast({
+            title: "Demo OTP",
+            description: `Use OTP: ${result.data.demoOTP}`,
+            duration: 10000,
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to send OTP",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Send OTP error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send OTP. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,11 +102,108 @@ const Login = () => {
     }
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const otpValue = otp.join("");
-    if (otpValue.length === 4 && userType) {
-      login(userType);
-      navigate("/dashboard");
+    if (otpValue.length !== 4 || !userType) return;
+    
+    setLoading(true);
+    try {
+      console.log('Verifying OTP with phone:', phone, 'otp:', otpValue, 'userType:', userType);
+      
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: phone,
+          otp: otpValue,
+          userType
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        login(result.data.token, result.data.user);
+        
+        toast({
+          title: "Login Successful",
+          description: result.message,
+        });
+
+        navigate("/dashboard");
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Invalid OTP",
+          variant: "destructive"
+        });
+        
+        // Clear OTP on error
+        setOtp(["", "", "", ""]);
+      }
+    } catch (error) {
+      console.error('Verify OTP error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth/resend-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: phone,
+          userType
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setOtpExpiry(new Date(result.data.expiresAt));
+        setOtp(["", "", "", ""]);
+        
+        toast({
+          title: "OTP Resent",
+          description: result.message,
+        });
+
+        // Show demo OTP in development
+        if (result.data.demoOTP) {
+          toast({
+            title: "Demo OTP",
+            description: `Use OTP: ${result.data.demoOTP}`,
+            duration: 10000,
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to resend OTP",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to resend OTP. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,9 +255,9 @@ const Login = () => {
             <Button 
               onClick={handleSendOtp} 
               className="w-full bg-primary hover:bg-primary/90"
-              disabled={phone.length !== 10 || !userType}
+              disabled={phone.length !== 10 || !userType || loading}
             >
-              Send OTP
+              {loading ? "Sending..." : "Send OTP"}
             </Button>
           ) : (
             <>
@@ -123,27 +274,45 @@ const Login = () => {
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       className="w-12 h-12 text-center text-lg font-semibold"
+                      disabled={loading}
                     />
                   ))}
                 </div>
+                {otpExpiry && (
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    OTP expires at {otpExpiry.toLocaleTimeString()}
+                  </p>
+                )}
               </div>
               <Button 
                 onClick={handleVerifyOtp} 
                 className="w-full bg-success hover:bg-success/90"
-                disabled={otp.join("").length !== 4}
+                disabled={otp.join("").length !== 4 || loading}
               >
-                Verify & Login
+                {loading ? "Verifying..." : "Verify & Login"}
               </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setShowOtp(false);
-                  setOtp(["", "", "", ""]);
-                }}
-                className="w-full"
-              >
-                Change Number
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowOtp(false);
+                    setOtp(["", "", "", ""]);
+                    setOtpExpiry(null);
+                  }}
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  Change Number
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleResendOtp}
+                  className="flex-1"
+                  disabled={loading}
+                >
+                  {loading ? "Sending..." : "Resend OTP"}
+                </Button>
+              </div>
             </>
           )}
         </div>

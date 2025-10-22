@@ -1,13 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import BottomNav from "@/components/BottomNav";
+import { useToast } from "@/hooks/use-toast";
+
+interface UserContext {
+  userRole: string;
+  canSelectDistrict: boolean;
+  canSelectGroup: boolean;
+  showDistrictField: boolean;
+  showGroupField: boolean;
+  assignedDistrict?: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  assignedGroup?: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  permissions: {
+    canCreateMember: boolean;
+    canEditMember: boolean;
+    canDeleteMember: boolean;
+    canApproveMember: boolean;
+    canViewReports: boolean;
+    canBulkImport: boolean;
+  };
+}
+
+interface District {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+interface Group {
+  _id: string;
+  name: string;
+  code: string;
+  district: string;
+}
 
 const AddMember = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [userContext, setUserContext] = useState<UserContext | null>(null);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -19,13 +66,166 @@ const AddMember = () => {
     profession: "",
     education: "",
     address: "",
+    monthlyBaithulMaal: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch user context and initial data
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Fetch user context
+        const contextResponse = await fetch('/api/members/user-context', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (contextResponse.ok) {
+          const contextResult = await contextResponse.json();
+          setUserContext(contextResult.data);
+
+          // Auto-fill district and group for group admins
+          if (contextResult.data.userRole === 'group_admin') {
+            setFormData(prev => ({
+              ...prev,
+              district: contextResult.data.assignedDistrict?._id || '',
+              group: contextResult.data.assignedGroup?._id || ''
+            }));
+          } else if (contextResult.data.userRole === 'district_admin') {
+            setFormData(prev => ({
+              ...prev,
+              district: contextResult.data.assignedDistrict?._id || ''
+            }));
+          }
+
+          // Fetch districts only if user can select district
+          if (contextResult.data.canSelectDistrict) {
+            const districtsResponse = await fetch('/api/districts?limit=100', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (districtsResponse.ok) {
+              const districtsResult = await districtsResponse.json();
+              setDistricts(districtsResult.data.docs || []);
+            }
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to load user context",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch initial data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load initial data",
+          variant: "destructive"
+        });
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, [toast]);
+
+  // Fetch groups when district changes
+  useEffect(() => {
+    if (formData.district && userContext?.canSelectGroup) {
+      const fetchGroups = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`/api/districts/${formData.district}/groups?limit=100`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            setGroups(result.data.docs || []);
+          }
+        } catch (error) {
+          console.error('Failed to fetch groups:', error);
+        }
+      };
+
+      fetchGroups();
+    }
+  }, [formData.district, userContext]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
-    navigate("/members");
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Clean the form data - remove empty optional fields
+      const cleanedData = { ...formData };
+      if (!cleanedData.email) delete cleanedData.email;
+      if (!cleanedData.dateOfBirth) delete cleanedData.dateOfBirth;
+      if (!cleanedData.bloodGroup) delete cleanedData.bloodGroup;
+      if (!cleanedData.profession) delete cleanedData.profession;
+      if (!cleanedData.education) delete cleanedData.education;
+      if (!cleanedData.address) delete cleanedData.address;
+      if (!cleanedData.monthlyBaithulMaal) delete cleanedData.monthlyBaithulMaal;
+      
+      console.log('Sending member data:', cleanedData);
+      
+      const response = await fetch('/api/members', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cleanedData)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Member added successfully",
+        });
+        navigate("/members");
+      } else {
+        // Handle validation errors
+        if (result.errors && Array.isArray(result.errors)) {
+          const errorMessages = result.errors.map((error: any) => error.msg).join(', ');
+          toast({
+            title: "Validation Error",
+            description: errorMessages,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: result.message || "Failed to add member",
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to add member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add member",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,55 +241,101 @@ const AddMember = () => {
 
       <main className="p-4">
         <Card className="p-4 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {initialLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              </div>
+            </div>
+          ) : !userContext?.permissions.canCreateMember ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">You don't have permission to add members.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Name</label>
+              <label className="text-sm font-medium mb-2 block">Name *</label>
               <Input
                 required
+                placeholder="Enter full name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Phone Number</label>
+              <label className="text-sm font-medium mb-2 block">Phone Number *</label>
               <Input
                 type="tel"
-                placeholder="+91XXXXXXXXXX"
+                placeholder="9876543210"
                 required
+                maxLength={10}
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) => {
+                  // Only allow digits and max 10 characters
+                  const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setFormData({ ...formData, phone: cleaned });
+                }}
               />
+              {formData.phone && formData.phone.length !== 10 && (
+                <p className="text-xs text-destructive mt-1">Please enter 10 digits</p>
+              )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">District</label>
-              <select
-                required
-                className="w-full px-3 py-2 border rounded-md bg-background"
-                value={formData.district}
-                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-              >
-                <option value="">Select District</option>
-                <option value="Thrissur">Thrissur</option>
-                <option value="Malappuram">Malappuram</option>
-                <option value="Kozhikode">Kozhikode</option>
-              </select>
-            </div>
+            {userContext?.showDistrictField && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">District *</label>
+                {userContext.canSelectDistrict ? (
+                  <select
+                    required
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    value={formData.district}
+                    onChange={(e) => {
+                      setFormData({ ...formData, district: e.target.value, group: "" });
+                      setGroups([]); // Clear groups when district changes
+                    }}
+                  >
+                    <option value="">Select District</option>
+                    {districts.map((district) => (
+                      <option key={district._id} value={district._id}>
+                        {district.name} ({district.code})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-3 py-2 border rounded-md bg-muted">
+                    {userContext.assignedDistrict?.name} ({userContext.assignedDistrict?.code})
+                  </div>
+                )}
+              </div>
+            )}
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Group</label>
-              <select
-                required
-                className="w-full px-3 py-2 border rounded-md bg-background"
-                value={formData.group}
-                onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-              >
-                <option value="">Select Group</option>
-                <option value="Varantharappalli">Varantharappalli</option>
-                <option value="Perumpilavu">Perumpilavu</option>
-              </select>
-            </div>
+            {userContext?.showGroupField && (
+              <div>
+                <label className="text-sm font-medium mb-2 block">Group *</label>
+                {userContext.canSelectGroup ? (
+                  <select
+                    required
+                    className="w-full px-3 py-2 border rounded-md bg-background"
+                    value={formData.group}
+                    onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                    disabled={!formData.district}
+                  >
+                    <option value="">Select Group</option>
+                    {groups.map((group) => (
+                      <option key={group._id} value={group._id}>
+                        {group.name} ({group.code})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-3 py-2 border rounded-md bg-muted">
+                    {userContext.assignedGroup?.name} ({userContext.assignedGroup?.code})
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium mb-2 block">Email (Optional)</label>
@@ -147,11 +393,25 @@ const AddMember = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Address (Optional)</label>
+              <label className="text-sm font-medium mb-2 block">Monthly Baithul Maal (Optional)</label>
               <Input
-                placeholder="Full address"
+                type="number"
+                placeholder="Enter monthly amount (e.g., 100)"
+                min="0"
+                step="1"
+                value={formData.monthlyBaithulMaal}
+                onChange={(e) => setFormData({ ...formData, monthlyBaithulMaal: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Address (Optional)</label>
+              <Textarea
+                placeholder="Enter full address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                rows={3}
+                className="min-h-[80px] resize-vertical"
               />
             </div>
 
@@ -159,11 +419,16 @@ const AddMember = () => {
               <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/members")}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-success hover:bg-success/90">
-                Add Member
+              <Button 
+                type="submit" 
+                className="flex-1 bg-success hover:bg-success/90"
+                disabled={loading || !userContext?.permissions.canCreateMember}
+              >
+                {loading ? "Adding..." : "Add Member"}
               </Button>
             </div>
           </form>
+          )}
         </Card>
       </main>
 

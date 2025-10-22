@@ -13,9 +13,10 @@ interface HeaderWithLogoutProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
+  leftAction?: React.ReactNode;
 }
 
-const HeaderWithLogout = ({ icon, title, subtitle }: HeaderWithLogoutProps) => {
+const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogoutProps) => {
   const { logout, userRole } = useAuth();
   const navigate = useNavigate();
 
@@ -40,6 +41,7 @@ const HeaderWithLogout = ({ icon, title, subtitle }: HeaderWithLogoutProps) => {
   return (
     <header className="bg-card border-b px-4 py-4">
       <div className="flex items-center gap-3">
+        {leftAction && <div>{leftAction}</div>}
         <div className="bg-primary p-2 rounded-lg">{icon}</div>
         <div className="flex-1">
           <h1 className="text-xl font-bold">{title}</h1>

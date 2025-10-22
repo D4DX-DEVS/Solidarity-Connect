@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Plus, Calendar, Bell, Menu } from "lucide-react";
+import { LayoutDashboard, Users, Plus, Calendar, Bell, Menu, BarChart3 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ const BottomNav = () => {
   const baseNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
     { icon: Users, label: "Members", path: "/members" },
-    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin"] },
+    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin", "state_admin"] },
     { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true },
     { icon: Bell, label: "Alerts", path: "/notifications" },
   ];
@@ -33,7 +33,7 @@ const BottomNav = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path || 
-                          (item.path === "/meetings" && location.pathname.includes("/meeting"));
+                          (item.path === "/meetings" && (location.pathname.includes("/meeting") || location.pathname === "/state-admin/meetings" || location.pathname === "/admin/meetings-view"));
 
           if (item.hasMenu && (userRole === "state_admin" || userRole === "district_admin")) {
             return (
@@ -53,9 +53,17 @@ const BottomNav = () => {
                     <Calendar className="h-4 w-4 mr-2" />
                     View Meetings
                   </DropdownMenuItem>
-                  {userRole === "state_admin" && (
+                  {(userRole === "state_admin" || userRole === "district_admin") && (
                     <>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate("/admin/meetings-view")}>
+                        <Users className="h-4 w-4 mr-2" />
+                        Admin View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/state-admin/meetings")}>
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Meetings Review
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                         <Menu className="h-4 w-4 mr-2" />
                         Meeting Agendas
@@ -68,7 +76,6 @@ const BottomNav = () => {
                   )}
                   {userRole === "district_admin" && (
                     <>
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                         <Menu className="h-4 w-4 mr-2" />
                         View Meeting Agendas

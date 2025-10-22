@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Users, Edit, ArrowRightLeft, Wallet } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,120 +10,250 @@ import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+interface Member {
+  _id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  status: string;
+  group: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  district: {
+    _id: string;
+    name: string;
+    code: string;
+  };
+  isApproved: boolean;
+  createdAt: string;
+  transferRequest?: {
+    status: 'pending' | 'approved';
+    targetDistrict: string;
+    targetGroup: string;
+  } | null;
+}
+
+interface District {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+interface Group {
+  _id: string;
+  name: string;
+  code: string;
+}
 
 const Members = () => {
   const navigate = useNavigate();
   const { userRole, userDistrict, userGroup } = useAuth();
+  const { toast } = useToast();
+  
+  const [members, setMembers] = useState<Member[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    abroad: 0,
+    applicant: 0,
+    ageOver: 0,
+    dismissed: 0,
+    approved: 0,
+    pending: 0
+  });
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showBaithul, setShowBaithul] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const itemsPerPage = 20;
 
-  const allMembers = [
-    {
-      id: 1,
-      name: "Abdullah nadeer",
-      phone: "+919846058901",
-      email: "No email",
-      status: "Active",
-      group: "Varantharappalli",
-      district: "Thrissur",
-    },
-    {
-      id: 2,
-      name: "Adhil Salim Noor",
-      phone: "+918891323881",
-      email: "No email",
-      status: "Applicant",
-      group: "Varantharappalli",
-      district: "Thrissur",
-    },
-    {
-      id: 3,
-      name: "Mohammed Ali",
-      phone: "+919876543210",
-      email: "mohammed@example.com",
-      status: "Active",
-      group: "Perumpilavu",
-      district: "Thrissur",
-    },
-    {
-      id: 4,
-      name: "Ahmed Hassan",
-      phone: "+919123456789",
-      email: "ahmed@example.com",
-      status: "Abroad",
-      group: "Varantharappalli",
-      district: "Thrissur",
-    },
-    {
-      id: 5,
-      name: "Ibrahim Khan",
-      phone: "+919998887776",
-      email: "No email",
-      status: "Inactive",
-      group: "Perumpilavu",
-      district: "Thrissur",
-    },
-    {
-      id: 6,
-      name: "Yusuf Ahmed",
-      phone: "+919887776665",
-      email: "yusuf@example.com",
-      status: "Active",
-      group: "Manjeri",
-      district: "Malappuram",
-    },
-    {
-      id: 7,
-      name: "Ismail Rahman",
-      phone: "+919776665554",
-      email: "No email",
-      status: "Active",
-      group: "Manjeri",
-      district: "Malappuram",
-    },
-  ];
+  // Debounced search state
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
-  // Filter members based on user role
-  let members = allMembers;
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
-  if (userRole === "group_admin" && userGroup) {
-    // Group admin sees only their group
-    members = allMembers.filter(m => m.group === userGroup);
-  } else if (userRole === "district_admin" && userDistrict) {
-    // District admin sees only their district
-    members = allMembers.filter(m => m.district === userDistrict);
-  }
-  // State admin sees all members (no filter)
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  // Apply additional filters
-  const filteredMembers = members.filter(member => {
-    const matchesSearch = 
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.phone.includes(searchQuery) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase());
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus]);
+
+  // Fetch members and related data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Build query parameters for filtering and pagination
+        const params = new URLSearchParams();
+        if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
+        if (selectedDistrict) params.append('district', selectedDistrict);
+        if (selectedGroup) params.append('group', selectedGroup);
+        if (selectedStatus) params.append('status', selectedStatus);
+        params.append('page', currentPage.toString());
+        params.append('limit', itemsPerPage.toString());
+        params.append('sort', '-createdAt'); // Sort by newest first
+        
+        // Fetch members
+        const membersResponse = await fetch(`/api/members?${params.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (membersResponse.ok) {
+          const membersResult = await membersResponse.json();
+          setMembers(membersResult.data || []);
+          setStatistics(membersResult.statistics || statistics);
+          
+          // Update pagination state
+          if (membersResult.pagination) {
+            setTotalPages(membersResult.pagination.totalPages);
+            setTotalDocs(membersResult.pagination.totalDocs);
+            setHasNextPage(membersResult.pagination.hasNextPage);
+            setHasPrevPage(membersResult.pagination.hasPrevPage);
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch members",
+            variant: "destructive"
+          });
+        }
+
+        // Fetch districts (for state admin and district admin filters)
+        if (userRole === 'state_admin') {
+          const districtsResponse = await fetch('/api/districts?limit=100', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (districtsResponse.ok) {
+            const districtsResult = await districtsResponse.json();
+            setDistricts(districtsResult.data.docs || []);
+          }
+        }
+
+        // Fetch groups (for filtering)
+        if (userRole === 'state_admin' || userRole === 'district_admin') {
+          const groupsResponse = await fetch('/api/groups?limit=100', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (groupsResponse.ok) {
+            const groupsResult = await groupsResponse.json();
+            setGroups(groupsResult.data || []);
+          }
+        }
+
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, userRole, toast]);
+
+  // Load more members function
+  const loadMoreMembers = async () => {
+    if (!hasNextPage || loadingMore) return;
     
-    const matchesDistrict = !selectedDistrict || member.district === selectedDistrict;
-    const matchesGroup = !selectedGroup || member.group === selectedGroup;
-    const matchesStatus = !selectedStatus || member.status === selectedStatus;
+    setLoadingMore(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Build query parameters for next page
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
+      if (selectedDistrict) params.append('district', selectedDistrict);
+      if (selectedGroup) params.append('group', selectedGroup);
+      if (selectedStatus) params.append('status', selectedStatus);
+      params.append('page', (currentPage + 1).toString());
+      params.append('limit', itemsPerPage.toString());
+      params.append('sort', '-createdAt');
+      
+      const response = await fetch(`/api/members?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    return matchesSearch && matchesDistrict && matchesGroup && matchesStatus;
-  });
-
-  // Calculate status counts based on filtered members
-  const statusCounts = {
-    total: members.length,
-    active: members.filter(m => m.status === "Active").length,
-    inactive: members.filter(m => m.status === "Inactive").length,
-    abroad: members.filter(m => m.status === "Abroad").length,
-    applicant: members.filter(m => m.status === "Applicant").length,
-    ageOver: members.filter(m => m.status === "Age over").length,
-    dismissed: members.filter(m => m.status === "Dismissed").length,
+      if (response.ok) {
+        const result = await response.json();
+        setMembers(prev => [...prev, ...(result.data || [])]);
+        setCurrentPage(prev => prev + 1);
+        setHasNextPage(result.pagination?.hasNextPage || false);
+      }
+    } catch (error) {
+      console.error('Failed to load more members:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load more members",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingMore(false);
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <HeaderWithLogout
+          icon={<Users className="h-6 w-6 text-primary-foreground" />}
+          title="Members"
+        />
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-sm text-muted-foreground">Loading members...</p>
+          </div>
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -144,29 +274,38 @@ const Members = () => {
         </div>
 
         <div className="space-y-2 mb-3">
-          {(userRole === "state_admin" || userRole === "district_admin") && (
+          {userRole === "state_admin" && (
             <select 
               className="w-full px-3 py-2 border rounded-md text-sm bg-background"
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
             >
               <option value="">All Districts</option>
-              <option value="Thrissur">Thrissur</option>
-              <option value="Malappuram">Malappuram</option>
-              <option value="Kozhikode">Kozhikode</option>
+              {districts.map((district) => (
+                <option key={district._id} value={district._id}>
+                  {district.name} ({district.code})
+                </option>
+              ))}
             </select>
           )}
           
           <div className="grid grid-cols-2 gap-2">
-            <select 
-              className="px-3 py-2 border rounded-md text-sm bg-background"
-              value={selectedGroup}
-              onChange={(e) => setSelectedGroup(e.target.value)}
-            >
-              <option value="">All Groups</option>
-              <option value="Varantharappalli">Varantharappalli</option>
-              <option value="Perumpilavu">Perumpilavu</option>
-            </select>
+            {(userRole === "state_admin" || userRole === "district_admin") ? (
+              <select 
+                className="px-3 py-2 border rounded-md text-sm bg-background"
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+              >
+                <option value="">All Groups</option>
+                {groups.map((group) => (
+                  <option key={group._id} value={group._id}>
+                    {group.name} ({group.code})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div></div>
+            )}
             <select 
               className="px-3 py-2 border rounded-md text-sm bg-background"
               value={selectedStatus}
@@ -189,19 +328,19 @@ const Members = () => {
         <div className="grid grid-cols-3 gap-2 mb-4">
           <Card className="shadow-sm">
             <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-primary">{statusCounts.total}</p>
+              <p className="text-2xl font-bold text-primary">{statistics.total}</p>
               <p className="text-xs text-muted-foreground">Total</p>
             </div>
           </Card>
           <Card className="shadow-sm">
             <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-success">{statusCounts.active}</p>
+              <p className="text-2xl font-bold text-success">{statistics.active}</p>
               <p className="text-xs text-muted-foreground">Active</p>
             </div>
           </Card>
           <Card className="shadow-sm">
             <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-orange-500">{statusCounts.applicant}</p>
+              <p className="text-2xl font-bold text-orange-500">{statistics.applicant}</p>
               <p className="text-xs text-muted-foreground">Applicant</p>
             </div>
           </Card>
@@ -209,98 +348,181 @@ const Members = () => {
         <div className="grid grid-cols-4 gap-2 mb-4">
           <Card className="shadow-sm">
             <div className="p-2 text-center">
-              <p className="text-lg font-bold text-muted-foreground">{statusCounts.inactive}</p>
+              <p className="text-lg font-bold text-muted-foreground">{statistics.inactive}</p>
               <p className="text-xs text-muted-foreground">Inactive</p>
             </div>
           </Card>
           <Card className="shadow-sm">
             <div className="p-2 text-center">
-              <p className="text-lg font-bold text-blue-500">{statusCounts.abroad}</p>
+              <p className="text-lg font-bold text-blue-500">{statistics.abroad}</p>
               <p className="text-xs text-muted-foreground">Abroad</p>
             </div>
           </Card>
           <Card className="shadow-sm">
             <div className="p-2 text-center">
-              <p className="text-lg font-bold text-muted-foreground">{statusCounts.ageOver}</p>
+              <p className="text-lg font-bold text-muted-foreground">{statistics.ageOver}</p>
               <p className="text-xs text-muted-foreground">Age over</p>
             </div>
           </Card>
           <Card className="shadow-sm">
             <div className="p-2 text-center">
-              <p className="text-lg font-bold text-destructive">{statusCounts.dismissed}</p>
+              <p className="text-lg font-bold text-destructive">{statistics.dismissed}</p>
               <p className="text-xs text-muted-foreground">Dismissed</p>
             </div>
           </Card>
         </div>
+        
+        {/* Pagination Info */}
+        <div className="text-center text-sm text-muted-foreground mb-4">
+          Showing {members.length} of {totalDocs} members
+          {totalPages > 1 && (
+            <span> • Page {currentPage} of {totalPages}</span>
+          )}
+        </div>
       </div>
 
       <main className="p-4 space-y-3">
-        {filteredMembers.map((member) => (
-          <Card key={member.id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-            <div 
-              className="p-4"
-              onClick={() => navigate(`/member/${member.id}`)}
-            >
-              <h3 className="font-semibold text-lg mb-1">{member.name}</h3>
-              <p className="text-sm text-muted-foreground mb-1">{member.email}</p>
-              <a 
-                href={`tel:${member.phone}`} 
-                className="text-sm text-primary flex items-center gap-1 mb-2"
-                onClick={(e) => e.stopPropagation()}
+        {members.length === 0 ? (
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No members found</p>
+            {userRole !== 'group_admin' && (
+              <Button 
+                onClick={() => navigate('/add-member')} 
+                className="mt-4"
               >
-                {member.phone}
-              </a>
-              <Badge
-                variant={member.status === "Active" ? "default" : "secondary"}
-                className={member.status === "Active" ? "bg-success" : "bg-orange-100 text-orange-800"}
+                Add First Member
+              </Button>
+            )}
+          </div>
+        ) : (
+          members.map((member) => (
+            <Card key={member._id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+              <div 
+                className="p-4"
+                onClick={() => navigate(`/member/${member._id}`)}
               >
-                {member.status}
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-2">{member.group}</p>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-lg">{member.name}</h3>
+                  {!member.isApproved && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-600">
+                      Pending
+                    </Badge>
+                  )}
+                </div>
+                
+                <p className="text-sm text-muted-foreground mb-1">
+                  {member.email || "No email"}
+                </p>
+                <a 
+                  href={`tel:${member.phone}`} 
+                  className="text-sm text-primary flex items-center gap-1 mb-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {member.phone}
+                </a>
+                
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge
+                    variant={member.status === "Active" ? "default" : "secondary"}
+                    className={
+                      member.status === "Active" 
+                        ? "bg-success" 
+                        : member.status === "Applicant"
+                        ? "bg-orange-100 text-orange-800"
+                        : member.status === "Abroad"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-gray-100 text-gray-800"
+                    }
+                  >
+                    {member.status}
+                  </Badge>
+                  {member.transferRequest && (
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        member.transferRequest.status === 'pending'
+                          ? "bg-yellow-100 text-yellow-800 border-yellow-300 flex items-center gap-1"
+                          : "bg-green-100 text-green-800 border-green-300 flex items-center gap-1"
+                      }
+                    >
+                      <Clock className="h-3 w-3" />
+                      Transfer {member.transferRequest.status === 'pending' ? 'Pending' : 'Approved'}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="text-sm text-muted-foreground mb-3">
+                  <p>{member.group.name} ({member.group.code})</p>
+                  <p>{member.district.name} ({member.district.code})</p>
+                </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/member/${member.id}/edit`);
-                  }}
-                >
-                  <Edit className="h-5 w-5 text-primary" />
-                  <span className="text-xs text-center leading-tight">Edit Request</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedMember(member);
-                    setShowTransfer(true);
-                  }}
-                >
-                  <ArrowRightLeft className="h-5 w-5 text-success" />
-                  <span className="text-xs text-center leading-tight">Transfer</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center gap-1 h-auto py-2 px-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedMember(member);
-                    setShowBaithul(true);
-                  }}
-                >
-                  <Wallet className="h-5 w-5 text-primary" />
-                  <span className="text-xs text-center leading-tight">Baithul Maal</span>
-                </Button>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/member/${member._id}/edit`);
+                    }}
+                  >
+                    <Edit className="h-5 w-5 text-primary" />
+                    <span className="text-xs text-center leading-tight">Edit Request</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    disabled={!!member.transferRequest}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMember(member);
+                      setShowTransfer(true);
+                    }}
+                  >
+                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest ? 'text-muted-foreground' : 'text-success'}`} />
+                    <span className="text-xs text-center leading-tight">Transfer</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMember(member);
+                      setShowBaithul(true);
+                    }}
+                  >
+                    <Wallet className="h-5 w-5 text-primary" />
+                    <span className="text-xs text-center leading-tight">Baithul Maal</span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
+        
+        {/* Load More Button */}
+        {hasNextPage && (
+          <div className="text-center py-4">
+            <Button 
+              onClick={loadMoreMembers}
+              disabled={loadingMore}
+              variant="outline"
+              className="w-full max-w-xs"
+            >
+              {loadingMore ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                  Loading...
+                </>
+              ) : (
+                `Load More (${totalDocs - members.length} remaining)`
+              )}
+            </Button>
+          </div>
+        )}
       </main>
 
       <TransferMemberDialog
@@ -313,6 +535,17 @@ const Members = () => {
         onOpenChange={setShowBaithul}
         member={selectedMember}
       />
+
+      {/* Floating Add Member Button */}
+      {userRole !== 'group_admin' && (
+        <Button
+          onClick={() => navigate('/add-member')}
+          className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
+          size="icon"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
 
       <BottomNav />
     </div>

@@ -6,26 +6,52 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
+import { notificationService } from "@/services/notificationService";
 
 const SendNotification = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     message: "",
-    type: "General",
     targetAudience: "all",
-    district: "",
-    group: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Notification sent:", formData);
-    toast({
-      title: "Notification Sent",
-      description: "Your notification has been sent successfully.",
-    });
-    navigate("/notifications");
+    
+    if (!formData.title.trim() || !formData.message.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await notificationService.createNotification({
+        title: formData.title.trim(),
+        message: formData.message.trim(),
+        targetAudience: formData.targetAudience,
+      });
+      
+      toast({
+        title: "Success",
+        description: "Notification created successfully as draft",
+      });
+      navigate("/notifications");
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create notification. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,76 +90,39 @@ const SendNotification = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Type</label>
-              <select
-                required
-                className="w-full px-3 py-2 border rounded-md bg-background"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              >
-                <option value="General">General</option>
-                <option value="Meeting">Meeting</option>
-                <option value="Payment">Payment</option>
-                <option value="Activity">Activity</option>
-                <option value="Urgent">Urgent</option>
-              </select>
-            </div>
-
-            <div>
               <label className="text-sm font-medium mb-2 block">Target Audience</label>
               <select
-                required
                 className="w-full px-3 py-2 border rounded-md bg-background"
                 value={formData.targetAudience}
                 onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
               >
                 <option value="all">All Members</option>
-                <option value="district">Specific District</option>
-                <option value="group">Specific Group</option>
-                <option value="admins">All Admins</option>
+                <option value="members">Members Only</option>
+                <option value="group_admins">Group Admins Only</option>
               </select>
             </div>
 
-            {formData.targetAudience === "district" && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select District</label>
-                <select
-                  required
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  value={formData.district}
-                  onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                >
-                  <option value="">Select District</option>
-                  <option value="Thrissur">Thrissur</option>
-                  <option value="Malappuram">Malappuram</option>
-                  <option value="Kozhikode">Kozhikode</option>
-                </select>
-              </div>
-            )}
-
-            {formData.targetAudience === "group" && (
-              <div>
-                <label className="text-sm font-medium mb-2 block">Select Group</label>
-                <select
-                  required
-                  className="w-full px-3 py-2 border rounded-md bg-background"
-                  value={formData.group}
-                  onChange={(e) => setFormData({ ...formData, group: e.target.value })}
-                >
-                  <option value="">Select Group</option>
-                  <option value="Varantharappalli">Varantharappalli</option>
-                  <option value="Perumpilavu">Perumpilavu</option>
-                </select>
-              </div>
-            )}
-
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/notifications")}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => navigate("/notifications")}
+                disabled={loading}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90">
-                <Send className="h-4 w-4 mr-2" />
-                Send Notification
+              <Button 
+                type="submit" 
+                className="flex-1 bg-primary hover:bg-primary/90"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                {loading ? "Creating..." : "Create Notification"}
               </Button>
             </div>
           </form>

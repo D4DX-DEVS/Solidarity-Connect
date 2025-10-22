@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
@@ -13,6 +14,7 @@ import ManageGroups from "./pages/ManageGroups";
 import TransferApprovals from "./pages/TransferApprovals";
 import MeetingAgenda from "./pages/MeetingAgenda";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
+import MeetingDetail from "./pages/MeetingDetail";
 import Members from "./pages/Members";
 import MemberDetail from "./pages/MemberDetail";
 import EditMemberDetails from "./pages/EditMemberDetails";
@@ -22,8 +24,12 @@ import Meetings from "./pages/Meetings";
 import Requests from "./pages/Requests";
 import Notifications from "./pages/Notifications";
 import SendNotification from "./pages/SendNotification";
+import EditNotification from "./pages/EditNotification";
+import NotificationDetail from "./pages/NotificationDetail";
 import BaithulDataView from "./pages/BaithulDataView";
 import MembersGroupReport from "./pages/MembersGroupReport";
+import StateAdminMeetings from "./pages/StateAdminMeetings";
+import AdminMeetingsView from "./pages/AdminMeetingsView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,25 +44,30 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/state-admin" element={<StateAdmin />} />
-            <Route path="/state-admin/districts" element={<ManageDistricts />} />
-            <Route path="/state-admin/groups" element={<ManageGroups />} />
-            <Route path="/state-admin/transfer-approvals" element={<TransferApprovals />} />
-            <Route path="/state-admin/meeting-agenda" element={<MeetingAgenda />} />
-            <Route path="/state-admin/create-meeting" element={<CreateMeetingAgenda />} />
-            <Route path="/state-admin/send-notification" element={<SendNotification />} />
-            <Route path="/state-admin/baithul-data" element={<BaithulDataView />} />
-            <Route path="/state-admin/group-reports" element={<MembersGroupReport />} />
-            <Route path="/district-admin" element={<DistrictAdmin />} />
-            <Route path="/members" element={<Members />} />
-            <Route path="/member/:id" element={<MemberDetail />} />
-            <Route path="/member/:id/edit" element={<EditMemberDetails />} />
-            <Route path="/add-member" element={<AddMember />} />
-            <Route path="/bulk-import" element={<BulkImport />} />
-            <Route path="/meetings" element={<Meetings />} />
-            <Route path="/requests" element={<Requests />} />
-            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
+            <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
+            <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageGroups /></ProtectedRoute>} />
+            <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin']}><TransferApprovals /></ProtectedRoute>} />
+            <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingAgenda /></ProtectedRoute>} />
+            <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
+            <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingDetail /></ProtectedRoute>} />
+            <Route path="/state-admin/send-notification" element={<ProtectedRoute requiredRoles={['state_admin']}><SendNotification /></ProtectedRoute>} />
+            <Route path="/state-admin/edit-notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><EditNotification /></ProtectedRoute>} />
+            <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
+            <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin']}><BaithulDataView /></ProtectedRoute>} />
+            <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin']}><MembersGroupReport /></ProtectedRoute>} />
+            <Route path="/state-admin/meetings" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><StateAdminMeetings /></ProtectedRoute>} />
+            <Route path="/admin/meetings-view" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute>} />
+            <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />
+            <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            <Route path="/member/:id" element={<ProtectedRoute><MemberDetail /></ProtectedRoute>} />
+            <Route path="/member/:id/edit" element={<ProtectedRoute><EditMemberDetails /></ProtectedRoute>} />
+            <Route path="/add-member" element={<ProtectedRoute><AddMember /></ProtectedRoute>} />
+            <Route path="/bulk-import" element={<ProtectedRoute><BulkImport /></ProtectedRoute>} />
+            <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+            <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
