@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Trash2, Plus } from "lucide-react";
+import { baithulMaalAPI } from "@/utils/api";
 
 interface Payment {
   _id: string;
@@ -71,17 +72,8 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/baithul-maal-payments/member/${member._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setPayments(result.data || []);
-      }
+      const result = await baithulMaalAPI.getMemberPayments(member._id);
+      setPayments(result.data || []);
     } catch (error) {
       console.error('Failed to fetch payments:', error);
     }
@@ -94,31 +86,20 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const url = editingPayment 
-        ? `/api/baithul-maal-payments/${editingPayment._id}`
-        : '/api/baithul-maal-payments';
-      
-      const method = editingPayment ? 'PUT' : 'POST';
       const payload = editingPayment 
         ? formData 
         : { ...formData, member: member._id };
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+      if (editingPayment) {
+        await baithulMaalAPI.updatePayment(editingPayment._id, formData);
+      } else {
+        await baithulMaalAPI.createPayment(payload);
+      }
+
+      toast({
+        title: "Success",
+        description: editingPayment ? "Payment updated successfully" : "Payment recorded successfully",
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: editingPayment ? "Payment updated successfully" : "Payment recorded successfully",
-        });
         
         // Reset form and refresh payments
         setFormData({
@@ -165,28 +146,13 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/baithul-maal-payments/${paymentId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      await baithulMaalAPI.deletePayment(paymentId);
+      
+      toast({
+        title: "Success",
+        description: "Payment record deleted successfully",
       });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Payment record deleted successfully",
-        });
-        fetchPayments();
-      } else {
-        const result = await response.json();
-        toast({
-          title: "Error",
-          description: result.message || "Failed to delete payment",
-          variant: "destructive"
-        });
-      }
+      fetchPayments();
     } catch (error) {
       console.error('Failed to delete payment:', error);
       toast({

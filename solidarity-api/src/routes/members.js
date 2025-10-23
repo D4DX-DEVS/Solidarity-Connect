@@ -31,6 +31,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       isApproved
     } = req.query;
 
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(limit) || 20), 100); // Between 1 and 100
+
     // Build filter based on user role
     let filter = {};
     
@@ -49,25 +53,37 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     if (group && ['state_admin', 'district_admin'].includes(req.user.role)) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
 
-    // Search functionality
+    // Search functionality - optimized for better performance
     if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { phone: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
+      const searchTerm = search.trim();
+      if (searchTerm.length >= 2) { // Only search if at least 2 characters
+        // Use text index if available, otherwise use regex
+        if (searchTerm.match(/^\+?[0-9]+$/)) {
+          // If search looks like a phone number, search phone field specifically
+          filter.phone = { $regex: searchTerm, $options: 'i' };
+        } else {
+          // For text search, use $or with regex
+          filter.$or = [
+            { name: { $regex: searchTerm, $options: 'i' } },
+            { phone: { $regex: searchTerm, $options: 'i' } },
+            { email: { $regex: searchTerm, $options: 'i' } }
+          ];
+        }
+      }
     }
 
     const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: pageNum,
+      limit: limitNum,
       sort,
       populate: [
         { path: 'district', select: 'name code' },
         { path: 'group', select: 'name code' },
         { path: 'createdBy', select: 'name phone' },
         { path: 'approvedBy', select: 'name phone' }
-      ]
+      ],
+      lean: false, // Keep as false to maintain mongoose document methods
+      leanWithId: false
     };
 
     const result = await Member.paginate(filter, options);
@@ -114,6 +130,14 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       }
     ]);
 
+    // Add cache headers for better performance
+    res.set({
+      'Cache-Control': 'private, max-age=60', // Cache for 1 minute
+      'X-Total-Count': result.totalDocs.toString(),
+      'X-Page-Count': result.totalPages.toString(),
+      'X-Current-Page': result.page.toString()
+    });
+
     res.status(200).json({
       success: true,
       data: membersWithTransferStatus,
@@ -123,7 +147,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         totalDocs: result.totalDocs,
         limit: result.limit,
         hasNextPage: result.hasNextPage,
-        hasPrevPage: result.hasPrevPage
+        hasPrevPage: result.hasPrevPage,
+        offset: (result.page - 1) * result.limit,
+        nextPage: result.hasNextPage ? result.page + 1 : null,
+        prevPage: result.hasPrevPage ? result.page - 1 : null
       },
       statistics: stats[0] || {
         total: 0, active: 0, inactive: 0, abroad: 0, 

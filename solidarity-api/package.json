@@ -7,7 +7,6 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/utils/seedData.js",
     "test": "jest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"

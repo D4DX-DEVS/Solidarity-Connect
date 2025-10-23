@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { apiCall } from "@/utils/api";
 import { Target, Plus, Edit, Trash2, Users, Calendar, TrendingUp } from "lucide-react";
 
 interface PersonalTarget {
@@ -68,25 +69,7 @@ const PersonalTargets = () => {
     active: true
   });
 
-  const apiCall = async (endpoint: string, options?: RequestInit) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        ...options?.headers
-      },
-      ...options
-    });
-
-    if (!response.ok) {
-      if (response.status === 403) {
-        throw new Error('You do not have permission to perform this action. Only State Admins can manage personal targets.');
-      }
-      throw new Error(`API request failed: ${response.status}`);
-    }
-
-    return response.json();
-  };
+  // Use the common API utility
 
   useEffect(() => {
     fetchData();

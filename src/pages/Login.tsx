@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { authAPI, memberAuthAPI } from "@/utils/api";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
@@ -31,54 +32,34 @@ const Login = () => {
     try {
       console.log('Sending OTP request with phone:', phone, 'userType:', userType);
 
-      // Use different endpoint for member login
-      const endpoint = userType === 'member' ? 
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/send-otp` :
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/send-otp`;
+      let result;
+      if (userType === 'member') {
+        result = await memberAuthAPI.sendOTP(phone);
+      } else {
+        result = await authAPI.sendOTP(phone, userType);
+      }
 
-      const requestBody = userType === 'member' ? 
-        { phone: phone } : 
-        { phone: phone, userType };
+      setShowOtp(true);
+      setOtpExpiry(new Date(result.data.expiresAt));
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+      toast({
+        title: "OTP Sent",
+        description: result.message,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        setShowOtp(true);
-        setOtpExpiry(new Date(result.data.expiresAt));
-
+      // Show demo OTP in development
+      if (result.data.demoOTP) {
         toast({
-          title: "OTP Sent",
-          description: result.message,
-        });
-
-        // Show demo OTP in development
-        if (result.data.demoOTP) {
-          toast({
-            title: "Demo OTP",
-            description: `Use OTP: ${result.data.demoOTP}`,
-            duration: 10000,
-          });
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to send OTP",
-          variant: "destructive"
+          title: "Demo OTP",
+          description: `Use OTP: ${result.data.demoOTP}`,
+          duration: 10000,
         });
       }
     } catch (error) {
       console.error('Send OTP error:', error);
       toast({
         title: "Error",
-        description: "Failed to send OTP. Please try again.",
+        description: error.message || "Failed to send OTP. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -116,57 +97,37 @@ const Login = () => {
     try {
       console.log('Verifying OTP with phone:', phone, 'otp:', otpValue, 'userType:', userType);
 
-      // Use different endpoint for member login
-      const endpoint = userType === 'member' ? 
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/verify-otp` :
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/verify-otp`;
+      let result;
+      if (userType === 'member') {
+        result = await memberAuthAPI.verifyOTP(phone, otpValue);
+      } else {
+        result = await authAPI.verifyOTP(phone, otpValue, userType);
+      }
 
-      const requestBody = userType === 'member' ? 
-        { phone: phone, otp: otpValue } : 
-        { phone: phone, otp: otpValue, userType };
+      const userData = userType === 'member' ? result.data.member : result.data.user;
+      login(result.data.token, userData, userType);
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+      toast({
+        title: "Login Successful",
+        description: result.message,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        const userData = userType === 'member' ? result.data.member : result.data.user;
-        login(result.data.token, userData, userType);
-
-        toast({
-          title: "Login Successful",
-          description: result.message,
-        });
-
-        // Navigate to different dashboard based on user type
-        if (userType === 'member') {
-          navigate("/member-dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+      // Navigate to different dashboard based on user type
+      if (userType === 'member') {
+        navigate("/member-dashboard");
       } else {
-        toast({
-          title: "Error",
-          description: result.message || "Invalid OTP",
-          variant: "destructive"
-        });
-
-        // Clear OTP on error
-        setOtp(["", "", "", ""]);
+        navigate("/dashboard");
       }
     } catch (error) {
       console.error('Verify OTP error:', error);
       toast({
         title: "Error",
-        description: "Failed to verify OTP. Please try again.",
+        description: error.message || "Failed to verify OTP. Please try again.",
         variant: "destructive"
       });
+
+      // Clear OTP on error
+      setOtp(["", "", "", ""]);
     } finally {
       setLoading(false);
     }
@@ -175,54 +136,34 @@ const Login = () => {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      // Use different endpoint for member login
-      const endpoint = userType === 'member' ? 
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/resend-otp` :
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/resend-otp`;
+      let result;
+      if (userType === 'member') {
+        result = await memberAuthAPI.resendOTP(phone);
+      } else {
+        result = await authAPI.resendOTP(phone, userType);
+      }
 
-      const requestBody = userType === 'member' ? 
-        { phone: phone } : 
-        { phone: phone, userType };
+      setOtpExpiry(new Date(result.data.expiresAt));
+      setOtp(["", "", "", ""]);
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(requestBody)
+      toast({
+        title: "OTP Resent",
+        description: result.message,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        setOtpExpiry(new Date(result.data.expiresAt));
-        setOtp(["", "", "", ""]);
-
+      // Show demo OTP in development
+      if (result.data.demoOTP) {
         toast({
-          title: "OTP Resent",
-          description: result.message,
-        });
-
-        // Show demo OTP in development
-        if (result.data.demoOTP) {
-          toast({
-            title: "Demo OTP",
-            description: `Use OTP: ${result.data.demoOTP}`,
-            duration: 10000,
-          });
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to resend OTP",
-          variant: "destructive"
+          title: "Demo OTP",
+          description: `Use OTP: ${result.data.demoOTP}`,
+          duration: 10000,
         });
       }
     } catch (error) {
       console.error('Resend OTP error:', error);
       toast({
         title: "Error",
-        description: "Failed to resend OTP. Please try again.",
+        description: error.message || "Failed to resend OTP. Please try again.",
         variant: "destructive"
       });
     } finally {

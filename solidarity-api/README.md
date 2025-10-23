@@ -352,12 +352,6 @@ npm test
 npm run lint
 ```
 
-### Database Seeding
-```bash
-# Create sample data for development
-npm run seed
-```
-
 ## Deployment
 
 ### Environment Variables for Production

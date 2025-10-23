@@ -2,7 +2,7 @@
 
 /**
  * Solidarity API Startup Script
- * This script provides options to start the server or seed the database
+ * This script provides options to start the server
  */
 
 import { spawn } from 'child_process';
@@ -51,32 +51,16 @@ async function main() {
         await runCommand('npm', ['start']);
         break;
 
-      case 'seed':
-        console.log('🌱 Seeding database...');
-        await runCommand('npm', ['run', 'seed']);
-        break;
-
       case 'install':
         console.log('📦 Installing dependencies...');
         await runCommand('npm', ['install']);
-        break;
-
-      case 'setup':
-        console.log('⚙️  Setting up project...');
-        console.log('📦 Installing dependencies...');
-        await runCommand('npm', ['install']);
-        console.log('🌱 Seeding database...');
-        await runCommand('npm', ['run', 'seed']);
-        console.log('✅ Setup complete!');
         break;
 
       default:
         console.log('Available commands:');
         console.log('  dev     - Start development server with nodemon');
         console.log('  start   - Start production server');
-        console.log('  seed    - Seed database with sample data');
         console.log('  install - Install dependencies');
-        console.log('  setup   - Install dependencies and seed database');
         console.log('\nUsage: node start.js <command>');
         console.log('Example: node start.js dev');
         break;

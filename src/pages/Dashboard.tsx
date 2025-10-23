@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { reportsAPI } from "@/utils/api";
 
 interface DashboardData {
   memberStatistics: {
@@ -42,19 +43,8 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('/api/reports/dashboard', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-          setDashboardData(result.data);
-        } else {
+        const result = await reportsAPI.getDashboard();
+        setDashboardData(result.data);
           toast({
             title: "Error",
             description: result.message || "Failed to fetch dashboard data",

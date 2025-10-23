@@ -1,18 +1,9 @@
 [
   {
-    "rowNumber": 6,
-    "name": "MUJUMAL M",
-    "originalPhone": "",
-    "assignedPhone": "+916000000000",
-    "issueType": "INVALID",
-    "district": "ALAPPUZHA",
-    "group": "CHERTHALA"
-  },
-  {
     "rowNumber": 40,
     "name": "Mubarak",
     "originalPhone": "Student",
-    "assignedPhone": "+916000000001",
+    "assignedPhone": "+916000000000",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -21,7 +12,7 @@
     "rowNumber": 41,
     "name": "Muhammed Anas S",
     "originalPhone": "Business",
-    "assignedPhone": "+916000000002",
+    "assignedPhone": "+916000000001",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -30,7 +21,7 @@
     "rowNumber": 42,
     "name": "JAHAS E",
     "originalPhone": "Ware house assistant",
-    "assignedPhone": "+916000000003",
+    "assignedPhone": "+916000000002",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -39,7 +30,7 @@
     "rowNumber": 43,
     "name": "HILAL IDRIS",
     "originalPhone": "business",
-    "assignedPhone": "+916000000004",
+    "assignedPhone": "+916000000003",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -48,7 +39,7 @@
     "rowNumber": 44,
     "name": "HABEEB RAHMAN",
     "originalPhone": "Supervision in Interlock Tile firm",
-    "assignedPhone": "+916000000005",
+    "assignedPhone": "+916000000004",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -57,7 +48,7 @@
     "rowNumber": 45,
     "name": "NIYAS",
     "originalPhone": "Business",
-    "assignedPhone": "+916000000006",
+    "assignedPhone": "+916000000005",
     "issueType": "INVALID",
     "district": "ALAPPUZHA",
     "group": "KAYAMKULAM"
@@ -66,17 +57,8 @@
     "rowNumber": 49,
     "name": "Asarsha A",
     "originalPhone": "",
-    "assignedPhone": "+916000000007",
+    "assignedPhone": "+916000000006",
     "issueType": "INVALID",
-    "district": "ALAPPUZHA",
-    "group": "HARIPPAD"
-  },
-  {
-    "rowNumber": 50,
-    "name": "Dr Azhar Pookunju",
-    "originalPhone": "+919495620175",
-    "assignedPhone": "+916000000008",
-    "issueType": "DUPLICATE",
     "district": "ALAPPUZHA",
     "group": "HARIPPAD"
   },
@@ -84,7 +66,7 @@
     "rowNumber": 64,
     "name": "MOHAMMED ZAHIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000009",
+    "assignedPhone": "+916000000007",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "ALUVA"
@@ -93,7 +75,7 @@
     "rowNumber": 91,
     "name": "SABIR A.M",
     "originalPhone": "",
-    "assignedPhone": "+916000000010",
+    "assignedPhone": "+916000000008",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KALAMASSERY-PANAYIKULAM"
@@ -102,7 +84,7 @@
     "rowNumber": 107,
     "name": "NOUFAL P P",
     "originalPhone": "",
-    "assignedPhone": "+916000000011",
+    "assignedPhone": "+916000000009",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -111,7 +93,7 @@
     "rowNumber": 109,
     "name": "NIYAS.K.NAZAR",
     "originalPhone": "",
-    "assignedPhone": "+916000000012",
+    "assignedPhone": "+916000000010",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -120,7 +102,7 @@
     "rowNumber": 111,
     "name": "ASLAM SAGEER P",
     "originalPhone": "",
-    "assignedPhone": "+916000000013",
+    "assignedPhone": "+916000000011",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -129,7 +111,7 @@
     "rowNumber": 113,
     "name": "ANSHAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000014",
+    "assignedPhone": "+916000000012",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -138,7 +120,7 @@
     "rowNumber": 114,
     "name": "MOHAMMED NAVAR NAZAR",
     "originalPhone": "",
-    "assignedPhone": "+916000000015",
+    "assignedPhone": "+916000000013",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -147,7 +129,7 @@
     "rowNumber": 116,
     "name": "ABU MUQTHAR T.A",
     "originalPhone": "",
-    "assignedPhone": "+916000000016",
+    "assignedPhone": "+916000000014",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -156,7 +138,7 @@
     "rowNumber": 117,
     "name": "MOHAMMED SHIYAS M.S",
     "originalPhone": "",
-    "assignedPhone": "+916000000017",
+    "assignedPhone": "+916000000015",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -165,7 +147,7 @@
     "rowNumber": 118,
     "name": "AMEER RAZAK",
     "originalPhone": "",
-    "assignedPhone": "+916000000018",
+    "assignedPhone": "+916000000016",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -174,7 +156,7 @@
     "rowNumber": 119,
     "name": "NUBAIL P.N",
     "originalPhone": "",
-    "assignedPhone": "+916000000019",
+    "assignedPhone": "+916000000017",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -183,7 +165,7 @@
     "rowNumber": 120,
     "name": "UBAID RAHMAN A",
     "originalPhone": "",
-    "assignedPhone": "+916000000020",
+    "assignedPhone": "+916000000018",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -192,7 +174,7 @@
     "rowNumber": 121,
     "name": "RAFI",
     "originalPhone": "",
-    "assignedPhone": "+916000000021",
+    "assignedPhone": "+916000000019",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -201,7 +183,7 @@
     "rowNumber": 122,
     "name": "HISHAM",
     "originalPhone": "",
-    "assignedPhone": "+916000000022",
+    "assignedPhone": "+916000000020",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -210,7 +192,7 @@
     "rowNumber": 123,
     "name": "MIRZAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000023",
+    "assignedPhone": "+916000000021",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -219,7 +201,7 @@
     "rowNumber": 124,
     "name": "HISHAM MOHAMMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000024",
+    "assignedPhone": "+916000000022",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -228,7 +210,7 @@
     "rowNumber": 125,
     "name": "MIRZAD MOIDEEN",
     "originalPhone": "",
-    "assignedPhone": "+916000000025",
+    "assignedPhone": "+916000000023",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -237,7 +219,7 @@
     "rowNumber": 126,
     "name": "MANSOOR P.A",
     "originalPhone": "",
-    "assignedPhone": "+916000000026",
+    "assignedPhone": "+916000000024",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -246,7 +228,7 @@
     "rowNumber": 127,
     "name": "SABIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000027",
+    "assignedPhone": "+916000000025",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -255,7 +237,7 @@
     "rowNumber": 128,
     "name": "SHANAVAS MOHAMMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000028",
+    "assignedPhone": "+916000000026",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -264,7 +246,7 @@
     "rowNumber": 129,
     "name": "MOHAMMED HAMIN",
     "originalPhone": "",
-    "assignedPhone": "+916000000029",
+    "assignedPhone": "+916000000027",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -273,7 +255,7 @@
     "rowNumber": 130,
     "name": "AMEEN RAZAK",
     "originalPhone": "",
-    "assignedPhone": "+916000000030",
+    "assignedPhone": "+916000000028",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -282,7 +264,7 @@
     "rowNumber": 131,
     "name": "SHAHID RAFI",
     "originalPhone": "",
-    "assignedPhone": "+916000000031",
+    "assignedPhone": "+916000000029",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -291,7 +273,7 @@
     "rowNumber": 132,
     "name": "MOHAMMED SHAMEER\n T.B",
     "originalPhone": "",
-    "assignedPhone": "+916000000032",
+    "assignedPhone": "+916000000030",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -300,7 +282,7 @@
     "rowNumber": 133,
     "name": "NAHAS",
     "originalPhone": "",
-    "assignedPhone": "+916000000033",
+    "assignedPhone": "+916000000031",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "KEEZHMAD-NEDUMBASSERY"
@@ -309,25 +291,16 @@
     "rowNumber": 149,
     "name": "SHAHUL.P",
     "originalPhone": "",
-    "assignedPhone": "+916000000034",
+    "assignedPhone": "+916000000032",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "MUVATTUPUZHA-KOTHAMANGALAM"
   },
   {
-    "rowNumber": 155,
-    "name": "THANSEEF SALIM",
-    "originalPhone": "",
-    "assignedPhone": "+916000000035",
-    "issueType": "INVALID",
-    "district": "ERANAKULAM",
-    "group": "KUNNATHUNAD"
-  },
-  {
     "rowNumber": 187,
     "name": "MUHAMMED RINSHAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000036",
+    "assignedPhone": "+916000000033",
     "issueType": "INVALID",
     "district": "ERANAKULAM",
     "group": "PERUMBAVOOR"
@@ -336,25 +309,16 @@
     "rowNumber": 197,
     "name": "Muhammad Anas PA",
     "originalPhone": "+919048711517",
-    "assignedPhone": "+916000000037",
+    "assignedPhone": "+916000000034",
     "issueType": "DUPLICATE",
     "district": "ERANAKULAM",
     "group": "PERUMBAVOOR"
   },
   {
-    "rowNumber": 198,
-    "name": "SHABANAS",
-    "originalPhone": "",
-    "assignedPhone": "+916000000038",
-    "issueType": "INVALID",
-    "district": "ERANAKULAM",
-    "group": "VAZHAKKULAM"
-  },
-  {
     "rowNumber": 213,
     "name": "Jaffar Sadiq",
     "originalPhone": "",
-    "assignedPhone": "+916000000039",
+    "assignedPhone": "+916000000035",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "CHAKKARAKKAL"
@@ -363,7 +327,7 @@
     "rowNumber": 238,
     "name": "MUHAMMED SHAMSEER",
     "originalPhone": "966 503491793",
-    "assignedPhone": "+916000000040",
+    "assignedPhone": "+916000000036",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "IRITTY"
@@ -372,7 +336,7 @@
     "rowNumber": 244,
     "name": "Arshad Chenoth",
     "originalPhone": "968 91258926",
-    "assignedPhone": "+916000000041",
+    "assignedPhone": "+916000000037",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "IRITTY"
@@ -381,7 +345,7 @@
     "rowNumber": 246,
     "name": "Navas V",
     "originalPhone": "",
-    "assignedPhone": "+916000000042",
+    "assignedPhone": "+916000000038",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "IRITTY"
@@ -390,7 +354,7 @@
     "rowNumber": 261,
     "name": "Hesham Khalid",
     "originalPhone": 966566881606,
-    "assignedPhone": "+916000000043",
+    "assignedPhone": "+916000000039",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -399,7 +363,7 @@
     "rowNumber": 263,
     "name": "Thahir Nakash C",
     "originalPhone": "",
-    "assignedPhone": "+916000000044",
+    "assignedPhone": "+916000000040",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -408,7 +372,7 @@
     "rowNumber": 264,
     "name": "Rashad M P",
     "originalPhone": "",
-    "assignedPhone": "+916000000045",
+    "assignedPhone": "+916000000041",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -417,7 +381,7 @@
     "rowNumber": 265,
     "name": "Haneef Muhammed P",
     "originalPhone": "",
-    "assignedPhone": "+916000000046",
+    "assignedPhone": "+916000000042",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -426,7 +390,7 @@
     "rowNumber": 266,
     "name": "ABDU MANAF .C",
     "originalPhone": "",
-    "assignedPhone": "+916000000047",
+    "assignedPhone": "+916000000043",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -435,7 +399,7 @@
     "rowNumber": 267,
     "name": "MISHAB .C",
     "originalPhone": "",
-    "assignedPhone": "+916000000048",
+    "assignedPhone": "+916000000044",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -444,7 +408,7 @@
     "rowNumber": 271,
     "name": "Shuhaib A",
     "originalPhone": "",
-    "assignedPhone": "+916000000049",
+    "assignedPhone": "+916000000045",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -453,7 +417,7 @@
     "rowNumber": 272,
     "name": "AFSAL C M",
     "originalPhone": "",
-    "assignedPhone": "+916000000050",
+    "assignedPhone": "+916000000046",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -462,7 +426,7 @@
     "rowNumber": 275,
     "name": "Mohammed Ansir",
     "originalPhone": "",
-    "assignedPhone": "+916000000051",
+    "assignedPhone": "+916000000047",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -471,7 +435,7 @@
     "rowNumber": 276,
     "name": "Mohammed Shibilly Ismail",
     "originalPhone": "",
-    "assignedPhone": "+916000000052",
+    "assignedPhone": "+916000000048",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "THALASSERY"
@@ -480,7 +444,7 @@
     "rowNumber": 287,
     "name": "Muhammed Feyiz",
     "originalPhone": "",
-    "assignedPhone": "+916000000053",
+    "assignedPhone": "+916000000049",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "PANOOR"
@@ -489,7 +453,7 @@
     "rowNumber": 291,
     "name": "MUNAVVIR .K.M",
     "originalPhone": "971 542020472",
-    "assignedPhone": "+916000000054",
+    "assignedPhone": "+916000000050",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "VALAPATTANAM"
@@ -498,7 +462,7 @@
     "rowNumber": 293,
     "name": "Sajir M",
     "originalPhone": "",
-    "assignedPhone": "+916000000055",
+    "assignedPhone": "+916000000051",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "VALAPATTANAM"
@@ -507,7 +471,7 @@
     "rowNumber": 298,
     "name": "Muhammed Aslam VS",
     "originalPhone": "",
-    "assignedPhone": "+916000000056",
+    "assignedPhone": "+916000000052",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "VALAPATTANAM"
@@ -516,7 +480,7 @@
     "rowNumber": 307,
     "name": "MUHAMMED JASEEL PK",
     "originalPhone": "",
-    "assignedPhone": "+916000000057",
+    "assignedPhone": "+916000000053",
     "issueType": "INVALID",
     "district": "KANNUR",
     "group": "KANNUR"
@@ -525,7 +489,7 @@
     "rowNumber": 321,
     "name": "Muhammed Ameen",
     "originalPhone": "",
-    "assignedPhone": "+916000000058",
+    "assignedPhone": "+916000000054",
     "issueType": "INVALID",
     "district": "KASARAGOD",
     "group": "KASARAGOD"
@@ -534,7 +498,7 @@
     "rowNumber": 329,
     "name": "SHAFEEF AHMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000059",
+    "assignedPhone": "+916000000055",
     "issueType": "INVALID",
     "district": "KASARAGOD",
     "group": "KANJANGAD"
@@ -543,7 +507,7 @@
     "rowNumber": 332,
     "name": "Mishab",
     "originalPhone": "+918606016263",
-    "assignedPhone": "+916000000060",
+    "assignedPhone": "+916000000056",
     "issueType": "DUPLICATE",
     "district": "KASARAGOD",
     "group": "KANJANGAD"
@@ -552,7 +516,7 @@
     "rowNumber": 333,
     "name": "Samseer P",
     "originalPhone": "",
-    "assignedPhone": "+916000000061",
+    "assignedPhone": "+916000000057",
     "issueType": "INVALID",
     "district": "KASARAGOD",
     "group": "KANJANGAD"
@@ -561,7 +525,7 @@
     "rowNumber": 347,
     "name": "Muhammed Yasir",
     "originalPhone": "",
-    "assignedPhone": "+916000000062",
+    "assignedPhone": "+916000000058",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "PALLURUTHY"
@@ -570,7 +534,7 @@
     "rowNumber": 365,
     "name": "MUNEER RAHMAN V.M",
     "originalPhone": "",
-    "assignedPhone": "+916000000063",
+    "assignedPhone": "+916000000059",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "VYPIN"
@@ -579,7 +543,7 @@
     "rowNumber": 372,
     "name": "Thasleem P K",
     "originalPhone": "",
-    "assignedPhone": "+916000000064",
+    "assignedPhone": "+916000000060",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "ERNAKULAM SOUTH-NORTH"
@@ -588,7 +552,7 @@
     "rowNumber": 380,
     "name": "Afnas M Saifuddin",
     "originalPhone": 97455638642,
-    "assignedPhone": "+916000000065",
+    "assignedPhone": "+916000000061",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "ERNAKULAM SOUTH-NORTH"
@@ -597,43 +561,25 @@
     "rowNumber": 385,
     "name": "SAFAL MON",
     "originalPhone": "",
-    "assignedPhone": "+916000000066",
+    "assignedPhone": "+916000000062",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "ERNAKULAM SOUTH-NORTH"
   },
   {
-    "rowNumber": 392,
-    "name": "Thanzeer K m",
-    "originalPhone": "",
-    "assignedPhone": "+916000000067",
-    "issueType": "INVALID",
-    "district": "KOCHI CITY",
-    "group": "VYTILA"
-  },
-  {
     "rowNumber": 399,
     "name": "ISMAIL MADAMBILLATH",
     "originalPhone": "",
-    "assignedPhone": "+916000000068",
+    "assignedPhone": "+916000000063",
     "issueType": "INVALID",
     "district": "KOCHI CITY",
     "group": "VYTILA"
-  },
-  {
-    "rowNumber": 400,
-    "name": "Rashid M R",
-    "originalPhone": "",
-    "assignedPhone": "+916000000069",
-    "issueType": "INVALID",
-    "district": "KOCHI CITY",
-    "group": "KOCHI"
   },
   {
     "rowNumber": 408,
     "name": "Aleef",
     "originalPhone": "974 7026 6502",
-    "assignedPhone": "+916000000070",
+    "assignedPhone": "+916000000064",
     "issueType": "INVALID",
     "district": "KOLLAM",
     "group": "CHADAYAMANGALAM"
@@ -642,7 +588,7 @@
     "rowNumber": 426,
     "name": "Shamnad",
     "originalPhone": "",
-    "assignedPhone": "+916000000071",
+    "assignedPhone": "+916000000065",
     "issueType": "INVALID",
     "district": "KOLLAM",
     "group": "KARUNAGAPALLY"
@@ -651,7 +597,7 @@
     "rowNumber": 459,
     "name": "Bassam",
     "originalPhone": 971507133927,
-    "assignedPhone": "+916000000072",
+    "assignedPhone": "+916000000066",
     "issueType": "INVALID",
     "district": "KOLLAM",
     "group": "ANCHAL-KADAKKAL"
@@ -660,7 +606,7 @@
     "rowNumber": 470,
     "name": "NIHAS",
     "originalPhone": "9061772359, 7012455829",
-    "assignedPhone": "+916000000073",
+    "assignedPhone": "+916000000067",
     "issueType": "INVALID",
     "district": "KOLLAM",
     "group": "ANCHAL-KADAKKAL"
@@ -669,7 +615,7 @@
     "rowNumber": 479,
     "name": "Sinaj",
     "originalPhone": "",
-    "assignedPhone": "+916000000074",
+    "assignedPhone": "+916000000068",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "ERATUPETTA"
@@ -678,7 +624,7 @@
     "rowNumber": 480,
     "name": "Mahin K K",
     "originalPhone": "",
-    "assignedPhone": "+916000000075",
+    "assignedPhone": "+916000000069",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "ERATUPETTA"
@@ -687,7 +633,7 @@
     "rowNumber": 481,
     "name": "Raseem Jaleel",
     "originalPhone": "",
-    "assignedPhone": "+916000000076",
+    "assignedPhone": "+916000000070",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "ERATUPETTA"
@@ -696,7 +642,7 @@
     "rowNumber": 482,
     "name": "Anees Ahmed",
     "originalPhone": "",
-    "assignedPhone": "+916000000077",
+    "assignedPhone": "+916000000071",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "ERATUPETTA"
@@ -705,7 +651,7 @@
     "rowNumber": 483,
     "name": "ANWER SADIQUE",
     "originalPhone": 94,
-    "assignedPhone": "+916000000078",
+    "assignedPhone": "+916000000072",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "ERATUPETTA"
@@ -714,16 +660,7 @@
     "rowNumber": 490,
     "name": "Noufal Noushad",
     "originalPhone": 966557810692,
-    "assignedPhone": "+916000000079",
-    "issueType": "INVALID",
-    "district": "KOTTAYAM",
-    "group": "CHANGANASSERY-KOTTAYAM"
-  },
-  {
-    "rowNumber": 491,
-    "name": "Shemeer Salim",
-    "originalPhone": "Nil",
-    "assignedPhone": "+916000000080",
+    "assignedPhone": "+916000000073",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "CHANGANASSERY-KOTTAYAM"
@@ -732,7 +669,7 @@
     "rowNumber": 497,
     "name": "Shafeeq P A",
     "originalPhone": "",
-    "assignedPhone": "+916000000081",
+    "assignedPhone": "+916000000074",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -741,7 +678,7 @@
     "rowNumber": 498,
     "name": "Abdul Hakeem",
     "originalPhone": "",
-    "assignedPhone": "+916000000082",
+    "assignedPhone": "+916000000075",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -750,7 +687,7 @@
     "rowNumber": 499,
     "name": "Afkar Siddique",
     "originalPhone": "",
-    "assignedPhone": "+916000000083",
+    "assignedPhone": "+916000000076",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -759,7 +696,7 @@
     "rowNumber": 500,
     "name": "Aslam C Basheer",
     "originalPhone": "",
-    "assignedPhone": "+916000000084",
+    "assignedPhone": "+916000000077",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -768,7 +705,7 @@
     "rowNumber": 501,
     "name": "Shabeer Ismail",
     "originalPhone": "",
-    "assignedPhone": "+916000000085",
+    "assignedPhone": "+916000000078",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -777,7 +714,7 @@
     "rowNumber": 502,
     "name": "Afsar Siddique",
     "originalPhone": "",
-    "assignedPhone": "+916000000086",
+    "assignedPhone": "+916000000079",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -786,7 +723,7 @@
     "rowNumber": 503,
     "name": "Ajas Rasheed",
     "originalPhone": "",
-    "assignedPhone": "+916000000087",
+    "assignedPhone": "+916000000080",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -795,7 +732,7 @@
     "rowNumber": 505,
     "name": "Ashik C Noushad",
     "originalPhone": "",
-    "assignedPhone": "+916000000088",
+    "assignedPhone": "+916000000081",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -804,7 +741,7 @@
     "rowNumber": 506,
     "name": "Jasil Jaseel",
     "originalPhone": "",
-    "assignedPhone": "+916000000089",
+    "assignedPhone": "+916000000082",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -813,7 +750,7 @@
     "rowNumber": 507,
     "name": "Muhammed Muneer",
     "originalPhone": "",
-    "assignedPhone": "+916000000090",
+    "assignedPhone": "+916000000083",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
@@ -822,25 +759,16 @@
     "rowNumber": 508,
     "name": "HAFEES MUHAMMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000091",
+    "assignedPhone": "+916000000084",
     "issueType": "INVALID",
     "district": "KOTTAYAM",
     "group": "KANJIRAPPALLY"
   },
   {
-    "rowNumber": 534,
-    "name": "Abdul Hakeem",
-    "originalPhone": "",
-    "assignedPhone": "+916000000092",
-    "issueType": "INVALID",
-    "district": "PALAKKAD",
-    "group": "ALATHUR"
-  },
-  {
     "rowNumber": 560,
     "name": "Muhsin VK",
     "originalPhone": 97433773266,
-    "assignedPhone": "+916000000093",
+    "assignedPhone": "+916000000085",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "ALATHUR"
@@ -849,7 +777,7 @@
     "rowNumber": 563,
     "name": "Riyas M",
     "originalPhone": "",
-    "assignedPhone": "+916000000094",
+    "assignedPhone": "+916000000086",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PALAKKAD"
@@ -858,16 +786,7 @@
     "rowNumber": 565,
     "name": "Shameer N",
     "originalPhone": "",
-    "assignedPhone": "+916000000095",
-    "issueType": "INVALID",
-    "district": "PALAKKAD",
-    "group": "PALAKKAD"
-  },
-  {
-    "rowNumber": 571,
-    "name": "SHAMEEM MA",
-    "originalPhone": "",
-    "assignedPhone": "+916000000096",
+    "assignedPhone": "+916000000087",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PALAKKAD"
@@ -876,7 +795,7 @@
     "rowNumber": 576,
     "name": "Muhammed Shafeek A",
     "originalPhone": "",
-    "assignedPhone": "+916000000097",
+    "assignedPhone": "+916000000088",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -885,7 +804,7 @@
     "rowNumber": 577,
     "name": "Sulfeekkar N",
     "originalPhone": "",
-    "assignedPhone": "+916000000098",
+    "assignedPhone": "+916000000089",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -894,7 +813,7 @@
     "rowNumber": 578,
     "name": "Amshaj",
     "originalPhone": "",
-    "assignedPhone": "+916000000099",
+    "assignedPhone": "+916000000090",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -903,7 +822,7 @@
     "rowNumber": 579,
     "name": "Jaffar Sadiq",
     "originalPhone": "",
-    "assignedPhone": "+916000000100",
+    "assignedPhone": "+916000000091",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -912,7 +831,7 @@
     "rowNumber": 580,
     "name": "Muhammed Shafeeq",
     "originalPhone": "",
-    "assignedPhone": "+916000000101",
+    "assignedPhone": "+916000000092",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -921,7 +840,7 @@
     "rowNumber": 581,
     "name": "Saheer Abbas",
     "originalPhone": "",
-    "assignedPhone": "+916000000102",
+    "assignedPhone": "+916000000093",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -930,7 +849,7 @@
     "rowNumber": 582,
     "name": "SHIHABUDHEEN S",
     "originalPhone": "",
-    "assignedPhone": "+916000000103",
+    "assignedPhone": "+916000000094",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
@@ -939,25 +858,16 @@
     "rowNumber": 583,
     "name": "ABUTHAHIR A R",
     "originalPhone": "",
-    "assignedPhone": "+916000000104",
+    "assignedPhone": "+916000000095",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "CHITTUR"
   },
   {
-    "rowNumber": 585,
-    "name": "Kuttymoidu V",
-    "originalPhone": "",
-    "assignedPhone": "+916000000105",
-    "issueType": "INVALID",
-    "district": "PALAKKAD",
-    "group": "PATTAMBI"
-  },
-  {
     "rowNumber": 586,
     "name": "Marsook V",
     "originalPhone": "",
-    "assignedPhone": "+916000000106",
+    "assignedPhone": "+916000000096",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -966,7 +876,7 @@
     "rowNumber": 590,
     "name": "Thasneem M",
     "originalPhone": "",
-    "assignedPhone": "+916000000107",
+    "assignedPhone": "+916000000097",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -975,7 +885,7 @@
     "rowNumber": 591,
     "name": "FASALU RAHMAN .V.P",
     "originalPhone": "",
-    "assignedPhone": "+916000000108",
+    "assignedPhone": "+916000000098",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -984,7 +894,7 @@
     "rowNumber": 592,
     "name": "Burhan AE",
     "originalPhone": "",
-    "assignedPhone": "+916000000109",
+    "assignedPhone": "+916000000099",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -993,7 +903,7 @@
     "rowNumber": 598,
     "name": "SHAHID MOOSA",
     "originalPhone": "",
-    "assignedPhone": "+916000000110",
+    "assignedPhone": "+916000000100",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -1002,7 +912,7 @@
     "rowNumber": 599,
     "name": "JABIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000111",
+    "assignedPhone": "+916000000101",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -1011,7 +921,7 @@
     "rowNumber": 600,
     "name": "HISHAM ABDUL KHADER",
     "originalPhone": "",
-    "assignedPhone": "+916000000112",
+    "assignedPhone": "+916000000102",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -1020,7 +930,7 @@
     "rowNumber": 601,
     "name": "LUKHMAN KHALID",
     "originalPhone": "",
-    "assignedPhone": "+916000000113",
+    "assignedPhone": "+916000000103",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PATTAMBI"
@@ -1029,7 +939,7 @@
     "rowNumber": 602,
     "name": "Sadikh V I",
     "originalPhone": "06.05.1990",
-    "assignedPhone": "+916000000114",
+    "assignedPhone": "+916000000104",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1038,7 +948,7 @@
     "rowNumber": 606,
     "name": "Noufal S",
     "originalPhone": "",
-    "assignedPhone": "+916000000115",
+    "assignedPhone": "+916000000105",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1047,7 +957,7 @@
     "rowNumber": 607,
     "name": "Siyad B",
     "originalPhone": "",
-    "assignedPhone": "+916000000116",
+    "assignedPhone": "+916000000106",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1056,7 +966,7 @@
     "rowNumber": 608,
     "name": "Faisal Khan MU",
     "originalPhone": "",
-    "assignedPhone": "+916000000117",
+    "assignedPhone": "+916000000107",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1065,7 +975,7 @@
     "rowNumber": 609,
     "name": "Noushad S",
     "originalPhone": "",
-    "assignedPhone": "+916000000118",
+    "assignedPhone": "+916000000108",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1074,7 +984,7 @@
     "rowNumber": 611,
     "name": "Adil P S",
     "originalPhone": "",
-    "assignedPhone": "+916000000119",
+    "assignedPhone": "+916000000109",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1083,7 +993,7 @@
     "rowNumber": 612,
     "name": "Ani Thoufeeq V A",
     "originalPhone": "",
-    "assignedPhone": "+916000000120",
+    "assignedPhone": "+916000000110",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1092,7 +1002,7 @@
     "rowNumber": 615,
     "name": "Muhammed Shareef P A",
     "originalPhone": "",
-    "assignedPhone": "+916000000121",
+    "assignedPhone": "+916000000111",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1101,7 +1011,7 @@
     "rowNumber": 616,
     "name": "Muhammed Shameer V A",
     "originalPhone": "",
-    "assignedPhone": "+916000000122",
+    "assignedPhone": "+916000000112",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1110,7 +1020,7 @@
     "rowNumber": 617,
     "name": "Jaseer Ahamed VM",
     "originalPhone": "",
-    "assignedPhone": "+916000000123",
+    "assignedPhone": "+916000000113",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1119,7 +1029,7 @@
     "rowNumber": 618,
     "name": "SHAHID AHAMED .V.M",
     "originalPhone": "",
-    "assignedPhone": "+916000000124",
+    "assignedPhone": "+916000000114",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PARALI-THRITHALA"
@@ -1128,7 +1038,7 @@
     "rowNumber": 627,
     "name": "JAHFER SADIQ",
     "originalPhone": 966598929751,
-    "assignedPhone": "+916000000125",
+    "assignedPhone": "+916000000115",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "OTTAPALAM"
@@ -1137,7 +1047,7 @@
     "rowNumber": 631,
     "name": "R",
     "originalPhone": "",
-    "assignedPhone": "+916000000126",
+    "assignedPhone": "+916000000116",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "OTTAPALAM"
@@ -1146,7 +1056,7 @@
     "rowNumber": 640,
     "name": "HAFEES",
     "originalPhone": "(+)971503711825",
-    "assignedPhone": "+916000000127",
+    "assignedPhone": "+916000000117",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "OTTAPALAM"
@@ -1155,7 +1065,7 @@
     "rowNumber": 641,
     "name": "ANSAR",
     "originalPhone": "+919809300213",
-    "assignedPhone": "+916000000128",
+    "assignedPhone": "+916000000118",
     "issueType": "DUPLICATE",
     "district": "PALAKKAD",
     "group": "OTTAPALAM"
@@ -1164,7 +1074,7 @@
     "rowNumber": 643,
     "name": "Abdul Shukoor K",
     "originalPhone": "",
-    "assignedPhone": "+916000000129",
+    "assignedPhone": "+916000000119",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "MANNARKKAD"
@@ -1173,7 +1083,7 @@
     "rowNumber": 655,
     "name": "Ashik A",
     "originalPhone": "",
-    "assignedPhone": "+916000000130",
+    "assignedPhone": "+916000000120",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1182,7 +1092,7 @@
     "rowNumber": 656,
     "name": "Ali Asvad K N",
     "originalPhone": "",
-    "assignedPhone": "+916000000131",
+    "assignedPhone": "+916000000121",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1191,7 +1101,7 @@
     "rowNumber": 657,
     "name": "Sulaiman V",
     "originalPhone": "",
-    "assignedPhone": "+916000000132",
+    "assignedPhone": "+916000000122",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1200,7 +1110,7 @@
     "rowNumber": 658,
     "name": "Rafeek P A",
     "originalPhone": "",
-    "assignedPhone": "+916000000133",
+    "assignedPhone": "+916000000123",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1209,7 +1119,7 @@
     "rowNumber": 659,
     "name": "Yoonus P M",
     "originalPhone": "",
-    "assignedPhone": "+916000000134",
+    "assignedPhone": "+916000000124",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1218,7 +1128,7 @@
     "rowNumber": 660,
     "name": "Ashaf M K",
     "originalPhone": "",
-    "assignedPhone": "+916000000135",
+    "assignedPhone": "+916000000125",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1227,7 +1137,7 @@
     "rowNumber": 661,
     "name": "Sanoop P M",
     "originalPhone": "",
-    "assignedPhone": "+916000000136",
+    "assignedPhone": "+916000000126",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1236,7 +1146,7 @@
     "rowNumber": 662,
     "name": "Rufaid P A",
     "originalPhone": "",
-    "assignedPhone": "+916000000137",
+    "assignedPhone": "+916000000127",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1245,7 +1155,7 @@
     "rowNumber": 663,
     "name": "Anvar P U",
     "originalPhone": "",
-    "assignedPhone": "+916000000138",
+    "assignedPhone": "+916000000128",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1254,7 +1164,7 @@
     "rowNumber": 664,
     "name": "SAFEER. PM",
     "originalPhone": "",
-    "assignedPhone": "+916000000139",
+    "assignedPhone": "+916000000129",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1263,7 +1173,7 @@
     "rowNumber": 665,
     "name": "ABDUL RAHIMAN A",
     "originalPhone": "",
-    "assignedPhone": "+916000000140",
+    "assignedPhone": "+916000000130",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1272,7 +1182,7 @@
     "rowNumber": 666,
     "name": "YASAR ARAFATH.V A",
     "originalPhone": "",
-    "assignedPhone": "+916000000141",
+    "assignedPhone": "+916000000131",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1281,7 +1191,7 @@
     "rowNumber": 667,
     "name": "MUHAMMED AASIF.C.H",
     "originalPhone": "",
-    "assignedPhone": "+916000000142",
+    "assignedPhone": "+916000000132",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1290,7 +1200,7 @@
     "rowNumber": 668,
     "name": "SHAMEER M",
     "originalPhone": "",
-    "assignedPhone": "+916000000143",
+    "assignedPhone": "+916000000133",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1299,7 +1209,7 @@
     "rowNumber": 669,
     "name": "YASSIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000144",
+    "assignedPhone": "+916000000134",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1308,7 +1218,7 @@
     "rowNumber": 670,
     "name": "MUJEEB REHMAN .S",
     "originalPhone": "",
-    "assignedPhone": "+916000000145",
+    "assignedPhone": "+916000000135",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1317,7 +1227,7 @@
     "rowNumber": 671,
     "name": "RASHID PA",
     "originalPhone": "",
-    "assignedPhone": "+916000000146",
+    "assignedPhone": "+916000000136",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1326,7 +1236,7 @@
     "rowNumber": 672,
     "name": "AFTHAB VA",
     "originalPhone": "",
-    "assignedPhone": "+916000000147",
+    "assignedPhone": "+916000000137",
     "issueType": "INVALID",
     "district": "PALAKKAD",
     "group": "PUTHUKKOD"
@@ -1335,7 +1245,7 @@
     "rowNumber": 725,
     "name": "ANOOP .P.H",
     "originalPhone": "",
-    "assignedPhone": "+916000000148",
+    "assignedPhone": "+916000000138",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "ERIYAD"
@@ -1344,7 +1254,7 @@
     "rowNumber": 737,
     "name": "Abdul Bajid V B",
     "originalPhone": "#ERROR!",
-    "assignedPhone": "+916000000149",
+    "assignedPhone": "+916000000139",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "ERIYAD"
@@ -1353,7 +1263,7 @@
     "rowNumber": 755,
     "name": "Muhsin Kamal",
     "originalPhone": "",
-    "assignedPhone": "+916000000150",
+    "assignedPhone": "+916000000140",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "KUNNAMKULAM"
@@ -1362,7 +1272,7 @@
     "rowNumber": 758,
     "name": "Ashique C M",
     "originalPhone": "",
-    "assignedPhone": "+916000000151",
+    "assignedPhone": "+916000000141",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "CHAVAKKAD"
@@ -1371,7 +1281,7 @@
     "rowNumber": 770,
     "name": "Jaseem",
     "originalPhone": 971555047797,
-    "assignedPhone": "+916000000152",
+    "assignedPhone": "+916000000142",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "CHAVAKKAD"
@@ -1380,7 +1290,7 @@
     "rowNumber": 774,
     "name": "Fasalu Rahman",
     "originalPhone": "",
-    "assignedPhone": "+916000000153",
+    "assignedPhone": "+916000000143",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "WADAKKANCHERY"
@@ -1389,7 +1299,7 @@
     "rowNumber": 775,
     "name": "Nisthar Mohammed",
     "originalPhone": "",
-    "assignedPhone": "+916000000154",
+    "assignedPhone": "+916000000144",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "WADAKKANCHERY"
@@ -1398,52 +1308,16 @@
     "rowNumber": 776,
     "name": "shakeer Mohammed Ali",
     "originalPhone": "",
-    "assignedPhone": "+916000000155",
+    "assignedPhone": "+916000000145",
     "issueType": "INVALID",
     "district": "THRISSUR",
     "group": "WADAKKANCHERY"
   },
   {
-    "rowNumber": 783,
-    "name": "SAHARSHAD .P.A",
-    "originalPhone": "",
-    "assignedPhone": "+916000000156",
-    "issueType": "INVALID",
-    "district": "THRISSUR",
-    "group": "THRISSUR"
-  },
-  {
-    "rowNumber": 785,
-    "name": "Rashid P U",
-    "originalPhone": "",
-    "assignedPhone": "+916000000157",
-    "issueType": "INVALID",
-    "district": "THRISSUR",
-    "group": "THRISSUR"
-  },
-  {
-    "rowNumber": 786,
-    "name": "SWABIR .P.A",
-    "originalPhone": "",
-    "assignedPhone": "+916000000158",
-    "issueType": "INVALID",
-    "district": "THRISSUR",
-    "group": "THRISSUR"
-  },
-  {
-    "rowNumber": 787,
-    "name": "NASHID .P.S",
-    "originalPhone": "",
-    "assignedPhone": "+916000000159",
-    "issueType": "INVALID",
-    "district": "THRISSUR",
-    "group": "THRISSUR"
-  },
-  {
     "rowNumber": 791,
     "name": "Sirajudheen bava",
     "originalPhone": "+919847223805",
-    "assignedPhone": "+916000000160",
+    "assignedPhone": "+916000000146",
     "issueType": "DUPLICATE",
     "district": "THRISSUR",
     "group": "THRISSUR"
@@ -1452,7 +1326,7 @@
     "rowNumber": 810,
     "name": "MOHAMMED ADIL . M",
     "originalPhone": "",
-    "assignedPhone": "+916000000161",
+    "assignedPhone": "+916000000147",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "ALATHIYOOR"
@@ -1461,7 +1335,7 @@
     "rowNumber": 811,
     "name": "SABITH BANNAN UP",
     "originalPhone": "",
-    "assignedPhone": "+916000000162",
+    "assignedPhone": "+916000000148",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "ALATHIYOOR"
@@ -1470,7 +1344,7 @@
     "rowNumber": 812,
     "name": "SHAFEEK K M",
     "originalPhone": "",
-    "assignedPhone": "+916000000163",
+    "assignedPhone": "+916000000149",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "ALATHIYOOR"
@@ -1479,7 +1353,7 @@
     "rowNumber": 813,
     "name": "JASEEM .P.P",
     "originalPhone": "",
-    "assignedPhone": "+916000000164",
+    "assignedPhone": "+916000000150",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "ALATHIYOOR"
@@ -1488,7 +1362,7 @@
     "rowNumber": 815,
     "name": "MUHAMMED IQBAL T",
     "originalPhone": 546689075,
-    "assignedPhone": "+916000000165",
+    "assignedPhone": "+916000000151",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
@@ -1497,16 +1371,7 @@
     "rowNumber": 816,
     "name": "MOHAMED FAISAL .M.K",
     "originalPhone": "",
-    "assignedPhone": "+916000000166",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 818,
-    "name": "HASHIM .V.T",
-    "originalPhone": "",
-    "assignedPhone": "+916000000167",
+    "assignedPhone": "+916000000152",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
@@ -1515,16 +1380,7 @@
     "rowNumber": 819,
     "name": "MANSOOR ILAHI P",
     "originalPhone": "",
-    "assignedPhone": "+916000000168",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 822,
-    "name": "MOHAMMED JASAR .P.T",
-    "originalPhone": "",
-    "assignedPhone": "+916000000169",
+    "assignedPhone": "+916000000153",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
@@ -1533,7 +1389,7 @@
     "rowNumber": 823,
     "name": "SIGIL KHAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000170",
+    "assignedPhone": "+916000000154",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
@@ -1542,16 +1398,7 @@
     "rowNumber": 825,
     "name": "BASILUDDEEN AZAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000171",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 827,
-    "name": "SAFDER SULTHAN",
-    "originalPhone": "",
-    "assignedPhone": "+916000000172",
+    "assignedPhone": "+916000000155",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
@@ -1560,52 +1407,16 @@
     "rowNumber": 828,
     "name": "MOHAMMED RISHAD A",
     "originalPhone": "",
-    "assignedPhone": "+916000000173",
+    "assignedPhone": "+916000000156",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 832,
-    "name": "DR. ABDUL WASIH LAKKAL",
-    "originalPhone": "",
-    "assignedPhone": "+916000000174",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 833,
-    "name": "HISHAM PE",
-    "originalPhone": "",
-    "assignedPhone": "+916000000175",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "AR NAGAR"
-  },
-  {
-    "rowNumber": 840,
-    "name": "ANEESURAHMAN T P",
-    "originalPhone": "",
-    "assignedPhone": "+916000000176",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "VALANCHERY"
   },
   {
     "rowNumber": 841,
     "name": "FAHAD K B",
     "originalPhone": "",
-    "assignedPhone": "+916000000177",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "VALANCHERY"
-  },
-  {
-    "rowNumber": 843,
-    "name": "HYDARALI V P",
-    "originalPhone": "",
-    "assignedPhone": "+916000000178",
+    "assignedPhone": "+916000000157",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALANCHERY"
@@ -1614,7 +1425,7 @@
     "rowNumber": 844,
     "name": "ABDUL JALEEL",
     "originalPhone": "",
-    "assignedPhone": "+916000000179",
+    "assignedPhone": "+916000000158",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALANCHERY"
@@ -1623,43 +1434,16 @@
     "rowNumber": 845,
     "name": "MUNEEB MUKHTHAR KT",
     "originalPhone": 994875197,
-    "assignedPhone": "+916000000180",
+    "assignedPhone": "+916000000159",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALANCHERY"
-  },
-  {
-    "rowNumber": 852,
-    "name": "HASHIR",
-    "originalPhone": "",
-    "assignedPhone": "+916000000181",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "VALANCHERY"
-  },
-  {
-    "rowNumber": 866,
-    "name": "NAJUMUDHEEN K P",
-    "originalPhone": "",
-    "assignedPhone": "+916000000182",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "PADAPPARAMB"
   },
   {
     "rowNumber": 869,
     "name": "IRSHAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000183",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "PADAPPARAMB"
-  },
-  {
-    "rowNumber": 870,
-    "name": "SHAKKIR",
-    "originalPhone": "",
-    "assignedPhone": "+916000000184",
+    "assignedPhone": "+916000000160",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1668,7 +1452,7 @@
     "rowNumber": 872,
     "name": "RIFATH RAHMAN.K",
     "originalPhone": "",
-    "assignedPhone": "+916000000185",
+    "assignedPhone": "+916000000161",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1677,7 +1461,7 @@
     "rowNumber": 873,
     "name": "AZHARUDHEEN. M",
     "originalPhone": "",
-    "assignedPhone": "+916000000186",
+    "assignedPhone": "+916000000162",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1686,7 +1470,7 @@
     "rowNumber": 874,
     "name": "HARIS. P",
     "originalPhone": "",
-    "assignedPhone": "+916000000187",
+    "assignedPhone": "+916000000163",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1695,7 +1479,7 @@
     "rowNumber": 875,
     "name": "SUHAIL IBRAHIM P P",
     "originalPhone": "",
-    "assignedPhone": "+916000000188",
+    "assignedPhone": "+916000000164",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1704,7 +1488,7 @@
     "rowNumber": 877,
     "name": "Naseef Ali KM",
     "originalPhone": "+919495530456",
-    "assignedPhone": "+916000000189",
+    "assignedPhone": "+916000000165",
     "issueType": "DUPLICATE",
     "district": "MALAPPURAM",
     "group": "PADAPPARAMB"
@@ -1713,7 +1497,7 @@
     "rowNumber": 879,
     "name": "MUHYUDHEEN ALI K",
     "originalPhone": "",
-    "assignedPhone": "+916000000190",
+    "assignedPhone": "+916000000166",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1722,7 +1506,7 @@
     "rowNumber": 880,
     "name": "KAMARUDHEEN M",
     "originalPhone": "",
-    "assignedPhone": "+916000000191",
+    "assignedPhone": "+916000000167",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1731,7 +1515,7 @@
     "rowNumber": 881,
     "name": "SAYYID AKRAM K",
     "originalPhone": "",
-    "assignedPhone": "+916000000192",
+    "assignedPhone": "+916000000168",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1740,7 +1524,7 @@
     "rowNumber": 882,
     "name": "SHIHABUDHEEN C",
     "originalPhone": "",
-    "assignedPhone": "+916000000193",
+    "assignedPhone": "+916000000169",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1749,7 +1533,7 @@
     "rowNumber": 883,
     "name": "KHALEEL IBRAHIM K",
     "originalPhone": "",
-    "assignedPhone": "+916000000194",
+    "assignedPhone": "+916000000170",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1758,7 +1542,7 @@
     "rowNumber": 884,
     "name": "SHAFAF ASLAM K",
     "originalPhone": "",
-    "assignedPhone": "+916000000195",
+    "assignedPhone": "+916000000171",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1767,7 +1551,7 @@
     "rowNumber": 885,
     "name": "MUHAMMED AMEEN N",
     "originalPhone": "",
-    "assignedPhone": "+916000000196",
+    "assignedPhone": "+916000000172",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1776,7 +1560,7 @@
     "rowNumber": 886,
     "name": "MUHAMMED AMEEN M.C",
     "originalPhone": "",
-    "assignedPhone": "+916000000197",
+    "assignedPhone": "+916000000173",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1785,7 +1569,7 @@
     "rowNumber": 888,
     "name": "MUHAMMED IRSHAD M",
     "originalPhone": "",
-    "assignedPhone": "+916000000198",
+    "assignedPhone": "+916000000174",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1794,7 +1578,7 @@
     "rowNumber": 891,
     "name": "MANJOOR MOHAMMED P",
     "originalPhone": "",
-    "assignedPhone": "+916000000199",
+    "assignedPhone": "+916000000175",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1803,7 +1587,7 @@
     "rowNumber": 893,
     "name": "MUHAMMED SALEEM K",
     "originalPhone": "",
-    "assignedPhone": "+916000000200",
+    "assignedPhone": "+916000000176",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1812,7 +1596,7 @@
     "rowNumber": 894,
     "name": "AFNAN N",
     "originalPhone": "",
-    "assignedPhone": "+916000000201",
+    "assignedPhone": "+916000000177",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1821,7 +1605,7 @@
     "rowNumber": 896,
     "name": "MUSHEER MOHAMMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000202",
+    "assignedPhone": "+916000000178",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VALLUVAMBRAM"
@@ -1830,7 +1614,7 @@
     "rowNumber": 898,
     "name": "MOHAMMED ASHFAQ",
     "originalPhone": "",
-    "assignedPhone": "+916000000203",
+    "assignedPhone": "+916000000179",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1839,7 +1623,7 @@
     "rowNumber": 899,
     "name": "SHERIN A P",
     "originalPhone": "",
-    "assignedPhone": "+916000000204",
+    "assignedPhone": "+916000000180",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1848,7 +1632,7 @@
     "rowNumber": 901,
     "name": "NAJI FABID M",
     "originalPhone": "",
-    "assignedPhone": "+916000000205",
+    "assignedPhone": "+916000000181",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1857,7 +1641,7 @@
     "rowNumber": 904,
     "name": "MUHAMMED FASIL P",
     "originalPhone": "",
-    "assignedPhone": "+916000000206",
+    "assignedPhone": "+916000000182",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1866,7 +1650,7 @@
     "rowNumber": 905,
     "name": "SHABEER M K",
     "originalPhone": "",
-    "assignedPhone": "+916000000207",
+    "assignedPhone": "+916000000183",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1875,7 +1659,7 @@
     "rowNumber": 906,
     "name": "MUHAMMED SUHAS. A",
     "originalPhone": "",
-    "assignedPhone": "+916000000208",
+    "assignedPhone": "+916000000184",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1884,7 +1668,7 @@
     "rowNumber": 907,
     "name": "ASHFAK AHAMMED K.P",
     "originalPhone": "",
-    "assignedPhone": "+916000000209",
+    "assignedPhone": "+916000000185",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MANJERI"
@@ -1893,7 +1677,7 @@
     "rowNumber": 915,
     "name": "MOHAMMED FAHAD P",
     "originalPhone": "",
-    "assignedPhone": "+916000000210",
+    "assignedPhone": "+916000000186",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURKAD"
@@ -1902,7 +1686,7 @@
     "rowNumber": 926,
     "name": "MUHAMMED NASEEH",
     "originalPhone": "",
-    "assignedPhone": "+916000000211",
+    "assignedPhone": "+916000000187",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURKAD"
@@ -1911,7 +1695,7 @@
     "rowNumber": 929,
     "name": "AFTHABU RAHMAN V",
     "originalPhone": "",
-    "assignedPhone": "+916000000212",
+    "assignedPhone": "+916000000188",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURKAD"
@@ -1920,7 +1704,7 @@
     "rowNumber": 930,
     "name": "THYSEER K",
     "originalPhone": "+919947119764",
-    "assignedPhone": "+916000000213",
+    "assignedPhone": "+916000000189",
     "issueType": "DUPLICATE",
     "district": "MALAPPURAM",
     "group": "TIRURKAD"
@@ -1929,7 +1713,7 @@
     "rowNumber": 948,
     "name": "MEHABOOB RAHMAN SM",
     "originalPhone": "+919809894743",
-    "assignedPhone": "+916000000214",
+    "assignedPhone": "+916000000190",
     "issueType": "DUPLICATE",
     "district": "MALAPPURAM",
     "group": "VENGARA"
@@ -1938,7 +1722,7 @@
     "rowNumber": 959,
     "name": "MOHAMMED SHIBILI .P",
     "originalPhone": "",
-    "assignedPhone": "+916000000215",
+    "assignedPhone": "+916000000191",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VAZHAKKAD"
@@ -1947,7 +1731,7 @@
     "rowNumber": 960,
     "name": "SHABEEN V K",
     "originalPhone": "",
-    "assignedPhone": "+916000000216",
+    "assignedPhone": "+916000000192",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "VAZHAKKAD"
@@ -1956,7 +1740,7 @@
     "rowNumber": 965,
     "name": "MUHAMMED FAHIM A T",
     "originalPhone": "",
-    "assignedPhone": "+916000000217",
+    "assignedPhone": "+916000000193",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KARUVARAKKUND"
@@ -1965,7 +1749,7 @@
     "rowNumber": 970,
     "name": "NAVAS SHERIF",
     "originalPhone": "",
-    "assignedPhone": "+916000000218",
+    "assignedPhone": "+916000000194",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -1974,7 +1758,7 @@
     "rowNumber": 971,
     "name": "JUNAID V P",
     "originalPhone": "",
-    "assignedPhone": "+916000000219",
+    "assignedPhone": "+916000000195",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -1983,7 +1767,7 @@
     "rowNumber": 973,
     "name": "NIYAS P",
     "originalPhone": "",
-    "assignedPhone": "+916000000220",
+    "assignedPhone": "+916000000196",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -1992,7 +1776,7 @@
     "rowNumber": 975,
     "name": "SALMANUL FARISH T",
     "originalPhone": "",
-    "assignedPhone": "+916000000221",
+    "assignedPhone": "+916000000197",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -2001,7 +1785,7 @@
     "rowNumber": 976,
     "name": "JUNAID M",
     "originalPhone": "",
-    "assignedPhone": "+916000000222",
+    "assignedPhone": "+916000000198",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -2010,7 +1794,7 @@
     "rowNumber": 977,
     "name": "MUHAMMED SAJID PT",
     "originalPhone": "",
-    "assignedPhone": "+916000000223",
+    "assignedPhone": "+916000000199",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -2019,7 +1803,7 @@
     "rowNumber": 979,
     "name": "AMEEN AHSAN T",
     "originalPhone": "",
-    "assignedPhone": "+916000000224",
+    "assignedPhone": "+916000000200",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "CHUNGATHARA"
@@ -2028,7 +1812,7 @@
     "rowNumber": 982,
     "name": "SAJID P",
     "originalPhone": "",
-    "assignedPhone": "+916000000225",
+    "assignedPhone": "+916000000201",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2037,7 +1821,7 @@
     "rowNumber": 983,
     "name": "SHIBIL MOHAMMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000226",
+    "assignedPhone": "+916000000202",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2046,7 +1830,7 @@
     "rowNumber": 984,
     "name": "RAMEEF",
     "originalPhone": "",
-    "assignedPhone": "+916000000227",
+    "assignedPhone": "+916000000203",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2055,7 +1839,7 @@
     "rowNumber": 985,
     "name": "JAMSHEED .K",
     "originalPhone": "",
-    "assignedPhone": "+916000000228",
+    "assignedPhone": "+916000000204",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2064,7 +1848,7 @@
     "rowNumber": 986,
     "name": "SHAREEF C T",
     "originalPhone": "",
-    "assignedPhone": "+916000000229",
+    "assignedPhone": "+916000000205",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2073,7 +1857,7 @@
     "rowNumber": 987,
     "name": "SABITH HASSAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000230",
+    "assignedPhone": "+916000000206",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2082,7 +1866,7 @@
     "rowNumber": 988,
     "name": "SIRAJUL ASLAM K",
     "originalPhone": "",
-    "assignedPhone": "+916000000231",
+    "assignedPhone": "+916000000207",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2091,7 +1875,7 @@
     "rowNumber": 989,
     "name": "ABDUL RAHEEM",
     "originalPhone": "",
-    "assignedPhone": "+916000000232",
+    "assignedPhone": "+916000000208",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2100,7 +1884,7 @@
     "rowNumber": 990,
     "name": "SADDAMHUSAIN.I",
     "originalPhone": "",
-    "assignedPhone": "+916000000233",
+    "assignedPhone": "+916000000209",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2109,7 +1893,7 @@
     "rowNumber": 992,
     "name": "JABIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000234",
+    "assignedPhone": "+916000000210",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2118,7 +1902,7 @@
     "rowNumber": 993,
     "name": "JAMSHEER K",
     "originalPhone": "",
-    "assignedPhone": "+916000000235",
+    "assignedPhone": "+916000000211",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2127,7 +1911,7 @@
     "rowNumber": 994,
     "name": "SALMAN K T",
     "originalPhone": "",
-    "assignedPhone": "+916000000236",
+    "assignedPhone": "+916000000212",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2136,7 +1920,7 @@
     "rowNumber": 995,
     "name": "SAHAL K",
     "originalPhone": "",
-    "assignedPhone": "+916000000237",
+    "assignedPhone": "+916000000213",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2145,7 +1929,7 @@
     "rowNumber": 996,
     "name": "SHIHABUDHEEN I",
     "originalPhone": "",
-    "assignedPhone": "+916000000238",
+    "assignedPhone": "+916000000214",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2154,7 +1938,7 @@
     "rowNumber": 997,
     "name": "NIBRASH M",
     "originalPhone": "",
-    "assignedPhone": "+916000000239",
+    "assignedPhone": "+916000000215",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2163,7 +1947,7 @@
     "rowNumber": 998,
     "name": "JUBAIRALI A",
     "originalPhone": "",
-    "assignedPhone": "+916000000240",
+    "assignedPhone": "+916000000216",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2172,7 +1956,7 @@
     "rowNumber": 999,
     "name": "MUHSIN AP",
     "originalPhone": "",
-    "assignedPhone": "+916000000241",
+    "assignedPhone": "+916000000217",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2181,7 +1965,7 @@
     "rowNumber": 1000,
     "name": "SABITH HASSAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000242",
+    "assignedPhone": "+916000000218",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "NILAMBUR"
@@ -2190,7 +1974,7 @@
     "rowNumber": 1012,
     "name": "AZHAR MOHIYUDHEEN",
     "originalPhone": 971526504977,
-    "assignedPhone": "+916000000243",
+    "assignedPhone": "+916000000219",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PUTHANATHANI"
@@ -2199,16 +1983,7 @@
     "rowNumber": 1015,
     "name": "ABDUL NAJIH",
     "originalPhone": "",
-    "assignedPhone": "+916000000244",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "PUTHANATHANI"
-  },
-  {
-    "rowNumber": 1017,
-    "name": "AMEENUL HASSAN",
-    "originalPhone": "",
-    "assignedPhone": "+916000000245",
+    "assignedPhone": "+916000000220",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "PUTHANATHANI"
@@ -2217,16 +1992,7 @@
     "rowNumber": 1025,
     "name": "FAZALUL HAQ",
     "originalPhone": 971509362364,
-    "assignedPhone": "+916000000246",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "TIRUR"
-  },
-  {
-    "rowNumber": 1034,
-    "name": "ABDUL SHAFEEK. N",
-    "originalPhone": "",
-    "assignedPhone": "+916000000247",
+    "assignedPhone": "+916000000221",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRUR"
@@ -2235,7 +2001,7 @@
     "rowNumber": 1035,
     "name": "FAKARUDHEEN ALI AHMMED TK",
     "originalPhone": 971507836334,
-    "assignedPhone": "+916000000248",
+    "assignedPhone": "+916000000222",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRUR"
@@ -2244,7 +2010,7 @@
     "rowNumber": 1050,
     "name": "DANISH KV",
     "originalPhone": "",
-    "assignedPhone": "+916000000249",
+    "assignedPhone": "+916000000223",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRUR"
@@ -2253,7 +2019,7 @@
     "rowNumber": 1053,
     "name": "MUHAMMED SHAFEEQ N P",
     "originalPhone": "",
-    "assignedPhone": "+916000000250",
+    "assignedPhone": "+916000000224",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2262,7 +2028,7 @@
     "rowNumber": 1054,
     "name": "ABSHAR C",
     "originalPhone": "",
-    "assignedPhone": "+916000000251",
+    "assignedPhone": "+916000000225",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2271,7 +2037,7 @@
     "rowNumber": 1059,
     "name": "SIDDIQU HASSAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000252",
+    "assignedPhone": "+916000000226",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2280,7 +2046,7 @@
     "rowNumber": 1061,
     "name": "SIRAJUDHEEN C H",
     "originalPhone": "",
-    "assignedPhone": "+916000000253",
+    "assignedPhone": "+916000000227",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2289,7 +2055,7 @@
     "rowNumber": 1063,
     "name": "AMJAD NASEEF",
     "originalPhone": "",
-    "assignedPhone": "+916000000254",
+    "assignedPhone": "+916000000228",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2298,7 +2064,7 @@
     "rowNumber": 1065,
     "name": "ABDUL NAHEEM C",
     "originalPhone": "",
-    "assignedPhone": "+916000000255",
+    "assignedPhone": "+916000000229",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2307,7 +2073,7 @@
     "rowNumber": 1066,
     "name": "MOHAMED RAZI CH",
     "originalPhone": "",
-    "assignedPhone": "+916000000256",
+    "assignedPhone": "+916000000230",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPARAMBA"
@@ -2316,7 +2082,7 @@
     "rowNumber": 1074,
     "name": "NISARUDHEEN MK",
     "originalPhone": "",
-    "assignedPhone": "+916000000257",
+    "assignedPhone": "+916000000231",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPPARAMBA"
@@ -2325,7 +2091,7 @@
     "rowNumber": 1075,
     "name": "YASIR HUSSAIN.T",
     "originalPhone": "",
-    "assignedPhone": "+916000000258",
+    "assignedPhone": "+916000000232",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPPARAMBA"
@@ -2334,7 +2100,7 @@
     "rowNumber": 1076,
     "name": "SHAFEEH .K",
     "originalPhone": "",
-    "assignedPhone": "+916000000259",
+    "assignedPhone": "+916000000233",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPPARAMBA"
@@ -2343,7 +2109,7 @@
     "rowNumber": 1077,
     "name": "BASIL. K",
     "originalPhone": "",
-    "assignedPhone": "+916000000260",
+    "assignedPhone": "+916000000234",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAKKARAPPARAMBA"
@@ -2352,7 +2118,7 @@
     "rowNumber": 1082,
     "name": "MUBASHIR K",
     "originalPhone": 971557901033,
-    "assignedPhone": "+916000000261",
+    "assignedPhone": "+916000000235",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2361,7 +2127,7 @@
     "rowNumber": 1085,
     "name": "MASOOD M",
     "originalPhone": "",
-    "assignedPhone": "+916000000262",
+    "assignedPhone": "+916000000236",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2370,7 +2136,7 @@
     "rowNumber": 1094,
     "name": "SHAFEEH MUNEES T",
     "originalPhone": 97466003946,
-    "assignedPhone": "+916000000263",
+    "assignedPhone": "+916000000237",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2379,7 +2145,7 @@
     "rowNumber": 1095,
     "name": "NOUFAL",
     "originalPhone": "",
-    "assignedPhone": "+916000000264",
+    "assignedPhone": "+916000000238",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2388,7 +2154,7 @@
     "rowNumber": 1097,
     "name": "MOHAMMED ALI V K",
     "originalPhone": 971553189594,
-    "assignedPhone": "+916000000265",
+    "assignedPhone": "+916000000239",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2397,7 +2163,7 @@
     "rowNumber": 1103,
     "name": "AMEEN P",
     "originalPhone": 18482489368,
-    "assignedPhone": "+916000000266",
+    "assignedPhone": "+916000000240",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TIRURANGADI"
@@ -2406,7 +2172,7 @@
     "rowNumber": 1121,
     "name": "SHAFEEQUE HASSAN .P",
     "originalPhone": 980916305,
-    "assignedPhone": "+916000000267",
+    "assignedPhone": "+916000000241",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2415,7 +2181,7 @@
     "rowNumber": 1123,
     "name": "ABDUL RAHIMAN M T",
     "originalPhone": "",
-    "assignedPhone": "+916000000268",
+    "assignedPhone": "+916000000242",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2424,7 +2190,7 @@
     "rowNumber": 1132,
     "name": "SHABEERALI K",
     "originalPhone": "",
-    "assignedPhone": "+916000000269",
+    "assignedPhone": "+916000000243",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2433,16 +2199,7 @@
     "rowNumber": 1135,
     "name": "NIYASUDHEEN .P",
     "originalPhone": "",
-    "assignedPhone": "+916000000270",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "SANTHAPURAM"
-  },
-  {
-    "rowNumber": 1136,
-    "name": "NAHAS U K",
-    "originalPhone": "",
-    "assignedPhone": "+916000000271",
+    "assignedPhone": "+916000000244",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2451,7 +2208,7 @@
     "rowNumber": 1138,
     "name": "NOUFAL .C",
     "originalPhone": "",
-    "assignedPhone": "+916000000272",
+    "assignedPhone": "+916000000245",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2460,7 +2217,7 @@
     "rowNumber": 1141,
     "name": "RABEEH USMAN K P",
     "originalPhone": 956774374,
-    "assignedPhone": "+916000000273",
+    "assignedPhone": "+916000000246",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2469,7 +2226,7 @@
     "rowNumber": 1142,
     "name": "MUHAMMED SHAJEEB P C",
     "originalPhone": "",
-    "assignedPhone": "+916000000274",
+    "assignedPhone": "+916000000247",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
@@ -2478,34 +2235,16 @@
     "rowNumber": 1143,
     "name": "SALAH KP",
     "originalPhone": "",
-    "assignedPhone": "+916000000275",
+    "assignedPhone": "+916000000248",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "SANTHAPURAM"
   },
   {
-    "rowNumber": 1151,
-    "name": "FAISAL",
-    "originalPhone": "",
-    "assignedPhone": "+916000000276",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "EDAPPAL-PONNANI"
-  },
-  {
-    "rowNumber": 1152,
-    "name": "ABDUL GAFOOR K M",
-    "originalPhone": "",
-    "assignedPhone": "+916000000277",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "EDAPPAL-PONNANI"
-  },
-  {
     "rowNumber": 1156,
     "name": "MUBEED RAHMAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000278",
+    "assignedPhone": "+916000000249",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "EDAPPAL-PONNANI"
@@ -2514,7 +2253,7 @@
     "rowNumber": 1157,
     "name": "BILAL ABDURAHIMAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000279",
+    "assignedPhone": "+916000000250",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "EDAPPAL-PONNANI"
@@ -2523,7 +2262,7 @@
     "rowNumber": 1163,
     "name": "HASHIR ABOOBACKER",
     "originalPhone": "",
-    "assignedPhone": "+916000000280",
+    "assignedPhone": "+916000000251",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "EDAPPAL-PONNANI"
@@ -2532,7 +2271,7 @@
     "rowNumber": 1175,
     "name": "TWAYYIB HASSAN C T",
     "originalPhone": "",
-    "assignedPhone": "+916000000281",
+    "assignedPhone": "+916000000252",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2541,7 +2280,7 @@
     "rowNumber": 1176,
     "name": "MUHAMMED YOUSUF P",
     "originalPhone": "",
-    "assignedPhone": "+916000000282",
+    "assignedPhone": "+916000000253",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2550,7 +2289,7 @@
     "rowNumber": 1179,
     "name": "LABEEB T K",
     "originalPhone": "",
-    "assignedPhone": "+916000000283",
+    "assignedPhone": "+916000000254",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2559,7 +2298,7 @@
     "rowNumber": 1180,
     "name": "ABOO SAFEED K K",
     "originalPhone": "",
-    "assignedPhone": "+916000000284",
+    "assignedPhone": "+916000000255",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2568,7 +2307,7 @@
     "rowNumber": 1183,
     "name": "SHAFEEL .P.P",
     "originalPhone": "",
-    "assignedPhone": "+916000000285",
+    "assignedPhone": "+916000000256",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2577,7 +2316,7 @@
     "rowNumber": 1188,
     "name": "HASEEB ASLAM C T",
     "originalPhone": "",
-    "assignedPhone": "+916000000286",
+    "assignedPhone": "+916000000257",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2586,7 +2325,7 @@
     "rowNumber": 1189,
     "name": "SINU SAHIL K",
     "originalPhone": "",
-    "assignedPhone": "+916000000287",
+    "assignedPhone": "+916000000258",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2595,7 +2334,7 @@
     "rowNumber": 1190,
     "name": "FAVAZ PALLIKKAL",
     "originalPhone": "",
-    "assignedPhone": "+916000000288",
+    "assignedPhone": "+916000000259",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2604,7 +2343,7 @@
     "rowNumber": 1191,
     "name": "MUHAMMED ASHRAF KK",
     "originalPhone": "",
-    "assignedPhone": "+916000000289",
+    "assignedPhone": "+916000000260",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2613,7 +2352,7 @@
     "rowNumber": 1193,
     "name": "MOHAMMED JABIR PT",
     "originalPhone": "",
-    "assignedPhone": "+916000000290",
+    "assignedPhone": "+916000000261",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2622,7 +2361,7 @@
     "rowNumber": 1194,
     "name": "SHIBAS PULIKKAL",
     "originalPhone": "",
-    "assignedPhone": "+916000000291",
+    "assignedPhone": "+916000000262",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2631,7 +2370,7 @@
     "rowNumber": 1196,
     "name": "NABEEL AHAMMED .N.C",
     "originalPhone": "",
-    "assignedPhone": "+916000000292",
+    "assignedPhone": "+916000000263",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KONDOTTY"
@@ -2640,7 +2379,7 @@
     "rowNumber": 1206,
     "name": "MOHAMMED THANVEER KP",
     "originalPhone": "",
-    "assignedPhone": "+916000000293",
+    "assignedPhone": "+916000000264",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "KOTTAKKAL"
@@ -2649,7 +2388,7 @@
     "rowNumber": 1213,
     "name": "NOUSHAD M K",
     "originalPhone": "",
-    "assignedPhone": "+916000000294",
+    "assignedPhone": "+916000000265",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "UNIVERSITY"
@@ -2658,7 +2397,7 @@
     "rowNumber": 1216,
     "name": "SHIBILI NASEEL",
     "originalPhone": "",
-    "assignedPhone": "+916000000295",
+    "assignedPhone": "+916000000266",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "UNIVERSITY"
@@ -2667,7 +2406,7 @@
     "rowNumber": 1244,
     "name": "MUHAMMED NAZEEM",
     "originalPhone": "",
-    "assignedPhone": "+916000000296",
+    "assignedPhone": "+916000000267",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AREEKODE"
@@ -2676,7 +2415,7 @@
     "rowNumber": 1245,
     "name": "AMANULLAH KARANATH",
     "originalPhone": 96879182194,
-    "assignedPhone": "+916000000297",
+    "assignedPhone": "+916000000268",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AREEKODE"
@@ -2685,7 +2424,7 @@
     "rowNumber": 1252,
     "name": "NAZEEM KOLAKKODAN",
     "originalPhone": "0091 8943036636",
-    "assignedPhone": "+916000000298",
+    "assignedPhone": "+916000000269",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "AREEKODE"
@@ -2694,16 +2433,7 @@
     "rowNumber": 1258,
     "name": "ASHIF",
     "originalPhone": "",
-    "assignedPhone": "+916000000299",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "MARANCHERY-PERUMBADAPPU"
-  },
-  {
-    "rowNumber": 1259,
-    "name": "NOUFAL A",
-    "originalPhone": "",
-    "assignedPhone": "+916000000300",
+    "assignedPhone": "+916000000270",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MARANCHERY-PERUMBADAPPU"
@@ -2712,7 +2442,7 @@
     "rowNumber": 1268,
     "name": "NASEEM P",
     "originalPhone": "",
-    "assignedPhone": "+916000000301",
+    "assignedPhone": "+916000000271",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2721,7 +2451,7 @@
     "rowNumber": 1270,
     "name": "SHARAFUDHEEN K P",
     "originalPhone": "",
-    "assignedPhone": "+916000000302",
+    "assignedPhone": "+916000000272",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2730,7 +2460,7 @@
     "rowNumber": 1271,
     "name": "AJMAL SADIQ V",
     "originalPhone": "",
-    "assignedPhone": "+916000000303",
+    "assignedPhone": "+916000000273",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2739,7 +2469,7 @@
     "rowNumber": 1273,
     "name": "FAROOQUE P",
     "originalPhone": "",
-    "assignedPhone": "+916000000304",
+    "assignedPhone": "+916000000274",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2748,7 +2478,7 @@
     "rowNumber": 1275,
     "name": "RIYAS MON P K",
     "originalPhone": "",
-    "assignedPhone": "+916000000305",
+    "assignedPhone": "+916000000275",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2757,7 +2487,7 @@
     "rowNumber": 1276,
     "name": "MANSOOR K",
     "originalPhone": "",
-    "assignedPhone": "+916000000306",
+    "assignedPhone": "+916000000276",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2766,7 +2496,7 @@
     "rowNumber": 1277,
     "name": "SARFRAS ISHAQUE E",
     "originalPhone": "",
-    "assignedPhone": "+916000000307",
+    "assignedPhone": "+916000000277",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2775,7 +2505,7 @@
     "rowNumber": 1278,
     "name": "JAVID",
     "originalPhone": "",
-    "assignedPhone": "+916000000308",
+    "assignedPhone": "+916000000278",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2784,7 +2514,7 @@
     "rowNumber": 1279,
     "name": "THOUFEEQ RAHMAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000309",
+    "assignedPhone": "+916000000279",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2793,7 +2523,7 @@
     "rowNumber": 1280,
     "name": "SALMAN",
     "originalPhone": "",
-    "assignedPhone": "+916000000310",
+    "assignedPhone": "+916000000280",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2802,7 +2532,7 @@
     "rowNumber": 1282,
     "name": "SAHAD NK",
     "originalPhone": "",
-    "assignedPhone": "+916000000311",
+    "assignedPhone": "+916000000281",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2811,7 +2541,7 @@
     "rowNumber": 1284,
     "name": "SHAMEEEM AHSAN.K",
     "originalPhone": "",
-    "assignedPhone": "+916000000312",
+    "assignedPhone": "+916000000282",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2820,7 +2550,7 @@
     "rowNumber": 1285,
     "name": "WASEEM AHSAN KP",
     "originalPhone": "",
-    "assignedPhone": "+916000000313",
+    "assignedPhone": "+916000000283",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MAMBAD"
@@ -2829,16 +2559,7 @@
     "rowNumber": 1296,
     "name": "NISAR AHAMMED .T.T",
     "originalPhone": "",
-    "assignedPhone": "+916000000314",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "EDAVANNA"
-  },
-  {
-    "rowNumber": 1299,
-    "name": "MUHSIN PARARI",
-    "originalPhone": "",
-    "assignedPhone": "+916000000315",
+    "assignedPhone": "+916000000284",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "EDAVANNA"
@@ -2847,7 +2568,7 @@
     "rowNumber": 1300,
     "name": "AYMAN P",
     "originalPhone": "",
-    "assignedPhone": "+916000000316",
+    "assignedPhone": "+916000000285",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "EDAVANNA"
@@ -2856,7 +2577,7 @@
     "rowNumber": 1308,
     "name": "Amjad v",
     "originalPhone": "+919544281144",
-    "assignedPhone": "+916000000317",
+    "assignedPhone": "+916000000286",
     "issueType": "DUPLICATE",
     "district": "MALAPPURAM",
     "group": "EDAVANNA"
@@ -2865,7 +2586,7 @@
     "rowNumber": 1321,
     "name": "MUBARIS",
     "originalPhone": 971501536764,
-    "assignedPhone": "+916000000318",
+    "assignedPhone": "+916000000287",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TANALUR-TANUR"
@@ -2874,52 +2595,16 @@
     "rowNumber": 1340,
     "name": "MUTHALIB",
     "originalPhone": 971582404828,
-    "assignedPhone": "+916000000319",
+    "assignedPhone": "+916000000288",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "TANALUR-TANUR"
   },
   {
-    "rowNumber": 1345,
-    "name": "SHIHABUDHEEN A",
-    "originalPhone": "",
-    "assignedPhone": "+916000000320",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "MALAPPURAM"
-  },
-  {
-    "rowNumber": 1361,
-    "name": "IBRAHIM ARABI",
-    "originalPhone": "",
-    "assignedPhone": "+916000000321",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "MALAPPURAM"
-  },
-  {
-    "rowNumber": 1373,
-    "name": "AMJAD MUBASHIR .C.H",
-    "originalPhone": "",
-    "assignedPhone": "+916000000322",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "MALAPPURAM"
-  },
-  {
     "rowNumber": 1385,
     "name": "MUHAMMED SABAH E",
     "originalPhone": 97431252580,
-    "assignedPhone": "+916000000323",
-    "issueType": "INVALID",
-    "district": "MALAPPURAM",
-    "group": "MALAPPURAM"
-  },
-  {
-    "rowNumber": 1390,
-    "name": "SAHUD A V",
-    "originalPhone": "",
-    "assignedPhone": "+916000000324",
+    "assignedPhone": "+916000000289",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MALAPPURAM"
@@ -2928,7 +2613,7 @@
     "rowNumber": 1391,
     "name": "DULFEEKAR ALI A",
     "originalPhone": 966554767101,
-    "assignedPhone": "+916000000325",
+    "assignedPhone": "+916000000290",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MALAPPURAM"
@@ -2937,7 +2622,7 @@
     "rowNumber": 1392,
     "name": "SHARAFUDHEEN A K",
     "originalPhone": "",
-    "assignedPhone": "+916000000326",
+    "assignedPhone": "+916000000291",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "MALAPPURAM"
@@ -2946,7 +2631,7 @@
     "rowNumber": 1407,
     "name": "FAHEEM OM",
     "originalPhone": "",
-    "assignedPhone": "+916000000327",
+    "assignedPhone": "+916000000292",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "WANDOOR"
@@ -2955,7 +2640,7 @@
     "rowNumber": 1409,
     "name": "SHAMEEM HUSSAIN P",
     "originalPhone": "",
-    "assignedPhone": "+916000000328",
+    "assignedPhone": "+916000000293",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "WANDOOR"
@@ -2964,7 +2649,7 @@
     "rowNumber": 1415,
     "name": "MUHAMMED RAFEEQ",
     "originalPhone": "",
-    "assignedPhone": "+916000000329",
+    "assignedPhone": "+916000000294",
     "issueType": "INVALID",
     "district": "MALAPPURAM",
     "group": "WANDOOR"
@@ -2973,7 +2658,7 @@
     "rowNumber": 1427,
     "name": "Naseem Dilas",
     "originalPhone": 97450665419,
-    "assignedPhone": "+916000000330",
+    "assignedPhone": "+916000000295",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "SULTHAN BATHERY"
@@ -2982,7 +2667,7 @@
     "rowNumber": 1428,
     "name": "Nabeel M.K",
     "originalPhone": 96891025126,
-    "assignedPhone": "+916000000331",
+    "assignedPhone": "+916000000296",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "SULTHAN BATHERY"
@@ -2991,7 +2676,7 @@
     "rowNumber": 1429,
     "name": "Abid Mashood K.A",
     "originalPhone": 97433121059,
-    "assignedPhone": "+916000000332",
+    "assignedPhone": "+916000000297",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "SULTHAN BATHERY"
@@ -3000,7 +2685,7 @@
     "rowNumber": 1434,
     "name": "Basith A",
     "originalPhone": 989521748,
-    "assignedPhone": "+916000000333",
+    "assignedPhone": "+916000000298",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "KALPETTA"
@@ -3009,7 +2694,7 @@
     "rowNumber": 1435,
     "name": "Anees A",
     "originalPhone": "",
-    "assignedPhone": "+916000000334",
+    "assignedPhone": "+916000000299",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "KALPETTA"
@@ -3018,7 +2703,7 @@
     "rowNumber": 1441,
     "name": "Binshad P",
     "originalPhone": 97459976166,
-    "assignedPhone": "+916000000335",
+    "assignedPhone": "+916000000300",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "KALPETTA"
@@ -3027,7 +2712,7 @@
     "rowNumber": 1442,
     "name": "Muhammed Shafeek T",
     "originalPhone": "",
-    "assignedPhone": "+916000000336",
+    "assignedPhone": "+916000000301",
     "issueType": "INVALID",
     "district": "WAYANAD",
     "group": "KALPETTA"
@@ -3036,7 +2721,7 @@
     "rowNumber": 1448,
     "name": "NASEEPH .P",
     "originalPhone": 96877591110,
-    "assignedPhone": "+916000000337",
+    "assignedPhone": "+916000000302",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "AYANCHERY"
@@ -3045,7 +2730,7 @@
     "rowNumber": 1450,
     "name": "SHAHEER V",
     "originalPhone": 971551049042,
-    "assignedPhone": "+916000000338",
+    "assignedPhone": "+916000000303",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "AYANCHERY"
@@ -3054,7 +2739,7 @@
     "rowNumber": 1481,
     "name": "AJMAL RAHMAN KK",
     "originalPhone": "#ERROR!",
-    "assignedPhone": "+916000000339",
+    "assignedPhone": "+916000000304",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THAMARASSERY"
@@ -3063,7 +2748,7 @@
     "rowNumber": 1484,
     "name": "SAYYID NABEEL M",
     "originalPhone": "+919744290333",
-    "assignedPhone": "+916000000340",
+    "assignedPhone": "+916000000305",
     "issueType": "DUPLICATE",
     "district": "KOZHIKKODE",
     "group": "THAMARASSERY"
@@ -3072,7 +2757,7 @@
     "rowNumber": 1487,
     "name": "Lubaib N P",
     "originalPhone": "",
-    "assignedPhone": "+916000000341",
+    "assignedPhone": "+916000000306",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MUKKAM"
@@ -3081,7 +2766,7 @@
     "rowNumber": 1507,
     "name": "SHAHEER T",
     "originalPhone": "",
-    "assignedPhone": "+916000000342",
+    "assignedPhone": "+916000000307",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3090,7 +2775,7 @@
     "rowNumber": 1512,
     "name": "Javed Islam T",
     "originalPhone": "",
-    "assignedPhone": "+916000000343",
+    "assignedPhone": "+916000000308",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3099,7 +2784,7 @@
     "rowNumber": 1513,
     "name": "Haris K K",
     "originalPhone": "",
-    "assignedPhone": "+916000000344",
+    "assignedPhone": "+916000000309",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3108,7 +2793,7 @@
     "rowNumber": 1514,
     "name": "Sanin Bushair MM",
     "originalPhone": "",
-    "assignedPhone": "+916000000345",
+    "assignedPhone": "+916000000310",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3117,7 +2802,7 @@
     "rowNumber": 1515,
     "name": "Ansar M",
     "originalPhone": "",
-    "assignedPhone": "+916000000346",
+    "assignedPhone": "+916000000311",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3126,7 +2811,7 @@
     "rowNumber": 1516,
     "name": "Muhammed Muhsin V K",
     "originalPhone": "",
-    "assignedPhone": "+916000000347",
+    "assignedPhone": "+916000000312",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3135,7 +2820,7 @@
     "rowNumber": 1517,
     "name": "MUHAMMED NABEEL .N.K",
     "originalPhone": "",
-    "assignedPhone": "+916000000348",
+    "assignedPhone": "+916000000313",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3144,7 +2829,7 @@
     "rowNumber": 1518,
     "name": "Yahya Muhammed",
     "originalPhone": "",
-    "assignedPhone": "+916000000349",
+    "assignedPhone": "+916000000314",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3153,7 +2838,7 @@
     "rowNumber": 1520,
     "name": "Muhammed Ali",
     "originalPhone": "",
-    "assignedPhone": "+916000000350",
+    "assignedPhone": "+916000000315",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3162,7 +2847,7 @@
     "rowNumber": 1521,
     "name": "SHAMNAS K",
     "originalPhone": "",
-    "assignedPhone": "+916000000351",
+    "assignedPhone": "+916000000316",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3171,7 +2856,7 @@
     "rowNumber": 1522,
     "name": "HAJAS RAHMAN .C ATHOLI",
     "originalPhone": "",
-    "assignedPhone": "+916000000352",
+    "assignedPhone": "+916000000317",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3180,7 +2865,7 @@
     "rowNumber": 1524,
     "name": "MUHAMMED SHEBIL P",
     "originalPhone": "",
-    "assignedPhone": "+916000000353",
+    "assignedPhone": "+916000000318",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3189,7 +2874,7 @@
     "rowNumber": 1525,
     "name": "DR MUHAMMAD SAYYAF A R",
     "originalPhone": "",
-    "assignedPhone": "+916000000354",
+    "assignedPhone": "+916000000319",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "MEPAYYUR-PERAMBRA"
@@ -3198,7 +2883,7 @@
     "rowNumber": 1530,
     "name": "Hashir P",
     "originalPhone": "+919947544224",
-    "assignedPhone": "+916000000355",
+    "assignedPhone": "+916000000320",
     "issueType": "DUPLICATE",
     "district": "KOZHIKKODE",
     "group": "KUNNAMANGALAM"
@@ -3207,7 +2892,7 @@
     "rowNumber": 1558,
     "name": "AHAMMED ADIL .E.N",
     "originalPhone": 97455474578,
-    "assignedPhone": "+916000000356",
+    "assignedPhone": "+916000000321",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KODIYATHUR-KARASSERY"
@@ -3216,7 +2901,7 @@
     "rowNumber": 1575,
     "name": "ASIF ABDUSSALAM",
     "originalPhone": 97430365034,
-    "assignedPhone": "+916000000357",
+    "assignedPhone": "+916000000322",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KUTTIADI"
@@ -3225,7 +2910,7 @@
     "rowNumber": 1582,
     "name": "Nadeer MK",
     "originalPhone": 557547612,
-    "assignedPhone": "+916000000358",
+    "assignedPhone": "+916000000323",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "VADAKARA"
@@ -3234,7 +2919,7 @@
     "rowNumber": 1583,
     "name": "ASIF VM",
     "originalPhone": "",
-    "assignedPhone": "+916000000359",
+    "assignedPhone": "+916000000324",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "VADAKARA"
@@ -3243,7 +2928,7 @@
     "rowNumber": 1584,
     "name": "SHUHAIB V",
     "originalPhone": "",
-    "assignedPhone": "+916000000360",
+    "assignedPhone": "+916000000325",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "VADAKARA"
@@ -3252,7 +2937,7 @@
     "rowNumber": 1585,
     "name": "SHABAD .S.M",
     "originalPhone": "",
-    "assignedPhone": "+916000000361",
+    "assignedPhone": "+916000000326",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "VADAKARA"
@@ -3261,7 +2946,7 @@
     "rowNumber": 1594,
     "name": "Hafiz Ali",
     "originalPhone": "",
-    "assignedPhone": "+916000000362",
+    "assignedPhone": "+916000000327",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOYILANDI"
@@ -3270,7 +2955,7 @@
     "rowNumber": 1596,
     "name": "MAFAS KV",
     "originalPhone": "",
-    "assignedPhone": "+916000000363",
+    "assignedPhone": "+916000000328",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOYILANDI"
@@ -3279,7 +2964,7 @@
     "rowNumber": 1597,
     "name": "Sharafudheen",
     "originalPhone": "",
-    "assignedPhone": "+916000000364",
+    "assignedPhone": "+916000000329",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOYILANDI"
@@ -3288,7 +2973,7 @@
     "rowNumber": 1599,
     "name": "Rinshad T M",
     "originalPhone": "",
-    "assignedPhone": "+916000000365",
+    "assignedPhone": "+916000000330",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOYILANDI"
@@ -3297,7 +2982,7 @@
     "rowNumber": 1601,
     "name": "MUHAMMED MIDILAJ MUSTH",
     "originalPhone": "",
-    "assignedPhone": "+916000000366",
+    "assignedPhone": "+916000000331",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOYILANDI"
@@ -3306,7 +2991,7 @@
     "rowNumber": 1605,
     "name": "Jasir P K",
     "originalPhone": "",
-    "assignedPhone": "+916000000367",
+    "assignedPhone": "+916000000332",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3315,7 +3000,7 @@
     "rowNumber": 1609,
     "name": "MUHAMMED SALIH",
     "originalPhone": "",
-    "assignedPhone": "+916000000368",
+    "assignedPhone": "+916000000333",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3324,7 +3009,7 @@
     "rowNumber": 1611,
     "name": "Fuad P P",
     "originalPhone": "",
-    "assignedPhone": "+916000000369",
+    "assignedPhone": "+916000000334",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3333,7 +3018,7 @@
     "rowNumber": 1614,
     "name": "khaleel nisar",
     "originalPhone": "",
-    "assignedPhone": "+916000000370",
+    "assignedPhone": "+916000000335",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3342,7 +3027,7 @@
     "rowNumber": 1621,
     "name": "Thaslim K",
     "originalPhone": "",
-    "assignedPhone": "+916000000371",
+    "assignedPhone": "+916000000336",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3351,7 +3036,7 @@
     "rowNumber": 1623,
     "name": "NABEEL NP",
     "originalPhone": "",
-    "assignedPhone": "+916000000372",
+    "assignedPhone": "+916000000337",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3360,7 +3045,7 @@
     "rowNumber": 1624,
     "name": "SALAH AHMED",
     "originalPhone": "",
-    "assignedPhone": "+916000000373",
+    "assignedPhone": "+916000000338",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3369,7 +3054,7 @@
     "rowNumber": 1625,
     "name": "Insamul Haq",
     "originalPhone": "",
-    "assignedPhone": "+916000000374",
+    "assignedPhone": "+916000000339",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3378,7 +3063,7 @@
     "rowNumber": 1626,
     "name": "Muneeb MK",
     "originalPhone": "",
-    "assignedPhone": "+916000000375",
+    "assignedPhone": "+916000000340",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3387,7 +3072,7 @@
     "rowNumber": 1627,
     "name": "Afsal PP",
     "originalPhone": "",
-    "assignedPhone": "+916000000376",
+    "assignedPhone": "+916000000341",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3396,7 +3081,7 @@
     "rowNumber": 1628,
     "name": "FUAD M",
     "originalPhone": "",
-    "assignedPhone": "+916000000377",
+    "assignedPhone": "+916000000342",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3405,7 +3090,7 @@
     "rowNumber": 1629,
     "name": "Haneen Muhammed",
     "originalPhone": "",
-    "assignedPhone": "+916000000378",
+    "assignedPhone": "+916000000343",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "OMASSERY"
@@ -3414,7 +3099,7 @@
     "rowNumber": 1631,
     "name": "Fasaludheen T A",
     "originalPhone": "",
-    "assignedPhone": "+916000000379",
+    "assignedPhone": "+916000000344",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THIRUVAMBADI-OMASSERY"
@@ -3423,7 +3108,7 @@
     "rowNumber": 1632,
     "name": "MUHAMMED FASAL .P",
     "originalPhone": "",
-    "assignedPhone": "+916000000380",
+    "assignedPhone": "+916000000345",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THIRUVAMBADI-OMASSERY"
@@ -3432,7 +3117,7 @@
     "rowNumber": 1633,
     "name": "Shameer K Y",
     "originalPhone": "",
-    "assignedPhone": "+916000000381",
+    "assignedPhone": "+916000000346",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THIRUVAMBADI-OMASSERY"
@@ -3441,7 +3126,7 @@
     "rowNumber": 1634,
     "name": "Irfan Naseef",
     "originalPhone": "",
-    "assignedPhone": "+916000000382",
+    "assignedPhone": "+916000000347",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THIRUVAMBADI-OMASSERY"
@@ -3450,7 +3135,7 @@
     "rowNumber": 1635,
     "name": "Muhammed Salman A A",
     "originalPhone": "",
-    "assignedPhone": "+916000000383",
+    "assignedPhone": "+916000000348",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "THIRUVAMBADI-OMASSERY"
@@ -3459,7 +3144,7 @@
     "rowNumber": 1645,
     "name": "MUHAMMED NOUFAL N P",
     "originalPhone": "(+)385916380638",
-    "assignedPhone": "+916000000384",
+    "assignedPhone": "+916000000349",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHELANNUR-KAKKODI"
@@ -3468,16 +3153,7 @@
     "rowNumber": 1648,
     "name": "Muneeb P",
     "originalPhone": "",
-    "assignedPhone": "+916000000385",
-    "issueType": "INVALID",
-    "district": "KOZHIKKODE",
-    "group": "CHELANNUR-KAKKODI"
-  },
-  {
-    "rowNumber": 1657,
-    "name": "ARSHIF .V.C",
-    "originalPhone": "",
-    "assignedPhone": "+916000000386",
+    "assignedPhone": "+916000000350",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHELANNUR-KAKKODI"
@@ -3486,7 +3162,7 @@
     "rowNumber": 1660,
     "name": "Farshad TM",
     "originalPhone": "",
-    "assignedPhone": "+916000000387",
+    "assignedPhone": "+916000000351",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHELANNUR-KAKKODI"
@@ -3495,7 +3171,7 @@
     "rowNumber": 1664,
     "name": "ABDULLAH UMER MUQTHAR",
     "originalPhone": "",
-    "assignedPhone": "+916000000388",
+    "assignedPhone": "+916000000352",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHELANNUR-KAKKODI"
@@ -3504,7 +3180,7 @@
     "rowNumber": 1693,
     "name": "ABDUL BASITH P.V",
     "originalPhone": 971525077769,
-    "assignedPhone": "+916000000389",
+    "assignedPhone": "+916000000353",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "KOZHIKKODE NORTH"
@@ -3513,17 +3189,8 @@
     "rowNumber": 1703,
     "name": "ABDUL RAUF C",
     "originalPhone": 989528343,
-    "assignedPhone": "+916000000390",
+    "assignedPhone": "+916000000354",
     "issueType": "INVALID",
-    "district": "KOZHIKKODE",
-    "group": "MEDICAL COLLEGE"
-  },
-  {
-    "rowNumber": 1712,
-    "name": "YUNUS K T",
-    "originalPhone": "+919567713884",
-    "assignedPhone": "+916000000391",
-    "issueType": "DUPLICATE",
     "district": "KOZHIKKODE",
     "group": "MEDICAL COLLEGE"
   },
@@ -3531,7 +3198,7 @@
     "rowNumber": 1730,
     "name": "SIRAJUDEEN V A",
     "originalPhone": "+919400914111",
-    "assignedPhone": "+916000000392",
+    "assignedPhone": "+916000000355",
     "issueType": "DUPLICATE",
     "district": "KOZHIKKODE",
     "group": "MEDICAL COLLEGE"
@@ -3540,7 +3207,7 @@
     "rowNumber": 1740,
     "name": "Jasim M",
     "originalPhone": "",
-    "assignedPhone": "+916000000393",
+    "assignedPhone": "+916000000356",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "BALUSSERY"
@@ -3549,7 +3216,7 @@
     "rowNumber": 1743,
     "name": "MUNAWAR FAIROOS .K.V",
     "originalPhone": 974401998,
-    "assignedPhone": "+916000000394",
+    "assignedPhone": "+916000000357",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "BALUSSERY"
@@ -3558,25 +3225,7 @@
     "rowNumber": 1756,
     "name": "Azharudheen K",
     "originalPhone": "",
-    "assignedPhone": "+916000000395",
-    "issueType": "INVALID",
-    "district": "KOZHIKKODE",
-    "group": "FEROKE"
-  },
-  {
-    "rowNumber": 1760,
-    "name": "THANSEER N",
-    "originalPhone": "",
-    "assignedPhone": "+916000000396",
-    "issueType": "INVALID",
-    "district": "KOZHIKKODE",
-    "group": "FEROKE"
-  },
-  {
-    "rowNumber": 1765,
-    "name": "JIBIN AHAMMED",
-    "originalPhone": "",
-    "assignedPhone": "+916000000397",
+    "assignedPhone": "+916000000358",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "FEROKE"
@@ -3585,7 +3234,7 @@
     "rowNumber": 1768,
     "name": "AREEB M",
     "originalPhone": 966546654785,
-    "assignedPhone": "+916000000398",
+    "assignedPhone": "+916000000359",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHANGAROTH"
@@ -3594,7 +3243,7 @@
     "rowNumber": 1769,
     "name": "RASHID .N",
     "originalPhone": "",
-    "assignedPhone": "+916000000399",
+    "assignedPhone": "+916000000360",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHANGAROTH"
@@ -3603,7 +3252,7 @@
     "rowNumber": 1770,
     "name": "RIJAD",
     "originalPhone": "974 3014 8708",
-    "assignedPhone": "+916000000400",
+    "assignedPhone": "+916000000361",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHANGAROTH"
@@ -3612,7 +3261,7 @@
     "rowNumber": 1776,
     "name": "SAIFUDHEEN V P",
     "originalPhone": 97433581118,
-    "assignedPhone": "+916000000401",
+    "assignedPhone": "+916000000362",
     "issueType": "INVALID",
     "district": "KOZHIKKODE",
     "group": "CHANGAROTH"
@@ -3621,7 +3270,7 @@
     "rowNumber": 1786,
     "name": "Riyas M",
     "originalPhone": "",
-    "assignedPhone": "+916000000402",
+    "assignedPhone": "+916000000363",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3630,7 +3279,7 @@
     "rowNumber": 1787,
     "name": "MOHAMMED JASIN JAHANGIR",
     "originalPhone": "",
-    "assignedPhone": "+916000000403",
+    "assignedPhone": "+916000000364",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3639,7 +3288,7 @@
     "rowNumber": 1788,
     "name": "MUHAMED MUNEER S",
     "originalPhone": "",
-    "assignedPhone": "+916000000404",
+    "assignedPhone": "+916000000365",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3648,7 +3297,7 @@
     "rowNumber": 1789,
     "name": "Adhil A",
     "originalPhone": "",
-    "assignedPhone": "+916000000405",
+    "assignedPhone": "+916000000366",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3657,7 +3306,7 @@
     "rowNumber": 1790,
     "name": "Mohammed Dhasthakir",
     "originalPhone": "",
-    "assignedPhone": "+916000000406",
+    "assignedPhone": "+916000000367",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3666,7 +3315,7 @@
     "rowNumber": 1791,
     "name": "Afsal Abdul salam",
     "originalPhone": "",
-    "assignedPhone": "+916000000407",
+    "assignedPhone": "+916000000368",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3675,7 +3324,7 @@
     "rowNumber": 1792,
     "name": "Rishab MB",
     "originalPhone": "",
-    "assignedPhone": "+916000000408",
+    "assignedPhone": "+916000000369",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3684,7 +3333,7 @@
     "rowNumber": 1793,
     "name": "AFSAL A",
     "originalPhone": "",
-    "assignedPhone": "+916000000409",
+    "assignedPhone": "+916000000370",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3693,7 +3342,7 @@
     "rowNumber": 1794,
     "name": "RASHID SALIM",
     "originalPhone": "",
-    "assignedPhone": "+916000000410",
+    "assignedPhone": "+916000000371",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3702,7 +3351,7 @@
     "rowNumber": 1795,
     "name": "Sunil Subrahmanyam",
     "originalPhone": "",
-    "assignedPhone": "+916000000411",
+    "assignedPhone": "+916000000372",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3711,7 +3360,7 @@
     "rowNumber": 1796,
     "name": "Ashker",
     "originalPhone": "",
-    "assignedPhone": "+916000000412",
+    "assignedPhone": "+916000000373",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "CHIRAYANKEEZH"
@@ -3720,7 +3369,7 @@
     "rowNumber": 1798,
     "name": "THANZEER. A",
     "originalPhone": "+919645083788",
-    "assignedPhone": "+916000000413",
+    "assignedPhone": "+916000000374",
     "issueType": "DUPLICATE",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3729,7 +3378,7 @@
     "rowNumber": 1799,
     "name": "Ansar Ahmmed B",
     "originalPhone": "",
-    "assignedPhone": "+916000000414",
+    "assignedPhone": "+916000000375",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3738,7 +3387,7 @@
     "rowNumber": 1800,
     "name": "Aneesh M",
     "originalPhone": "",
-    "assignedPhone": "+916000000415",
+    "assignedPhone": "+916000000376",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3747,7 +3396,7 @@
     "rowNumber": 1801,
     "name": "Shamnad A M",
     "originalPhone": "",
-    "assignedPhone": "+916000000416",
+    "assignedPhone": "+916000000377",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3756,7 +3405,7 @@
     "rowNumber": 1802,
     "name": "NOWSHAD .C.A",
     "originalPhone": "",
-    "assignedPhone": "+916000000417",
+    "assignedPhone": "+916000000378",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3765,7 +3414,7 @@
     "rowNumber": 1804,
     "name": "Shibu M",
     "originalPhone": "",
-    "assignedPhone": "+916000000418",
+    "assignedPhone": "+916000000379",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3774,7 +3423,7 @@
     "rowNumber": 1805,
     "name": "Hijas Ahmed",
     "originalPhone": "",
-    "assignedPhone": "+916000000419",
+    "assignedPhone": "+916000000380",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3783,7 +3432,7 @@
     "rowNumber": 1806,
     "name": "HASSAN NASEEF",
     "originalPhone": "",
-    "assignedPhone": "+916000000420",
+    "assignedPhone": "+916000000381",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3792,7 +3441,7 @@
     "rowNumber": 1807,
     "name": "Riyas AR",
     "originalPhone": "",
-    "assignedPhone": "+916000000421",
+    "assignedPhone": "+916000000382",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3801,7 +3450,7 @@
     "rowNumber": 1808,
     "name": "Abdullah",
     "originalPhone": "",
-    "assignedPhone": "+916000000422",
+    "assignedPhone": "+916000000383",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3810,7 +3459,7 @@
     "rowNumber": 1809,
     "name": "Ansari",
     "originalPhone": "",
-    "assignedPhone": "+916000000423",
+    "assignedPhone": "+916000000384",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3819,7 +3468,7 @@
     "rowNumber": 1810,
     "name": "Nabeel",
     "originalPhone": "",
-    "assignedPhone": "+916000000424",
+    "assignedPhone": "+916000000385",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
@@ -3828,34 +3477,16 @@
     "rowNumber": 1811,
     "name": "Shabeer T",
     "originalPhone": "",
-    "assignedPhone": "+916000000425",
+    "assignedPhone": "+916000000386",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "NEDUMANGAD-PALODE"
   },
   {
-    "rowNumber": 1817,
-    "name": "SHAKHIR.S",
-    "originalPhone": "",
-    "assignedPhone": "+916000000426",
-    "issueType": "INVALID",
-    "district": "THIRUVANANTHAPURAM",
-    "group": "TVM SOUTH"
-  },
-  {
-    "rowNumber": 1819,
-    "name": "MOHAMMED IJAS",
-    "originalPhone": "",
-    "assignedPhone": "+916000000427",
-    "issueType": "INVALID",
-    "district": "THIRUVANANTHAPURAM",
-    "group": "TVM SOUTH"
-  },
-  {
     "rowNumber": 1823,
     "name": "MOHAMED ANAS H",
     "originalPhone": "",
-    "assignedPhone": "+916000000428",
+    "assignedPhone": "+916000000387",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3864,7 +3495,7 @@
     "rowNumber": 1824,
     "name": "Muhammad Harish N",
     "originalPhone": "",
-    "assignedPhone": "+916000000429",
+    "assignedPhone": "+916000000388",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3873,7 +3504,7 @@
     "rowNumber": 1825,
     "name": "Siyad F",
     "originalPhone": "",
-    "assignedPhone": "+916000000430",
+    "assignedPhone": "+916000000389",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3882,7 +3513,7 @@
     "rowNumber": 1826,
     "name": "Muhammed Haneefa",
     "originalPhone": "",
-    "assignedPhone": "+916000000431",
+    "assignedPhone": "+916000000390",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3891,7 +3522,7 @@
     "rowNumber": 1827,
     "name": "Muhammed Ali MK",
     "originalPhone": "",
-    "assignedPhone": "+916000000432",
+    "assignedPhone": "+916000000391",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3900,7 +3531,7 @@
     "rowNumber": 1828,
     "name": "Shajeer.M.A",
     "originalPhone": "",
-    "assignedPhone": "+916000000433",
+    "assignedPhone": "+916000000392",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3909,7 +3540,7 @@
     "rowNumber": 1829,
     "name": "AL MAYOOF K",
     "originalPhone": "",
-    "assignedPhone": "+916000000434",
+    "assignedPhone": "+916000000393",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3918,7 +3549,7 @@
     "rowNumber": 1830,
     "name": "ARSHAD",
     "originalPhone": "",
-    "assignedPhone": "+916000000435",
+    "assignedPhone": "+916000000394",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3927,7 +3558,7 @@
     "rowNumber": 1831,
     "name": "YOUSUF SALIM",
     "originalPhone": "",
-    "assignedPhone": "+916000000436",
+    "assignedPhone": "+916000000395",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3936,7 +3567,7 @@
     "rowNumber": 1832,
     "name": "Haris",
     "originalPhone": "",
-    "assignedPhone": "+916000000437",
+    "assignedPhone": "+916000000396",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3945,7 +3576,7 @@
     "rowNumber": 1833,
     "name": "Sufyan.A",
     "originalPhone": "",
-    "assignedPhone": "+916000000438",
+    "assignedPhone": "+916000000397",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3954,7 +3585,7 @@
     "rowNumber": 1834,
     "name": "Ejas Ansari",
     "originalPhone": "",
-    "assignedPhone": "+916000000439",
+    "assignedPhone": "+916000000398",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3963,7 +3594,7 @@
     "rowNumber": 1835,
     "name": "Althaf",
     "originalPhone": "",
-    "assignedPhone": "+916000000440",
+    "assignedPhone": "+916000000399",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3972,7 +3603,7 @@
     "rowNumber": 1836,
     "name": "Aseem A",
     "originalPhone": "",
-    "assignedPhone": "+916000000441",
+    "assignedPhone": "+916000000400",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3981,7 +3612,7 @@
     "rowNumber": 1837,
     "name": "Akbar M",
     "originalPhone": "",
-    "assignedPhone": "+916000000442",
+    "assignedPhone": "+916000000401",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3990,7 +3621,7 @@
     "rowNumber": 1838,
     "name": "MUHAMMED JASIN .F",
     "originalPhone": "",
-    "assignedPhone": "+916000000443",
+    "assignedPhone": "+916000000402",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -3999,7 +3630,7 @@
     "rowNumber": 1839,
     "name": "Jasin",
     "originalPhone": "",
-    "assignedPhone": "+916000000444",
+    "assignedPhone": "+916000000403",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -4008,7 +3639,7 @@
     "rowNumber": 1840,
     "name": "RIYAS .M",
     "originalPhone": "",
-    "assignedPhone": "+916000000445",
+    "assignedPhone": "+916000000404",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "TVM NORTH-WEST"
@@ -4017,7 +3648,7 @@
     "rowNumber": 1841,
     "name": "Amhar MS",
     "originalPhone": "",
-    "assignedPhone": "+916000000446",
+    "assignedPhone": "+916000000405",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "VARKALA-ATTINGAL"
@@ -4026,7 +3657,7 @@
     "rowNumber": 1847,
     "name": "Abdul Raheem S",
     "originalPhone": "",
-    "assignedPhone": "+916000000447",
+    "assignedPhone": "+916000000406",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4035,7 +3666,7 @@
     "rowNumber": 1848,
     "name": "Haroon S",
     "originalPhone": "",
-    "assignedPhone": "+916000000448",
+    "assignedPhone": "+916000000407",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4044,7 +3675,7 @@
     "rowNumber": 1849,
     "name": "Diya",
     "originalPhone": "",
-    "assignedPhone": "+916000000449",
+    "assignedPhone": "+916000000408",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4053,7 +3684,7 @@
     "rowNumber": 1850,
     "name": "Sharif",
     "originalPhone": "",
-    "assignedPhone": "+916000000450",
+    "assignedPhone": "+916000000409",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4062,7 +3693,7 @@
     "rowNumber": 1851,
     "name": "ziyad",
     "originalPhone": "",
-    "assignedPhone": "+916000000451",
+    "assignedPhone": "+916000000410",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4071,7 +3702,7 @@
     "rowNumber": 1852,
     "name": "Al ameen",
     "originalPhone": "",
-    "assignedPhone": "+916000000452",
+    "assignedPhone": "+916000000411",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4080,7 +3711,7 @@
     "rowNumber": 1853,
     "name": "Ijas",
     "originalPhone": "",
-    "assignedPhone": "+916000000453",
+    "assignedPhone": "+916000000412",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"
@@ -4089,7 +3720,7 @@
     "rowNumber": 1854,
     "name": "Ameer mangalapuram",
     "originalPhone": "",
-    "assignedPhone": "+916000000454",
+    "assignedPhone": "+916000000413",
     "issueType": "INVALID",
     "district": "THIRUVANANTHAPURAM",
     "group": "KAZHAKKOOTTAM"

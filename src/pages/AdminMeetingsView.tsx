@@ -13,6 +13,7 @@ import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import { meetingsAPI } from "@/utils/api";
 
 interface GroupProgress {
   groupId: string;
@@ -103,20 +104,9 @@ const AdminMeetingsView = () => {
         if (value) queryParams.append(key, value);
       });
 
-      const response = await fetch(`/api/meetings/admin/overview?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setMeetings(result.data);
-        setSummaryStats(result.summaryStats);
-      } else {
-        throw new Error('Failed to fetch meetings');
-      }
+      const result = await meetingsAPI.getAdminOverview(Object.fromEntries(queryParams));
+      setMeetings(result.data);
+      setSummaryStats(result.summaryStats);
     } catch (error) {
       console.error('Error fetching meetings:', error);
       toast({

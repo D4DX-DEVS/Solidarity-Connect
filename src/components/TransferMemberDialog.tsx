@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { districtsAPI, transferRequestsAPI } from "@/utils/api";
 
 interface District {
   _id: string;
@@ -75,17 +76,8 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
   const fetchDistricts = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/districts?limit=100', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setDistricts(result.data || []);
-      }
+      const result = await districtsAPI.getDistricts({ limit: 100 });
+      setDistricts(result.data || []);
     } catch (error) {
       console.error('Failed to fetch districts:', error);
     }
@@ -94,17 +86,8 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
   const fetchGroups = async (districtId: string) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/districts/${districtId}/groups?limit=100`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setGroups(result.data || []);
-      }
+      const result = await districtsAPI.getDistrictGroups(districtId, { limit: 100 });
+      setGroups(result.data || []);
     } catch (error) {
       console.error('Failed to fetch groups:', error);
     }
@@ -117,35 +100,18 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/transfer-requests', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          member: member._id,
-          targetDistrict: formData.targetDistrict,
-          targetGroup: formData.targetGroup,
-          reason: formData.reason
-        })
+      await transferRequestsAPI.createTransferRequest({
+        member: member._id,
+        targetDistrict: formData.targetDistrict,
+        targetGroup: formData.targetGroup,
+        reason: formData.reason
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Transfer request submitted successfully. It will be reviewed by the appropriate admin.",
-        });
-        onOpenChange(false);
-      } else {
-        toast({
-          title: "Error",
-          description: result.message || "Failed to submit transfer request",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Success",
+        description: "Transfer request submitted successfully. It will be reviewed by the appropriate admin.",
+      });
+      onOpenChange(false);
     } catch (error) {
       console.error('Failed to submit transfer request:', error);
       toast({

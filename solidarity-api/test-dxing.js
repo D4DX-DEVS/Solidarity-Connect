@@ -26,7 +26,7 @@ async function testDXingAPI() {
     }
     console.log('✅ API credentials configured');
 
-    // Test phone number (use the one from seed data)
+    // Test phone number
     const testPhone = '+919656550933';
     const testMessage = '🧪 Test message from Solidarity API\n\nThis is a test message to verify DXing integration.\n\n- Solidarity Team';
 

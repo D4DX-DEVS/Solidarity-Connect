@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { format } from "date-fns";
+import { meetingsAPI } from "@/utils/api";
 
 interface GroupProgress {
   groupId: string;
@@ -146,24 +147,10 @@ const StateAdminMeetings = () => {
       });
 
       // Fetch both admin overview and detailed review data
-      const [overviewResponse, reviewResponse] = await Promise.all([
-        fetch(`/api/meetings/admin/overview?${queryParams}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`/api/meetings/admin/review?${queryParams}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+      const [overviewResult, reviewResult] = await Promise.all([
+        meetingsAPI.getAdminOverview(Object.fromEntries(queryParams)),
+        meetingsAPI.getAdminReview(Object.fromEntries(queryParams))
       ]);
-
-      if (overviewResponse.ok && reviewResponse.ok) {
-        const overviewResult = await overviewResponse.json();
-        const reviewResult = await reviewResponse.json();
         
         // Combine the data - use overview for group progress, review for detailed analytics
         const combinedMeetings = overviewResult.data.map((overviewMeeting: any) => {

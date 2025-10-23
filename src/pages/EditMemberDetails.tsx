@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { membersAPI } from "@/utils/api";
 
 interface Member {
   _id: string;
@@ -61,17 +62,9 @@ const EditMemberDetails = () => {
     const fetchMember = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/members/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const memberData = result.data;
-          setMember(memberData);
+        const result = await membersAPI.getMember(id!);
+        const memberData = result.data;
+        setMember(memberData);
           
           // Populate form with existing data
           setFormData({
@@ -131,30 +124,13 @@ const EditMemberDetails = () => {
 
       console.log('Updating member with data:', cleanedData);
 
-      const response = await fetch(`/api/members/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(cleanedData)
+      const result = await membersAPI.updateMember(id!, cleanedData);
+      
+      toast({
+        title: "Success",
+        description: "Member updated successfully",
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Member updated successfully",
-        });
-        navigate("/members");
-      } else {
-        // Handle validation errors
-        if (result.errors && Array.isArray(result.errors)) {
-          const errorMessages = result.errors.map((error: any) => error.msg).join(', ');
-          toast({
-            title: "Validation Error",
-            description: errorMessages,
+      navigate("/members");
             variant: "destructive"
           });
         } else {

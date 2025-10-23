@@ -6,7 +6,7 @@
 
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:9000/api';
+const BASE_URL = 'http://localhost:5003/api';
 const TEST_PHONE = '+919656550933';
 
 let authToken = '';
@@ -120,7 +120,13 @@ async function testMembersPagination() {
     console.log('   ✅ Proper pagination metadata returned');
 
   } catch (error) {
-    console.error('❌ Members pagination test failed:', error.response?.data || error.message);
+    console.error('❌ Members pagination test failed:');
+    console.error('Error message:', error.message);
+    if (error.response) {
+      console.error('Response status:', error.response.status);
+      console.error('Response data:', error.response.data);
+    }
+    console.error('Full error:', error);
     process.exit(1);
   }
 }

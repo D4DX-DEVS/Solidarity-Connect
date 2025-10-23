@@ -8,7 +8,7 @@ The Solidarity API backend is now fully functional and ready to use with your Re
 - **Base URL**: `http://localhost:8888/api`
 - **Health Check**: `http://localhost:8888/health`
 - **Environment**: Development
-- **Database**: MongoDB (Connected and Seeded)
+- **Database**: MongoDB (Connected)
 
 ### Authentication
 - **Login Phone**: `+919656550933` (for all user types)
@@ -239,15 +239,6 @@ Authorization: Bearer <token>
 - Manage Baithul Maal for their group
 - Bulk import members to their group
 
-## 📊 Sample Data
-
-The database is seeded with:
-- **3 Users**: One for each role type (all use same phone number)
-- **2 Districts**: Thrissur, Malappuram
-- **3 Groups**: Varantharappalli, Perumpilavu, Manjeri
-- **7 Members**: Sample members with different statuses
-- **Baithul Maal Data**: Sample financial contributions
-
 ## 🔧 Development Commands
 
 ```bash
@@ -256,9 +247,6 @@ npm start
 
 # Development with auto-reload
 npm run dev
-
-# Seed database
-npm run seed
 
 # Test API endpoints
 node test-api.js

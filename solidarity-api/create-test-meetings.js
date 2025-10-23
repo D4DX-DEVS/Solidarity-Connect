@@ -34,7 +34,7 @@ const createTestMeetings = async () => {
     // Find a user to create meetings (preferably state admin)
     const stateAdmin = await User.findOne({ role: 'state_admin' });
     if (!stateAdmin) {
-      console.log('No state admin found. Please run seed data first: npm run seed');
+      console.log('No state admin found. Please create a state admin user first.');
       return;
     }
 

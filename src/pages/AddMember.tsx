@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
+import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 
 interface UserContext {
   userRole: string;
@@ -76,16 +77,8 @@ const AddMember = () => {
         const token = localStorage.getItem('token');
         
         // Fetch user context
-        const contextResponse = await fetch('/api/members/user-context', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (contextResponse.ok) {
-          const contextResult = await contextResponse.json();
-          setUserContext(contextResult.data);
+        const contextResult = await membersAPI.getUserContext();
+        setUserContext(contextResult.data);
 
           // Auto-fill district and group for group admins
           if (contextResult.data.userRole === 'group_admin') {
@@ -103,17 +96,8 @@ const AddMember = () => {
 
           // Fetch districts only if user can select district
           if (contextResult.data.canSelectDistrict) {
-            const districtsResponse = await fetch('/api/districts?limit=100', {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            });
-
-            if (districtsResponse.ok) {
-              const districtsResult = await districtsResponse.json();
-              setDistricts(districtsResult.data.docs || []);
-            }
+            const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
+            setDistricts(districtsResult.data.docs || []);
           }
         } else {
           toast({
@@ -143,17 +127,8 @@ const AddMember = () => {
       const fetchGroups = async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`/api/districts/${formData.district}/groups?limit=100`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            setGroups(result.data.docs || []);
-          }
+          const result = await districtsAPI.getDistrictGroups(formData.district, { limit: 100 });
+          setGroups(result.data.docs || []);
         } catch (error) {
           console.error('Failed to fetch groups:', error);
         }
@@ -182,40 +157,13 @@ const AddMember = () => {
       
       console.log('Sending member data:', cleanedData);
       
-      const response = await fetch('/api/members', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(cleanedData)
+      const result = await membersAPI.createMember(cleanedData);
+      
+      toast({
+        title: "Success",
+        description: "Member added successfully",
       });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Member added successfully",
-        });
-        navigate("/members");
-      } else {
-        // Handle validation errors
-        if (result.errors && Array.isArray(result.errors)) {
-          const errorMessages = result.errors.map((error: any) => error.msg).join(', ');
-          toast({
-            title: "Validation Error",
-            description: errorMessages,
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: result.message || "Failed to add member",
-            variant: "destructive"
-          });
-        }
-      }
+      navigate("/members");
     } catch (error) {
       console.error('Failed to add member:', error);
       toast({

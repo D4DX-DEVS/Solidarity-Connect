@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { apiCall } from "@/utils/api";
 import { 
   User, 
   CreditCard, 
@@ -104,24 +105,7 @@ const MemberDashboard = () => {
   const { token, logout } = useAuth();
   const { toast } = useToast();
 
-  const apiCall = async (endpoint: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        logout();
-        throw new Error('Session expired');
-      }
-      throw new Error('API request failed');
-    }
-
-    return response.json();
-  };
+  // Use the common API utility
 
   useEffect(() => {
     const fetchData = async () => {

@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema({
   permissions: [{
     type: String,
     enum: [
+      'manage_users',
       'manage_members',
       'manage_districts',
       'manage_groups',
@@ -117,6 +118,7 @@ userSchema.pre('save', function(next) {
   switch (this.role) {
     case 'state_admin':
       this.permissions = [
+        'manage_users',
         'manage_members',
         'manage_districts',
         'manage_groups',

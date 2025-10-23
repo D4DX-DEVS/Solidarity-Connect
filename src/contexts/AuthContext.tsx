@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { authAPI, memberAuthAPI } from "@/utils/api";
 
 type UserRole = "state_admin" | "district_admin" | "group_admin" | "member";
 
@@ -60,20 +61,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(storedToken);
 
     try {
-      // Use different endpoint based on user type
-      const endpoint = userType === 'member' ? 
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/profile` :
-        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/me`;
-
-      const response = await fetch(endpoint, {
-        headers: {
-          'Authorization': `Bearer ${storedToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
+      // Use different API based on user type
+      const result = userType === 'member' ? 
+        await memberAuthAPI.getProfile() :
+        await authAPI.getProfile();
         let userData;
         
         if (userType === 'member') {

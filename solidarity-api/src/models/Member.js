@@ -129,8 +129,15 @@ memberSchema.index({ phone: 1 });
 memberSchema.index({ district: 1 });
 memberSchema.index({ group: 1 });
 memberSchema.index({ status: 1 });
+memberSchema.index({ isApproved: 1 });
 memberSchema.index({ name: 'text', email: 'text' });
 memberSchema.index({ createdAt: -1 });
+
+// Compound indexes for common query patterns
+memberSchema.index({ district: 1, status: 1 });
+memberSchema.index({ group: 1, status: 1 });
+memberSchema.index({ status: 1, isApproved: 1 });
+memberSchema.index({ district: 1, group: 1, status: 1 }); // For role-based filtering
 
 // Calculate age from date of birth
 memberSchema.pre('save', function(next) {

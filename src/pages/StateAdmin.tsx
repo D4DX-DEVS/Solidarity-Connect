@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { reportsAPI, usersAPI, baithulMaalAPI } from "@/utils/api";
 
 interface DashboardData {
   memberStatistics: {
@@ -68,6 +69,7 @@ const StateAdmin = () => {
   const [loading, setLoading] = useState(true);
 
   const adminActions = [
+    { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
     { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
@@ -91,25 +93,16 @@ const StateAdmin = () => {
       };
 
       // Fetch dashboard overview
-      const dashboardResponse = await fetch('/api/reports/dashboard', { headers });
-      if (dashboardResponse.ok) {
-        const dashboardResult = await dashboardResponse.json();
-        setDashboardData(dashboardResult.data);
-      }
+      const dashboardResult = await reportsAPI.getDashboard();
+      setDashboardData(dashboardResult.data);
 
       // Fetch user statistics
-      const userStatsResponse = await fetch('/api/users/stats/overview', { headers });
-      if (userStatsResponse.ok) {
-        const userStatsResult = await userStatsResponse.json();
-        setUserStats(userStatsResult.data.statistics);
-      }
+      const userStatsResult = await usersAPI.getUserStats();
+      setUserStats(userStatsResult.data.statistics);
 
       // Fetch Baithul Maal statistics
-      const baithulMaalResponse = await fetch('/api/baithul-maal/stats', { headers });
-      if (baithulMaalResponse.ok) {
-        const baithulMaalResult = await baithulMaalResponse.json();
-        setBaithulMaalStats(baithulMaalResult.data);
-      }
+      const baithulMaalResult = await baithulMaalAPI.getStats();
+      setBaithulMaalStats(baithulMaalResult.data);
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -235,6 +228,10 @@ const StateAdmin = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/state-admin/users")}>
+                    <UserCog className="h-4 w-4 mr-2" />
+                    User Management
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/personal-targets")}>
                     <Target className="h-4 w-4 mr-2" />
                     Personal Targets

@@ -11,6 +11,7 @@ import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 
 interface Member {
   _id: string;
@@ -121,26 +122,17 @@ const Members = () => {
         params.append('sort', '-createdAt'); // Sort by newest first
         
         // Fetch members
-        const membersResponse = await fetch(`/api/members?${params.toString()}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (membersResponse.ok) {
-          const membersResult = await membersResponse.json();
-          setMembers(membersResult.data || []);
-          setStatistics(membersResult.statistics || statistics);
-          
-          // Update pagination state
-          if (membersResult.pagination) {
-            setTotalPages(membersResult.pagination.totalPages);
-            setTotalDocs(membersResult.pagination.totalDocs);
-            setHasNextPage(membersResult.pagination.hasNextPage);
-            setHasPrevPage(membersResult.pagination.hasPrevPage);
-          }
-        } else {
+        const membersResult = await membersAPI.getMembers(Object.fromEntries(params));
+        setMembers(membersResult.data || []);
+        setStatistics(membersResult.statistics || statistics);
+        
+        // Update pagination state
+        if (membersResult.pagination) {
+          setTotalPages(membersResult.pagination.totalPages);
+          setTotalDocs(membersResult.pagination.totalDocs);
+          setHasNextPage(membersResult.pagination.hasNextPage);
+          setHasPrevPage(membersResult.pagination.hasPrevPage);
+        }
           toast({
             title: "Error",
             description: "Failed to fetch members",
@@ -150,32 +142,14 @@ const Members = () => {
 
         // Fetch districts (for state admin and district admin filters)
         if (userRole === 'state_admin') {
-          const districtsResponse = await fetch('/api/districts?limit=100', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (districtsResponse.ok) {
-            const districtsResult = await districtsResponse.json();
-            setDistricts(districtsResult.data.docs || []);
-          }
+          const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
+          setDistricts(districtsResult.data.docs || []);
         }
 
         // Fetch groups (for filtering)
         if (userRole === 'state_admin' || userRole === 'district_admin') {
-          const groupsResponse = await fetch('/api/groups?limit=100', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (groupsResponse.ok) {
-            const groupsResult = await groupsResponse.json();
-            setGroups(groupsResult.data || []);
-          }
+          const groupsResult = await groupsAPI.getGroups({ limit: 100 });
+          setGroups(groupsResult.data || []);
         }
 
       } catch (error) {
@@ -211,19 +185,10 @@ const Members = () => {
       params.append('limit', itemsPerPage.toString());
       params.append('sort', '-createdAt');
       
-      const response = await fetch(`/api/members?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setMembers(prev => [...prev, ...(result.data || [])]);
-        setCurrentPage(prev => prev + 1);
-        setHasNextPage(result.pagination?.hasNextPage || false);
-      }
+      const result = await membersAPI.getMembers(Object.fromEntries(params));
+      setMembers(prev => [...prev, ...(result.data || [])]);
+      setCurrentPage(prev => prev + 1);
+      setHasNextPage(result.pagination?.hasNextPage || false);
     } catch (error) {
       console.error('Failed to load more members:', error);
       toast({

@@ -1,0 +1,410 @@
+[
+  {
+    "rowNumber": 6,
+    "name": "MUJUMAL M",
+    "phone": "",
+    "district": "ALAPPUZHA",
+    "group": "CHERTHALA",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 46,
+    "name": "Azhar A",
+    "phone": 9495620175,
+    "district": "ALAPPUZHA",
+    "group": "HARIPPAD",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 155,
+    "name": "THANSEEF SALIM",
+    "phone": "",
+    "district": "ERANAKULAM",
+    "group": "KUNNATHUNAD",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 169,
+    "name": "JUNAIS P.S",
+    "phone": "70252 30780",
+    "district": "ERANAKULAM",
+    "group": "MANNAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 198,
+    "name": "SHABANAS",
+    "phone": "",
+    "district": "ERANAKULAM",
+    "group": "VAZHAKKULAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 224,
+    "name": "Munees Muhammed P P",
+    "phone": 8111963360,
+    "district": "KANNUR",
+    "group": "CHAKKARAKKAL",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 392,
+    "name": "Thanzeer K m",
+    "phone": "",
+    "district": "KOCHI CITY",
+    "group": "VYTILA",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 400,
+    "name": "Rashid M R",
+    "phone": "",
+    "district": "KOCHI CITY",
+    "group": "KOCHI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 425,
+    "name": "Muhammed Ansar A",
+    "phone": 9946066681,
+    "district": "KOLLAM",
+    "group": "KARUNAGAPALLY",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 491,
+    "name": "Shemeer Salim",
+    "phone": "Nil",
+    "district": "KOTTAYAM",
+    "group": "CHANGANASSERY-KOTTAYAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 517,
+    "name": "Navas I",
+    "phone": 9400167010,
+    "district": "PALAKKAD",
+    "group": "ALANALLUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 520,
+    "name": "Abdul Gafoor",
+    "phone": 7736279527,
+    "district": "PALAKKAD",
+    "group": "ALANALLUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 524,
+    "name": "Thanseer Aslam TP",
+    "phone": 7560838425,
+    "district": "PALAKKAD",
+    "group": "ALANALLUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 534,
+    "name": "Abdul Hakeem",
+    "phone": "",
+    "district": "PALAKKAD",
+    "group": "ALATHUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 571,
+    "name": "SHAMEEM MA",
+    "phone": "",
+    "district": "PALAKKAD",
+    "group": "PALAKKAD",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 585,
+    "name": "Kuttymoidu V",
+    "phone": "",
+    "district": "PALAKKAD",
+    "group": "PATTAMBI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 686,
+    "name": "Noushad M",
+    "phone": 9645017829,
+    "district": "THRISSUR",
+    "group": "MATHILAKAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 783,
+    "name": "SAHARSHAD .P.A",
+    "phone": "",
+    "district": "THRISSUR",
+    "group": "THRISSUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 785,
+    "name": "Rashid P U",
+    "phone": "",
+    "district": "THRISSUR",
+    "group": "THRISSUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 786,
+    "name": "SWABIR .P.A",
+    "phone": "",
+    "district": "THRISSUR",
+    "group": "THRISSUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 787,
+    "name": "NASHID .P.S",
+    "phone": "",
+    "district": "THRISSUR",
+    "group": "THRISSUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 818,
+    "name": "HASHIM .V.T",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "AR NAGAR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 822,
+    "name": "MOHAMMED JASAR .P.T",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "AR NAGAR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 827,
+    "name": "SAFDER SULTHAN",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "AR NAGAR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 832,
+    "name": "DR. ABDUL WASIH LAKKAL",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "AR NAGAR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 833,
+    "name": "HISHAM PE",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "AR NAGAR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 840,
+    "name": "ANEESURAHMAN T P",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "VALANCHERY",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 843,
+    "name": "HYDARALI V P",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "VALANCHERY",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 852,
+    "name": "HASHIR",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "VALANCHERY",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 866,
+    "name": "NAJUMUDHEEN K P",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "PADAPPARAMB",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 870,
+    "name": "SHAKKIR",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "PADAPPARAMB",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1017,
+    "name": "AMEENUL HASSAN",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "PUTHANATHANI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1018,
+    "name": "THASLEEM .K.K",
+    "phone": 9562049324,
+    "district": "MALAPPURAM",
+    "group": "PUTHANATHANI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1032,
+    "name": "MEHROUF ALI .M",
+    "phone": 9539050509,
+    "district": "MALAPPURAM",
+    "group": "TIRUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1034,
+    "name": "ABDUL SHAFEEK. N",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "TIRUR",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1136,
+    "name": "NAHAS U K",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "SANTHAPURAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1151,
+    "name": "FAISAL",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "EDAPPAL-PONNANI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1152,
+    "name": "ABDUL GAFOOR K M",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "EDAPPAL-PONNANI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1259,
+    "name": "NOUFAL A",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "MARANCHERY-PERUMBADAPPU",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1260,
+    "name": "ASHIF.K",
+    "phone": 918592849987,
+    "district": "MALAPPURAM",
+    "group": "MARANCHERY-PERUMBADAPPU",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1299,
+    "name": "MUHSIN PARARI",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "EDAVANNA",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1345,
+    "name": "SHIHABUDHEEN A",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "MALAPPURAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1361,
+    "name": "IBRAHIM ARABI",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "MALAPPURAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1373,
+    "name": "AMJAD MUBASHIR .C.H",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "MALAPPURAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1390,
+    "name": "SAHUD A V",
+    "phone": "",
+    "district": "MALAPPURAM",
+    "group": "MALAPPURAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1505,
+    "name": "YOONUS KT",
+    "phone": 9567713884,
+    "district": "KOZHIKKODE",
+    "group": "MUKKAM",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1657,
+    "name": "ARSHIF .V.C",
+    "phone": "",
+    "district": "KOZHIKKODE",
+    "group": "CHELANNUR-KAKKODI",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1760,
+    "name": "THANSEER N",
+    "phone": "",
+    "district": "KOZHIKKODE",
+    "group": "FEROKE",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1765,
+    "name": "JIBIN AHAMMED",
+    "phone": "",
+    "district": "KOZHIKKODE",
+    "group": "FEROKE",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1817,
+    "name": "SHAKHIR.S",
+    "phone": "",
+    "district": "THIRUVANANTHAPURAM",
+    "group": "TVM SOUTH",
+    "reason": "NEED TO REMOVE status"
+  },
+  {
+    "rowNumber": 1819,
+    "name": "MOHAMMED IJAS",
+    "phone": "",
+    "district": "THIRUVANANTHAPURAM",
+    "group": "TVM SOUTH",
+    "reason": "NEED TO REMOVE status"
+  }
+]
