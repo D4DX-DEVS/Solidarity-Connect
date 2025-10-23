@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { apiCall } from "@/utils/api";
+import { memberAuthAPI } from "@/utils/api";
 import { 
   User, 
   CreditCard, 
@@ -113,20 +113,26 @@ const MemberDashboard = () => {
         setLoading(true);
 
         // Fetch profile
-        const profileData = await apiCall('/member-auth/profile');
+        const profileData = await memberAuthAPI.getProfile();
         setProfile(profileData.data);
 
-        // Fetch current month targets
-        const currentDate = new Date();
-        const targetsData = await apiCall(`/member-auth/targets?month=${currentDate.getMonth() + 1}&year=${currentDate.getFullYear()}`);
+        // Fetch all targets (sorted by release date, recent first)
+        const targetsData = await memberAuthAPI.getTargets({
+          limit: '20' // Show recent 20 targets
+        });
         setTargets(targetsData.data);
 
         // Fetch upcoming meetings
-        const meetingsData = await apiCall('/member-auth/meetings?status=scheduled&limit=5');
+        const meetingsData = await memberAuthAPI.getMeetings({
+          status: 'scheduled',
+          limit: '5'
+        });
         setMeetings(meetingsData.data.meetings);
 
         // Fetch recent notifications
-        const notificationsData = await apiCall('/member-auth/notifications?limit=5');
+        const notificationsData = await memberAuthAPI.getNotifications({
+          limit: '5'
+        });
         setNotifications(notificationsData.data.notifications);
 
       } catch (error) {
@@ -300,13 +306,13 @@ const MemberDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
-            Current Month Targets
+            Recent Targets
           </CardTitle>
         </CardHeader>
         <CardContent>
           {targets.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              No targets assigned for this month
+              No targets available
             </p>
           ) : (
             <div className="space-y-4">
@@ -518,7 +524,7 @@ const MemberDashboard = () => {
         <CardContent>
           {targets.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              No targets assigned for this month
+              No targets available
             </p>
           ) : (
             <div className="space-y-4">

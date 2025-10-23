@@ -558,32 +558,94 @@ router.get('/meetings', authenticateMember, async (req, res) => {
 // @access  Private (Member)
 router.get('/targets', authenticateMember, async (req, res) => {
   try {
-    const { month, year, status } = req.query;
+    const { month, year, status, limit = 50 } = req.query;
     const member = req.member;
 
-    // Get member's target progress
-    const progressRecords = await MemberTargetProgress.find({ member: member._id })
-      .populate({
-        path: 'personalTarget',
-        match: {
-          status: 'active',
-          ...(month && { month: parseInt(month) }),
-          ...(year && { year: parseInt(year) })
-        }
-      })
-      .populate('personalTarget', 'title description category targetValue unit month year startDate endDate instructions rewards');
+    // Build filter for targets that apply to this member
+    let targetFilter = {
+      status: 'active',
+      $or: [
+        { targetAudience: 'all' },
+        { targetAudience: 'specific_districts', targetDistricts: member.district },
+        { targetAudience: 'specific_groups', targetGroups: member.group }
+      ]
+    };
 
-    // Filter out records where personalTarget is null (due to populate match)
-    const validProgress = progressRecords.filter(p => p.personalTarget);
+    // Add month/year filter if provided (for backward compatibility)
+    if (month) targetFilter.month = parseInt(month);
+    if (year) targetFilter.year = parseInt(year);
+
+    // Get all targets that apply to this member, sorted by release date (recent first)
+    const targets = await PersonalTarget.find(targetFilter)
+      .sort({ createdAt: -1, startDate: -1 }) // Sort by creation date first, then start date
+      .limit(parseInt(limit))
+      .populate('createdBy', 'name role')
+      .populate('targetDistricts', 'name')
+      .populate('targetGroups', 'name');
+
+    // Get member's progress for these targets
+    const targetIds = targets.map(t => t._id);
+    const progressRecords = await MemberTargetProgress.find({ 
+      member: member._id,
+      personalTarget: { $in: targetIds }
+    });
+
+    // Create a map of progress by target ID
+    const progressMap = {};
+    progressRecords.forEach(progress => {
+      progressMap[progress.personalTarget.toString()] = progress;
+    });
+
+    // Combine targets with progress data
+    const targetsWithProgress = targets.map(target => {
+      const progress = progressMap[target._id.toString()];
+      
+      if (progress) {
+        // Return existing progress record
+        return {
+          _id: progress._id,
+          personalTarget: target,
+          currentProgress: progress.currentProgress,
+          targetValue: progress.targetValue,
+          progressPercentage: progress.progressPercentage,
+          status: progress.status,
+          completedAt: progress.completedAt,
+          notes: progress.notes,
+          dailyProgress: progress.dailyProgress,
+          createdAt: progress.createdAt,
+          updatedAt: progress.updatedAt
+        };
+      } else {
+        // Create a virtual progress record for targets without progress
+        return {
+          _id: null, // No progress record exists yet
+          personalTarget: target,
+          currentProgress: 0,
+          targetValue: target.targetValue,
+          progressPercentage: 0,
+          status: 'not_started',
+          completedAt: null,
+          notes: null,
+          dailyProgress: [],
+          createdAt: target.createdAt,
+          updatedAt: target.updatedAt
+        };
+      }
+    });
 
     // Apply status filter if provided
-    const filteredProgress = status ? 
-      validProgress.filter(p => p.status === status) : 
-      validProgress;
+    const filteredTargets = status ? 
+      targetsWithProgress.filter(t => t.status === status) : 
+      targetsWithProgress;
 
     res.status(200).json({
       success: true,
-      data: filteredProgress
+      data: filteredTargets,
+      meta: {
+        total: filteredTargets.length,
+        hasProgress: progressRecords.length,
+        newTargets: targets.length - progressRecords.length
+      }
     });
 
   } catch (error) {

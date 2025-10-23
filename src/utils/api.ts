@@ -93,6 +93,26 @@ export const memberAuthAPI = {
     }),
 
   getProfile: () => apiCall('/member-auth/profile'),
+
+  getTargets: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/targets${queryString}`);
+  },
+
+  getMeetings: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/meetings${queryString}`);
+  },
+
+  getNotifications: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/notifications${queryString}`);
+  },
+
+  getBaithulMaal: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/baithul-maal${queryString}`);
+  },
 };
 
 // Users API calls
@@ -210,6 +230,16 @@ export const meetingsAPI = {
 export const baithulMaalAPI = {
   getStats: () => apiCall('/baithul-maal/stats'),
   
+  getBaithulData: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/baithul-maal${queryString}`);
+  },
+
+  getPayments: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/baithul-maal-payments${queryString}`);
+  },
+
   getMemberPayments: (memberId: string) => 
     apiCall(`/baithul-maal-payments/member/${memberId}`),
 

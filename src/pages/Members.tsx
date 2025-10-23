@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ const Members = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        setLoading(currentPage === 1); // Only show loading on first page
         
         // Build query parameters for filtering and pagination
         const params = new URLSearchParams();
@@ -137,15 +137,22 @@ const Members = () => {
           }
         }
 
-        // Fetch districts (for state admin and district admin filters)
+        // Fetch districts (for state admin)
         if (userRole === 'state_admin') {
           const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
-          setDistricts(districtsResult.data.docs || []);
+          setDistricts(districtsResult.data || []);
         }
 
-        // Fetch groups (for filtering)
+        // Fetch groups based on selected district or user role
         if (userRole === 'state_admin' || userRole === 'district_admin') {
-          const groupsResult = await groupsAPI.getGroups({ limit: 100 });
+          const groupParams: any = { limit: 100 };
+          if (selectedDistrict) {
+            groupParams.district = selectedDistrict;
+          } else if (userRole === 'district_admin' && userDistrict) {
+            groupParams.district = userDistrict._id;
+          }
+          
+          const groupsResult = await groupsAPI.getGroups(groupParams);
           setGroups(groupsResult.data || []);
         }
 
@@ -162,39 +169,41 @@ const Members = () => {
     };
 
     fetchData();
-  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, userRole, toast]);
+  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, userRole, userDistrict, toast]);
 
-  // Load more members function
-  const loadMoreMembers = async () => {
-    if (!hasNextPage || loadingMore) return;
-    
-    setLoadingMore(true);
-    try {
-      const token = localStorage.getItem('token');
+  // Reset groups when district changes
+  useEffect(() => {
+    if (selectedDistrict && (userRole === 'state_admin' || userRole === 'district_admin')) {
+      setSelectedGroup(""); // Clear group selection when district changes
       
-      // Build query parameters for next page
-      const params = new URLSearchParams();
-      if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
-      if (selectedDistrict) params.append('district', selectedDistrict);
-      if (selectedGroup) params.append('group', selectedGroup);
-      if (selectedStatus) params.append('status', selectedStatus);
-      params.append('page', (currentPage + 1).toString());
-      params.append('limit', itemsPerPage.toString());
-      params.append('sort', '-createdAt');
+      // Fetch groups for the selected district
+      const fetchDistrictGroups = async () => {
+        try {
+          const groupsResult = await groupsAPI.getGroups({ 
+            district: selectedDistrict, 
+            limit: 100 
+          });
+          setGroups(groupsResult.data || []);
+        } catch (error) {
+          console.error('Failed to fetch district groups:', error);
+        }
+      };
       
-      const result = await membersAPI.getMembers(Object.fromEntries(params));
-      setMembers(prev => [...prev, ...(result.data || [])]);
+      fetchDistrictGroups();
+    }
+  }, [selectedDistrict, userRole]);
+
+  // Navigate to next page
+  const goToNextPage = () => {
+    if (hasNextPage) {
       setCurrentPage(prev => prev + 1);
-      setHasNextPage(result.pagination?.hasNextPage || false);
-    } catch (error) {
-      console.error('Failed to load more members:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load more members",
-        variant: "destructive"
-      });
-    } finally {
-      setLoadingMore(false);
+    }
+  };
+
+  // Navigate to previous page
+  const goToPrevPage = () => {
+    if (hasPrevPage) {
+      setCurrentPage(prev => prev - 1);
     }
   };
 
@@ -465,23 +474,33 @@ const Members = () => {
           ))
         )}
         
-        {/* Load More Button */}
-        {hasNextPage && (
-          <div className="text-center py-4">
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center py-4 px-2">
             <Button 
-              onClick={loadMoreMembers}
-              disabled={loadingMore}
+              onClick={goToPrevPage}
+              disabled={!hasPrevPage}
               variant="outline"
-              className="w-full max-w-xs"
+              size="sm"
+              className="flex items-center gap-2"
             >
-              {loadingMore ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-                  Loading...
-                </>
-              ) : (
-                `Load More (${totalDocs - members.length} remaining)`
-              )}
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+            
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+            
+            <Button 
+              onClick={goToNextPage}
+              disabled={!hasNextPage}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         )}

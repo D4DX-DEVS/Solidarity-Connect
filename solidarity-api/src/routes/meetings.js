@@ -341,12 +341,12 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         // Add enhanced user-specific information
         meetingObj.userInfo = {
           canEdit: req.user.role === 'state_admin' || 
-                  meeting.createdBy._id.toString() === req.user._id.toString(),
+                  (meeting.createdBy && meeting.createdBy._id.toString() === req.user._id.toString()),
           canManageAttendance: ['group_admin', 'district_admin', 'state_admin'].includes(req.user.role),
           canViewReports: ['district_admin', 'state_admin'].includes(req.user.role),
           canMarkSessionComplete: req.user.role === 'group_admin',
           canAddGuests: req.user.role === 'group_admin',
-          isCreator: meeting.createdBy._id.toString() === req.user._id.toString(),
+          isCreator: meeting.createdBy && meeting.createdBy._id.toString() === req.user._id.toString(),
           role: req.user.role
         };
 
@@ -412,9 +412,16 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
   } catch (error) {
     console.error('Get meetings error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch meetings'
+      message: 'Failed to fetch meetings',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });
@@ -520,7 +527,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
     // Add user permissions
     meetingData.userPermissions = {
       canEdit: req.user.role === 'state_admin' || 
-              meeting.createdBy._id.toString() === req.user._id.toString(),
+              (meeting.createdBy && meeting.createdBy._id.toString() === req.user._id.toString()),
       canManageAttendance: ['group_admin', 'district_admin', 'state_admin'].includes(req.user.role),
       canViewReports: ['district_admin', 'state_admin'].includes(req.user.role),
       canMarkComplete: req.user.role === 'group_admin' && 
@@ -3191,7 +3198,7 @@ router.get('/admin/overview',
       const {
         page = 1,
         limit = 20,
-        sort = '-createdAt',
+        sort = '-scheduledDate', // Changed to sort by scheduled date (latest first)
         status,
         completionStatus,
         search
@@ -3270,8 +3277,58 @@ router.get('/admin/overview',
 
             const groupProgress = {};
             
-            // Initialize group progress tracking
+            // Get actual member counts and status breakdown from Member collection
+            const Member = (await import('../models/Member.js')).default;
+            const memberStats = await Promise.all(
+              targetGroups.map(async (group) => {
+                const [totalMembers, activeMembers, inactiveMembers, abroadMembers] = await Promise.all([
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: { $in: ['Active', 'Inactive', 'Abroad'] }, // Count all members except dismissed
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Active',
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Inactive',
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Abroad',
+                    isApproved: true 
+                  })
+                ]);
+                
+                return { 
+                  groupId: group._id.toString(), 
+                  totalMembers,
+                  activeMembers,
+                  inactiveMembers,
+                  abroadMembers
+                };
+              })
+            );
+            
+            // Create member stats lookup
+            const memberStatsLookup = {};
+            memberStats.forEach((stats) => {
+              memberStatsLookup[stats.groupId] = stats;
+            });
+            
+            // Initialize group progress tracking with actual member counts and status breakdown
             targetGroups.forEach(group => {
+              const stats = memberStatsLookup[group._id.toString()] || {
+                totalMembers: 0,
+                activeMembers: 0,
+                inactiveMembers: 0,
+                abroadMembers: 0
+              };
+              
               groupProgress[group._id.toString()] = {
                 groupId: group._id,
                 groupName: group.name,
@@ -3279,8 +3336,17 @@ router.get('/admin/overview',
                 district: group.district,
                 totalSessions: sessions.length,
                 completedSessions: 0,
-                totalMembers: 0,
+                // Member counts from database
+                totalMembers: stats.totalMembers,
+                activeMembers: stats.activeMembers,
+                inactiveMembers: stats.inactiveMembers,
+                abroadMembersFromDB: stats.abroadMembers, // Members with 'Abroad' status in DB
+                // Attendance tracking (will be updated from session data)
                 totalGuests: 0,
+                presentMembers: 0,
+                absentMembers: 0,
+                abroadMembers: 0, // Members marked as abroad in attendance
+                presentGuests: 0,
                 attendanceRecorded: false,
                 lastActivity: null,
                 status: 'pending' // pending, in_progress, completed
@@ -3291,14 +3357,42 @@ router.get('/admin/overview',
             sessions.forEach(session => {
               // Track which groups have recorded attendance
               const groupsWithAttendance = new Set();
+              const groupAttendanceData = {};
               
               session.memberAttendance.forEach(attendance => {
                 if (attendance.member && attendance.member.group) {
                   const groupId = attendance.member.group.toString();
                   groupsWithAttendance.add(groupId);
                   
+                  if (!groupAttendanceData[groupId]) {
+                    groupAttendanceData[groupId] = {
+                      totalMembers: 0,
+                      presentMembers: 0,
+                      absentMembers: 0,
+                      lateMembers: 0,
+                      abroadMembers: 0
+                    };
+                  }
+                  
+                  groupAttendanceData[groupId].totalMembers++;
+                  
+                  switch (attendance.status) {
+                    case 'present':
+                      groupAttendanceData[groupId].presentMembers++;
+                      break;
+                    case 'absent':
+                      groupAttendanceData[groupId].absentMembers++;
+                      break;
+                    case 'late':
+                      groupAttendanceData[groupId].lateMembers++;
+                      groupAttendanceData[groupId].presentMembers++; // Late is considered present
+                      break;
+                    case 'abroad':
+                      groupAttendanceData[groupId].abroadMembers++;
+                      break;
+                  }
+                  
                   if (groupProgress[groupId]) {
-                    groupProgress[groupId].totalMembers++;
                     groupProgress[groupId].attendanceRecorded = true;
                     if (!groupProgress[groupId].lastActivity || session.completedAt > groupProgress[groupId].lastActivity) {
                       groupProgress[groupId].lastActivity = session.completedAt || session.scheduledDate;
@@ -3311,8 +3405,28 @@ router.get('/admin/overview',
                 if (guest.addedBy && guest.addedBy.group) {
                   const groupId = guest.addedBy.group.toString();
                   if (groupProgress[groupId]) {
-                    groupProgress[groupId].totalGuests++;
+                    groupProgress[groupId].totalGuests = (groupProgress[groupId].totalGuests || 0) + 1;
+                    if (guest.status === 'present' || guest.status === 'late') {
+                      groupProgress[groupId].presentGuests = (groupProgress[groupId].presentGuests || 0) + 1;
+                    }
                   }
+                }
+              });
+
+              // Update group progress with attendance data (don't overwrite totalMembers)
+              Object.keys(groupAttendanceData).forEach(groupId => {
+                if (groupProgress[groupId]) {
+                  const data = groupAttendanceData[groupId];
+                  // Keep the actual member count from database, only update attendance data
+                  groupProgress[groupId].presentMembers = Math.max(groupProgress[groupId].presentMembers || 0, data.presentMembers);
+                  groupProgress[groupId].absentMembers = Math.max(groupProgress[groupId].absentMembers || 0, data.absentMembers);
+                  groupProgress[groupId].abroadMembers = Math.max(groupProgress[groupId].abroadMembers || 0, data.abroadMembers);
+                  
+                  // Calculate attendance rate based on actual total members vs present members
+                  const totalParticipants = (groupProgress[groupId].totalMembers || 0) + (groupProgress[groupId].totalGuests || 0);
+                  const totalPresent = (groupProgress[groupId].presentMembers || 0) + (groupProgress[groupId].presentGuests || 0);
+                  groupProgress[groupId].attendanceRate = totalParticipants > 0 ? 
+                    ((totalPresent / totalParticipants) * 100).toFixed(1) : '0';
                 }
               });
 
@@ -3329,8 +3443,8 @@ router.get('/admin/overview',
             // Calculate status for each group
             // Key Logic: If attendance is recorded, it means the program was conducted/completed by that group
             Object.values(groupProgress).forEach(progress => {
-              // If group has recorded any attendance data, consider program as completed
-              if (progress.attendanceRecorded || progress.totalMembers > 0 || progress.totalGuests > 0) {
+              // If group has recorded any attendance data (present, absent, etc.), consider program as conducted
+              if (progress.attendanceRecorded || progress.presentMembers > 0 || progress.absentMembers > 0 || progress.abroadMembers > 0 || progress.totalGuests > 0) {
                 progress.status = 'completed'; // Program conducted = completed
                 progress.programConducted = true;
               } else {
@@ -3388,6 +3502,8 @@ router.get('/admin/overview',
                   groupAttendanceData[groupId] = {
                     totalMembers: 0,
                     presentMembers: 0,
+                    absentMembers: 0,
+                    abroadMembers: 0,
                     totalGuests: 0,
                     presentGuests: 0,
                     lastActivity: null
@@ -3395,8 +3511,20 @@ router.get('/admin/overview',
                 }
                 
                 groupAttendanceData[groupId].totalMembers++;
-                if (record.status === 'present' || record.status === 'late') {
-                  groupAttendanceData[groupId].presentMembers++;
+                
+                switch (record.status) {
+                  case 'present':
+                    groupAttendanceData[groupId].presentMembers++;
+                    break;
+                  case 'absent':
+                    groupAttendanceData[groupId].absentMembers++;
+                    break;
+                  case 'late':
+                    groupAttendanceData[groupId].presentMembers++; // Late is considered present
+                    break;
+                  case 'abroad':
+                    groupAttendanceData[groupId].abroadMembers++;
+                    break;
                 }
                 
                 if (!groupAttendanceData[groupId].lastActivity || record.markedAt > groupAttendanceData[groupId].lastActivity) {
@@ -3432,18 +3560,70 @@ router.get('/admin/overview',
               }
             });
 
+            // Get actual member counts and status breakdown for non-monthly series meetings too
+            const Member = (await import('../models/Member.js')).default;
+            const memberStats = await Promise.all(
+              targetGroups.map(async (group) => {
+                const [totalMembers, activeMembers, inactiveMembers, abroadMembers] = await Promise.all([
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: { $in: ['Active', 'Inactive', 'Abroad'] }, // Count all members except dismissed
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Active',
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Inactive',
+                    isApproved: true 
+                  }),
+                  Member.countDocuments({ 
+                    group: group._id, 
+                    status: 'Abroad',
+                    isApproved: true 
+                  })
+                ]);
+                
+                return { 
+                  groupId: group._id.toString(), 
+                  totalMembers,
+                  activeMembers,
+                  inactiveMembers,
+                  abroadMembers
+                };
+              })
+            );
+            
+            // Create member stats lookup
+            const memberStatsLookup = {};
+            memberStats.forEach((stats) => {
+              memberStatsLookup[stats.groupId] = stats;
+            });
+
             const groupProgress = targetGroups.map(group => {
               const groupId = group._id.toString();
               const data = groupAttendanceData[groupId] || {
-                totalMembers: 0,
                 presentMembers: 0,
+                absentMembers: 0,
+                abroadMembers: 0,
                 totalGuests: 0,
                 presentGuests: 0,
                 lastActivity: null
               };
               
+              // Use actual member stats from database
+              const stats = memberStatsLookup[groupId] || {
+                totalMembers: 0,
+                activeMembers: 0,
+                inactiveMembers: 0,
+                abroadMembers: 0
+              };
+              
               // Key Logic: If any attendance data exists, program was conducted
-              const programConducted = groupsWithData.has(groupId) || data.totalMembers > 0 || data.totalGuests > 0;
+              const programConducted = groupsWithData.has(groupId) || data.presentMembers > 0 || data.totalGuests > 0;
               
               return {
                 groupId: group._id,
@@ -3453,12 +3633,19 @@ router.get('/admin/overview',
                 status: programConducted ? 'completed' : 'pending', // For single meetings, conducted = completed
                 attendanceRecorded: groupsWithData.has(groupId),
                 programConducted: programConducted,
-                totalMembers: data.totalMembers,
+                // Member counts from database
+                totalMembers: stats.totalMembers,
+                activeMembers: stats.activeMembers,
+                inactiveMembers: stats.inactiveMembers,
+                abroadMembersFromDB: stats.abroadMembers, // Members with 'Abroad' status in DB
+                // Attendance data from meeting records
                 totalGuests: data.totalGuests,
                 presentMembers: data.presentMembers,
                 presentGuests: data.presentGuests,
-                attendanceRate: (data.totalMembers + data.totalGuests) > 0 ? 
-                  (((data.presentMembers + data.presentGuests) / (data.totalMembers + data.totalGuests)) * 100).toFixed(1) : '0',
+                absentMembers: data.absentMembers,
+                abroadMembers: data.abroadMembers, // Members marked as abroad in attendance
+                attendanceRate: (stats.totalMembers + data.totalGuests) > 0 ? 
+                  (((data.presentMembers + data.presentGuests) / (stats.totalMembers + data.totalGuests)) * 100).toFixed(1) : '0',
                 lastActivity: data.lastActivity,
                 conductedDate: data.lastActivity // When the program was conducted (attendance marked)
               };
@@ -3486,17 +3673,22 @@ router.get('/admin/overview',
         })
       );
 
-      // Apply completion status filter if specified
+      // Apply completion status filter if specified (this affects the data but not pagination)
       let filteredMeetings = enhancedMeetings;
       if (completionStatus) {
         filteredMeetings = enhancedMeetings.filter(meeting => 
           meeting.overallProgress?.status === completionStatus
         );
+        
+        // If we filtered out results, we need to adjust pagination
+        // For now, we'll return the filtered results but keep original pagination
+        // In a production system, you'd want to apply this filter at the database level
       }
 
-      // Calculate summary statistics
+      // Calculate summary statistics based on all meetings (not just current page)
+      // For accurate stats, we should query all meetings, but for performance we'll use current page
       const summaryStats = {
-        totalMeetings: filteredMeetings.length,
+        totalMeetings: result.totalDocs, // Use total from database
         completedMeetings: filteredMeetings.filter(m => m.overallProgress?.status === 'completed').length,
         pendingMeetings: filteredMeetings.filter(m => m.overallProgress?.status === 'pending').length,
         totalGroups: allGroups.length,
@@ -3516,7 +3708,7 @@ router.get('/admin/overview',
         pagination: {
           currentPage: result.page,
           totalPages: result.totalPages,
-          totalDocs: filteredMeetings.length,
+          totalDocs: result.totalDocs,
           limit: result.limit,
           hasNextPage: result.hasNextPage,
           hasPrevPage: result.hasPrevPage
