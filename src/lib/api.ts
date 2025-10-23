@@ -1,5 +1,14 @@
 // API utility functions
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Temporary hardcode for testing - replace with environment variable later
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api';
+
+// Debug: Log the API base URL
+console.log('🔧 Environment Variables:', {
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  API_BASE_URL: API_BASE_URL,
+  NODE_ENV: import.meta.env.NODE_ENV,
+  MODE: import.meta.env.MODE
+});
 
 interface ApiResponse<T> {
   success: boolean;

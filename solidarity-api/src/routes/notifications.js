@@ -30,15 +30,19 @@ router.get('/', authenticate, async (req, res) => {
     let filter = {};
     if (status) filter.status = status;
 
-    // Apply role-based filtering
+    // Apply role-based filtering based on target audience
     if (req.user.role !== 'state_admin') {
       filter.$or = [
-        { targetAudience: 'all' },
-        { targetAudience: 'members' }
+        { targetAudience: 'all' }
       ];
 
+      // Add role-specific target audiences
       if (req.user.role === 'group_admin') {
         filter.$or.push({ targetAudience: 'group_admins' });
+      } else if (req.user.role === 'member') {
+        filter.$or.push({ targetAudience: 'members' });
+      } else if (req.user.role === 'district_admin') {
+        filter.$or.push({ targetAudience: 'district_admins' });
       }
     }
 
@@ -150,19 +154,22 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       });
     }
 
-    // Check access permissions - State admins can view all, others based on targeting
+    // Check access permissions based on target audience
     let canView = req.user.role === 'state_admin' ||
       notification.targetAudience === 'all' ||
       notification.targetUsers.some(u => u._id.toString() === req.user._id.toString());
 
-    if (!canView && req.user.role === 'district_admin') {
-      canView = notification.targetAudience === 'district_admins' ||
-        (notification.targetDistricts && notification.targetDistricts.some(d => d._id.toString() === req.user.district._id.toString()));
-    }
-
-    if (!canView && req.user.role === 'group_admin') {
-      canView = notification.targetAudience === 'group_admins' ||
-        (notification.targetGroups && notification.targetGroups.some(g => g._id.toString() === req.user.group._id.toString()));
+    // Role-specific access control
+    if (!canView) {
+      if (req.user.role === 'district_admin') {
+        canView = notification.targetAudience === 'district_admins' ||
+          (notification.targetDistricts && notification.targetDistricts.some(d => d._id.toString() === req.user.district._id.toString()));
+      } else if (req.user.role === 'group_admin') {
+        canView = notification.targetAudience === 'group_admins' ||
+          (notification.targetGroups && notification.targetGroups.some(g => g._id.toString() === req.user.group._id.toString()));
+      } else if (req.user.role === 'member') {
+        canView = notification.targetAudience === 'members';
+      }
     }
 
     if (!canView) {

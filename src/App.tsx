@@ -30,6 +30,8 @@ import BaithulDataView from "./pages/BaithulDataView";
 import MembersGroupReport from "./pages/MembersGroupReport";
 import StateAdminMeetings from "./pages/StateAdminMeetings";
 import AdminMeetingsView from "./pages/AdminMeetingsView";
+import MemberDashboard from "./pages/MemberDashboard";
+import PersonalTargets from "./pages/PersonalTargets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +70,8 @@ const App = () => (
             <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
             <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/member-dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
+            <Route path="/personal-targets" element={<ProtectedRoute requiredRoles={['state_admin']}><PersonalTargets /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

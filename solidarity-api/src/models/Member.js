@@ -42,6 +42,16 @@ const memberSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'Education cannot exceed 100 characters']
   },
+  areaOfInterest: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Area of interest cannot exceed 200 characters']
+  },
+  skills: {
+    type: String,
+    trim: true,
+    maxlength: [200, 'Skills cannot exceed 200 characters']
+  },
   address: {
     type: String,
     trim: true,

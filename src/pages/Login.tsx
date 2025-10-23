@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
-  const [userType, setUserType] = useState<"state_admin" | "district_admin" | "group_admin" | "">("");
+  const [userType, setUserType] = useState<"state_admin" | "district_admin" | "group_admin" | "member" | "">("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [showOtp, setShowOtp] = useState(false);
@@ -26,20 +26,26 @@ const Login = () => {
 
   const handleSendOtp = async () => {
     if (phone.length !== 10 || !userType) return;
-    
+
     setLoading(true);
     try {
       console.log('Sending OTP request with phone:', phone, 'userType:', userType);
-      
-      const response = await fetch('/api/auth/send-otp', {
+
+      // Use different endpoint for member login
+      const endpoint = userType === 'member' ? 
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/send-otp` :
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/send-otp`;
+
+      const requestBody = userType === 'member' ? 
+        { phone: phone } : 
+        { phone: phone, userType };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          phone: phone,
-          userType
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
@@ -47,7 +53,7 @@ const Login = () => {
       if (response.ok) {
         setShowOtp(true);
         setOtpExpiry(new Date(result.data.expiresAt));
-        
+
         toast({
           title: "OTP Sent",
           description: result.message,
@@ -82,7 +88,7 @@ const Login = () => {
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digit
-    
+
     const newOtp = [...otp];
     newOtp[index] = value.replace(/\D/g, ""); // Only digits
     setOtp(newOtp);
@@ -105,41 +111,52 @@ const Login = () => {
   const handleVerifyOtp = async () => {
     const otpValue = otp.join("");
     if (otpValue.length !== 4 || !userType) return;
-    
+
     setLoading(true);
     try {
       console.log('Verifying OTP with phone:', phone, 'otp:', otpValue, 'userType:', userType);
-      
-      const response = await fetch('/api/auth/verify-otp', {
+
+      // Use different endpoint for member login
+      const endpoint = userType === 'member' ? 
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/verify-otp` :
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/verify-otp`;
+
+      const requestBody = userType === 'member' ? 
+        { phone: phone, otp: otpValue } : 
+        { phone: phone, otp: otpValue, userType };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          phone: phone,
-          otp: otpValue,
-          userType
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        login(result.data.token, result.data.user);
-        
+        const userData = userType === 'member' ? result.data.member : result.data.user;
+        login(result.data.token, userData, userType);
+
         toast({
           title: "Login Successful",
           description: result.message,
         });
 
-        navigate("/dashboard");
+        // Navigate to different dashboard based on user type
+        if (userType === 'member') {
+          navigate("/member-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         toast({
           title: "Error",
           description: result.message || "Invalid OTP",
           variant: "destructive"
         });
-        
+
         // Clear OTP on error
         setOtp(["", "", "", ""]);
       }
@@ -158,15 +175,21 @@ const Login = () => {
   const handleResendOtp = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/resend-otp', {
+      // Use different endpoint for member login
+      const endpoint = userType === 'member' ? 
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/resend-otp` :
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/resend-otp`;
+
+      const requestBody = userType === 'member' ? 
+        { phone: phone } : 
+        { phone: phone, userType };
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          phone: phone,
-          userType
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
@@ -174,7 +197,7 @@ const Login = () => {
       if (response.ok) {
         setOtpExpiry(new Date(result.data.expiresAt));
         setOtp(["", "", "", ""]);
-        
+
         toast({
           title: "OTP Resent",
           description: result.message,
@@ -229,6 +252,7 @@ const Login = () => {
               <option value="state_admin">State Admin</option>
               <option value="district_admin">District Admin</option>
               <option value="group_admin">Members Group Admin</option>
+              <option value="member">Member</option>
             </select>
           </div>
 
@@ -252,8 +276,8 @@ const Login = () => {
           </div>
 
           {!showOtp ? (
-            <Button 
-              onClick={handleSendOtp} 
+            <Button
+              onClick={handleSendOtp}
               className="w-full bg-primary hover:bg-primary/90"
               disabled={phone.length !== 10 || !userType || loading}
             >
@@ -284,8 +308,8 @@ const Login = () => {
                   </p>
                 )}
               </div>
-              <Button 
-                onClick={handleVerifyOtp} 
+              <Button
+                onClick={handleVerifyOtp}
                 className="w-full bg-success hover:bg-success/90"
                 disabled={otp.join("").length !== 4 || loading}
               >

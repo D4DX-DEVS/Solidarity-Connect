@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-type UserRole = "state_admin" | "district_admin" | "group_admin";
+type UserRole = "state_admin" | "district_admin" | "group_admin" | "member";
 
 interface User {
   id: string;
@@ -28,7 +28,8 @@ interface AuthContextType {
   userRole: UserRole | null;
   userDistrict: string | null;
   userGroup: string | null;
-  login: (token: string, userData: User) => void;
+  token: string | null;
+  login: (token: string, userData: User, userType?: string) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
 }
@@ -41,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userDistrict, setUserDistrict] = useState<string | null>(null);
   const [userGroup, setUserGroup] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // Check if user is authenticated on app load
   useEffect(() => {
@@ -48,22 +50,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const checkAuth = async (): Promise<boolean> => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const storedToken = localStorage.getItem('token');
+    const userType = localStorage.getItem('userType');
+    
+    if (!storedToken) {
       return false;
     }
+    
+    setToken(storedToken);
 
     try {
-      const response = await fetch('/api/auth/me', {
+      // Use different endpoint based on user type
+      const endpoint = userType === 'member' ? 
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/member-auth/profile` :
+        `${import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api'}/auth/me`;
+
+      const response = await fetch(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${storedToken}`,
           'Content-Type': 'application/json'
         }
       });
 
       if (response.ok) {
         const result = await response.json();
-        const userData = result.data;
+        let userData;
+        
+        if (userType === 'member') {
+          // For members, the profile data structure is different
+          userData = {
+            id: result.data.profile.id,
+            name: result.data.profile.name,
+            phone: result.data.profile.phone,
+            email: result.data.profile.email,
+            role: 'member' as UserRole,
+            district: result.data.profile.district,
+            group: result.data.profile.group,
+            permissions: [],
+            isActive: result.data.profile.status === 'Active'
+          };
+        } else {
+          userData = result.data;
+        }
         
         setIsAuthenticated(true);
         setUser(userData);
@@ -75,17 +103,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         // Token is invalid, remove it
         localStorage.removeItem('token');
+        localStorage.removeItem('userType');
         return false;
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
+      localStorage.removeItem('userType');
       return false;
     }
   };
 
-  const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token);
+  const login = (tokenValue: string, userData: User, userType?: string) => {
+    localStorage.setItem('token', tokenValue);
+    if (userType) {
+      localStorage.setItem('userType', userType);
+    }
+    setToken(tokenValue);
     setIsAuthenticated(true);
     setUser(userData);
     setUserRole(userData.role);
@@ -95,6 +129,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userType');
+    setToken(null);
     setIsAuthenticated(false);
     setUser(null);
     setUserRole(null);
@@ -109,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userRole, 
       userDistrict, 
       userGroup, 
+      token,
       login, 
       logout, 
       checkAuth 

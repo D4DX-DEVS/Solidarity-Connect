@@ -22,6 +22,9 @@ import baithulMaalPaymentRoutes from './routes/baithulMaalPayments.js';
 import transferRequestRoutes from './routes/transferRequests.js';
 import reportRoutes from './routes/reports.js';
 import bulkImportRoutes from './routes/bulkImport.js';
+import personalTargetsRoutes from './routes/personalTargets.js';
+import memberTargetProgressRoutes from './routes/memberTargetProgress.js';
+import memberAuthRoutes from './routes/memberAuth.js';
 
 // Load environment variables
 dotenv.config();
@@ -109,6 +112,9 @@ app.use('/api/baithul-maal-payments', baithulMaalPaymentRoutes);
 app.use('/api/transfer-requests', transferRequestRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/bulk-import', bulkImportRoutes);
+app.use('/api/personal-targets', personalTargetsRoutes);
+app.use('/api/member-target-progress', memberTargetProgressRoutes);
+app.use('/api/member-auth', memberAuthRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
