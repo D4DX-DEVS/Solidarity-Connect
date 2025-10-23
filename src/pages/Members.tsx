@@ -123,21 +123,18 @@ const Members = () => {
         
         // Fetch members
         const membersResult = await membersAPI.getMembers(Object.fromEntries(params));
-        setMembers(membersResult.data || []);
-        setStatistics(membersResult.statistics || statistics);
         
-        // Update pagination state
-        if (membersResult.pagination) {
-          setTotalPages(membersResult.pagination.totalPages);
-          setTotalDocs(membersResult.pagination.totalDocs);
-          setHasNextPage(membersResult.pagination.hasNextPage);
-          setHasPrevPage(membersResult.pagination.hasPrevPage);
-        }
-          toast({
-            title: "Error",
-            description: "Failed to fetch members",
-            variant: "destructive"
-          });
+        if (membersResult) {
+          setMembers(membersResult.data || []);
+          setStatistics(membersResult.statistics || statistics);
+          
+          // Update pagination state
+          if (membersResult.pagination) {
+            setTotalPages(membersResult.pagination.totalPages);
+            setTotalDocs(membersResult.pagination.totalDocs);
+            setHasNextPage(membersResult.pagination.hasNextPage);
+            setHasPrevPage(membersResult.pagination.hasPrevPage);
+          }
         }
 
         // Fetch districts (for state admin and district admin filters)

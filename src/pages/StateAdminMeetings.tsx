@@ -151,7 +151,8 @@ const StateAdminMeetings = () => {
         meetingsAPI.getAdminOverview(Object.fromEntries(queryParams)),
         meetingsAPI.getAdminReview(Object.fromEntries(queryParams))
       ]);
-        
+      
+      if (overviewResult && reviewResult) {
         // Combine the data - use overview for group progress, review for detailed analytics
         const combinedMeetings = overviewResult.data.map((overviewMeeting: any) => {
           const reviewMeeting = reviewResult.data.find((rm: any) => rm._id === overviewMeeting._id);

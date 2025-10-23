@@ -203,9 +203,6 @@ const UserManagement = () => {
       setEditingUser(null);
       setFormData({ name: "", phone: "", email: "", role: "", district: "", group: "" });
       fetchData();
-          variant: "destructive",
-        });
-      }
     } catch (error) {
       toast({
         title: "Error",

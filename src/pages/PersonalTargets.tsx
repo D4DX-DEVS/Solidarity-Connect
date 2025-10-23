@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
-import { Target, Plus, Edit, Trash2, Users, Calendar, TrendingUp } from "lucide-react";
+import { Target, Plus, Edit, Trash2, Users, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 
 interface PersonalTarget {
   _id: string;
@@ -47,6 +48,7 @@ interface Group {
 }
 
 const PersonalTargets = () => {
+  const navigate = useNavigate();
   const [targets, setTargets] = useState<PersonalTarget[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -238,16 +240,22 @@ const PersonalTargets = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <header className="bg-card border-b px-4 py-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold">Personal Targets</h1>
+            <p className="text-sm text-muted-foreground">Create and manage monthly targets for members</p>
+          </div>
+        </div>
+      </header>
+
       <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-        {/* Header */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
-              <Target className="h-6 w-6 sm:h-8 sm:w-8" />
-              <span className="hidden sm:inline">Personal Targets Management</span>
-              <span className="sm:hidden">Targets</span>
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Create and manage monthly targets for members</p>
             {!canManageTargets && (
               <p className="text-xs sm:text-sm text-amber-600 mt-1">
                 ⚠️ You have read-only access. Only State Admins can create/edit targets.

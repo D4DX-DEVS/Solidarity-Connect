@@ -53,20 +53,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAuth = async (): Promise<boolean> => {
     const storedToken = localStorage.getItem('token');
     const userType = localStorage.getItem('userType');
-    
+
     if (!storedToken) {
       return false;
     }
-    
+
     setToken(storedToken);
 
     try {
       // Use different API based on user type
-      const result = userType === 'member' ? 
+      const result = userType === 'member' ?
         await memberAuthAPI.getProfile() :
         await authAPI.getProfile();
+
+      if (result && result.data) {
         let userData;
-        
+
         if (userType === 'member') {
           // For members, the profile data structure is different
           userData = {
@@ -83,13 +85,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           userData = result.data;
         }
-        
+
         setIsAuthenticated(true);
         setUser(userData);
         setUserRole(userData.role);
         setUserDistrict(userData.district?.name || null);
         setUserGroup(userData.group?.name || null);
-        
+
         return true;
       } else {
         // Token is invalid, remove it
@@ -130,16 +132,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      isAuthenticated, 
-      user, 
-      userRole, 
-      userDistrict, 
-      userGroup, 
+    <AuthContext.Provider value={{
+      isAuthenticated,
+      user,
+      userRole,
+      userDistrict,
+      userGroup,
       token,
-      login, 
-      logout, 
-      checkAuth 
+      login,
+      logout,
+      checkAuth
     }}>
       {children}
     </AuthContext.Provider>

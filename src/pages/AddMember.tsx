@@ -78,7 +78,9 @@ const AddMember = () => {
         
         // Fetch user context
         const contextResult = await membersAPI.getUserContext();
-        setUserContext(contextResult.data);
+        
+        if (contextResult && contextResult.data) {
+          setUserContext(contextResult.data);
 
           // Auto-fill district and group for group admins
           if (contextResult.data.userRole === 'group_admin') {

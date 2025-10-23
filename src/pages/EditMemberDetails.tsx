@@ -63,8 +63,10 @@ const EditMemberDetails = () => {
       try {
         const token = localStorage.getItem('token');
         const result = await membersAPI.getMember(id!);
-        const memberData = result.data;
-        setMember(memberData);
+        
+        if (result && result.data) {
+          const memberData = result.data;
+          setMember(memberData);
           
           // Populate form with existing data
           setFormData({
@@ -126,20 +128,18 @@ const EditMemberDetails = () => {
 
       const result = await membersAPI.updateMember(id!, cleanedData);
       
-      toast({
-        title: "Success",
-        description: "Member updated successfully",
-      });
-      navigate("/members");
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: result.message || "Failed to update member",
-            variant: "destructive"
-          });
-        }
+      if (result && result.success !== false) {
+        toast({
+          title: "Success",
+          description: "Member updated successfully",
+        });
+        navigate("/members");
+      } else {
+        toast({
+          title: "Error",
+          description: result?.message || "Failed to update member",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Failed to update member:', error);

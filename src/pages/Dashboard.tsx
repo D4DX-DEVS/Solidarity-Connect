@@ -44,10 +44,13 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const result = await reportsAPI.getDashboard();
-        setDashboardData(result.data);
+        
+        if (result && result.data) {
+          setDashboardData(result.data);
+        } else {
           toast({
             title: "Error",
-            description: result.message || "Failed to fetch dashboard data",
+            description: result?.message || "Failed to fetch dashboard data",
             variant: "destructive",
           });
         }

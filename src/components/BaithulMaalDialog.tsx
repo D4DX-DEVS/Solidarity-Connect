@@ -90,16 +90,18 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
         ? formData 
         : { ...formData, member: member._id };
 
+      let result;
       if (editingPayment) {
-        await baithulMaalAPI.updatePayment(editingPayment._id, formData);
+        result = await baithulMaalAPI.updatePayment(editingPayment._id, formData);
       } else {
-        await baithulMaalAPI.createPayment(payload);
+        result = await baithulMaalAPI.createPayment(payload);
       }
 
-      toast({
-        title: "Success",
-        description: editingPayment ? "Payment updated successfully" : "Payment recorded successfully",
-      });
+      if (result && result.success !== false) {
+        toast({
+          title: "Success",
+          description: editingPayment ? "Payment updated successfully" : "Payment recorded successfully",
+        });
         
         // Reset form and refresh payments
         setFormData({
@@ -114,7 +116,7 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
       } else {
         toast({
           title: "Error",
-          description: result.message || "Failed to save payment",
+          description: result?.message || "Failed to save payment",
           variant: "destructive"
         });
       }
