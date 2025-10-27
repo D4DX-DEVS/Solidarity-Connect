@@ -260,12 +260,12 @@ const StateAdminMeetings = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-xl">{selectedMeeting.title}</CardTitle>
-                  <p className="text-muted-foreground mt-1">{selectedMeeting.description}</p>
+                  <CardTitle className="text-xl">{selectedMeeting.title || 'Untitled Meeting'}</CardTitle>
+                  <p className="text-muted-foreground mt-1">{selectedMeeting.description || 'No description'}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Badge className={getStatusColor(selectedMeeting.status)}>
-                    {selectedMeeting.status}
+                  <Badge className={getStatusColor(selectedMeeting.status || 'unknown')}>
+                    {selectedMeeting.status || 'Unknown'}
                   </Badge>
                   {selectedMeeting.reviewFlags?.needsAttention && (
                     <Badge variant="destructive">
@@ -280,20 +280,20 @@ const StateAdminMeetings = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Created By</p>
-                  <p className="font-medium">{selectedMeeting.createdBy.name}</p>
-                  <p className="text-xs text-muted-foreground">{selectedMeeting.createdBy.role}</p>
+                  <p className="font-medium">{selectedMeeting.createdBy?.name || 'Unknown'}</p>
+                  <p className="text-xs text-muted-foreground">{selectedMeeting.createdBy?.role || 'Unknown'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Date</p>
-                  <p className="font-medium">{format(new Date(selectedMeeting.scheduledDate), 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{selectedMeeting.scheduledDate ? format(new Date(selectedMeeting.scheduledDate), 'MMM dd, yyyy') : 'No date set'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Duration</p>
-                  <p className="font-medium">{selectedMeeting.duration} min</p>
+                  <p className="font-medium">{selectedMeeting.duration || 0} min</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Target</p>
-                  <p className="font-medium">{selectedMeeting.targetAudience.replace('_', ' ')}</p>
+                  <p className="font-medium">{selectedMeeting.targetAudience ? selectedMeeting.targetAudience.replace('_', ' ') : 'Unknown'}</p>
                 </div>
               </div>
             </CardContent>
@@ -313,19 +313,19 @@ const StateAdminMeetings = () => {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-primary">{selectedMeeting.sessionInfo.totalSessions}</p>
+                      <p className="text-2xl font-bold text-primary">{selectedMeeting.sessionInfo?.totalSessions || 0}</p>
                       <p className="text-sm text-muted-foreground">Total Sessions</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">{selectedMeeting.sessionInfo.completedSessions}</p>
+                      <p className="text-2xl font-bold text-green-600">{selectedMeeting.sessionInfo?.completedSessions || 0}</p>
                       <p className="text-sm text-muted-foreground">Completed</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-yellow-600">{selectedMeeting.sessionInfo.pendingSessions}</p>
+                      <p className="text-2xl font-bold text-yellow-600">{selectedMeeting.sessionInfo?.pendingSessions || 0}</p>
                       <p className="text-sm text-muted-foreground">Pending</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">{selectedMeeting.sessionInfo.totalParticipants}</p>
+                      <p className="text-2xl font-bold text-blue-600">{selectedMeeting.sessionInfo?.totalParticipants || 0}</p>
                       <p className="text-sm text-muted-foreground">Total Participants</p>
                     </div>
                   </div>
@@ -334,26 +334,26 @@ const StateAdminMeetings = () => {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Completion Rate</span>
-                        <span className="font-medium">{selectedMeeting.sessionInfo.completionRate}%</span>
+                        <span className="font-medium">{selectedMeeting.sessionInfo?.completionRate || '0'}%</span>
                       </div>
-                      <Progress value={parseFloat(selectedMeeting.sessionInfo.completionRate)} />
+                      <Progress value={parseFloat(selectedMeeting.sessionInfo?.completionRate || '0')} />
                     </div>
                     
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Attendance Rate</span>
-                        <span className={`font-medium ${getAttendanceRateColor(parseFloat(selectedMeeting.sessionInfo.overallAttendanceRate))}`}>
-                          {selectedMeeting.sessionInfo.overallAttendanceRate}%
+                        <span className={`font-medium ${getAttendanceRateColor(parseFloat(selectedMeeting.sessionInfo?.overallAttendanceRate || '0'))}`}>
+                          {selectedMeeting.sessionInfo?.overallAttendanceRate || '0'}%
                         </span>
                       </div>
-                      <Progress value={parseFloat(selectedMeeting.sessionInfo.overallAttendanceRate)} />
+                      <Progress value={parseFloat(selectedMeeting.sessionInfo?.overallAttendanceRate || '0')} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Group-wise Statistics */}
-              {selectedMeeting.sessionInfo.groupWiseStats.length > 0 && (
+              {selectedMeeting.sessionInfo?.groupWiseStats && selectedMeeting.sessionInfo.groupWiseStats.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>Group-wise Performance</CardTitle>
@@ -382,7 +382,7 @@ const StateAdminMeetings = () => {
               )}
 
               {/* District-wise Statistics */}
-              {selectedMeeting.sessionInfo.districtWiseStats.length > 0 && (
+              {selectedMeeting.sessionInfo?.districtWiseStats && selectedMeeting.sessionInfo.districtWiseStats.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle>District-wise Performance</CardTitle>
@@ -607,12 +607,12 @@ const StateAdminMeetings = () => {
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{meeting.title}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{meeting.description}</p>
+                      <h3 className="font-semibold text-lg">{meeting.title || 'Untitled Meeting'}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{meeting.description || 'No description'}</p>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <Badge className={getStatusColor(meeting.status)}>
-                        {meeting.status}
+                      <Badge className={getStatusColor(meeting.status || 'unknown')}>
+                        {meeting.status || 'Unknown'}
                       </Badge>
                       {meeting.reviewFlags?.needsAttention && (
                         <Badge variant="destructive">
@@ -626,19 +626,19 @@ const StateAdminMeetings = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
                     <div>
                       <p className="text-muted-foreground">Created By</p>
-                      <p className="font-medium">{meeting.createdBy.name}</p>
+                      <p className="font-medium">{meeting.createdBy?.name || 'Unknown'}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Date</p>
-                      <p className="font-medium">{format(new Date(meeting.scheduledDate), 'MMM dd, yyyy')}</p>
+                      <p className="font-medium">{meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy') : 'No date set'}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Type</p>
-                      <p className="font-medium">{meeting.meetingType.replace('_', ' ')}</p>
+                      <p className="font-medium">{meeting.meetingType ? meeting.meetingType.replace('_', ' ') : 'Unknown'}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Target</p>
-                      <p className="font-medium">{meeting.targetAudience.replace('_', ' ')}</p>
+                      <p className="font-medium">{meeting.targetAudience ? meeting.targetAudience.replace('_', ' ') : 'Unknown'}</p>
                     </div>
                   </div>
 
@@ -648,20 +648,20 @@ const StateAdminMeetings = () => {
                         <div>
                           <p className="text-muted-foreground">Sessions</p>
                           <p className="font-medium">
-                            {meeting.sessionInfo.completedSessions}/{meeting.sessionInfo.totalSessions}
+                            {meeting.sessionInfo?.completedSessions || 0}/{meeting.sessionInfo?.totalSessions || 0}
                             <span className={`ml-2 ${getCompletionStatusColor(meeting.completionStatus || '')}`}>
-                              ({meeting.sessionInfo.completionRate}%)
+                              ({meeting.sessionInfo?.completionRate || '0'}%)
                             </span>
                           </p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Participants</p>
-                          <p className="font-medium">{meeting.sessionInfo.totalParticipants}</p>
+                          <p className="font-medium">{meeting.sessionInfo?.totalParticipants || 0}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Attendance</p>
-                          <p className={`font-medium ${getAttendanceRateColor(parseFloat(meeting.sessionInfo.overallAttendanceRate))}`}>
-                            {meeting.sessionInfo.overallAttendanceRate}%
+                          <p className={`font-medium ${getAttendanceRateColor(parseFloat(meeting.sessionInfo?.overallAttendanceRate || '0'))}`}>
+                            {meeting.sessionInfo?.overallAttendanceRate || '0'}%
                           </p>
                         </div>
                         <div>
@@ -672,7 +672,7 @@ const StateAdminMeetings = () => {
                         </div>
                       </div>
 
-                      {meeting.sessionInfo.overallAttendanceRate && (
+                      {meeting.sessionInfo?.overallAttendanceRate && (
                         <div className="mt-3">
                           <Progress value={parseFloat(meeting.sessionInfo.overallAttendanceRate)} className="h-2" />
                         </div>
