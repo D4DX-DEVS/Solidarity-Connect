@@ -17,7 +17,7 @@ const formatPhoneNumber = (req, res, next) => {
   next();
 };
 
-router.post('/send-otp', loginValidation, formatPhoneNumber, async (req, res) => {
+router.post('/send-otp', loginValidation, async (req, res) => {
   try {
     const { phone, userType } = req.body;
     console.log('Received send-otp request:', { phone, userType });
@@ -45,7 +45,7 @@ router.post('/send-otp', loginValidation, formatPhoneNumber, async (req, res) =>
 // @route   POST /api/auth/verify-otp
 // @desc    Verify OTP and login user
 // @access  Public
-router.post('/verify-otp', verifyOTPValidation, formatPhoneNumber, async (req, res) => {
+router.post('/verify-otp', verifyOTPValidation, async (req, res) => {
   try {
     const { phone, otp, userType } = req.body;
 
@@ -90,7 +90,7 @@ router.post('/verify-otp', verifyOTPValidation, formatPhoneNumber, async (req, r
 // @route   POST /api/auth/resend-otp
 // @desc    Resend OTP to user's phone
 // @access  Public
-router.post('/resend-otp', loginValidation, formatPhoneNumber, async (req, res) => {
+router.post('/resend-otp', loginValidation, async (req, res) => {
   try {
     const { phone, userType } = req.body;
 

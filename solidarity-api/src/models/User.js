@@ -12,13 +12,19 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: [true, 'Phone number is required'],
-    match: [/^\+91[6-9]\d{9}$/, 'Please enter a valid Indian phone number']
+    match: [/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number']
   },
   email: {
     type: String,
     trim: true,
     lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    validate: {
+      validator: function(v) {
+        // Only validate if email is provided (not empty)
+        return !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
+      },
+      message: 'Please enter a valid email'
+    }
   },
   role: {
     type: String,
@@ -29,7 +35,7 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'District',
     required: function() {
-      return this.role === 'district_admin' || this.role === 'group_admin';
+      return this.role === 'district_admin';
     }
   },
   group: {

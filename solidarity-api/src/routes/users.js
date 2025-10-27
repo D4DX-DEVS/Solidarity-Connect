@@ -110,10 +110,10 @@ router.put('/:id',
   objectIdValidation('id'),
   [
     body('name').optional().trim().isLength({ min: 2, max: 100 }),
-    body('email').optional().isEmail().normalizeEmail(),
+    body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail(),
     body('role').optional().isIn(['state_admin', 'district_admin', 'group_admin']),
-    body('district').optional().isMongoId(),
-    body('group').optional().isMongoId(),
+    body('district').optional({ checkFalsy: true }).isMongoId(),
+    body('group').optional({ checkFalsy: true }).isMongoId(),
     body('isActive').optional().isBoolean(),
     handleValidationErrors
   ],
@@ -140,6 +140,17 @@ router.put('/:id',
       }
 
       const updateData = req.body;
+
+      // Clean up empty string values that should be undefined for ObjectId fields
+      if (updateData.district === '') {
+        delete updateData.district;
+      }
+      if (updateData.group === '') {
+        delete updateData.group;
+      }
+      if (updateData.email === '') {
+        delete updateData.email;
+      }
 
       // Only state admin can change role, district, group, and isActive
       if (!isStateAdmin) {
@@ -187,11 +198,11 @@ router.post('/',
   requireRole('state_admin'),
   [
     body('name').trim().isLength({ min: 2, max: 100 }),
-    body('phone').matches(/^\+91[6-9]\d{9}$/),
-    body('email').optional().isEmail().normalizeEmail(),
+    body('phone').matches(/^[6-9]\d{9}$/),  // 10 digit phone number starting with 6-9
+    body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail(),
     body('role').isIn(['state_admin', 'district_admin', 'group_admin']),
-    body('district').optional().isMongoId(),
-    body('group').optional().isMongoId(),
+    body('district').optional({ checkFalsy: true }).isMongoId(),
+    body('group').optional({ checkFalsy: true }).isMongoId(),
     handleValidationErrors
   ],
   async (req, res) => {
@@ -205,6 +216,17 @@ router.post('/',
           success: false,
           message: 'User with this phone number already exists'
         });
+      }
+
+      // Clean up empty string values that should be undefined for ObjectId fields
+      if (userData.district === '') {
+        delete userData.district;
+      }
+      if (userData.group === '') {
+        delete userData.group;
+      }
+      if (userData.email === '') {
+        delete userData.email;
       }
 
       // Create user

@@ -75,7 +75,11 @@ interface Group {
   _id: string;
   name: string;
   code: string;
-  district: string;
+  district: {
+    _id: string;
+    name: string;
+    code: string;
+  } | string;
 }
 
 interface UserStats {
@@ -150,9 +154,8 @@ const UserManagement = () => {
       const districtsResult = await districtsAPI.getDistricts({ limit: 100, isActive: true });
       setDistricts(districtsResult.data);
 
-      // Fetch groups - get all active groups without pagination limit
-      const groupsResult = await groupsAPI.getGroups({ limit: 100, isActive: true });
-      setGroups(groupsResult.data);
+      // Don't fetch all groups initially - they will be loaded when district is selected
+      setGroups([]);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -260,6 +263,11 @@ const UserManagement = () => {
       district: user.district?._id || "",
       group: user.group?._id || ""
     });
+    
+    // Load groups for the user's district if they have one
+    if (user.district?._id) {
+      fetchGroupsForDistrict(user.district._id);
+    }
   };
 
   const filteredUsers = users.filter(user => {
@@ -276,14 +284,13 @@ const UserManagement = () => {
 
 
 
-  // Filter groups based on selected district - groups are loaded from models/database
-  const filteredGroups = groups.filter(group => 
-    !formData.district || group.district === formData.district
-  );
+  // Groups are already filtered by district when loaded, so use them directly
+  const filteredGroups = groups;
 
   // Function to fetch groups for a specific district
   const fetchGroupsForDistrict = async (districtId: string) => {
     if (!districtId) {
+      setGroups([]); // Clear groups when no district is selected
       return;
     }
     
@@ -291,15 +298,11 @@ const UserManagement = () => {
     try {
       const result = await groupsAPI.getGroups({ district: districtId, limit: 100, isActive: true });
       
-      // Update groups state with district-specific groups
-      const districtGroups = result.data;
-      setGroups(prevGroups => {
-        // Remove existing groups for this district and add new ones
-        const otherGroups = prevGroups.filter(g => g.district !== districtId);
-        return [...otherGroups, ...districtGroups];
-      });
+      // Set groups to only the district-specific groups
+      setGroups(result.data || []);
     } catch (error) {
       console.error('Error fetching district groups:', error);
+      setGroups([]); // Clear groups on error
       toast({
         title: "Error",
         description: "Failed to load groups for selected district",
@@ -535,6 +538,7 @@ const UserManagement = () => {
           setShowCreateDialog(false);
           setEditingUser(null);
           setFormData({ name: "", phone: "", email: "", role: "", district: "", group: "" });
+          setGroups([]); // Clear groups when dialog is closed
         }
       }}>
         <DialogContent className="max-w-md">
@@ -662,6 +666,7 @@ const UserManagement = () => {
                   setShowCreateDialog(false);
                   setEditingUser(null);
                   setFormData({ name: "", phone: "", email: "", role: "", district: "", group: "" });
+                  setGroups([]); // Clear groups when canceling
                 }}
               >
                 Cancel

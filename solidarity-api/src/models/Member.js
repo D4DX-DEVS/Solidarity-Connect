@@ -12,7 +12,7 @@ const memberSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Phone number is required'],
     unique: true,
-    match: [/^\+91[6-9]\d{9}$/, 'Please enter a valid Indian phone number']
+    match: [/^[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number']
   },
   email: {
     type: String,
