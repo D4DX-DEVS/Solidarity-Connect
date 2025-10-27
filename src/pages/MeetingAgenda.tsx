@@ -46,6 +46,8 @@ const MeetingAgenda = () => {
   };
 
   const getTargetAudienceText = (meeting: any) => {
+    if (!meeting.targetAudience) return 'Unknown';
+    
     switch (meeting.targetAudience) {
       case 'all': return 'All Members';
       case 'group_admins': return 'Group Admins';
@@ -156,14 +158,14 @@ const MeetingAgenda = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">{meeting.title}</h3>
+                      <h3 className="font-semibold text-lg mb-1">{meeting.title || 'Untitled Meeting'}</h3>
                       {meeting.description && (
                         <p className="text-sm text-muted-foreground mb-2">{meeting.description}</p>
                       )}
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a')}
+                          {meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a') : 'No date set'}
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4" />
@@ -172,8 +174,8 @@ const MeetingAgenda = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(meeting.status)}>
-                        {meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1)}
+                      <Badge className={getStatusColor(meeting.status || 'unknown')}>
+                        {meeting.status ? meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1) : 'Unknown'}
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -187,7 +189,7 @@ const MeetingAgenda = () => {
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
-                            onClick={() => handleDeleteMeeting(meeting._id, meeting.title)}
+                            onClick={() => handleDeleteMeeting(meeting._id, meeting.title || 'Untitled Meeting')}
                             className="text-red-600"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -202,14 +204,14 @@ const MeetingAgenda = () => {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-4">
                       <span className="text-muted-foreground">
-                        Duration: {meeting.duration} minutes
+                        Duration: {meeting.duration || 0} minutes
                       </span>
                       <span className="text-muted-foreground">
-                        Type: {meeting.meetingType.charAt(0).toUpperCase() + meeting.meetingType.slice(1)}
+                        Type: {meeting.meetingType ? meeting.meetingType.charAt(0).toUpperCase() + meeting.meetingType.slice(1) : 'Unknown'}
                       </span>
                     </div>
                     <span className="text-muted-foreground">
-                      Created by {meeting.createdBy.name}
+                      Created by {meeting.createdBy?.name || 'Unknown'}
                     </span>
                   </div>
                 </CardContent>

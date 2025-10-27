@@ -228,7 +228,10 @@ export const meetingsAPI = {
 
 // Baithul Maal API calls
 export const baithulMaalAPI = {
-  getStats: () => apiCall('/baithul-maal/stats'),
+  getStats: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/baithul-maal/stats${queryString}`);
+  },
   
   getBaithulData: (params?: Record<string, any>) => {
     const queryString = params ? '?' + new URLSearchParams(params).toString() : '';

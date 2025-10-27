@@ -209,12 +209,15 @@ router.post('/',
     try {
       const userData = req.body;
 
-      // Check if user with same phone already exists
-      const existingUser = await User.findOne({ phone: userData.phone });
+      // Check if user with same phone and role already exists
+      const existingUser = await User.findOne({ 
+        phone: userData.phone, 
+        role: userData.role 
+      });
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: 'User with this phone number already exists'
+          message: `User with this phone number already exists for role: ${userData.role}`
         });
       }
 

@@ -84,7 +84,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     } = req.query;
 
     // Build filter based on user role
-    let filter = { isActive: true };
+    let filter = { 
+      isActive: true,
+      member: { $ne: null } // Exclude payments with null member references
+    };
     
     if (req.user.role === 'group_admin') {
       // Group admin can only see payments for their group members
@@ -128,6 +131,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
     const result = await BaithulMaalPayment.paginate(filter, options);
 
+    // Filter out any payments where member population failed
+    const validPayments = result.docs.filter(payment => payment.member && payment.member._id);
+
     // Calculate summary statistics
     const stats = await BaithulMaalPayment.aggregate([
       { $match: filter },
@@ -143,7 +149,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: result.docs,
+      data: validPayments,
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,

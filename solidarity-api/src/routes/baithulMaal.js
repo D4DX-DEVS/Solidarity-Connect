@@ -28,7 +28,9 @@ router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationVali
     let filter = { 
       status: 'Active', 
       isApproved: true,
-      'baithulMaal.monthlyAmount': { $gt: 0 }
+      'baithulMaal.monthlyAmount': { $gt: 0 },
+      district: { $ne: null }, // Ensure district exists
+      group: { $ne: null } // Ensure group exists
     };
 
     // Apply role-based filtering
@@ -68,6 +70,12 @@ router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationVali
 
     const result = await Member.paginate(filter, options);
 
+    // Filter out any members where district or group population failed
+    const validMembers = result.docs.filter(member => 
+      member && member._id && member.district && member.group && 
+      member.district.name && member.group.name
+    );
+
     // Calculate statistics
     const stats = await Member.aggregate([
       { $match: filter },
@@ -86,7 +94,7 @@ router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationVali
 
     res.status(200).json({
       success: true,
-      data: result.docs,
+      data: validMembers,
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,
@@ -361,6 +369,11 @@ router.get('/stats', authenticate, authorize(['manage_baithul_maal']), async (re
       matchFilter.group = req.user.group._id;
     } else if (req.user.role === 'district_admin') {
       matchFilter.district = req.user.district._id;
+    } else if (req.user.role === 'state_admin') {
+      // State admin can filter by district and group via query params
+      const { district, group } = req.query;
+      if (district) matchFilter.district = district;
+      if (group) matchFilter.group = group;
     }
 
     // Overall statistics
@@ -408,10 +421,6 @@ router.get('/stats', authenticate, authorize(['manage_baithul_maal']), async (re
     // Group-wise statistics (if user can see multiple groups)
     let groupStats = [];
     if (req.user.role !== 'group_admin') {
-      const groupFilter = req.user.role === 'district_admin' 
-        ? { district: req.user.district._id } 
-        : {};
-
       groupStats = await Member.aggregate([
         { $match: { ...matchFilter, 'baithulMaal.monthlyAmount': { $gt: 0 } } },
         {
@@ -423,7 +432,6 @@ router.get('/stats', authenticate, authorize(['manage_baithul_maal']), async (re
           }
         },
         { $unwind: '$groupInfo' },
-        ...(Object.keys(groupFilter).length > 0 ? [{ $match: { 'groupInfo.district': groupFilter.district } }] : []),
         {
           $group: {
             _id: '$group',

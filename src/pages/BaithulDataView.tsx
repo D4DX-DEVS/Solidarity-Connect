@@ -114,12 +114,13 @@ const BaithulDataView = () => {
           ...(selectedMonth && { paymentMonth: selectedMonth }),
           limit: '50' 
         }),
-        baithulMaalAPI.getStats()
+        baithulMaalAPI.getStats(params)
       ]);
       
-      setBaithulMembers(membersResult.data || []);
-      setBaithulPayments(paymentsResult.data || []);
-      setBaithulStats(statsResult.data);
+      // Safely set data with null checks
+      setBaithulMembers(Array.isArray(membersResult.data) ? membersResult.data.filter(m => m && m._id) : []);
+      setBaithulPayments(Array.isArray(paymentsResult.data) ? paymentsResult.data.filter(p => p && p._id) : []);
+      setBaithulStats(statsResult.data || null);
       
       // Process monthly report data
       if (viewMode === "monthly") {
@@ -142,7 +143,8 @@ const BaithulDataView = () => {
     try {
       // Fetch payments for the last 12 months
       const monthlyData = [];
-      const now = new Date();
+      // Use a fixed date to avoid future date issues - start from December 2024
+      const now = new Date(2024, 11, 1); // December 2024
       
       for (let i = 0; i < 12; i++) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -151,7 +153,7 @@ const BaithulDataView = () => {
         const monthlyPayments = await baithulMaalAPI.getPayments({
           ...params,
           paymentMonth: monthStr,
-          limit: '1000' // Get all payments for the month
+          limit: '100' // Get payments for the month (max allowed by API)
         });
         
         const monthData = {
@@ -192,7 +194,9 @@ const BaithulDataView = () => {
   // Generate month options for the last 12 months
   const getMonthOptions = () => {
     const months = [];
-    const now = new Date();
+    // Use a fixed date to avoid future date issues - start from December 2024
+    const now = new Date(2024, 11, 1); // December 2024
+    // Start from current month and go back 11 months (total 12 months)
     for (let i = 0; i < 12; i++) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthStr = format(date, 'yyyy-MM');
@@ -275,7 +279,9 @@ const BaithulDataView = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Districts</SelectItem>
-                  {districts.map((district) => (
+                  {districts
+                    .filter(district => district && district._id && district.name) // Filter out null/undefined districts
+                    .map((district) => (
                     <SelectItem key={district._id} value={district._id}>
                       {district.name} ({district.code})
                     </SelectItem>
@@ -384,7 +390,9 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulMembers.map((member) => {
+                  baithulMembers
+                    .filter(member => member && member._id && member.name) // Filter out null/undefined members
+                    .map((member) => {
                     const monthsActive = member.joinedDate ? 
                       Math.floor((Date.now() - new Date(member.joinedDate).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
                     const expectedTotal = monthsActive * member.baithulMaal.monthlyAmount;
@@ -454,7 +462,9 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulPayments.map((payment) => (
+                  baithulPayments
+                    .filter(payment => payment && payment._id) // Filter out null/undefined payments
+                    .map((payment) => (
                     <Card key={payment._id}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -503,7 +513,9 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulStats.groupStatistics.map((group) => (
+                  baithulStats.groupStatistics
+                    .filter(group => group && group._id && group.groupName) // Filter out null/undefined groups
+                    .map((group) => (
                     <Card key={group._id}>
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-3">
