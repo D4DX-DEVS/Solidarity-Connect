@@ -160,7 +160,7 @@ router.get('/members',
   ],
   async (req, res) => {
     try {
-      const { startDate, endDate, district, group, status } = req.query;
+      const { startDate, endDate, district, group, status, page = 1, limit = 10 } = req.query;
 
       let filter = {};
 
@@ -181,6 +181,11 @@ router.get('/members',
         if (startDate) filter.createdAt.$gte = new Date(startDate);
         if (endDate) filter.createdAt.$lte = new Date(endDate);
       }
+
+      // Pagination parameters
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
 
       // Member statistics by status
       const statusStats = await Member.aggregate([
@@ -233,8 +238,8 @@ router.get('/members',
         { $sort: { '_id.year': 1, '_id.month': 1 } }
       ]);
 
-      // Group-wise statistics
-      const groupStats = await Member.aggregate([
+      // Group-wise statistics with status breakdown and pagination
+      const groupStatsAggregation = [
         { $match: filter },
         {
           $lookup: {
@@ -252,11 +257,39 @@ router.get('/members',
             groupCode: { $first: '$groupInfo.code' },
             totalMembers: { $sum: 1 },
             activeMembers: { $sum: { $cond: [{ $eq: ['$status', 'Active'] }, 1, 0] } },
+            inactiveMembers: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
+            abroadMembers: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
+            applicantMembers: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
             totalBaithulMaal: { $sum: '$baithulMaal.monthlyAmount' }
           }
         },
         { $sort: { totalMembers: -1 } }
+      ];
+
+      // Get total count for pagination
+      const totalGroupsResult = await Member.aggregate([
+        ...groupStatsAggregation,
+        { $count: 'total' }
       ]);
+      const totalGroups = totalGroupsResult[0]?.total || 0;
+
+      // Get paginated results
+      const groupStats = await Member.aggregate([
+        ...groupStatsAggregation,
+        { $skip: skip },
+        { $limit: limitNum }
+      ]);
+
+      // Calculate pagination info
+      const totalPages = Math.ceil(totalGroups / limitNum);
+      const pagination = {
+        currentPage: pageNum,
+        totalPages,
+        totalDocs: totalGroups,
+        limit: limitNum,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1
+      };
 
       res.status(200).json({
         success: true,
@@ -266,7 +299,8 @@ router.get('/members',
           registrationTrend,
           groupStatistics: groupStats,
           filters: { startDate, endDate, district, group, status }
-        }
+        },
+        pagination
       });
 
     } catch (error) {

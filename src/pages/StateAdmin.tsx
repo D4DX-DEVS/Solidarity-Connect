@@ -73,10 +73,8 @@ const StateAdmin = () => {
     { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
-    { icon: Calendar, label: "Meeting Reports", path: "/state-admin/meetings", color: "text-blue-500" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
     { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
-    { icon: Upload, label: "Bulk Import", path: "/bulk-import", color: "text-success" },
   ];
 
   const fetchDashboardData = async () => {
@@ -249,10 +247,6 @@ const StateAdmin = () => {
                   <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                     <Settings className="h-4 w-4 mr-2" />
                     Meeting Agenda
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/meetings")}>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Meeting Reports
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

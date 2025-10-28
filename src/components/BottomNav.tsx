@@ -60,10 +60,6 @@ const BottomNav = () => {
                         <Users className="h-4 w-4 mr-2" />
                         Admin View
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/state-admin/meetings")}>
-                        <BarChart3 className="h-4 w-4 mr-2" />
-                        Meetings Review
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                         <Menu className="h-4 w-4 mr-2" />
                         Meeting Agendas

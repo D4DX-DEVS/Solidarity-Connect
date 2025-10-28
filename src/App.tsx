@@ -28,7 +28,7 @@ import EditNotification from "./pages/EditNotification";
 import NotificationDetail from "./pages/NotificationDetail";
 import BaithulDataView from "./pages/BaithulDataView";
 import MembersGroupReport from "./pages/MembersGroupReport";
-import StateAdminMeetings from "./pages/StateAdminMeetings";
+
 import AdminMeetingsView from "./pages/AdminMeetingsView";
 import MemberDashboard from "./pages/MemberDashboard";
 import PersonalTargets from "./pages/PersonalTargets";
@@ -60,7 +60,7 @@ const App = () => (
             <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
             <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin']}><BaithulDataView /></ProtectedRoute>} />
             <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin']}><MembersGroupReport /></ProtectedRoute>} />
-            <Route path="/state-admin/meetings" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><StateAdminMeetings /></ProtectedRoute>} />
+
             <Route path="/admin/meetings-view" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute>} />
             <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />

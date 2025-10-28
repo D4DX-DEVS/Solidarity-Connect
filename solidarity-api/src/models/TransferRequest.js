@@ -101,7 +101,9 @@ const transferRequestSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Indexes for better query performance
@@ -253,13 +255,9 @@ transferRequestSchema.statics.getPendingForUser = async function(user) {
   let filter = { status: 'pending' };
 
   if (user.role === 'district_admin') {
-    // District admin sees transfers involving their district
-    filter.$or = [
-      { currentDistrict: user.district._id },
-      { targetDistrict: user.district._id }
-    ];
-    // Only within-district transfers (cross-district needs state approval)
-    filter.currentDistrict = filter.targetDistrict = user.district._id;
+    // District admin sees only within-district transfers (cross-district needs state approval)
+    filter.currentDistrict = user.district._id;
+    filter.targetDistrict = user.district._id;
   } else if (user.role === 'group_admin') {
     // Group admin sees transfers from their group
     filter.currentGroup = user.group._id;

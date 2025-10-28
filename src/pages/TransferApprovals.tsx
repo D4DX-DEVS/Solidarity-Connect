@@ -70,19 +70,21 @@ const TransferApprovals = () => {
       else setLoadingMore(true);
       
       const response = await api.get(`/transfer-requests?status=pending&page=${page}&limit=${itemsPerPage}&sort=-createdAt`);
+      console.log('Transfer requests API response:', response);
+      console.log('Transfer requests data:', response.data);
       
       if (append) {
-        setTransferRequests(prev => [...prev, ...(response.data.data || [])]);
+        setTransferRequests(prev => [...prev, ...(response.data || [])]);
       } else {
-        setTransferRequests(response.data.data || []);
+        setTransferRequests(response.data || []);
       }
       
       // Update pagination state
-      if (response.data.pagination) {
-        setCurrentPage(response.data.pagination.currentPage);
-        setTotalPages(response.data.pagination.totalPages);
-        setTotalDocs(response.data.pagination.totalDocs);
-        setHasNextPage(response.data.pagination.hasNextPage);
+      if (response.pagination) {
+        setCurrentPage(response.pagination.currentPage);
+        setTotalPages(response.pagination.totalPages);
+        setTotalDocs(response.pagination.totalDocs);
+        setHasNextPage(response.pagination.hasNextPage);
       }
     } catch (error) {
       console.error('Failed to fetch transfer requests:', error);

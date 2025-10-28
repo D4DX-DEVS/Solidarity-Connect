@@ -428,7 +428,7 @@ const Members = () => {
                   <p>{member.district.name} ({member.district.code})</p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -439,7 +439,7 @@ const Members = () => {
                     }}
                   >
                     <Edit className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight">Edit Request</span>
+                    <span className="text-xs text-center leading-tight">Edit</span>
                   </Button>
                   <Button
                     variant="ghost"
@@ -466,7 +466,19 @@ const Members = () => {
                     }}
                   >
                     <Wallet className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight">Baithul Maal</span>
+                    <span className="text-xs text-center leading-tight">Baithul</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/member/${member._id}`);
+                    }}
+                  >
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <span className="text-xs text-center leading-tight">Details</span>
                   </Button>
                 </div>
               </div>

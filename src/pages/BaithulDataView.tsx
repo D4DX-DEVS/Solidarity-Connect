@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -98,6 +99,13 @@ const BaithulDataView = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [viewMode, setViewMode] = useState<"members" | "payments" | "groups" | "monthly">("members");
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalMembers, setTotalMembers] = useState(0);
+  const [totalPayments, setTotalPayments] = useState(0);
+  const [totalGroups, setTotalGroups] = useState(0);
+  const itemsPerPage = 20;
 
   // Fetch data
   const fetchBaithulData = async () => {
@@ -107,24 +115,52 @@ const BaithulDataView = () => {
       const params: Record<string, string> = {};
       if (selectedDistrict) params.district = selectedDistrict;
       
-      const [membersResult, paymentsResult, statsResult] = await Promise.all([
-        baithulMaalAPI.getBaithulData(params),
-        baithulMaalAPI.getPayments({ 
-          ...params, 
-          ...(selectedMonth && { paymentMonth: selectedMonth }),
-          limit: '50' 
-        }),
-        baithulMaalAPI.getStats(params)
-      ]);
+      // Add pagination params based on view mode
+      const paginatedParams = {
+        ...params,
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString()
+      };
       
-      // Safely set data with null checks
-      setBaithulMembers(Array.isArray(membersResult.data) ? membersResult.data.filter(m => m && m._id) : []);
-      setBaithulPayments(Array.isArray(paymentsResult.data) ? paymentsResult.data.filter(p => p && p._id) : []);
-      setBaithulStats(statsResult.data || null);
-      
-      // Process monthly report data
-      if (viewMode === "monthly") {
+      // Fetch based on view mode
+      if (viewMode === "members") {
+        const [membersResult, statsResult] = await Promise.all([
+          baithulMaalAPI.getBaithulData(paginatedParams),
+          baithulMaalAPI.getStats(params)
+        ]);
+        
+        setBaithulMembers(Array.isArray(membersResult.data) ? membersResult.data.filter(m => m && m._id) : []);
+        setTotalMembers(membersResult.pagination?.totalDocs || 0);
+        setBaithulStats(statsResult.data || null);
+      } else if (viewMode === "payments") {
+        const [paymentsResult, statsResult] = await Promise.all([
+          baithulMaalAPI.getPayments({ 
+            ...paginatedParams, 
+            ...(selectedMonth && { paymentMonth: selectedMonth })
+          }),
+          baithulMaalAPI.getStats(params)
+        ]);
+        
+        setBaithulPayments(Array.isArray(paymentsResult.data) ? paymentsResult.data.filter(p => p && p._id) : []);
+        setTotalPayments(paymentsResult.pagination?.totalDocs || 0);
+        setBaithulStats(statsResult.data || null);
+      } else if (viewMode === "groups") {
+        const statsResult = await baithulMaalAPI.getStats(params);
+        setBaithulStats(statsResult.data || null);
+        
+        // Groups are in stats, apply client-side pagination
+        const allGroups = statsResult.data?.groupStatistics || [];
+        setTotalGroups(allGroups.length);
+        const startIdx = (currentPage - 1) * itemsPerPage;
+        const paginatedGroups = allGroups.slice(startIdx, startIdx + itemsPerPage);
+        setBaithulStats({
+          ...statsResult.data,
+          groupStatistics: paginatedGroups
+        });
+      } else if (viewMode === "monthly") {
         await fetchMonthlyReportData(params);
+        const statsResult = await baithulMaalAPI.getStats(params);
+        setBaithulStats(statsResult.data || null);
       }
       
     } catch (error) {
@@ -141,34 +177,31 @@ const BaithulDataView = () => {
 
   const fetchMonthlyReportData = async (params: Record<string, string>) => {
     try {
-      // Fetch payments for the last 12 months
+      // Fetch payments for current month only
       const monthlyData = [];
-      // Use a fixed date to avoid future date issues - start from December 2024
-      const now = new Date(2024, 11, 1); // December 2024
+      const now = new Date(); // Use current date
       
-      for (let i = 0; i < 12; i++) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthStr = format(date, 'yyyy-MM');
-        
-        const monthlyPayments = await baithulMaalAPI.getPayments({
-          ...params,
-          paymentMonth: monthStr,
-          limit: '100' // Get payments for the month (max allowed by API)
-        });
-        
-        const monthData = {
-          month: monthStr,
-          monthLabel: format(date, 'MMMM yyyy'),
-          totalAmount: monthlyPayments.statistics?.totalAmount || 0,
-          totalPayments: monthlyPayments.statistics?.totalPayments || 0,
-          avgAmount: monthlyPayments.statistics?.avgAmount || 0,
-          payments: monthlyPayments.data || []
-        };
-        
-        monthlyData.push(monthData);
-      }
+      const date = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthStr = format(date, 'yyyy-MM');
       
-      setMonthlyReportData(monthlyData.reverse()); // Show oldest to newest
+      const monthlyPayments = await baithulMaalAPI.getPayments({
+        ...params,
+        paymentMonth: monthStr,
+        limit: '100' // Get payments for the month (max allowed by API)
+      });
+      
+      const monthData = {
+        month: monthStr,
+        monthLabel: format(date, 'MMMM yyyy'),
+        totalAmount: monthlyPayments.statistics?.totalAmount || 0,
+        totalPayments: monthlyPayments.statistics?.totalPayments || 0,
+        avgAmount: monthlyPayments.statistics?.avgAmount || 0,
+        payments: monthlyPayments.data || []
+      };
+      
+      monthlyData.push(monthData);
+      
+      setMonthlyReportData(monthlyData);
     } catch (error) {
       console.error('Error fetching monthly report data:', error);
     }
@@ -185,24 +218,25 @@ const BaithulDataView = () => {
 
   useEffect(() => {
     fetchBaithulData();
+  }, [selectedDistrict, selectedMonth, viewMode, currentPage]);
+  
+  useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
   }, [selectedDistrict, selectedMonth, viewMode]);
 
   useEffect(() => {
     fetchDistricts();
   }, []);
 
-  // Generate month options for the last 12 months
+  // Generate month options starting from current month
   const getMonthOptions = () => {
     const months = [];
-    // Use a fixed date to avoid future date issues - start from December 2024
-    const now = new Date(2024, 11, 1); // December 2024
-    // Start from current month and go back 11 months (total 12 months)
-    for (let i = 0; i < 12; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthStr = format(date, 'yyyy-MM');
-      const monthLabel = format(date, 'MMMM yyyy');
-      months.push({ value: monthStr, label: monthLabel });
-    }
+    const now = new Date(); // Use current date
+    // Start from current month only (no past months)
+    const date = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthStr = format(date, 'yyyy-MM');
+    const monthLabel = format(date, 'MMMM yyyy');
+    months.push({ value: monthStr, label: monthLabel });
     return months;
   };
 
@@ -378,8 +412,8 @@ const BaithulDataView = () => {
           <>
             {viewMode === "members" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold">Contributing Members ({baithulMembers.length})</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold">Contributing Members ({totalMembers})</h2>
                 </div>
                 {baithulMembers.length === 0 ? (
                   <Card>
@@ -390,68 +424,111 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulMembers
-                    .filter(member => member && member._id && member.name) // Filter out null/undefined members
-                    .map((member) => {
-                    const monthsActive = member.joinedDate ? 
-                      Math.floor((Date.now() - new Date(member.joinedDate).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
-                    const expectedTotal = monthsActive * member.baithulMaal.monthlyAmount;
-                    const pendingAmount = Math.max(0, expectedTotal - member.baithulMaal.totalPaid);
+                  <>
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Member</TableHead>
+                              <TableHead>Group/District</TableHead>
+                              <TableHead className="text-right">Monthly</TableHead>
+                              <TableHead className="text-right">Paid</TableHead>
+                              <TableHead className="text-right">Pending</TableHead>
+                              <TableHead>Last Payment</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {baithulMembers
+                              .filter(member => member && member._id && member.name)
+                              .map((member) => {
+                                const monthsActive = member.joinedDate ? 
+                                  Math.floor((Date.now() - new Date(member.joinedDate).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
+                                const expectedTotal = monthsActive * member.baithulMaal.monthlyAmount;
+                                const pendingAmount = Math.max(0, expectedTotal - member.baithulMaal.totalPaid);
+                                
+                                return (
+                                  <TableRow key={member._id}>
+                                    <TableCell>
+                                      <div>
+                                        <p className="font-medium">{member.name}</p>
+                                        <p className="text-xs text-muted-foreground">{member.phone}</p>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="text-sm">
+                                        <p>{member.group.name}</p>
+                                        <p className="text-xs text-muted-foreground">{member.district.name}</p>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold text-blue-600">
+                                      ₹{member.baithulMaal.monthlyAmount}
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold text-green-600">
+                                      ₹{member.baithulMaal.totalPaid}
+                                    </TableCell>
+                                    <TableCell className="text-right font-semibold text-orange-600">
+                                      ₹{pendingAmount}
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                      {member.baithulMaal.lastPaymentDate 
+                                        ? format(new Date(member.baithulMaal.lastPaymentDate), 'MMM dd, yyyy')
+                                        : '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={pendingAmount > 0 ? "destructive" : "default"} className="text-xs">
+                                        {pendingAmount > 0 ? "Pending" : "Up to Date"}
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
                     
-                    return (
-                      <Card key={member._id}>
+                    {/* Pagination Controls */}
+                    {totalMembers > itemsPerPage && (
+                      <Card>
                         <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h3 className="font-semibold">{member.name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {member.group.name}, {member.district.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{member.phone}</p>
+                          <div className="flex items-center justify-between">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <div className="text-sm text-muted-foreground">
+                              Page {currentPage} of {Math.ceil(totalMembers / itemsPerPage)}
+                              <span className="ml-2">
+                                (Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalMembers)} of {totalMembers})
+                              </span>
                             </div>
-                            <Badge variant={pendingAmount > 0 ? "destructive" : "default"}>
-                              {pendingAmount > 0 ? "Pending" : "Up to Date"}
-                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalMembers / itemsPerPage), prev + 1))}
+                              disabled={currentPage >= Math.ceil(totalMembers / itemsPerPage)}
+                            >
+                              Next
+                            </Button>
                           </div>
-                          
-                          <div className="grid grid-cols-3 gap-3 mt-3">
-                            <div className="text-center bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2">
-                              <p className="text-lg font-bold text-blue-600">
-                                ₹{member.baithulMaal.monthlyAmount}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Monthly</p>
-                            </div>
-                            <div className="text-center bg-green-50 dark:bg-green-900/20 rounded-lg p-2">
-                              <p className="text-lg font-bold text-green-600">
-                                ₹{member.baithulMaal.totalPaid}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Paid</p>
-                            </div>
-                            <div className="text-center bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2">
-                              <p className="text-lg font-bold text-orange-600">
-                                ₹{pendingAmount}
-                              </p>
-                              <p className="text-xs text-muted-foreground">Pending</p>
-                            </div>
-                          </div>
-                          
-                          {member.baithulMaal.lastPaymentDate && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Last payment: {format(new Date(member.baithulMaal.lastPaymentDate), 'MMM dd, yyyy')}
-                            </p>
-                          )}
                         </CardContent>
                       </Card>
-                    );
-                  })
+                    )}
+                  </>
                 )}
               </div>
             )}
 
             {viewMode === "payments" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold">Recent Payments ({baithulPayments.length})</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold">Recent Payments ({totalPayments})</h2>
                 </div>
                 {baithulPayments.length === 0 ? (
                   <Card>
@@ -462,47 +539,97 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulPayments
-                    .filter(payment => payment && payment._id) // Filter out null/undefined payments
-                    .map((payment) => (
-                    <Card key={payment._id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold">{payment.member?.name || 'Unknown Member'}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {payment.member?.group?.name || 'Unknown Group'}, {payment.member?.district?.name || 'Unknown District'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Recorded by: {payment.recordedBy?.name || 'Unknown'}
-                            </p>
-                          </div>
-                          <Badge variant="default">Paid</Badge>
-                        </div>
-                        
-                        <div className="flex justify-between items-center mt-3">
-                          <div>
-                            <p className="text-2xl font-bold text-green-600">₹{payment.amount.toLocaleString()}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(payment.paymentDate), 'MMM dd, yyyy')} • {format(new Date(payment.paymentMonth + '-01'), 'MMMM yyyy')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {payment.description && (
-                          <p className="text-xs text-muted-foreground mt-2 italic">{payment.description}</p>
-                        )}
+                  <>
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Member</TableHead>
+                              <TableHead>Group/District</TableHead>
+                              <TableHead className="text-right">Amount</TableHead>
+                              <TableHead>Payment Date</TableHead>
+                              <TableHead>Month</TableHead>
+                              <TableHead>Recorded By</TableHead>
+                              <TableHead>Description</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {baithulPayments
+                              .filter(payment => payment && payment._id)
+                              .map((payment) => (
+                                <TableRow key={payment._id}>
+                                  <TableCell className="font-medium">
+                                    {payment.member?.name || 'Unknown Member'}
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="text-sm">
+                                      <p>{payment.member?.group?.name || 'Unknown Group'}</p>
+                                      <p className="text-xs text-muted-foreground">{payment.member?.district?.name || 'Unknown District'}</p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-green-600">
+                                    ₹{payment.amount.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {format(new Date(payment.paymentDate), 'MMM dd, yyyy')}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {format(new Date(payment.paymentMonth + '-01'), 'MMMM yyyy')}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {payment.recordedBy?.name || 'Unknown'}
+                                  </TableCell>
+                                  <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                                    {payment.description || '-'}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
                       </CardContent>
                     </Card>
-                  ))
+                    
+                    {/* Pagination Controls */}
+                    {totalPayments > itemsPerPage && (
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <div className="text-sm text-muted-foreground">
+                              Page {currentPage} of {Math.ceil(totalPayments / itemsPerPage)}
+                              <span className="ml-2">
+                                (Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalPayments)} of {totalPayments})
+                              </span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalPayments / itemsPerPage), prev + 1))}
+                              disabled={currentPage >= Math.ceil(totalPayments / itemsPerPage)}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
               </div>
             )}
 
             {viewMode === "groups" && baithulStats && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-semibold">Group Statistics ({baithulStats.groupStatistics.length})</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-semibold">Group Statistics ({totalGroups})</h2>
                 </div>
                 {baithulStats.groupStatistics.length === 0 ? (
                   <Card>
@@ -513,42 +640,78 @@ const BaithulDataView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  baithulStats.groupStatistics
-                    .filter(group => group && group._id && group.groupName) // Filter out null/undefined groups
-                    .map((group) => (
-                    <Card key={group._id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-semibold text-lg">{group.groupName}</h3>
-                            <p className="text-sm text-muted-foreground">Code: {group.groupCode}</p>
-                          </div>
-                          <Badge variant="outline">{group.memberCount} members</Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="text-center bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                            <p className="text-lg font-bold text-blue-600">
-                              ₹{group.totalMonthlyAmount.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Monthly Target</p>
-                          </div>
-                          <div className="text-center bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                            <p className="text-lg font-bold text-green-600">
-                              ₹{group.totalPaidAmount.toLocaleString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Total Collected</p>
-                          </div>
-                          <div className="text-center bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
-                            <p className="text-lg font-bold text-purple-600">
-                              ₹{Math.round(group.averageAmount).toLocaleString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">Avg per Member</p>
-                          </div>
-                        </div>
+                  <>
+                    <Card>
+                      <CardContent className="p-0">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Group Name</TableHead>
+                              <TableHead>Code</TableHead>
+                              <TableHead className="text-center">Members</TableHead>
+                              <TableHead className="text-right">Monthly Target</TableHead>
+                              <TableHead className="text-right">Total Collected</TableHead>
+                              <TableHead className="text-right">Avg per Member</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {baithulStats.groupStatistics
+                              .filter(group => group && group._id && group.groupName)
+                              .map((group) => (
+                                <TableRow key={group._id}>
+                                  <TableCell className="font-medium">{group.groupName}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">{group.groupCode}</TableCell>
+                                  <TableCell className="text-center">
+                                    <Badge variant="outline">{group.memberCount}</Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-blue-600">
+                                    ₹{group.totalMonthlyAmount.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-green-600">
+                                    ₹{group.totalPaidAmount.toLocaleString()}
+                                  </TableCell>
+                                  <TableCell className="text-right font-semibold text-purple-600">
+                                    ₹{Math.round(group.averageAmount).toLocaleString()}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
                       </CardContent>
                     </Card>
-                  ))
+                    
+                    {/* Pagination Controls */}
+                    {totalGroups > itemsPerPage && (
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              Previous
+                            </Button>
+                            <div className="text-sm text-muted-foreground">
+                              Page {currentPage} of {Math.ceil(totalGroups / itemsPerPage)}
+                              <span className="ml-2">
+                                (Showing {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalGroups)} of {totalGroups})
+                              </span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalGroups / itemsPerPage), prev + 1))}
+                              disabled={currentPage >= Math.ceil(totalGroups / itemsPerPage)}
+                            >
+                              Next
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
                 )}
               </div>
             )}

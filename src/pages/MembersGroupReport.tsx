@@ -2,6 +2,7 @@ import { Users, ArrowLeft, Download, TrendingUp, Loader2, ChevronLeft, ChevronRi
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -13,6 +14,9 @@ interface GroupStats {
   groupCode: string;
   totalMembers: number;
   activeMembers: number;
+  inactiveMembers?: number;
+  abroadMembers?: number;
+  applicantMembers?: number;
   totalBaithulMaal: number;
 }
 
@@ -48,7 +52,6 @@ const MembersGroupReport = () => {
   const navigate = useNavigate();
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
-  const [viewMode, setViewMode] = useState<"detailed" | "cumulative">("detailed");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportsData, setReportsData] = useState<ReportsData | null>(null);
@@ -61,96 +64,77 @@ const MembersGroupReport = () => {
   const [pageSize, setPageSize] = useState(10);
   const [paginationLoading, setPaginationLoading] = useState(false);
 
-  // Fetch initial data (districts and reports)
+  // Fetch districts on mount
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchDistricts = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch districts first
         const districtsResponse = await districtsAPI.getDistricts();
         console.log('Districts API response:', districtsResponse);
         if (districtsResponse.success) {
           setDistricts(districtsResponse.data || []);
         }
+      } catch (err) {
+        console.error('Error fetching districts:', err);
+      }
+    };
+    fetchDistricts();
+  }, []);
 
-        // Fetch initial reports data with pagination
-        const reportsParams = { page: currentPage, limit: pageSize };
-        const reportsResponse = await reportsAPI.getMembers(reportsParams);
+  // Fetch reports data when filters or pagination changes
+  useEffect(() => {
+    const fetchReportsData = async () => {
+      try {
+        // Use pagination loading for page changes only
+        if (currentPage > 1 && !selectedDistrict && !selectedGroup) {
+          setPaginationLoading(true);
+        } else {
+          setLoading(true);
+        }
+        setError(null);
+
+        // Build query parameters
+        const params: Record<string, any> = {
+          page: currentPage,
+          limit: pageSize
+        };
+        if (selectedDistrict) params.district = selectedDistrict;
+        if (selectedGroup) params.group = selectedGroup;
+
+        // Fetch reports data
+        const reportsResponse = await reportsAPI.getMembers(params);
+        console.log('Reports API response:', reportsResponse);
         if (reportsResponse.success) {
           setReportsData(reportsResponse.data);
-          const groupStats = reportsResponse.data.groupStatistics || [];
-          setGroups(groupStats);
-          setAllGroups(groupStats);
+          setGroups(reportsResponse.data.groupStatistics || []);
           if (reportsResponse.pagination) {
+            console.log('Pagination data:', reportsResponse.pagination);
             setPagination(reportsResponse.pagination);
+          } else {
+            console.log('No pagination data in response');
+          }
+        }
+
+        // If district is selected, fetch groups for that district
+        if (selectedDistrict && !selectedGroup) {
+          try {
+            const districtGroupsResponse = await districtsAPI.getDistrictGroups(selectedDistrict);
+            if (districtGroupsResponse.success) {
+              setDistrictGroups(districtGroupsResponse.data || []);
+            }
+          } catch (err) {
+            console.error('Error fetching district groups:', err);
           }
         }
       } catch (err) {
-        console.error('Error fetching initial data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch data');
+        console.error('Error fetching reports data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch reports data');
       } finally {
         setLoading(false);
+        setPaginationLoading(false);
       }
     };
 
-    fetchInitialData();
-  }, []);
-
-  // Fetch filtered data when filters change
-  useEffect(() => {
-    if (selectedDistrict || selectedGroup || currentPage > 1) {
-      const fetchFilteredData = async () => {
-        try {
-          // Use pagination loading for page changes, full loading for filter changes
-          if (currentPage > 1 && !selectedDistrict && !selectedGroup) {
-            setPaginationLoading(true);
-          } else {
-            setLoading(true);
-          }
-          setError(null);
-
-          // Build query parameters
-          const params: Record<string, any> = {
-            page: currentPage,
-            limit: pageSize
-          };
-          if (selectedDistrict) params.district = selectedDistrict;
-          if (selectedGroup) params.group = selectedGroup;
-
-          // Fetch filtered reports data
-          const reportsResponse = await reportsAPI.getMembers(params);
-          if (reportsResponse.success) {
-            setReportsData(reportsResponse.data);
-            setGroups(reportsResponse.data.groupStatistics || []);
-            if (reportsResponse.pagination) {
-              setPagination(reportsResponse.pagination);
-            }
-          }
-
-          // If district is selected, fetch groups for that district
-          if (selectedDistrict && !selectedGroup) {
-            try {
-              const districtGroupsResponse = await districtsAPI.getDistrictGroups(selectedDistrict);
-              if (districtGroupsResponse.success) {
-                setDistrictGroups(districtGroupsResponse.data || []);
-              }
-            } catch (err) {
-              console.error('Error fetching district groups:', err);
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching filtered data:', err);
-          setError(err instanceof Error ? err.message : 'Failed to fetch filtered data');
-        } finally {
-          setLoading(false);
-          setPaginationLoading(false);
-        }
-      };
-
-      fetchFilteredData();
-    }
+    fetchReportsData();
   }, [selectedDistrict, selectedGroup, currentPage, pageSize]);
 
   // Reset group selection when district changes
@@ -219,16 +203,6 @@ const MembersGroupReport = () => {
     acc[districtName].push(group);
     return acc;
   }, {} as Record<string, GroupStats[]>);
-
-  // Cumulative stats
-  const cumulativeStats = {
-    totalMembers,
-    totalActive,
-    totalInactive,
-    totalAbroad,
-    totalApplicant,
-    totalGroups: filteredGroups.length,
-  };
 
   // Export functionality
   const handleExport = async () => {
@@ -330,24 +304,6 @@ const MembersGroupReport = () => {
         {!loading && !error && (
           <Card className="shadow-sm">
             <CardContent className="p-3 space-y-2">
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "detailed" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setViewMode("detailed")}
-                >
-                  Detailed
-                </Button>
-                <Button
-                  variant={viewMode === "cumulative" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setViewMode("cumulative")}
-                >
-                  Cumulative
-                </Button>
-              </div>
               <div className="grid grid-cols-2 gap-2">
                 <select
                   className="px-3 py-2 border rounded-md text-sm bg-background"
@@ -398,26 +354,44 @@ const MembersGroupReport = () => {
           </Card>
         )}
 
-        {/* Summary Cards */}
+        {/* Summary Cards - Status Based Statistics */}
         {!loading && !error && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Card className="shadow-sm">
               <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total Members</p>
+                <p className="text-sm text-muted-foreground mb-1">Total</p>
                 <p className="text-3xl font-bold text-primary">{totalMembers}</p>
               </CardContent>
             </Card>
             <Card className="shadow-sm">
               <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Active Members</p>
-                <p className="text-3xl font-bold text-success">{totalActive}</p>
+                <p className="text-sm text-muted-foreground mb-1">Active</p>
+                <p className="text-3xl font-bold text-green-600">{totalActive}</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Inactive</p>
+                <p className="text-3xl font-bold text-gray-600">{totalInactive}</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Abroad</p>
+                <p className="text-3xl font-bold text-blue-600">{totalAbroad}</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm">
+              <CardContent className="p-4 text-center">
+                <p className="text-sm text-muted-foreground mb-1">Applicant</p>
+                <p className="text-3xl font-bold text-orange-600">{totalApplicant}</p>
               </CardContent>
             </Card>
           </div>
         )}
 
         {/* Pagination Controls */}
-        {!loading && !error && pagination && viewMode === "detailed" && (
+        {!loading && !error && pagination && pagination.totalDocs > 0 && (
           <Card className="shadow-sm">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
@@ -470,53 +444,58 @@ const MembersGroupReport = () => {
           </Card>
         )}
 
-        {/* District-wise Reports */}
-        {!loading && !error && viewMode === "detailed" ? (
+        {/* District-wise Reports - Table View */}
+        {!loading && !error && (
           <>
             {Object.entries(groupsByDistrict).map(([districtName, districtGroups]) => (
-              <div key={districtName}>
-                <h2 className="font-semibold mb-3">{districtName}</h2>
-                <div className="space-y-3">
-                  {districtGroups.map((group) => {
-                    // Calculate inactive, abroad, applicant from total - active
-                    const inactiveCount = Math.max(0, group.totalMembers - group.activeMembers);
-                    
-                    return (
-                      <Card key={group._id} className="shadow-sm">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div>
-                              <h3 className="font-semibold text-lg">{group.groupName}</h3>
-                              <p className="text-xs text-muted-foreground">Code: {group.groupCode}</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <TrendingUp className="h-3 w-3 text-primary" />
-                                <span className="text-xs text-primary font-medium">₹{group.totalBaithulMaal}/month</span>
-                              </div>
-                            </div>
-                            <Badge variant="outline" className="text-lg font-bold">
-                              {group.totalMembers}
-                            </Badge>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="text-center">
-                              <p className="text-lg font-bold text-success">{group.activeMembers}</p>
-                              <p className="text-xs text-muted-foreground">Active</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-lg font-bold text-muted-foreground">{inactiveCount}</p>
-                              <p className="text-xs text-muted-foreground">Others</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-lg font-bold text-primary">{group.totalMembers}</p>
-                              <p className="text-xs text-muted-foreground">Total</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+              <div key={districtName} className="space-y-3">
+                <h2 className="font-semibold">{districtName}</h2>
+                <Card className="shadow-sm">
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Group Name</TableHead>
+                          <TableHead>Code</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                          <TableHead className="text-right">Active</TableHead>
+                          <TableHead className="text-right">Inactive</TableHead>
+                          <TableHead className="text-right">Abroad</TableHead>
+                          <TableHead className="text-right">Applicant</TableHead>
+                          <TableHead className="text-right">Baithul Maal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {districtGroups.map((group) => {
+                          return (
+                            <TableRow key={group._id}>
+                              <TableCell className="font-medium">{group.groupName}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">{group.groupCode}</TableCell>
+                              <TableCell className="text-right font-semibold text-primary">
+                                {group.totalMembers}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-green-600">
+                                {group.activeMembers || 0}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-gray-600">
+                                {group.inactiveMembers || 0}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-blue-600">
+                                {group.abroadMembers || 0}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-orange-600">
+                                {group.applicantMembers || 0}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-purple-600">
+                                ₹{group.totalBaithulMaal.toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
               </div>
             ))}
             {Object.keys(groupsByDistrict).length === 0 && (
@@ -527,43 +506,7 @@ const MembersGroupReport = () => {
               </Card>
             )}
           </>
-        ) : !loading && !error ? (
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <h2 className="font-semibold mb-4">Cumulative Statistics</h2>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-primary/10 rounded-lg p-4 text-center">
-                    <p className="text-3xl font-bold text-primary">{cumulativeStats.totalMembers}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Total Members</p>
-                  </div>
-                  <div className="bg-success/10 rounded-lg p-4 text-center">
-                    <p className="text-3xl font-bold text-success">{cumulativeStats.totalActive}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Active Members</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-muted/50 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-muted-foreground">{cumulativeStats.totalInactive}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Inactive</p>
-                  </div>
-                  <div className="bg-blue-50 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-blue-500">{cumulativeStats.totalAbroad}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Abroad</p>
-                  </div>
-                  <div className="bg-orange-50 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-orange-500">{cumulativeStats.totalApplicant}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Applicant</p>
-                  </div>
-                </div>
-                <div className="bg-accent/50 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold">{cumulativeStats.totalGroups}</p>
-                  <p className="text-sm text-muted-foreground mt-1">Total Groups</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : null}
+        )}
 
         {/* Bottom Pagination */}
         {!loading && !error && pagination && pagination.totalPages > 1 && (
