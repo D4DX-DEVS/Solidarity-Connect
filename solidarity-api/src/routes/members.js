@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
@@ -35,23 +36,42 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     const pageNum = Math.max(1, parseInt(page) || 1);
     const limitNum = Math.min(Math.max(1, parseInt(limit) || 20), 100); // Between 1 and 100
 
-    // Build filter based on user role
-    let filter = {};
+    // Build base filter based on user role
+    let baseFilter = {};
     
     if (req.user.role === 'group_admin') {
       // Group admin can only see their group members
-      filter.group = req.user.group._id;
+      baseFilter.group = req.user.group._id;
     } else if (req.user.role === 'district_admin') {
       // District admin can only see their district members
-      filter.district = req.user.district._id;
+      baseFilter.district = req.user.district._id;
     }
     // State admin can see all members (no additional filter)
 
-    // Apply additional filters
+    // Build query filter (includes all filters for member list)
+    let filter = { ...baseFilter };
+
+    // Apply additional filters for member list
     if (status) filter.status = status;
     if (district && req.user.role === 'state_admin') filter.district = district;
     if (group && ['state_admin', 'district_admin'].includes(req.user.role)) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
+
+    // Build statistics filter (excludes search and status, but includes district/group filters)
+    let statsFilter = { ...baseFilter };
+    if (district && req.user.role === 'state_admin') {
+      statsFilter.district = mongoose.Types.ObjectId.isValid(district) 
+        ? new mongoose.Types.ObjectId(district) 
+        : district;
+    }
+    if (group && ['state_admin', 'district_admin'].includes(req.user.role)) {
+      statsFilter.group = mongoose.Types.ObjectId.isValid(group) 
+        ? new mongoose.Types.ObjectId(group) 
+        : group;
+    }
+
+    console.log('Statistics Filter:', JSON.stringify(statsFilter, null, 2));
+    console.log('Query Filter:', JSON.stringify(filter, null, 2));
 
     // Search functionality - optimized for better performance
     if (search) {
@@ -111,9 +131,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       transferRequest: transferRequestMap[member._id.toString()] || null
     }));
 
-    // Calculate statistics
+    // Calculate statistics based on district/group filters (but not search/status)
+    // This shows total counts for the selected district/group scope
     const stats = await Member.aggregate([
-      { $match: filter },
+      { $match: statsFilter },
       {
         $group: {
           _id: null,
@@ -129,6 +150,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         }
       }
     ]);
+
+    console.log('Statistics Result:', stats);
 
     // Add cache headers for better performance
     res.set({

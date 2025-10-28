@@ -142,6 +142,17 @@ const AddMember = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate phone number format
+    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Phone number must be 10 digits starting with 6, 7, 8, or 9",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -230,6 +241,9 @@ const AddMember = () => {
               />
               {formData.phone && formData.phone.length !== 10 && (
                 <p className="text-xs text-destructive mt-1">Please enter 10 digits</p>
+              )}
+              {formData.phone && formData.phone.length === 10 && !/^[6-9]/.test(formData.phone) && (
+                <p className="text-xs text-destructive mt-1">Phone number must start with 6, 7, 8, or 9</p>
               )}
             </div>
 
