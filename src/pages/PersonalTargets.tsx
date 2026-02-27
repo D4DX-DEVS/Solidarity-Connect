@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,21 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
-import { Target, Plus, Edit, Trash2, Users, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
+import { Target, Plus, Edit, Trash2, Calendar, ArrowLeft, Clock } from "lucide-react";
 
 interface PersonalTarget {
   _id: string;
   title: string;
   description: string;
   category: string;
-  targetType: string;
-  targetValue: number;
-  unit: string;
-  month: number;
-  year: number;
   targetAudience: string;
-  targetDistricts: Array<{ _id: string; name: string }>;
-  targetGroups: Array<{ _id: string; name: string }>;
   status: string;
   startDate: string;
   endDate: string;
@@ -36,66 +29,57 @@ interface PersonalTarget {
   createdAt: string;
 }
 
-interface District {
-  _id: string;
-  name: string;
-}
+// Format a Date to "yyyy-MM-ddTHH:mm" for datetime-local input
+const toDatetimeLocal = (date: Date) => {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
-interface Group {
-  _id: string;
-  name: string;
-  district: string;
-}
+const defaultStart = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return toDatetimeLocal(d);
+};
+
+const defaultEnd = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 30);
+  d.setHours(23, 59, 0, 0);
+  return toDatetimeLocal(d);
+};
 
 const PersonalTargets = () => {
   const navigate = useNavigate();
   const [targets, setTargets] = useState<PersonalTarget[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState<PersonalTarget | null>(null);
-  const { token, user, userRole } = useAuth();
+  const { userRole } = useAuth();
   const { toast } = useToast();
 
-  // Check if user has permission to create/edit targets
   const canManageTargets = userRole === 'state_admin';
 
-  // Form state - Simplified for essential fields
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'other',
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-    active: true
+    startDate: defaultStart(),
+    endDate: defaultEnd(),
+    active: true,
+    targetAudience: 'all_users' as string,
+    instructions: '',
+    rewards: ''
   });
 
-  // Use the common API utility
-
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [targetsData, districtsData, groupsData] = await Promise.all([
-        apiCall('/personal-targets'),
-        apiCall('/districts'),
-        apiCall('/groups')
-      ]);
-
+      const targetsData = await apiCall('/personal-targets');
       setTargets(targetsData.data);
-      setDistricts(districtsData.data);
-      setGroups(groupsData.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load data",
-        variant: "destructive"
-      });
+    } catch {
+      toast({ title: "Error", description: "Failed to load targets", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -103,69 +87,54 @@ const PersonalTargets = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+      toast({ title: "Invalid dates", description: "End date must be after start date", variant: "destructive" });
+      return;
+    }
+
     try {
       const endpoint = editingTarget ? `/personal-targets/${editingTarget._id}` : '/personal-targets';
       const method = editingTarget ? 'PUT' : 'POST';
 
-      // Prepare simplified data for API
+      const start = new Date(formData.startDate);
       const targetData = {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        month: formData.month,
-        year: formData.year,
+        month: start.getMonth() + 1,
+        year: start.getFullYear(),
         status: formData.active ? 'active' : 'inactive',
-        // Set default values for required fields
         targetType: 'monthly',
         targetValue: 1,
         unit: 'times',
-        targetAudience: 'all',
-        startDate: new Date(formData.year, formData.month - 1, 1).toISOString(),
-        endDate: new Date(formData.year, formData.month, 0).toISOString()
+        targetAudience: formData.targetAudience,
+        instructions: formData.instructions,
+        rewards: formData.rewards,
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: new Date(formData.endDate).toISOString()
       };
 
-      await apiCall(endpoint, {
-        method,
-        body: JSON.stringify(targetData)
-      });
+      await apiCall(endpoint, { method, body: JSON.stringify(targetData) });
 
-      toast({
-        title: "Success",
-        description: `Target ${editingTarget ? 'updated' : 'created'} successfully`
-      });
-
+      toast({ title: "Success", description: `Target ${editingTarget ? 'updated' : 'created'} successfully` });
       setIsCreateDialogOpen(false);
       setEditingTarget(null);
       resetForm();
       fetchData();
-    } catch (error) {
-      console.error('Error saving target:', error);
-      toast({
-        title: "Error",
-        description: `Failed to ${editingTarget ? 'update' : 'create'} target`,
-        variant: "destructive"
-      });
+    } catch {
+      toast({ title: "Error", description: `Failed to ${editingTarget ? 'update' : 'create'} target`, variant: "destructive" });
     }
   };
 
   const handleDelete = async (targetId: string) => {
     if (!confirm('Are you sure you want to delete this target?')) return;
-
     try {
       await apiCall(`/personal-targets/${targetId}`, { method: 'DELETE' });
-      toast({
-        title: "Success",
-        description: "Target deleted successfully"
-      });
+      toast({ title: "Success", description: "Target deleted successfully" });
       fetchData();
-    } catch (error) {
-      console.error('Error deleting target:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete target",
-        variant: "destructive"
-      });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete target", variant: "destructive" });
     }
   };
 
@@ -174,9 +143,12 @@ const PersonalTargets = () => {
       title: '',
       description: '',
       category: 'other',
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      active: true
+      startDate: defaultStart(),
+      endDate: defaultEnd(),
+      active: true,
+      targetAudience: 'all_users',
+      instructions: '',
+      rewards: ''
     });
   };
 
@@ -186,28 +158,34 @@ const PersonalTargets = () => {
       title: target.title,
       description: target.description,
       category: target.category,
-      month: target.month,
-      year: target.year,
-      active: target.status === 'active'
+      startDate: toDatetimeLocal(new Date(target.startDate)),
+      endDate: toDatetimeLocal(new Date(target.endDate)),
+      active: target.status === 'active',
+      targetAudience: target.targetAudience || 'all_users',
+      instructions: target.instructions || '',
+      rewards: target.rewards || ''
     });
     setIsCreateDialogOpen(true);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
+  const formatDateRange = (startDate: string, endDate: string) => {
+    const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', {
+      day: 'numeric', month: 'short', year: 'numeric'
     });
+    const fmtTime = (d: string) => new Date(d).toLocaleTimeString('en-IN', {
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+    return {
+      start: `${fmt(startDate)}, ${fmtTime(startDate)}`,
+      end: `${fmt(endDate)}, ${fmtTime(endDate)}`
+    };
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const isCurrentlyActive = (target: PersonalTarget) => {
+    const now = new Date();
+    return target.status === 'active' &&
+      new Date(target.startDate) <= now &&
+      new Date(target.endDate) >= now;
   };
 
   const getCategoryIcon = (category: string) => {
@@ -222,16 +200,19 @@ const PersonalTargets = () => {
     }
   };
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  const AUDIENCE_LABELS: Record<string, string> = {
+    all_users: 'All Users',
+    members_only: 'Members Only',
+    group_admins: 'Group Admins',
+    area_admins: 'Area Admins',
+    district_admins: 'District Admins'
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading targets...</p>
         </div>
       </div>
@@ -247,13 +228,12 @@ const PersonalTargets = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-xl font-bold">Personal Targets</h1>
-            <p className="text-sm text-muted-foreground">Create and manage monthly targets for members</p>
+            <p className="text-sm text-muted-foreground">Create and manage targets for users</p>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             {!canManageTargets && (
@@ -271,115 +251,145 @@ const PersonalTargets = () => {
                   <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingTarget ? 'Edit Target' : 'Create New Target'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Enter target title"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Category *</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="quran">📖 Quran</SelectItem>
-                      <SelectItem value="hadith">📚 Hadith</SelectItem>
-                      <SelectItem value="prayer">🤲 Prayer</SelectItem>
-                      <SelectItem value="charity">💝 Charity</SelectItem>
-                      <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
-                      <SelectItem value="community">🤝 Community</SelectItem>
-                      <SelectItem value="other">🎯 Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe the target in detail"
-                    rows={3}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+                <DialogHeader>
+                  <DialogTitle>{editingTarget ? 'Edit Target' : 'Create New Target'}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="month">Select Month *</Label>
-                    <Select value={formData.month.toString()} onValueChange={(value) => setFormData({ ...formData, month: parseInt(value) })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month, index) => (
-                          <SelectItem key={index} value={(index + 1).toString()}>
-                            {month}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="year">Year *</Label>
+                    <Label htmlFor="title">Title *</Label>
                     <Input
-                      id="year"
-                      type="number"
-                      min="2020"
-                      max="2050"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter target title"
                       required
                     />
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="active" className="text-sm font-medium">
-                      Active Status
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Target is currently active and visible to members
-                    </p>
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="quran">📖 Quran</SelectItem>
+                        <SelectItem value="hadith">📚 Hadith</SelectItem>
+                        <SelectItem value="prayer">🤲 Prayer</SelectItem>
+                        <SelectItem value="charity">💝 Charity</SelectItem>
+                        <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
+                        <SelectItem value="community">🤝 Community</SelectItem>
+                        <SelectItem value="other">🎯 Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Switch
-                    id="active"
-                    checked={formData.active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                  />
-                </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingTarget ? 'Update Target' : 'Create Target'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <div>
+                    <Label htmlFor="description">Description *</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Describe the target in detail"
+                      rows={3}
+                      required
+                    />
+                  </div>
+
+                  {/* Start & End Date with Time */}
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label htmlFor="startDate">Start Date & Time *</Label>
+                      <Input
+                        id="startDate"
+                        type="datetime-local"
+                        value={formData.startDate}
+                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate">End Date & Time *</Label>
+                      <Input
+                        id="endDate"
+                        type="datetime-local"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="active" className="text-sm font-medium">Active Status</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Target is visible only when active and within the date range
+                      </p>
+                    </div>
+                    <Switch
+                      id="active"
+                      checked={formData.active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Target Audience *</Label>
+                    <Select
+                      value={formData.targetAudience}
+                      onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all_users">All Users</SelectItem>
+                        <SelectItem value="members_only">Members Only</SelectItem>
+                        <SelectItem value="group_admins">Group Admins Only</SelectItem>
+                        <SelectItem value="area_admins">Area Admins Only</SelectItem>
+                        <SelectItem value="district_admins">District Admins Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="instructions">Instructions (Optional)</Label>
+                    <Textarea
+                      id="instructions"
+                      value={formData.instructions}
+                      onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                      placeholder="How to complete this target..."
+                      rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="rewards">Rewards (Optional)</Label>
+                    <Input
+                      id="rewards"
+                      value={formData.rewards}
+                      onChange={(e) => setFormData({ ...formData, rewards: e.target.value })}
+                      placeholder="Reward for completing this target..."
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      {editingTarget ? 'Update Target' : 'Create Target'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
 
-        {/* Targets List - Mobile Responsive Grid */}
+        {/* Targets Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {targets.length === 0 ? (
             <div className="col-span-full">
@@ -396,71 +406,71 @@ const PersonalTargets = () => {
               </Card>
             </div>
           ) : (
-            targets.map((target) => (
-              <Card key={target._id} className="relative overflow-hidden hover:shadow-md transition-shadow">
-                {/* Status indicator */}
-                <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${
-                  target.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                }`} />
-                
-                <CardContent className="p-4">
-                  {/* Header with icon and title */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <span className="text-2xl flex-shrink-0">
-                      {getCategoryIcon(target.category)}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm leading-tight truncate">
-                        {target.title}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {target.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Month and Year */}
-                  <div className="flex items-center gap-1 mb-3">
-                    <Calendar className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {months[target.month - 1]} {target.year}
-                    </span>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className="flex items-center justify-between">
-                    <Badge 
-                      variant={target.status === 'active' ? 'default' : 'secondary'}
-                      className="text-xs px-2 py-1"
-                    >
-                      {target.status}
-                    </Badge>
-                    
-                    {/* Action buttons for mobile */}
-                    {canManageTargets && (
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => openEditDialog(target)}
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
-                          onClick={() => handleDelete(target._id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+            targets.map((target) => {
+              const active = isCurrentlyActive(target);
+              const { start, end } = formatDateRange(target.startDate, target.endDate);
+              return (
+                <Card key={target._id} className="relative overflow-hidden hover:shadow-md transition-shadow">
+                  <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="text-2xl flex-shrink-0">{getCategoryIcon(target.category)}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm leading-tight truncate">{target.title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{target.description}</p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                    </div>
+
+                    {/* Date range */}
+                    <div className="space-y-1 mb-3">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-xs text-muted-foreground">
+                          <span className="font-medium">From:</span> {start}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+                        <span className="text-xs text-muted-foreground">
+                          <span className="font-medium">To:</span> {end}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge
+                          variant={active ? 'default' : 'secondary'}
+                          className={`text-xs px-2 py-0.5 ${
+                            active ? 'bg-green-600' :
+                            target.status === 'active' && new Date(target.startDate) > new Date() ? 'bg-amber-500 text-white' :
+                            target.status === 'active' && new Date(target.endDate) < new Date() ? 'bg-gray-400 text-white' : ''
+                          }`}
+                        >
+                          {active ? 'Active' :
+                            target.status === 'active' && new Date(target.startDate) > new Date() ? 'Scheduled' :
+                            target.status === 'active' && new Date(target.endDate) < new Date() ? 'Expired' :
+                            'Inactive'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}
+                        </span>
+                      </div>
+                      {canManageTargets && (
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEditDialog(target)}>
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => handleDelete(target._id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

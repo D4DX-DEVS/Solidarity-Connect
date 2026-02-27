@@ -25,6 +25,9 @@ import bulkImportRoutes from './routes/bulkImport.js';
 import personalTargetsRoutes from './routes/personalTargets.js';
 import memberTargetProgressRoutes from './routes/memberTargetProgress.js';
 import memberAuthRoutes from './routes/memberAuth.js';
+import uploadRoutes from './routes/uploads.js';
+import orgFilesRoutes from './routes/orgFiles.js';
+import userTargetProgressRoutes from './routes/userTargetProgress.js';
 
 // Load environment variables
 dotenv.config();
@@ -37,28 +40,26 @@ connectDB();
 
 // Security middleware
 app.use(helmet());
-// CORS configuration
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? [
-      'https://octopus-app-zv6rt.ondigitalocean.app',
-      process.env.FRONTEND_URL || 'https://your-frontend-domain.com'
-    ]
-  : [
-      'http://localhost:3000', 
-      'http://localhost:5173', 
-      'http://localhost:8080', 
-      'http://localhost:8081',
-      process.env.FRONTEND_URL
-    ].filter(Boolean); // Remove undefined values
 
-console.log('🌐 CORS allowed origins:', allowedOrigins);
+// CORS configuration - allowed origins from env (same format for dev and production)
+// FRONTEND_URL: single URL or comma-separated list, e.g. http://localhost:5173 or https://app.example.com,https://www.example.com
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+  console.warn('⚠️ FRONTEND_URL is not set. CORS will block browser requests from unknown origins.');
+}
+
+console.log('🌐 CORS allowed origins:', allowedOrigins.length ? allowedOrigins : '(none from env)');
 console.log('🔧 Environment:', process.env.NODE_ENV);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (e.g. mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -67,7 +68,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -115,6 +116,9 @@ app.use('/api/bulk-import', bulkImportRoutes);
 app.use('/api/personal-targets', personalTargetsRoutes);
 app.use('/api/member-target-progress', memberTargetProgressRoutes);
 app.use('/api/member-auth', memberAuthRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/org-files', orgFilesRoutes);
+app.use('/api/user-target-progress', userTargetProgressRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));

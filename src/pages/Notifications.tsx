@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Send, Edit, Trash2, Eye, AlertCircle } from "lucide-react";
+import { Bell, Send, Edit, Trash2, Eye, AlertCircle, FileText, Image, Film, Paperclip } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BottomNav from "@/components/BottomNav";
@@ -204,6 +204,30 @@ const Notifications = () => {
                     Target: {notification.targetAudience.replace('_', ' ')} | 
                     Type: {notification.type}
                   </div>
+
+                  {notification.attachments && notification.attachments.length > 0 && (
+                    <div className="mb-3 space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <Paperclip className="h-3 w-3" /> Attachments:
+                      </p>
+                      {notification.attachments.map((att, i) => {
+                        const mime = att.mimetype || '';
+                        const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                        return (
+                          <a
+                            key={i}
+                            href={att.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm text-primary hover:underline"
+                          >
+                            <Icon className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{att.originalName || `File ${i + 1}`}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {userRole === "state_admin" && (
                     <div className="flex gap-2 pt-2 border-t">

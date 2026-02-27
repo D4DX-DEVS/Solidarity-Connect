@@ -40,6 +40,18 @@ const memberTargetProgressSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
+  feedback: {
+    type: String,
+    trim: true,
+    maxlength: [1000, 'Feedback cannot exceed 1000 characters']
+  },
+  fileAttachment: {
+    url: String,
+    originalName: String,
+    mimetype: String,
+    size: Number,
+    key: String
+  },
   dailyProgress: [{
     date: {
       type: Date,

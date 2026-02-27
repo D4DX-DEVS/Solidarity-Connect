@@ -4,7 +4,6 @@ import {
   Users, 
   Plus, 
   Search, 
-  Filter, 
   MoreVertical, 
   Edit, 
   Trash2, 
@@ -12,7 +11,8 @@ import {
   UserX,
   Shield,
   Building2,
-  UserCog
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -101,8 +101,14 @@ const UserManagement = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDocs, setTotalDocs] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [loadingGroups, setLoadingGroups] = useState(false);
@@ -129,49 +135,88 @@ const UserManagement = () => {
     group_admin: "bg-orange-100 text-orange-800"
   };
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, roleFilter, statusFilter]);
+
+  // Fetch districts + stats once on mount
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) { navigate('/login'); return; }
+        const [statsResult, districtsResult] = await Promise.all([
+          usersAPI.getUserStats(),
+          districtsAPI.getDistricts({ limit: 100, isActive: true })
+        ]);
+        setUserStats(statsResult.data.statistics);
+        setDistricts(districtsResult.data || []);
+      } catch (err) {
+        console.error('Error fetching init data:', err);
+      }
+    };
+    init();
+  }, []);
+
+  // Fetch users when page or filters change
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const params: Record<string, any> = { page: currentPage, limit: 20 };
+        if (debouncedSearch) params.search = debouncedSearch;
+        if (roleFilter !== 'all') params.role = roleFilter;
+        if (statusFilter === 'active') params.isActive = true;
+        else if (statusFilter === 'inactive') params.isActive = false;
+
+        const usersResult = await usersAPI.getUsers(params);
+        setUsers(usersResult.data || []);
+        if (usersResult.pagination) {
+          setTotalPages(usersResult.pagination.totalPages || 1);
+          setTotalDocs(usersResult.pagination.totalDocs || 0);
+          setHasNextPage(usersResult.pagination.hasNextPage || false);
+          setHasPrevPage(usersResult.pagination.hasPrevPage || false);
+        }
+        setGroups([]);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        toast({ title: "Error", description: "Failed to load user data", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter]);
+
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
+      setLoading(true);
+      const params: Record<string, any> = { page: currentPage, limit: 20 };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (roleFilter !== 'all') params.role = roleFilter;
+      if (statusFilter === 'active') params.isActive = true;
+      else if (statusFilter === 'inactive') params.isActive = false;
+      const usersResult = await usersAPI.getUsers(params);
+      setUsers(usersResult.data || []);
+      if (usersResult.pagination) {
+        setTotalPages(usersResult.pagination.totalPages || 1);
+        setTotalDocs(usersResult.pagination.totalDocs || 0);
+        setHasNextPage(usersResult.pagination.hasNextPage || false);
+        setHasPrevPage(usersResult.pagination.hasPrevPage || false);
       }
-
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Fetch users
-      const usersResult = await usersAPI.getUsers({ limit: 100 });
-      setUsers(usersResult.data);
-
-      // Fetch user stats
-      const statsResult = await usersAPI.getUserStats();
-      setUserStats(statsResult.data.statistics);
-
-      // Fetch districts - get all active districts without pagination limit
-      const districtsResult = await districtsAPI.getDistricts({ limit: 100, isActive: true });
-      setDistricts(districtsResult.data);
-
-      // Don't fetch all groups initially - they will be loaded when district is selected
-      setGroups([]);
-
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load user data",
-        variant: "destructive",
-      });
+      console.error('Error refreshing users:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const handleCreateUser = async () => {
     try {
@@ -270,17 +315,6 @@ const UserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm) ||
-                         (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesRole = !roleFilter || roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = !statusFilter || statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.isActive) ||
-                         (statusFilter === 'inactive' && !user.isActive);
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
 
 
 
@@ -449,7 +483,7 @@ const UserManagement = () => {
 
         {/* Users List */}
         <div className="space-y-3">
-          {filteredUsers.map((user) => (
+          {users.map((user) => (
             <Card key={user._id}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -516,19 +550,46 @@ const UserManagement = () => {
           ))}
         </div>
 
-        {filteredUsers.length === 0 && (
+        {users.length === 0 && !loading && (
           <Card>
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No users found</h3>
               <p className="text-muted-foreground">
-                {searchTerm || roleFilter || statusFilter 
+                {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
                   ? "Try adjusting your search or filters"
                   : "Get started by creating your first user"
                 }
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between py-2">
+            <p className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages} ({totalDocs} users)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => p - 1)}
+                disabled={!hasPrevPage || loading}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => p + 1)}
+                disabled={!hasNextPage || loading}
+              >
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
         )}
       </main>
 

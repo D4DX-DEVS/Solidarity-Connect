@@ -6,6 +6,11 @@ import User from '../models/User.js';
 import Request from '../models/Request.js';
 import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
+import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
+import TransferRequest from '../models/TransferRequest.js';
+import PersonalTarget from '../models/PersonalTarget.js';
+import UserTargetProgress from '../models/UserTargetProgress.js';
+import MemberTargetProgress from '../models/MemberTargetProgress.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
@@ -1260,6 +1265,91 @@ router.get('/export/members', authenticate, authorize(['view_reports']), async (
       success: false,
       message: 'Failed to export members data'
     });
+  }
+});
+
+// @route   GET /api/reports/consolidation
+// @desc    Get filtered list of users for consolidation (state admin only)
+// @access  State Admin only
+router.get('/consolidation', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (req.user.role !== 'state_admin') {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const { districtId, groupId, roleFilter, consolidationType, targetId, targetStatus } = req.query;
+    const mongoose = (await import('mongoose')).default;
+
+    // Build user filter
+    const userFilter = { isActive: true };
+    if (districtId) userFilter.district = new mongoose.Types.ObjectId(districtId);
+    if (groupId) userFilter.group = new mongoose.Types.ObjectId(groupId);
+
+    if (roleFilter === 'district_admin') {
+      userFilter.role = 'district_admin';
+    } else if (roleFilter === 'area_admin') {
+      userFilter.role = 'group_admin';
+      userFilter['roleTag.type'] = 'area';
+    } else if (roleFilter === 'unit_admin') {
+      userFilter.role = 'group_admin';
+      userFilter['roleTag.type'] = 'unit';
+    } else if (roleFilter === 'group_admin') {
+      userFilter.role = 'group_admin';
+      // include all group_admin subtypes
+    }
+
+    let users = await User.find(userFilter)
+      .populate('district', 'name code')
+      .populate('group', 'name code')
+      .select('name role roleTag district group phone createdAt')
+      .sort({ name: 1 });
+
+    // Personal target filtering
+    let targetMeta = null;
+    const progressMap = {};
+
+    if (consolidationType === 'personal_target' && targetId) {
+      targetMeta = await PersonalTarget.findById(new mongoose.Types.ObjectId(targetId))
+        .select('title category targetAudience');
+
+      const progressQuery = { personalTarget: new mongoose.Types.ObjectId(targetId) };
+      if (targetStatus && targetStatus !== 'all') progressQuery.status = targetStatus;
+
+      const progressRecords = await UserTargetProgress.find(progressQuery)
+        .select('user status completedAt feedback');
+      progressRecords.forEach(p => {
+        progressMap[p.user.toString()] = p;
+      });
+
+      // Filter to only users with a matching progress record
+      if (targetStatus && targetStatus !== 'all') {
+        users = users.filter(u => !!progressMap[u._id.toString()]);
+      }
+    }
+
+    const data = users.map(u => ({
+      _id: u._id,
+      name: u.name,
+      role: u.role,
+      roleTag: u.roleTag,
+      district: u.district,
+      group: u.group,
+      phone: u.phone,
+      progress: progressMap[u._id.toString()] || null
+    }));
+
+    res.status(200).json({
+      success: true,
+      data,
+      meta: {
+        count: data.length,
+        target: targetMeta,
+        filters: { districtId, groupId, roleFilter, consolidationType, targetId, targetStatus }
+      }
+    });
+  } catch (error) {
+    console.error('Consolidation report error:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate consolidation report' });
   }
 });
 

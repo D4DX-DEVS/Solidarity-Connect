@@ -99,7 +99,7 @@ const AddMember = () => {
           // Fetch districts only if user can select district
           if (contextResult.data.canSelectDistrict) {
             const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
-            setDistricts(districtsResult.data.docs || []);
+            setDistricts(districtsResult.data || []);
           }
         } else {
           toast({
@@ -130,7 +130,7 @@ const AddMember = () => {
         try {
           const token = localStorage.getItem('token');
           const result = await districtsAPI.getDistrictGroups(formData.district, { limit: 100 });
-          setGroups(result.data.docs || []);
+          setGroups(result.data || []);
         } catch (error) {
           console.error('Failed to fetch groups:', error);
         }

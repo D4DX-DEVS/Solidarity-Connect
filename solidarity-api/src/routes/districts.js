@@ -36,12 +36,6 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       ];
     }
 
-    // If user is district admin, only show their district
-    // Group admins can see all districts for transfer purposes
-    if (req.user.role === 'district_admin') {
-      filter._id = req.user.district._id;
-    }
-
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
@@ -54,17 +48,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
     const result = await District.paginate(filter, options);
 
-    // Get statistics for each district
-    const districtsWithStats = await Promise.all(
-      result.docs.map(async (district) => {
-        const stats = await district.updateStatistics();
-        return stats;
-      })
-    );
-
     res.status(200).json({
       success: true,
-      data: districtsWithStats,
+      data: result.docs,
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,

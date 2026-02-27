@@ -74,7 +74,23 @@ const userSchema = new mongoose.Schema({
       'manage_meetings',
       'manage_baithul_maal'
     ]
-  }]
+  }],
+  isLeader: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  roleTag: {
+    type: {
+      type: String,
+      enum: ['state', 'district', 'area', 'unit'],
+    },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Role tag name cannot exceed 100 characters']
+    }
+  }
 }, {
   timestamps: true
 });

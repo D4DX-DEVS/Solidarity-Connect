@@ -1,5 +1,9 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import path from 'path';
+import crypto from 'crypto';
 import MemberAuth from '../models/MemberAuth.js';
 import Member from '../models/Member.js';
 import PersonalTarget from '../models/PersonalTarget.js';
@@ -7,7 +11,29 @@ import MemberTargetProgress from '../models/MemberTargetProgress.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
+import District from '../models/District.js';
+import Group from '../models/Group.js';
 import { body, validationResult } from 'express-validator';
+
+// Multer in-memory storage for file uploads
+const memberUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain',
+      'video/mp4', 'video/mpeg',
+      'audio/mpeg', 'audio/wav'
+    ];
+    if (allowedMimes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error(`File type ${file.mimetype} is not allowed`));
+  }
+});
 
 const router = express.Router();
 
@@ -558,30 +584,28 @@ router.get('/meetings', authenticateMember, async (req, res) => {
 // @access  Private (Member)
 router.get('/targets', authenticateMember, async (req, res) => {
   try {
-    const { month, year, status, limit = 50 } = req.query;
+    const { limit = 50 } = req.query;
     const member = req.member;
+    const now = new Date();
 
-    // Build filter for targets that apply to this member
+    // Build filter: only show targets that are active and within the current date range
     let targetFilter = {
       status: 'active',
+      targetAudience: { $in: ['all_users', 'members_only'] },
       $or: [
-        { targetAudience: 'all' },
-        { targetAudience: 'specific_districts', targetDistricts: member.district },
-        { targetAudience: 'specific_groups', targetGroups: member.group }
+        // Targets with a date range — only show if current time is within range
+        { startDate: { $lte: now }, endDate: { $gte: now } },
+        // Targets without dates set — always show (backward compat)
+        { startDate: { $exists: false } },
+        { startDate: null }
       ]
     };
-
-    // Add month/year filter if provided (for backward compatibility)
-    if (month) targetFilter.month = parseInt(month);
-    if (year) targetFilter.year = parseInt(year);
 
     // Get all targets that apply to this member, sorted by release date (recent first)
     const targets = await PersonalTarget.find(targetFilter)
       .sort({ createdAt: -1, startDate: -1 }) // Sort by creation date first, then start date
       .limit(parseInt(limit))
-      .populate('createdBy', 'name role')
-      .populate('targetDistricts', 'name')
-      .populate('targetGroups', 'name');
+      .populate('createdBy', 'name role');
 
     // Get member's progress for these targets
     const targetIds = targets.map(t => t._id);
@@ -610,6 +634,8 @@ router.get('/targets', authenticateMember, async (req, res) => {
           progressPercentage: progress.progressPercentage,
           status: progress.status,
           completedAt: progress.completedAt,
+          feedback: progress.feedback || '',
+          fileAttachment: progress.fileAttachment || null,
           notes: progress.notes,
           dailyProgress: progress.dailyProgress,
           createdAt: progress.createdAt,
@@ -625,6 +651,8 @@ router.get('/targets', authenticateMember, async (req, res) => {
           progressPercentage: 0,
           status: 'not_started',
           completedAt: null,
+          feedback: '',
+          fileAttachment: null,
           notes: null,
           dailyProgress: [],
           createdAt: target.createdAt,
@@ -633,10 +661,7 @@ router.get('/targets', authenticateMember, async (req, res) => {
       }
     });
 
-    // Apply status filter if provided
-    const filteredTargets = status ? 
-      targetsWithProgress.filter(t => t.status === status) : 
-      targetsWithProgress;
+    const filteredTargets = targetsWithProgress;
 
     res.status(200).json({
       success: true,
@@ -662,13 +687,15 @@ router.get('/targets', authenticateMember, async (req, res) => {
 // @access  Private (Member)
 router.get('/notifications', authenticateMember, async (req, res) => {
   try {
-    const { page = 1, limit = 20, isRead } = req.query;
+    const { page = 1, limit = 20, isRead, status, type } = req.query;
     const member = req.member;
 
     let filter = {
+      status: status || 'sent',
       $or: [
         { targetAudience: 'all' },
         { targetAudience: 'members' },
+        { targetAudiences: { $in: ['all', 'members'] } },
         { targetGroups: member.group },
         { targetDistricts: member.district },
         { targetMembers: member._id }
@@ -677,6 +704,10 @@ router.get('/notifications', authenticateMember, async (req, res) => {
 
     if (isRead !== undefined) {
       filter.isRead = isRead === 'true';
+    }
+
+    if (type) {
+      filter.type = type;
     }
 
     const options = {
@@ -729,6 +760,193 @@ router.post('/logout', authenticateMember, async (req, res) => {
       success: false,
       message: 'Failed to logout'
     });
+  }
+});
+
+// @route   GET /api/member-auth/leaders
+// @desc    Get all users marked as leaders (accessible to authenticated members)
+// @access  Private (Member)
+router.get('/leaders', authenticateMember, async (req, res) => {
+  try {
+    const {
+      roleType,
+      search,
+      districtId,
+      groupId,
+      unitName,
+      page = 1,
+      limit = 50,
+    } = req.query;
+
+    const filter = { isLeader: true };
+    if (roleType) filter['roleTag.type'] = roleType;
+    if (districtId) filter.district = districtId;
+    if (groupId) filter.group = groupId;
+    if (unitName) filter['roleTag.name'] = unitName;
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { 'roleTag.name': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const users = await User.find(filter)
+      .select('name phone role roleTag isLeader district group')
+      .populate('district', 'name code')
+      .populate('group', 'name code')
+      .sort({ 'roleTag.type': 1, name: 1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    const total = await User.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      data: users,
+      pagination: {
+        currentPage: parseInt(page),
+        totalDocs: total,
+        totalPages: Math.ceil(total / parseInt(limit)),
+        limit: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get leaders (member) error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch leaders' });
+  }
+});
+
+// @route   POST /api/member-auth/targets/:targetId/progress
+// @desc    Mark a target as completed / in-progress with feedback and optional file
+// @access  Private (Member)
+router.post('/targets/:targetId/progress', authenticateMember, async (req, res) => {
+  try {
+    const { status, feedback, fileAttachment } = req.body;
+    const member = req.member;
+
+    const validStatuses = ['not_started', 'in_progress', 'completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+
+    // Fetch target to get targetValue for upsert
+    const personalTarget = await PersonalTarget.findById(req.params.targetId);
+    if (!personalTarget) {
+      return res.status(404).json({ success: false, message: 'Target not found' });
+    }
+
+    const isCompleted = status === 'completed';
+    const updateData = {
+      status,
+      targetValue: personalTarget.targetValue,
+      currentProgress: isCompleted ? personalTarget.targetValue : 0,
+      progressPercentage: isCompleted ? 100 : 0,
+      ...(feedback !== undefined ? { feedback } : {}),
+      ...(fileAttachment ? { fileAttachment } : {}),
+      ...(isCompleted ? { completedAt: new Date() } : {})
+    };
+
+    const progress = await MemberTargetProgress.findOneAndUpdate(
+      { member: member._id, personalTarget: req.params.targetId },
+      { $set: updateData },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ success: true, message: 'Progress updated', data: progress });
+  } catch (error) {
+    console.error('Update member target progress error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update progress' });
+  }
+});
+
+// @route   POST /api/member-auth/uploads
+// @desc    Upload a file to DigitalOcean Spaces (member)
+// @access  Private (Member)
+router.post('/uploads', authenticateMember, memberUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const s3 = new S3Client({
+      endpoint: process.env.DO_SPACES_ENDPOINT,
+      region: 'us-east-1',
+      credentials: {
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET
+      },
+      forcePathStyle: false
+    });
+
+    const bucket = process.env.DO_SPACES_BUCKET;
+    const folder = process.env.DO_SPACES_FOLDER || 'targets';
+    const cdnEndpoint = process.env.DO_SPACES_CDN_ENDPOINT;
+    const uniqueId = crypto.randomBytes(16).toString('hex');
+    const ext = path.extname(req.file.originalname);
+    const key = `${folder}/${uniqueId}${ext}`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+      ACL: 'public-read'
+    }));
+
+    const cdnBase = cdnEndpoint
+      ? cdnEndpoint.replace(/\/$/, '')
+      : `https://${bucket}.${process.env.DO_SPACES_ENDPOINT?.replace('https://', '')}`;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        url: `${cdnBase}/${key}`,
+        originalName: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        key
+      }
+    });
+  } catch (error) {
+    console.error('Member file upload error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to upload file' });
+  }
+});
+
+// @route   GET /api/member-auth/districts
+// @desc    Get all districts (for filter dropdowns)
+// @access  Private (Member)
+router.get('/districts', authenticateMember, async (req, res) => {
+  try {
+    const districts = await District.find({ isActive: true })
+      .select('_id name code')
+      .sort({ name: 1 });
+
+    res.status(200).json({ success: true, data: districts });
+  } catch (error) {
+    console.error('Get districts (member) error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch districts' });
+  }
+});
+
+// @route   GET /api/member-auth/groups
+// @desc    Get all groups (for filter dropdowns), optionally filtered by district
+// @access  Private (Member)
+router.get('/groups', authenticateMember, async (req, res) => {
+  try {
+    const { district } = req.query;
+    const filter = { isActive: true };
+    if (district) filter.district = district;
+
+    const groups = await Group.find(filter)
+      .select('_id name code district')
+      .sort({ name: 1 });
+
+    res.status(200).json({ success: true, data: groups });
+  } catch (error) {
+    console.error('Get groups (member) error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch groups' });
   }
 });
 

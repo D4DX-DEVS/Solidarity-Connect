@@ -37,29 +37,19 @@ const personalTargetSchema = new mongoose.Schema({
   },
   month: {
     type: Number,
-    required: [true, 'Month is required'],
     min: 1,
     max: 12
   },
   year: {
     type: Number,
-    required: [true, 'Year is required'],
     min: 2020,
     max: 2050
   },
   targetAudience: {
     type: String,
-    enum: ['all', 'specific_districts', 'specific_groups'],
-    default: 'all'
+    enum: ['all_users', 'members_only', 'group_admins', 'area_admins', 'district_admins'],
+    default: 'all_users'
   },
-  targetDistricts: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'District'
-  }],
-  targetGroups: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Group'
-  }],
   status: {
     type: String,
     enum: ['active', 'inactive', 'completed'],
@@ -133,35 +123,13 @@ personalTargetSchema.statics.getActiveTargets = function(month, year, filter = {
     month,
     year,
     status: 'active'
-  }).populate('createdBy', 'name role')
-    .populate('targetDistricts', 'name')
-    .populate('targetGroups', 'name');
+  }).populate('createdBy', 'name role');
 };
 
 // Static method to get targets by audience
-personalTargetSchema.statics.getTargetsByAudience = function(audience, districtIds = [], groupIds = []) {
-  let query = { status: 'active' };
-  
-  if (audience === 'all') {
-    query.targetAudience = 'all';
-  } else if (audience === 'specific_districts' && districtIds.length > 0) {
-    query = {
-      ...query,
-      targetAudience: 'specific_districts',
-      targetDistricts: { $in: districtIds }
-    };
-  } else if (audience === 'specific_groups' && groupIds.length > 0) {
-    query = {
-      ...query,
-      targetAudience: 'specific_groups',
-      targetGroups: { $in: groupIds }
-    };
-  }
-  
-  return this.find(query)
-    .populate('createdBy', 'name role')
-    .populate('targetDistricts', 'name')
-    .populate('targetGroups', 'name');
+personalTargetSchema.statics.getTargetsByAudience = function(audience) {
+  return this.find({ status: 'active', targetAudience: audience })
+    .populate('createdBy', 'name role');
 };
 
 // Add pagination plugin

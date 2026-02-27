@@ -12,6 +12,7 @@
     "lint:fix": "eslint src/ --fix"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.997.0",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
