@@ -35,8 +35,9 @@ interface TransferRequest {
   requestedBy: { name: string; role: string };
   reason: string;
   status: string;
-  areaApproval: { status: string };
-  districtApproval: { status: string };
+  sourceDistrictApproval: { status: string };
+  targetDistrictApproval: { status: string };
+  isCrossDistrict: boolean;
   createdAt: string;
 }
 
@@ -81,6 +82,7 @@ const DistrictAdmin = () => {
   const fetchPendingTransfers = async () => {
     try {
       setLoadingTransfers(true);
+      // No ?status= param — backend auto-filters to show only requests pending this district's approval
       const result = await apiCall("/transfer-requests?sort=-createdAt&limit=20");
       setPendingTransfers(result.data || []);
     } catch (err) {
@@ -237,10 +239,15 @@ const DistrictAdmin = () => {
                           <Badge variant="outline" className="text-xs ml-1">Cross-District</Badge>
                         )}
                       </div>
-                      <div className="flex gap-1 mt-1">
-                        <Badge variant="outline" className={`text-xs ${transfer.areaApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          Area: {transfer.areaApproval?.status || 'pending'}
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          Source: {transfer.sourceDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
                         </Badge>
+                        {transfer.isCrossDistrict && (
+                          <Badge variant="outline" className={`text-xs ${transfer.targetDistrictApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            Target: {transfer.targetDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 bg-muted p-1 rounded">{transfer.reason}</p>
                       <div className="flex gap-2 mt-2">
@@ -296,7 +303,7 @@ const DistrictAdmin = () => {
         <DialogContent className="max-w-sm mx-auto">
           <DialogHeader><DialogTitle>Approve Transfer</DialogTitle></DialogHeader>
           <p className="text-sm">
-            Approve transfer for <strong>{selectedTransfer?.member?.name}</strong>? This will forward to State Admin for final approval.
+            Approve transfer for <strong>{selectedTransfer?.member?.name}</strong>? Once both district admins approve, the request will be forwarded to State Admin for final approval.
           </p>
           <div>
             <label className="text-sm font-medium">Comments (Optional)</label>

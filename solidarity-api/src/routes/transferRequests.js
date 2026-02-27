@@ -4,7 +4,7 @@ import Member from '../models/Member.js';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
 import { authenticate, authorize } from '../middleware/auth.js';
-import { 
+import {
   paginationValidation,
   objectIdValidation,
   handleValidationErrors
@@ -13,80 +13,64 @@ import { body } from 'express-validator';
 
 const router = express.Router();
 
-// Helper: is user an area admin?
-const isAreaAdmin = (user) =>
-  user.role === 'group_admin' && user.roleTag?.type === 'area';
+const POPULATE_OPTS = [
+  { path: 'member', select: 'name phone' },
+  { path: 'currentDistrict', select: 'name code' },
+  { path: 'currentGroup', select: 'name code' },
+  { path: 'targetDistrict', select: 'name code' },
+  { path: 'targetGroup', select: 'name code' },
+  { path: 'requestedBy', select: 'name phone role' },
+  { path: 'sourceDistrictApproval.approvedBy', select: 'name' },
+  { path: 'targetDistrictApproval.approvedBy', select: 'name' },
+  { path: 'stateApproval.approvedBy', select: 'name' },
+  { path: 'completedBy', select: 'name' },
+  { path: 'rejectedBy', select: 'name' }
+];
 
-// Validation for transfer request creation
+// Validation for creation
 const createTransferValidation = [
-  body('member')
-    .isMongoId()
-    .withMessage('Valid member ID is required'),
-  body('targetDistrict')
-    .isMongoId()
-    .withMessage('Valid target district ID is required'),
-  body('targetGroup')
-    .isMongoId()
-    .withMessage('Valid target group ID is required'),
-  body('reason')
-    .trim()
-    .isLength({ min: 10, max: 500 })
-    .withMessage('Reason must be between 10 and 500 characters'),
+  body('member').isMongoId().withMessage('Valid member ID is required'),
+  body('targetDistrict').isMongoId().withMessage('Valid target district ID is required'),
+  body('targetGroup').isMongoId().withMessage('Valid target group ID is required'),
+  body('reason').trim().isLength({ min: 10, max: 500 }).withMessage('Reason must be 10–500 characters'),
   handleValidationErrors
 ];
 
-// Validation for approval/rejection
 const approvalValidation = [
   objectIdValidation('id'),
-  body('comments')
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Comments cannot exceed 500 characters'),
+  body('comments').optional().trim().isLength({ max: 500 }),
   handleValidationErrors
 ];
 
 // @route   GET /api/transfer-requests
-// @desc    Get transfer requests with filtering and pagination
+// @desc    Get transfer requests filtered by role
 // @access  Private
 router.get('/', authenticate, paginationValidation, async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      sort = '-requestDate',
-      status,
-      member,
-      district
-    } = req.query;
+    const { page = 1, limit = 20, sort = '-requestDate', member, district } = req.query;
 
-    // Build filter based on user role (3-tier hierarchy)
     let filter = {};
-    
-    if (isAreaAdmin(req.user)) {
-      // Area admin sees only transfers from their group at area-pending stage
-      filter.currentGroup = req.user.group._id;
-      filter['areaApproval.status'] = 'pending';
-      filter.status = 'pending';
-    } else if (req.user.role === 'district_admin') {
-      // District admin sees transfers waiting at district tier (area already approved)
-      filter['areaApproval.status'] = 'approved';
-      filter['districtApproval.status'] = 'pending';
-      filter.status = 'area_approved';
-      filter.$or = [
-        { currentDistrict: req.user.district._id },
-        { targetDistrict: req.user.district._id }
-      ];
-    } else if (req.user.role === 'group_admin') {
-      // Non-area group_admin: sees only their group's requests
-      filter.currentGroup = req.user.group._id;
-    }
-    // State admin sees all transfers (no role filter — filtered by status/query params below)
 
-    // Apply additional filters
-    if (status) filter.status = status;
+    if (req.user.role === 'group_admin') {
+      // Group admins see requests created from their group
+      filter.currentGroup = req.user.group._id;
+    } else if (req.user.role === 'district_admin') {
+      // District admins see requests pending their approval
+      const distId = req.user.district._id;
+      filter.status = 'pending';
+      filter.$or = [
+        { currentDistrict: distId, 'sourceDistrictApproval.status': 'pending' },
+        { targetDistrict: distId, 'targetDistrictApproval.status': 'pending' }
+      ];
+    } else if (req.user.role === 'state_admin') {
+      // State admin sees requests where both district admins have approved
+      filter.status = 'district_approved';
+    }
+    // Other roles: no results
+
+    // Optional additional filters (don't override role-based $or for district_admin)
     if (member) filter.member = member;
-    if (district) {
+    if (district && req.user.role !== 'district_admin') {
       filter.$or = [
         { currentDistrict: district },
         { targetDistrict: district }
@@ -97,37 +81,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       page: parseInt(page),
       limit: parseInt(limit),
       sort,
-      populate: [
-        { path: 'member', select: 'name phone' },
-        { path: 'currentDistrict', select: 'name code' },
-        { path: 'currentGroup', select: 'name code' },
-        { path: 'targetDistrict', select: 'name code' },
-        { path: 'targetGroup', select: 'name code' },
-        { path: 'requestedBy', select: 'name phone role' },
-        { path: 'areaApproval.approvedBy', select: 'name phone' },
-        { path: 'districtApproval.approvedBy', select: 'name phone' },
-        { path: 'stateApproval.approvedBy', select: 'name phone' },
-        { path: 'completedBy', select: 'name phone' },
-        { path: 'rejectedBy', select: 'name phone' }
-      ]
+      populate: POPULATE_OPTS
     };
 
     const result = await TransferRequest.paginate(filter, options);
-
-    // Calculate statistics
-    const stats = await TransferRequest.aggregate([
-      { $match: filter },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          pending: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-          approved: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
-          completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
-          rejected: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } }
-        }
-      }
-    ]);
 
     res.status(200).json({
       success: true,
@@ -139,118 +96,64 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         limit: result.limit,
         hasNextPage: result.hasNextPage,
         hasPrevPage: result.hasPrevPage
-      },
-      statistics: stats[0] || { total: 0, pending: 0, approved: 0, completed: 0, rejected: 0 }
+      }
     });
 
   } catch (error) {
     console.error('Get transfer requests error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch transfer requests'
-    });
-  }
-});
-
-// @route   GET /api/transfer-requests/pending
-// @desc    Get pending transfer requests for current user
-// @access  Private
-router.get('/pending', authenticate, async (req, res) => {
-  try {
-    const pendingTransfers = await TransferRequest.getPendingForUser(req.user);
-
-    res.status(200).json({
-      success: true,
-      data: pendingTransfers
-    });
-
-  } catch (error) {
-    console.error('Get pending transfers error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch pending transfers'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch transfer requests' });
   }
 });
 
 // @route   POST /api/transfer-requests
-// @desc    Create new transfer request
+// @desc    Create new transfer request (group_admin only)
 // @access  Private
 router.post('/', authenticate, authorize(['manage_members']), createTransferValidation, async (req, res) => {
   try {
     const { member: memberId, targetDistrict, targetGroup, reason } = req.body;
 
-    // Check if member exists and user has access
+    // Only group_admin can create transfer requests
+    if (req.user.role !== 'group_admin') {
+      return res.status(403).json({ success: false, message: 'Only group admins can create transfer requests' });
+    }
+
     const member = await Member.findById(memberId).populate('group district');
     if (!member) {
-      return res.status(404).json({
-        success: false,
-        message: 'Member not found'
-      });
+      return res.status(404).json({ success: false, message: 'Member not found' });
     }
 
-    // Check access permissions
-    if (req.user.role === 'group_admin' && member.group._id.toString() !== req.user.group._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only transfer members from your group.'
-      });
+    // Only allow transfers from own group
+    if (member.group._id.toString() !== req.user.group._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You can only transfer members from your group' });
     }
 
-    if (req.user.role === 'district_admin' && member.district._id.toString() !== req.user.district._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only transfer members from your district.'
-      });
-    }
-
-    // Validate target district and group
     const targetDistrictDoc = await District.findById(targetDistrict);
     if (!targetDistrictDoc) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid target district'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid target district' });
     }
 
     const targetGroupDoc = await Group.findById(targetGroup).populate('district');
     if (!targetGroupDoc) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid target group'
-      });
+      return res.status(400).json({ success: false, message: 'Invalid target group' });
     }
 
-    // Ensure target group belongs to target district
     if (targetGroupDoc.district._id.toString() !== targetDistrict) {
-      return res.status(400).json({
-        success: false,
-        message: 'Target group does not belong to the selected district'
-      });
+      return res.status(400).json({ success: false, message: 'Target group does not belong to the selected district' });
     }
 
-    // Check if member is already in the target group
     if (member.group._id.toString() === targetGroup) {
-      return res.status(400).json({
-        success: false,
-        message: 'Member is already in the target group'
-      });
+      return res.status(400).json({ success: false, message: 'Member is already in the target group' });
     }
 
-    // Check for existing pending transfer request for this member
+    // Check for existing active request
     const existingRequest = await TransferRequest.findOne({
       member: memberId,
-      status: { $in: ['pending', 'approved'] }
+      status: { $in: ['pending', 'district_approved'] }
     });
-
     if (existingRequest) {
-      return res.status(400).json({
-        success: false,
-        message: 'There is already a pending transfer request for this member'
-      });
+      return res.status(400).json({ success: false, message: 'There is already an active transfer request for this member' });
     }
 
-    // Create transfer request
     const transferRequest = new TransferRequest({
       member: memberId,
       currentDistrict: member.district._id,
@@ -262,16 +165,7 @@ router.post('/', authenticate, authorize(['manage_members']), createTransferVali
     });
 
     await transferRequest.save();
-
-    // Populate the created request
-    await transferRequest.populate([
-      { path: 'member', select: 'name phone' },
-      { path: 'currentDistrict', select: 'name code' },
-      { path: 'currentGroup', select: 'name code' },
-      { path: 'targetDistrict', select: 'name code' },
-      { path: 'targetGroup', select: 'name code' },
-      { path: 'requestedBy', select: 'name phone role' }
-    ]);
+    await transferRequest.populate(POPULATE_OPTS);
 
     res.status(201).json({
       success: true,
@@ -281,203 +175,110 @@ router.post('/', authenticate, authorize(['manage_members']), createTransferVali
 
   } catch (error) {
     console.error('Create transfer request error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create transfer request'
-    });
+    res.status(500).json({ success: false, message: error.message || 'Failed to create transfer request' });
   }
 });
 
 // @route   POST /api/transfer-requests/:id/approve
-// @desc    Approve transfer request
+// @desc    Approve a transfer request
+//          - District admin: advances district approval stage
+//          - State admin: final approval + immediately completes (member data updated)
 // @access  Private
 router.post('/:id/approve', authenticate, authorize(['manage_members']), approvalValidation, async (req, res) => {
   try {
     const { comments } = req.body;
 
-    const transferRequest = await TransferRequest.findById(req.params.id)
-      .populate('member', 'name phone')
-      .populate('currentDistrict', 'name code')
-      .populate('currentGroup', 'name code')
-      .populate('targetDistrict', 'name code')
-      .populate('targetGroup', 'name code');
-
+    const transferRequest = await TransferRequest.findById(req.params.id).populate(POPULATE_OPTS);
     if (!transferRequest) {
-      return res.status(404).json({
-        success: false,
-        message: 'Transfer request not found'
-      });
+      return res.status(404).json({ success: false, message: 'Transfer request not found' });
     }
 
-    // Check if user can approve this transfer
     if (!transferRequest.canApprove(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: 'You do not have permission to approve this transfer request'
-      });
+      return res.status(403).json({ success: false, message: 'You do not have permission to approve this transfer at this stage' });
     }
 
     await transferRequest.approve(req.user, comments);
 
-    res.status(200).json({
-      success: true,
-      message: 'Transfer request approved successfully',
-      data: transferRequest
-    });
+    const msg = req.user.role === 'state_admin'
+      ? 'Transfer completed — member has been moved'
+      : 'Transfer approved — forwarded to next approval stage';
+
+    res.status(200).json({ success: true, message: msg, data: transferRequest });
 
   } catch (error) {
     console.error('Approve transfer error:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to approve transfer request'
-    });
+    res.status(400).json({ success: false, message: error.message || 'Failed to approve transfer request' });
   }
 });
 
 // @route   POST /api/transfer-requests/:id/reject
-// @desc    Reject transfer request
+// @desc    Reject a transfer request
 // @access  Private
 router.post('/:id/reject', authenticate, authorize(['manage_members']), [
   objectIdValidation('id'),
-  body('reason')
-    .trim()
-    .isLength({ min: 5, max: 500 })
-    .withMessage('Rejection reason must be between 5 and 500 characters'),
+  body('reason').trim().isLength({ min: 5, max: 500 }).withMessage('Rejection reason must be 5–500 characters'),
   handleValidationErrors
 ], async (req, res) => {
   try {
     const { reason } = req.body;
 
-    const transferRequest = await TransferRequest.findById(req.params.id)
-      .populate('member', 'name phone')
-      .populate('currentDistrict', 'name code')
-      .populate('currentGroup', 'name code')
-      .populate('targetDistrict', 'name code')
-      .populate('targetGroup', 'name code');
-
+    const transferRequest = await TransferRequest.findById(req.params.id).populate(POPULATE_OPTS);
     if (!transferRequest) {
-      return res.status(404).json({
-        success: false,
-        message: 'Transfer request not found'
-      });
+      return res.status(404).json({ success: false, message: 'Transfer request not found' });
     }
 
-    // Check if user can reject this transfer
-    if (!transferRequest.canApprove(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: 'You do not have permission to reject this transfer request'
-      });
+    // Check the user can act on this request
+    const canAct =
+      req.user.role === 'state_admin' ||
+      (req.user.role === 'district_admin' && (
+        req.user.district?._id?.toString() === transferRequest.currentDistrict?._id?.toString() ||
+        req.user.district?._id?.toString() === transferRequest.targetDistrict?._id?.toString()
+      ));
+
+    if (!canAct) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to reject this transfer request' });
     }
 
     await transferRequest.reject(req.user, reason);
 
-    res.status(200).json({
-      success: true,
-      message: 'Transfer request rejected successfully',
-      data: transferRequest
-    });
+    res.status(200).json({ success: true, message: 'Transfer request rejected', data: transferRequest });
 
   } catch (error) {
     console.error('Reject transfer error:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to reject transfer request'
-    });
-  }
-});
-
-// @route   POST /api/transfer-requests/:id/complete
-// @desc    Complete approved transfer (actually move the member)
-// @access  Private
-router.post('/:id/complete', authenticate, authorize(['manage_members']), objectIdValidation('id'), handleValidationErrors, async (req, res) => {
-  try {
-    const transferRequest = await TransferRequest.findById(req.params.id)
-      .populate('member', 'name phone')
-      .populate('currentDistrict', 'name code')
-      .populate('currentGroup', 'name code')
-      .populate('targetDistrict', 'name code')
-      .populate('targetGroup', 'name code');
-
-    if (!transferRequest) {
-      return res.status(404).json({
-        success: false,
-        message: 'Transfer request not found'
-      });
-    }
-
-    await transferRequest.complete(req.user);
-
-    res.status(200).json({
-      success: true,
-      message: 'Transfer completed successfully',
-      data: transferRequest
-    });
-
-  } catch (error) {
-    console.error('Complete transfer error:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Failed to complete transfer'
-    });
+    res.status(400).json({ success: false, message: error.message || 'Failed to reject transfer request' });
   }
 });
 
 // @route   GET /api/transfer-requests/:id
-// @desc    Get single transfer request
+// @desc    Get a single transfer request
 // @access  Private
 router.get('/:id', authenticate, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
-    const transferRequest = await TransferRequest.findById(req.params.id)
-      .populate('member', 'name phone')
-      .populate('currentDistrict', 'name code')
-      .populate('currentGroup', 'name code')
-      .populate('targetDistrict', 'name code')
-      .populate('targetGroup', 'name code')
-      .populate('requestedBy', 'name phone role')
-      .populate('areaApproval.approvedBy', 'name phone')
-      .populate('districtApproval.approvedBy', 'name phone')
-      .populate('stateApproval.approvedBy', 'name phone')
-      .populate('completedBy', 'name phone')
-      .populate('rejectedBy', 'name phone');
-
+    const transferRequest = await TransferRequest.findById(req.params.id).populate(POPULATE_OPTS);
     if (!transferRequest) {
-      return res.status(404).json({
-        success: false,
-        message: 'Transfer request not found'
-      });
+      return res.status(404).json({ success: false, message: 'Transfer request not found' });
     }
 
-    // Check access permissions
-    let hasAccess = false;
-    
-    if (req.user.role === 'state_admin') {
-      hasAccess = true;
-    } else if (req.user.role === 'district_admin') {
-      hasAccess = transferRequest.currentDistrict._id.toString() === req.user.district._id.toString() ||
-                  transferRequest.targetDistrict._id.toString() === req.user.district._id.toString();
+    // Access check
+    let hasAccess = req.user.role === 'state_admin';
+    if (req.user.role === 'district_admin') {
+      const distId = req.user.district?._id?.toString();
+      hasAccess =
+        transferRequest.currentDistrict?._id?.toString() === distId ||
+        transferRequest.targetDistrict?._id?.toString() === distId;
     } else if (req.user.role === 'group_admin') {
-      hasAccess = transferRequest.currentGroup._id.toString() === req.user.group._id.toString();
+      hasAccess = transferRequest.currentGroup?._id?.toString() === req.user.group?._id?.toString();
     }
 
     if (!hasAccess) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
+      return res.status(403).json({ success: false, message: 'Access denied' });
     }
 
-    res.status(200).json({
-      success: true,
-      data: transferRequest
-    });
+    res.status(200).json({ success: true, data: transferRequest });
 
   } catch (error) {
     console.error('Get transfer request error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch transfer request'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch transfer request' });
   }
 });
 
