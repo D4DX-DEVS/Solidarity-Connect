@@ -1,8 +1,9 @@
-import { Users, CheckCircle, Clock, Calendar, Upload } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
+import UserTargetsSection from "@/components/UserTargetsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +26,7 @@ interface DashboardData {
 }
 
 const Dashboard = () => {
-  const { userRole, userDistrict, userGroup } = useAuth();
+  const { userRole, userDistrict, userGroup, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -138,6 +139,8 @@ const Dashboard = () => {
           ))}
         </div>
 
+        <UserTargetsSection />
+
         {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
           <Card className="shadow-sm">
             <CardContent className="p-4">
@@ -162,6 +165,32 @@ const Dashboard = () => {
             <p className="text-sm text-muted-foreground">
               Manage your members, track attendance, and handle requests efficiently.
             </p>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <Button
+                variant="outline"
+                className="h-auto py-3 flex flex-col items-center gap-1"
+                onClick={() => navigate("/role-management")}
+              >
+                <Shield className="h-5 w-5 text-blue-500" />
+                <span className="text-xs">Role Management</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 flex flex-col items-center gap-1"
+                onClick={() => navigate("/leaders")}
+              >
+                <Star className="h-5 w-5 text-yellow-500" />
+                <span className="text-xs">Leaders</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 flex flex-col items-center gap-1 col-span-2"
+                onClick={() => navigate("/org-files")}
+              >
+                <FileText className="h-5 w-5 text-green-600" />
+                <span className="text-xs">Membership Form & Files</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </main>

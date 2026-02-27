@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,6 +75,11 @@ const StateAdmin = () => {
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
     { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
+    { icon: Shield, label: "Role Management", path: "/role-management", color: "text-blue-500" },
+    { icon: Star, label: "Leaders", path: "/leaders", color: "text-yellow-500" },
+    { icon: Megaphone, label: "Announcements", path: "/announcements", color: "text-green-600" },
+    { icon: FolderOpen, label: "Org Files", path: "/org-files", color: "text-teal-500" },
+    { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
 
   const fetchDashboardData = async () => {
@@ -247,6 +252,19 @@ const StateAdmin = () => {
                   <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
                     <Settings className="h-4 w-4 mr-2" />
                     Meeting Agenda
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/role-management")}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Role Management
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/leaders")}>
+                    <Star className="h-4 w-4 mr-2" />
+                    Leaders
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/announcements")}>
+                    <Megaphone className="h-4 w-4 mr-2" />
+                    Announcements
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

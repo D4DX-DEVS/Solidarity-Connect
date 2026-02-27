@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { authAPI, memberAuthAPI } from "@/utils/api";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import logo from "@/assets/logo.png";
 
 const Login = () => {
@@ -116,7 +117,7 @@ const Login = () => {
       if (userType === 'member') {
         navigate("/member-dashboard");
       } else {
-        navigate("/dashboard");
+        navigate(getHomeRouteByRole(userData?.role));
       }
     } catch (error) {
       console.error('Verify OTP error:', error);

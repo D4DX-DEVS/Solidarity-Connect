@@ -33,6 +33,11 @@ import AdminMeetingsView from "./pages/AdminMeetingsView";
 import MemberDashboard from "./pages/MemberDashboard";
 import PersonalTargets from "./pages/PersonalTargets";
 import UserManagement from "./pages/UserManagement";
+import RoleManagement from "./pages/RoleManagement";
+import Leaders from "./pages/Leaders";
+import Announcements from "./pages/Announcements";
+import OrgFiles from "./pages/OrgFiles";
+import Consolidation from "./pages/Consolidation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,11 +52,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute requiredRoles={['group_admin']}><Dashboard /></ProtectedRoute>} />
             <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
             <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
             <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageGroups /></ProtectedRoute>} />
-            <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin']}><TransferApprovals /></ProtectedRoute>} />
+            <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
             <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingAgenda /></ProtectedRoute>} />
             <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
             <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingDetail /></ProtectedRoute>} />
@@ -71,9 +76,14 @@ const App = () => (
             <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
             <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/member-dashboard" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
+            <Route path="/member-dashboard" element={<ProtectedRoute requiredRoles={['member']}><MemberDashboard /></ProtectedRoute>} />
             <Route path="/personal-targets" element={<ProtectedRoute requiredRoles={['state_admin']}><PersonalTargets /></ProtectedRoute>} />
             <Route path="/state-admin/users" element={<ProtectedRoute requiredRoles={['state_admin']}><UserManagement /></ProtectedRoute>} />
+            <Route path="/role-management" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><RoleManagement /></ProtectedRoute>} />
+            <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
+            <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+            <Route path="/org-files" element={<ProtectedRoute><OrgFiles /></ProtectedRoute>} />
+            <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin']}><Consolidation /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

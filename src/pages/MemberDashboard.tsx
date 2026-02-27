@@ -5,19 +5,33 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI } from "@/utils/api";
-import { 
-  User, 
-  CreditCard, 
-  Calendar, 
-  Target, 
-  Bell, 
-  TrendingUp,
+import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  User,
+  CreditCard,
+  Calendar,
+  Target,
+  Bell,
   MapPin,
   Users,
   Phone,
   Mail,
   IndianRupee,
-  Home
+  Home,
+  Star,
+  FileText,
+  Image,
+  Film,
+  Paperclip,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
+  Upload,
+  X
 } from "lucide-react";
 
 interface MemberProfile {
@@ -46,9 +60,18 @@ interface MemberProfile {
   };
 }
 
+interface FileAttachment {
+  url: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  key: string;
+}
+
 interface PersonalTarget {
-  _id: string;
+  _id: string | null;
   personalTarget: {
+    _id: string;
     title: string;
     description: string;
     category: string;
@@ -66,6 +89,8 @@ interface PersonalTarget {
   progressPercentage: number;
   status: string;
   completedAt?: string;
+  feedback?: string;
+  fileAttachment?: FileAttachment | null;
 }
 
 interface Meeting {
@@ -93,6 +118,7 @@ interface Notification {
   priority: string;
   isRead: boolean;
   createdAt: string;
+  attachments?: { url: string; originalName?: string; mimetype?: string }[];
 }
 
 const MemberDashboard = () => {
@@ -102,8 +128,17 @@ const MemberDashboard = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState("overview");
+  // Target interaction state
+  const [expandedTargetId, setExpandedTargetId] = useState<string | null>(null);
+  const [targetFeedback, setTargetFeedback] = useState<Record<string, string>>({});
+  const [targetSaving, setTargetSaving] = useState<string | null>(null);
+  const [targetUploading, setTargetUploading] = useState<string | null>(null);
+  const [pendingTargetFiles, setPendingTargetFiles] = useState<Record<string, File>>({});
+  const [uploadedTargetAttachments, setUploadedTargetAttachments] = useState<Record<string, FileAttachment>>({});
+  const targetFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { token, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Use the common API utility
 
@@ -121,6 +156,7 @@ const MemberDashboard = () => {
           limit: '20' // Show recent 20 targets
         });
         setTargets(targetsData.data);
+        syncTargetState(targetsData.data);
 
         // Fetch upcoming meetings
         const meetingsData = await memberAuthAPI.getMeetings({
@@ -214,12 +250,82 @@ const MemberDashboard = () => {
     );
   }
 
+  const syncTargetState = (data: PersonalTarget[]) => {
+    const feedbackMap: Record<string, string> = {};
+    const attachmentMap: Record<string, FileAttachment> = {};
+    data.forEach((t) => {
+      const id = t.personalTarget._id;
+      if (t.feedback) feedbackMap[id] = t.feedback;
+      if (t.fileAttachment?.url) attachmentMap[id] = t.fileAttachment as FileAttachment;
+    });
+    setTargetFeedback(feedbackMap);
+    setUploadedTargetAttachments(attachmentMap);
+  };
+
+  const uploadTargetFile = async (targetId: string) => {
+    const file = pendingTargetFiles[targetId];
+    if (!file) return uploadedTargetAttachments[targetId];
+    try {
+      setTargetUploading(targetId);
+      const result = await memberAuthAPI.uploadFile(file);
+      const attachment = result.data;
+      setUploadedTargetAttachments(prev => ({ ...prev, [targetId]: attachment }));
+      setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
+      return attachment;
+    } catch {
+      toast({ title: "Upload Failed", description: "Could not upload the file.", variant: "destructive" });
+      return undefined;
+    } finally {
+      setTargetUploading(null);
+    }
+  };
+
+  const updateTargetProgress = async (targetId: string, status: string) => {
+    try {
+      setTargetSaving(targetId);
+      let fileAttachment = uploadedTargetAttachments[targetId];
+      if (pendingTargetFiles[targetId]) {
+        fileAttachment = await uploadTargetFile(targetId);
+      }
+      const result = await memberAuthAPI.updateTargetProgress(targetId, {
+        status,
+        feedback: targetFeedback[targetId] || '',
+        ...(fileAttachment ? { fileAttachment } : {})
+      });
+
+      // Optimistically update the badge immediately from the API response
+      if (result?.data) {
+        const updated = result.data;
+        setTargets(prev =>
+          prev.map(t =>
+            t.personalTarget._id === targetId
+              ? { ...t, status: updated.status, completedAt: updated.completedAt ?? t.completedAt, progressPercentage: updated.progressPercentage ?? t.progressPercentage }
+              : t
+          )
+        );
+      }
+
+      toast({ title: "Progress Updated", description: "Your target progress has been saved." });
+      // Full sync in background
+      const targetsData = await memberAuthAPI.getTargets({ limit: '20' });
+      setTargets(targetsData.data);
+      syncTargetState(targetsData.data);
+    } catch {
+      toast({ title: "Error", description: "Failed to update progress", variant: "destructive" });
+    } finally {
+      setTargetSaving(null);
+    }
+  };
+
   const menuItems = [
     { id: "overview", label: "Overview", icon: Home },
     { id: "profile", label: "Profile", icon: User },
     { id: "targets", label: "Targets", icon: Target },
+    { id: "leaders", label: "Leaders", icon: Star },
     { id: "notifications", label: "Notifications", icon: Bell }
   ];
+
+  const handleLeadersClick = () => navigate("/leaders");
 
   const renderContent = () => {
     switch (activeView) {
@@ -317,7 +423,7 @@ const MemberDashboard = () => {
           ) : (
             <div className="space-y-4">
               {targets.slice(0, 3).map((target) => (
-                <div key={target._id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={target._id ?? target.personalTarget._id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">
                       {getCategoryIcon(target.personalTarget.category)}
@@ -368,11 +474,43 @@ const MemberDashboard = () => {
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDate(notification.createdAt)}
                     </p>
+                    {notification.attachments && notification.attachments.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {notification.attachments.map((att, i) => {
+                          const mime = att.mimetype || '';
+                          const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                          return (
+                            <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-primary hover:underline">
+                              <Icon className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{att.originalName || `File ${i + 1}`}</span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Leaders Quick Link */}
+      <Card
+        className="shadow-sm border-primary/20 cursor-pointer hover:border-primary/50 transition-colors"
+        onClick={handleLeadersClick}
+      >
+        <CardContent className="p-4 flex items-center gap-3">
+          <div className="bg-yellow-100 p-2 rounded-full">
+            <Star className="h-5 w-5 text-yellow-600 fill-yellow-500" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold">Leaders</p>
+            <p className="text-sm text-muted-foreground">View all designated leaders</p>
+          </div>
+          <Star className="h-4 w-4 text-muted-foreground" />
         </CardContent>
       </Card>
     </div>
@@ -523,74 +661,179 @@ const MemberDashboard = () => {
         </CardHeader>
         <CardContent>
           {targets.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              No targets available
-            </p>
+            <p className="text-muted-foreground text-center py-8">No targets available</p>
           ) : (
-            <div className="space-y-4">
-              {targets.map((target) => (
-                <Card key={target._id} className="border-l-4 border-l-blue-500">
-                  <CardContent className="pt-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <span className="text-3xl">
-                          {getCategoryIcon(target.personalTarget.category)}
-                        </span>
-                        <div>
-                          <h3 className="font-semibold text-lg">{target.personalTarget.title}</h3>
-                          <p className="text-muted-foreground mb-2">{target.personalTarget.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span>
-                              <strong>Progress:</strong> {target.currentProgress} / {target.targetValue} {target.personalTarget.unit}
-                            </span>
-                            <span>
-                              <strong>Category:</strong> {target.personalTarget.category}
-                            </span>
+            <div className="space-y-3">
+              {targets.map((target) => {
+                const targetId = target.personalTarget._id;
+                const isExpanded = expandedTargetId === targetId;
+                const isSaving = targetSaving === targetId;
+                const isUploading = targetUploading === targetId;
+                const attachment = uploadedTargetAttachments[targetId];
+                const pendingFile = pendingTargetFiles[targetId];
+
+                return (
+                  <Card key={target._id ?? target.personalTarget._id} className="border-l-4 border-l-blue-500">
+                    <CardContent className="pt-3 pb-3">
+                      {/* Header row */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start gap-2 flex-1">
+                          <span className="text-2xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <Badge className={getStatusColor(target.status)}>
+                                {target.status === 'completed' ? <CheckCircle className="h-3 w-3 mr-1" /> :
+                                  target.status === 'in_progress' ? <Clock className="h-3 w-3 mr-1" /> :
+                                  <AlertCircle className="h-3 w-3 mr-1" />}
+                                {target.status.replace('_', ' ')}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                {target.progressPercentage.toFixed(0)}%
+                              </span>
+                            </div>
+                            <p className="font-semibold text-sm">{target.personalTarget.title}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">{target.personalTarget.description}</p>
                           </div>
+                        </div>
+                        <button
+                          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
+                          onClick={() => setExpandedTargetId(isExpanded ? null : targetId)}
+                        >
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </button>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                        <div
+                          className="bg-blue-600 h-1.5 rounded-full transition-all"
+                          style={{ width: `${Math.min(100, target.progressPercentage)}%` }}
+                        />
+                      </div>
+
+                      {/* Expanded section */}
+                      {isExpanded && (
+                        <div className="mt-3 space-y-3 border-t pt-3">
                           {target.personalTarget.instructions && (
-                            <div className="mt-2">
-                              <strong className="text-sm">Instructions:</strong>
-                              <p className="text-sm text-muted-foreground">{target.personalTarget.instructions}</p>
+                            <div className="bg-muted/50 p-2 rounded text-xs">
+                              <p className="font-medium mb-1">Instructions:</p>
+                              <p>{target.personalTarget.instructions}</p>
                             </div>
                           )}
                           {target.personalTarget.rewards && (
-                            <div className="mt-2">
-                              <strong className="text-sm">Rewards:</strong>
-                              <p className="text-sm text-muted-foreground">{target.personalTarget.rewards}</p>
+                            <div className="bg-yellow-50 p-2 rounded text-xs">
+                              <p className="font-medium mb-1">Rewards:</p>
+                              <p>{target.personalTarget.rewards}</p>
                             </div>
                           )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(target.status)}>
-                          {target.status.replace('_', ' ')}
-                        </Badge>
-                        <div className="mt-2">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {target.progressPercentage.toFixed(1)}%
+
+                          {/* Feedback */}
+                          <div>
+                            <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                              <MessageSquare className="h-3 w-3" /> Feedback
+                            </label>
+                            <textarea
+                              className="w-full text-xs border rounded p-2 min-h-[60px] bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                              placeholder="Add your feedback..."
+                              value={targetFeedback[targetId] || ''}
+                              onChange={(e) => setTargetFeedback(prev => ({ ...prev, [targetId]: e.target.value }))}
+                            />
                           </div>
-                          <div className="w-24 bg-gray-200 rounded-full h-2 mt-1">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${Math.min(100, target.progressPercentage)}%` }}
-                            ></div>
+
+                          {/* File Upload */}
+                          <div>
+                            <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                              <Paperclip className="h-3 w-3" /> Attachment
+                            </label>
+                            <input
+                              type="file"
+                              className="hidden"
+                              ref={el => { targetFileRefs.current[targetId] = el; }}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setPendingTargetFiles(prev => ({ ...prev, [targetId]: file }));
+                              }}
+                            />
+                            {(attachment || pendingFile) ? (
+                              <div className="flex items-center gap-2 p-2 bg-muted rounded text-xs">
+                                {(() => {
+                                  const mime = attachment?.mimetype || pendingFile?.type || '';
+                                  const name = attachment?.originalName || pendingFile?.name || 'File';
+                                  const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                                  return (
+                                    <>
+                                      <Icon className="h-3 w-3 shrink-0" />
+                                      {attachment?.url ? (
+                                        <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary hover:underline">{name}</a>
+                                      ) : (
+                                        <span className="flex-1 truncate">{name}</span>
+                                      )}
+                                      {pendingFile && <span className="text-amber-600 shrink-0">unsaved</span>}
+                                    </>
+                                  );
+                                })()}
+                                <button
+                                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                                  onClick={() => {
+                                    setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
+                                    setUploadedTargetAttachments(prev => { const n = { ...prev }; delete n[targetId]; return n; });
+                                    if (targetFileRefs.current[targetId]) targetFileRefs.current[targetId]!.value = '';
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted w-full justify-center"
+                                onClick={() => targetFileRefs.current[targetId]?.click()}
+                              >
+                                <Upload className="h-3 w-3" /> Choose File
+                              </button>
+                            )}
                           </div>
+
+                          {/* Action buttons */}
+                          <div className="flex gap-2 flex-wrap">
+                            {target.status !== 'in_progress' && (
+                              <button
+                                className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted disabled:opacity-50"
+                                disabled={isSaving || isUploading}
+                                onClick={() => updateTargetProgress(targetId, 'in_progress')}
+                              >
+                                <Clock className="h-3 w-3" /> Mark In Progress
+                              </button>
+                            )}
+                            {target.status !== 'completed' && (
+                              <button
+                                className="text-xs bg-green-600 text-white rounded px-3 py-1.5 flex items-center gap-1 hover:bg-green-700 disabled:opacity-50"
+                                disabled={isSaving || isUploading}
+                                onClick={() => updateTargetProgress(targetId, 'completed')}
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                {isSaving ? 'Saving...' : isUploading ? 'Uploading...' : 'Mark Complete'}
+                              </button>
+                            )}
+                            <button
+                              className="text-xs border rounded px-3 py-1.5 ml-auto hover:bg-muted disabled:opacity-50"
+                              disabled={isSaving || isUploading}
+                              onClick={() => updateTargetProgress(targetId, target.status)}
+                            >
+                              Save
+                            </button>
+                          </div>
+
+                          {target.completedAt && (
+                            <p className="text-xs text-green-600">
+                              Completed on {formatDate(target.completedAt)}
+                            </p>
+                          )}
                         </div>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        Period: {new Date(target.personalTarget.startDate).toLocaleDateString()} - {new Date(target.personalTarget.endDate).toLocaleDateString()}
-                      </span>
-                      {target.completedAt && (
-                        <span className="text-green-600">
-                          Completed on {formatDate(target.completedAt)}
-                        </span>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -710,6 +953,24 @@ const MemberDashboard = () => {
                         <p className="text-xs text-muted-foreground mt-2">
                           {formatDate(notification.createdAt)}
                         </p>
+                        {notification.attachments && notification.attachments.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                              <Paperclip className="h-3 w-3" /> Attachments:
+                            </p>
+                            {notification.attachments.map((att, i) => {
+                              const mime = att.mimetype || '';
+                              const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                              return (
+                                <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-sm text-primary hover:underline">
+                                  <Icon className="h-4 w-4 flex-shrink-0" />
+                                  <span className="truncate">{att.originalName || `File ${i + 1}`}</span>
+                                </a>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -755,7 +1016,7 @@ const MemberDashboard = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveView(item.id)}
+                onClick={() => item.id === "leaders" ? navigate("/leaders") : setActiveView(item.id)}
                 className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
                   isActive 
                     ? 'text-blue-600 bg-blue-50' 

@@ -37,11 +37,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       ];
     }
 
-    // Apply role-based filtering
-    // Group admins can see all groups for transfer purposes
-    if (req.user.role === 'district_admin') {
-      filter.district = req.user.district._id;
-    } else if (district && (req.user.role === 'state_admin' || req.user.role === 'group_admin')) {
+    // Apply district filter if provided
+    if (district) {
       filter.district = district;
     }
 
@@ -58,17 +55,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
     const result = await Group.paginate(filter, options);
 
-    // Update statistics for each group
-    const groupsWithStats = await Promise.all(
-      result.docs.map(async (group) => {
-        await group.updateStatistics();
-        return group;
-      })
-    );
-
     res.status(200).json({
       success: true,
-      data: groupsWithStats,
+      data: result.docs,
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,

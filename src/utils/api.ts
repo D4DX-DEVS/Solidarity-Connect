@@ -49,6 +49,20 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   }
 };
 
+// Multipart API call (for file uploads — no Content-Type header so browser sets boundary)
+export const multipartApiCall = async (endpoint: string, formData: FormData) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem('token');
+
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(url, { method: 'POST', headers, body: formData });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+  return data;
+};
+
 // Auth API calls
 export const authAPI = {
   sendOTP: (phone: string, userType: string) => 
@@ -113,6 +127,25 @@ export const memberAuthAPI = {
     const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
     return apiCall(`/member-auth/baithul-maal${queryString}`);
   },
+
+  getDistricts: () => apiCall('/member-auth/districts'),
+
+  getGroups: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/groups${queryString}`);
+  },
+
+  updateTargetProgress: (targetId: string, data: { status: string; feedback?: string; fileAttachment?: object }) =>
+    apiCall(`/member-auth/targets/${targetId}/progress`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return multipartApiCall('/member-auth/uploads', formData);
+  },
 };
 
 // Users API calls
@@ -176,6 +209,11 @@ export const membersAPI = {
   },
 
   getMember: (id: string) => apiCall(`/members/${id}`),
+
+  approveMember: (id: string) =>
+    apiCall(`/members/${id}/approve`, {
+      method: 'POST',
+    }),
 
   createMember: (memberData: any) =>
     apiCall('/members', {
@@ -286,8 +324,56 @@ export const reportsAPI = {
   },
 };
 
+// Leaders API calls
+export const leadersAPI = {
+  getLeaders: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/users/leaders${queryString}`);
+  },
+  getMemberLeaders: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/leaders${queryString}`);
+  },
+  updateLeader: (userId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string } }) =>
+    apiCall(`/users/${userId}/leader`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+};
+
+// Uploads API calls (DigitalOcean Spaces)
+export const uploadsAPI = {
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return multipartApiCall('/uploads', formData);
+  },
+};
+
+// Notifications API calls
+export const notificationsAPI = {
+  getNotifications: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/notifications${queryString}`);
+  },
+  getNotification: (id: string) => apiCall(`/notifications/${id}`),
+  createNotification: (data: any) =>
+    apiCall('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateNotification: (id: string, data: any) =>
+    apiCall(`/notifications/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteNotification: (id: string) =>
+    apiCall(`/notifications/${id}`, { method: 'DELETE' }),
+};
+
 export default {
   apiCall,
+  multipartApiCall,
   authAPI,
   memberAuthAPI,
   usersAPI,
@@ -298,4 +384,7 @@ export default {
   baithulMaalAPI,
   transferRequestsAPI,
   reportsAPI,
+  leadersAPI,
+  uploadsAPI,
+  notificationsAPI,
 };
