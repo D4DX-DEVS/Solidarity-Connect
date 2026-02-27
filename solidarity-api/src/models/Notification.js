@@ -29,6 +29,11 @@ const notificationSchema = new mongoose.Schema({
     enum: ['all', 'state_admins', 'district_admins', 'group_admins', 'members', 'specific_groups', 'specific_districts', 'specific_users'],
     default: 'all'
   },
+  // For announcements: an array of audience types so one notification can target multiple groups
+  targetAudiences: [{
+    type: String,
+    enum: ['all', 'state_admins', 'district_admins', 'group_admins', 'members']
+  }],
   targetGroups: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Group'

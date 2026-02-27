@@ -87,6 +87,8 @@ const Members = () => {
   const [hasPrevPage, setHasPrevPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const itemsPerPage = 20;
+  const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Debounced search state
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
@@ -105,6 +107,29 @@ const Members = () => {
     setCurrentPage(1);
   }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus]);
 
+  // Fetch districts and groups ONCE on mount (not on every page change)
+  useEffect(() => {
+    const fetchFilters = async () => {
+      try {
+        if (userRole === 'state_admin') {
+          const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
+          setDistricts(districtsResult.data || []);
+        }
+        if (userRole === 'state_admin' || userRole === 'district_admin') {
+          const groupParams: any = { limit: 100 };
+          if (userRole === 'district_admin' && userDistrict) {
+            groupParams.district = (userDistrict as any)._id || userDistrict;
+          }
+          const groupsResult = await groupsAPI.getGroups(groupParams);
+          setGroups(groupsResult.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch filter data:', error);
+      }
+    };
+    fetchFilters();
+  }, [userRole, userDistrict]);
+
   // Fetch members and related data
   useEffect(() => {
     const fetchData = async () => {
@@ -119,14 +144,18 @@ const Members = () => {
         if (selectedStatus) params.append('status', selectedStatus);
         params.append('page', currentPage.toString());
         params.append('limit', itemsPerPage.toString());
-        params.append('sort', '-createdAt'); // Sort by newest first
+        params.append('sort', '-createdAt');
+        // Skip heavy stats aggregation on page 2+; keep stats when filters change (page resets to 1)
+        if (currentPage > 1) params.append('includeStats', 'false');
         
-        // Fetch members
+        // Fetch members only
         const membersResult = await membersAPI.getMembers(Object.fromEntries(params));
         
         if (membersResult) {
           setMembers(membersResult.data || []);
-          setStatistics(membersResult.statistics || statistics);
+          if (membersResult.statistics) {
+            setStatistics(membersResult.statistics);
+          }
           
           // Update pagination state
           if (membersResult.pagination) {
@@ -137,30 +166,11 @@ const Members = () => {
           }
         }
 
-        // Fetch districts (for state admin)
-        if (userRole === 'state_admin') {
-          const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
-          setDistricts(districtsResult.data || []);
-        }
-
-        // Fetch groups based on selected district or user role
-        if (userRole === 'state_admin' || userRole === 'district_admin') {
-          const groupParams: any = { limit: 100 };
-          if (selectedDistrict) {
-            groupParams.district = selectedDistrict;
-          } else if (userRole === 'district_admin' && userDistrict) {
-            groupParams.district = userDistrict._id;
-          }
-          
-          const groupsResult = await groupsAPI.getGroups(groupParams);
-          setGroups(groupsResult.data || []);
-        }
-
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Failed to fetch members:', error);
         toast({
           title: "Error",
-          description: "Failed to load data",
+          description: "Failed to load members",
           variant: "destructive"
         });
       } finally {
@@ -169,7 +179,7 @@ const Members = () => {
     };
 
     fetchData();
-  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, userRole, userDistrict, toast]);
+  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, refreshKey, toast]);
 
   // Reset groups when district changes
   useEffect(() => {
@@ -204,6 +214,34 @@ const Members = () => {
   const goToPrevPage = () => {
     if (hasPrevPage) {
       setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const handleApproveAndActivate = async (member: Member) => {
+    try {
+      setApprovingMemberId(member._id);
+
+      await membersAPI.approveMember(member._id);
+
+      if (member.status !== 'Active') {
+        await membersAPI.updateMember(member._id, { status: 'Active' });
+      }
+
+      toast({
+        title: 'Success',
+        description: `${member.name} approved and activated successfully`,
+      });
+
+      setRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      console.error('Failed to approve and activate member:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to approve and activate member',
+        variant: 'destructive',
+      });
+    } finally {
+      setApprovingMemberId(null);
     }
   };
 
@@ -375,11 +413,25 @@ const Members = () => {
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-lg">{member.name}</h3>
-                  {!member.isApproved && (
-                    <Badge variant="outline" className="text-orange-600 border-orange-600">
-                      Pending
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!member.isApproved && (
+                      <Badge variant="outline" className="text-orange-600 border-orange-600">
+                        Pending
+                      </Badge>
+                    )}
+                    {!member.isApproved && (userRole === 'state_admin' || userRole === 'district_admin') && (
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApproveAndActivate(member);
+                        }}
+                        disabled={approvingMemberId === member._id}
+                      >
+                        {approvingMemberId === member._id ? 'Processing...' : 'Approve & Activate'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 
                 <p className="text-sm text-muted-foreground mb-1">

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Plus, Calendar, Bell, Menu, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, Plus, Calendar, Bell, Menu, Megaphone, Star } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,19 +8,22 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { userRole } = useAuth();
+  const dashboardPath = getHomeRouteByRole(userRole);
 
   // Filter nav items based on role
   const baseNavItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-    { icon: Users, label: "Members", path: "/members" },
-    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin", "state_admin"] },
-    { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true },
-    { icon: Bell, label: "Alerts", path: "/notifications" },
+    { icon: LayoutDashboard, label: "Dashboard", path: dashboardPath },
+    { icon: Users, label: "Members", path: "/members", hideForRoles: ["member"] },
+    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin", "state_admin", "member"] },
+    { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true, hideForRoles: ["member"] },
+    { icon: Star, label: "Leaders", path: "/leaders" },
+    { icon: Bell, label: "Alerts", path: "/notifications", hasMenu: true },
   ];
 
   const navItems = baseNavItems.filter(
@@ -33,7 +36,36 @@ const BottomNav = () => {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path || 
-                          (item.path === "/meetings" && (location.pathname.includes("/meeting") || location.pathname === "/state-admin/meetings" || location.pathname === "/admin/meetings-view"));
+                          (item.path === "/meetings" && (location.pathname.includes("/meeting") || location.pathname === "/state-admin/meetings" || location.pathname === "/admin/meetings-view")) ||
+                          (item.path === "/notifications" && location.pathname === "/announcements");
+
+          if (item.path === "/notifications" && item.hasMenu) {
+            return (
+              <DropdownMenu key={item.path}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    <Icon className={`h-6 w-6 ${isActive ? "text-primary" : ""}`} />
+                    <span className="text-xs mt-1">{item.label}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" side="top" className="mb-2">
+                  <DropdownMenuItem onClick={() => navigate("/notifications")}>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Notifications
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/announcements")}>
+                    <Megaphone className="h-4 w-4 mr-2" />
+                    Announcements
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
 
           if (item.hasMenu && (userRole === "state_admin" || userRole === "district_admin")) {
             return (

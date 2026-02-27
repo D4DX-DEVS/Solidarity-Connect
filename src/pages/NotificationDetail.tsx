@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Send, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Edit, Send, Trash2, Users, Paperclip, FileText, Image, Film } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -239,6 +239,36 @@ const NotificationDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Attachments Card */}
+        {notification.attachments && notification.attachments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Paperclip className="h-5 w-5" />
+                Attachments ({notification.attachments.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {notification.attachments.map((att, i) => {
+                const mime = att.mimetype || '';
+                const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                return (
+                  <a
+                    key={i}
+                    href={att.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors text-primary"
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <span className="text-sm truncate">{att.originalName || `File ${i + 1}`}</span>
+                  </a>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-3">

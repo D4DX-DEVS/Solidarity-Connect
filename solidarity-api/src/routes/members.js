@@ -29,7 +29,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       district,
       group,
       search,
-      isApproved
+      isApproved,
+      includeStats = 'true'
     } = req.query;
 
     // Validate pagination parameters
@@ -69,9 +70,6 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         ? new mongoose.Types.ObjectId(group) 
         : group;
     }
-
-    console.log('Statistics Filter:', JSON.stringify(statsFilter, null, 2));
-    console.log('Query Filter:', JSON.stringify(filter, null, 2));
 
     // Search functionality - optimized for better performance
     if (search) {
@@ -131,31 +129,33 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       transferRequest: transferRequestMap[member._id.toString()] || null
     }));
 
-    // Calculate statistics based on district/group filters (but not search/status)
-    // This shows total counts for the selected district/group scope
-    const stats = await Member.aggregate([
-      { $match: statsFilter },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: 1 },
-          active: { $sum: { $cond: [{ $eq: ['$status', 'Active'] }, 1, 0] } },
-          inactive: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
-          abroad: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
-          applicant: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
-          ageOver: { $sum: { $cond: [{ $eq: ['$status', 'Age over'] }, 1, 0] } },
-          dismissed: { $sum: { $cond: [{ $eq: ['$status', 'Dismissed'] }, 1, 0] } },
-          approved: { $sum: { $cond: ['$isApproved', 1, 0] } },
-          pending: { $sum: { $cond: [{ $not: '$isApproved' }, 1, 0] } }
+    // Calculate statistics only when requested (skip on pagination to improve speed)
+    let stats = [];
+    if (includeStats !== 'false') {
+      stats = await Member.aggregate([
+        { $match: statsFilter },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            active: { $sum: { $cond: [{ $eq: ['$status', 'Active'] }, 1, 0] } },
+            inactive: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
+            abroad: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
+            applicant: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
+            ageOver: { $sum: { $cond: [{ $eq: ['$status', 'Age over'] }, 1, 0] } },
+            dismissed: { $sum: { $cond: [{ $eq: ['$status', 'Dismissed'] }, 1, 0] } },
+            approved: { $sum: { $cond: ['$isApproved', 1, 0] } },
+            pending: { $sum: { $cond: [{ $not: '$isApproved' }, 1, 0] } }
+          }
         }
-      }
-    ]);
+      ]);
+    }
 
-    console.log('Statistics Result:', stats);
-
-    // Add cache headers for better performance
+    // Disable caching to avoid stale approval/status state after updates
     res.set({
-      'Cache-Control': 'private, max-age=60', // Cache for 1 minute
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       'X-Total-Count': result.totalDocs.toString(),
       'X-Page-Count': result.totalPages.toString(),
       'X-Current-Page': result.page.toString()

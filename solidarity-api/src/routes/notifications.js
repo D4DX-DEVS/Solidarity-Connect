@@ -25,25 +25,33 @@ router.get('/', authenticate, async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const sort = req.query.sort || '-createdAt';
     const status = req.query.status;
+    const type = req.query.type;
 
     // Build filter
     let filter = {};
     if (status) filter.status = status;
+    if (type) filter.type = type;
 
     // Apply role-based filtering based on target audience
     if (req.user.role !== 'state_admin') {
-      filter.$or = [
-        { targetAudience: 'all' }
-      ];
-
-      // Add role-specific target audiences
-      if (req.user.role === 'group_admin') {
-        filter.$or.push({ targetAudience: 'group_admins' });
-      } else if (req.user.role === 'member') {
-        filter.$or.push({ targetAudience: 'members' });
-      } else if (req.user.role === 'district_admin') {
-        filter.$or.push({ targetAudience: 'district_admins' });
+      if (!status) {
+        filter.status = 'sent';
       }
+
+      const audienceValues = ['all'];
+
+      if (req.user.role === 'group_admin') {
+        audienceValues.push('group_admins');
+      } else if (req.user.role === 'member') {
+        audienceValues.push('members');
+      } else if (req.user.role === 'district_admin') {
+        audienceValues.push('district_admins');
+      }
+
+      filter.$or = [
+        { targetAudience: { $in: audienceValues } },
+        { targetAudiences: { $in: audienceValues } }
+      ];
     }
 
     const options = {
@@ -154,21 +162,25 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       });
     }
 
+    const targetAudienceValues = Array.isArray(notification.targetAudiences) && notification.targetAudiences.length > 0
+      ? notification.targetAudiences
+      : [notification.targetAudience];
+
     // Check access permissions based on target audience
     let canView = req.user.role === 'state_admin' ||
-      notification.targetAudience === 'all' ||
+      targetAudienceValues.includes('all') ||
       notification.targetUsers.some(u => u._id.toString() === req.user._id.toString());
 
     // Role-specific access control
     if (!canView) {
       if (req.user.role === 'district_admin') {
-        canView = notification.targetAudience === 'district_admins' ||
+        canView = targetAudienceValues.includes('district_admins') ||
           (notification.targetDistricts && notification.targetDistricts.some(d => d._id.toString() === req.user.district._id.toString()));
       } else if (req.user.role === 'group_admin') {
-        canView = notification.targetAudience === 'group_admins' ||
+        canView = targetAudienceValues.includes('group_admins') ||
           (notification.targetGroups && notification.targetGroups.some(g => g._id.toString() === req.user.group._id.toString()));
       } else if (req.user.role === 'member') {
-        canView = notification.targetAudience === 'members';
+        canView = targetAudienceValues.includes('members');
       }
     }
 
@@ -198,7 +210,18 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 // @access  Private - State Admin Only
 router.post('/', authenticate, requireRole('state_admin'), async (req, res) => {
   try {
-    const { title, message, targetAudience = 'all' } = req.body;
+    const {
+      title,
+      message,
+      targetAudience = 'all',
+      targetAudiences,
+      type = 'general',
+      priority = 'medium',
+      status = 'draft',
+      channels = ['in_app'],
+      attachments = [],
+      scheduledFor
+    } = req.body;
 
     // Basic validation
     if (!title || !message) {
@@ -208,16 +231,36 @@ router.post('/', authenticate, requireRole('state_admin'), async (req, res) => {
       });
     }
 
-    // Create notification with simplified data
+    const normalizedTargetAudiences = Array.isArray(targetAudiences) && targetAudiences.length > 0
+      ? targetAudiences
+      : [targetAudience];
+
+    const normalizedAttachments = Array.isArray(attachments)
+      ? attachments
+          .filter(att => att && att.url)
+          .map(att => ({
+            url: att.url,
+            originalName: att.originalName,
+            mimetype: att.mimetype,
+            size: att.size,
+            filename: att.filename
+          }))
+      : [];
+
+    // Create notification
     const notification = new Notification({
       title: title.trim(),
       message: message.trim(),
-      type: 'general',
-      priority: 'medium', // Default priority
+      type,
+      priority,
       targetAudience,
+      targetAudiences: normalizedTargetAudiences,
+      channels,
+      attachments: normalizedAttachments,
       createdBy: req.user._id,
-      status: 'draft',
-      scheduledFor: new Date()
+      status,
+      scheduledFor: scheduledFor ? new Date(scheduledFor) : new Date(),
+      ...(status === 'sent' ? { sentAt: new Date() } : {})
     });
 
     await notification.save();
@@ -337,15 +380,47 @@ router.get('/:id/status', authenticate, objectIdValidation('id'), handleValidati
 // @access  Private - State Admin Only
 router.put('/:id', authenticate, requireRole('state_admin'), async (req, res) => {
   try {
-    const { title, message, targetAudience } = req.body;
+    const {
+      title,
+      message,
+      targetAudience,
+      targetAudiences,
+      type,
+      priority,
+      status,
+      channels,
+      attachments
+    } = req.body;
+
+    const updatePayload = {
+      ...(title && { title: title.trim() }),
+      ...(message && { message: message.trim() }),
+      ...(targetAudience && { targetAudience }),
+      ...(Array.isArray(targetAudiences) && { targetAudiences }),
+      ...(type && { type }),
+      ...(priority && { priority }),
+      ...(status && { status }),
+      ...(Array.isArray(channels) && { channels }),
+      ...(Array.isArray(attachments) && {
+        attachments: attachments
+          .filter(att => att && att.url)
+          .map(att => ({
+            url: att.url,
+            originalName: att.originalName,
+            mimetype: att.mimetype,
+            size: att.size,
+            filename: att.filename
+          }))
+      })
+    };
+
+    if (status === 'sent') {
+      updatePayload.sentAt = new Date();
+    }
 
     const updatedNotification = await Notification.findByIdAndUpdate(
       req.params.id,
-      {
-        ...(title && { title: title.trim() }),
-        ...(message && { message: message.trim() }),
-        ...(targetAudience && { targetAudience })
-      },
+      updatePayload,
       { new: true, runValidators: true }
     ).populate('createdBy', 'name phone role');
 

@@ -47,10 +47,24 @@ const transferRequestSchema = new mongoose.Schema({
   // Approval workflow
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'completed'],
+    enum: ['pending', 'area_approved', 'district_approved', 'approved', 'rejected', 'completed'],
     default: 'pending'
   },
-  // District admin approval (if transferring within district)
+  // Area admin approval (first tier — group_admin with roleTag.type = 'area')
+  areaApproval: {
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    approvedAt: Date,
+    comments: String
+  },
+  // District admin approval (second tier)
   districtApproval: {
     status: {
       type: String,
@@ -64,7 +78,7 @@ const transferRequestSchema = new mongoose.Schema({
     approvedAt: Date,
     comments: String
   },
-  // State admin approval (if transferring between districts)
+  // State admin approval (third and final tier)
   stateApproval: {
     status: {
       type: String,
@@ -114,72 +128,58 @@ transferRequestSchema.index({ currentDistrict: 1 });
 transferRequestSchema.index({ targetDistrict: 1 });
 transferRequestSchema.index({ requestDate: -1 });
 
+// Helper: is user an area admin?
+const isAreaAdmin = (user) =>
+  user.role === 'group_admin' && user.roleTag?.type === 'area';
+
 // Virtual to check if transfer is between districts
 transferRequestSchema.virtual('isCrossDistrict').get(function() {
   return this.currentDistrict.toString() !== this.targetDistrict.toString();
 });
 
-// Virtual to get required approval level
-transferRequestSchema.virtual('requiredApprovalLevel').get(function() {
-  return this.isCrossDistrict ? 'state' : 'district';
-});
-
-// Method to check if user can approve this transfer
+// Method to check if user can approve this transfer at their tier
 transferRequestSchema.methods.canApprove = function(user) {
   if (user.role === 'state_admin') {
-    return true; // State admin can approve all transfers
+    return this.districtApproval.status === 'approved';
   }
-  
   if (user.role === 'district_admin') {
-    // District admin can approve transfers within their district
-    if (!this.isCrossDistrict) {
-      return user.district._id.toString() === this.currentDistrict.toString() ||
-             user.district._id.toString() === this.targetDistrict.toString();
-    }
-    return false; // Cannot approve cross-district transfers
+    return this.areaApproval.status === 'approved' &&
+      this.districtApproval.status === 'pending' &&
+      (user.district?._id?.toString() === this.currentDistrict?.toString() ||
+       user.district?._id?.toString() === this.targetDistrict?.toString());
   }
-  
-  return false; // Group admins cannot approve transfers
+  if (isAreaAdmin(user)) {
+    return this.areaApproval.status === 'pending' &&
+      user.group?._id?.toString() === this.currentGroup?.toString();
+  }
+  return false;
 };
 
-// Method to get current approval status
-transferRequestSchema.methods.getCurrentApprovalStatus = function() {
-  if (this.status === 'completed' || this.status === 'rejected') {
-    return this.status;
-  }
-
-  if (this.isCrossDistrict) {
-    // Cross-district transfer needs state admin approval
-    return this.stateApproval.status;
-  } else {
-    // Within district transfer needs district admin approval
-    return this.districtApproval.status;
-  }
-};
-
-// Method to approve transfer
+// Method to approve transfer (advances one tier)
 transferRequestSchema.methods.approve = async function(user, comments = '') {
   if (!this.canApprove(user)) {
-    throw new Error('You do not have permission to approve this transfer');
-  }
-
-  if (this.status !== 'pending') {
-    throw new Error('Transfer request is not in pending status');
+    throw new Error('You do not have permission to approve this transfer, or previous tier has not approved yet');
   }
 
   const now = new Date();
 
-  if (user.role === 'state_admin') {
-    this.stateApproval.status = 'approved';
-    this.stateApproval.approvedBy = user._id;
-    this.stateApproval.approvedAt = now;
-    this.stateApproval.comments = comments;
-    this.status = 'approved';
-  } else if (user.role === 'district_admin' && !this.isCrossDistrict) {
+  if (isAreaAdmin(user)) {
+    this.areaApproval.status = 'approved';
+    this.areaApproval.approvedBy = user._id;
+    this.areaApproval.approvedAt = now;
+    this.areaApproval.comments = comments;
+    this.status = 'area_approved';
+  } else if (user.role === 'district_admin') {
     this.districtApproval.status = 'approved';
     this.districtApproval.approvedBy = user._id;
     this.districtApproval.approvedAt = now;
     this.districtApproval.comments = comments;
+    this.status = 'district_approved';
+  } else if (user.role === 'state_admin') {
+    this.stateApproval.status = 'approved';
+    this.stateApproval.approvedBy = user._id;
+    this.stateApproval.approvedAt = now;
+    this.stateApproval.comments = comments;
     this.status = 'approved';
   }
 
@@ -187,34 +187,42 @@ transferRequestSchema.methods.approve = async function(user, comments = '') {
   return this;
 };
 
-// Method to reject transfer
+// Method to reject transfer (any tier can reject)
 transferRequestSchema.methods.reject = async function(user, reason) {
-  if (!this.canApprove(user)) {
+  const canReject =
+    user.role === 'state_admin' ||
+    user.role === 'district_admin' ||
+    isAreaAdmin(user);
+
+  if (!canReject) {
     throw new Error('You do not have permission to reject this transfer');
   }
 
-  if (this.status !== 'pending') {
-    throw new Error('Transfer request is not in pending status');
+  if (['completed', 'rejected'].includes(this.status)) {
+    throw new Error('Transfer request is already ' + this.status);
   }
 
   const now = new Date();
-
   this.status = 'rejected';
   this.rejectionReason = reason;
   this.rejectedBy = user._id;
   this.rejectedAt = now;
 
-  // Also update the specific approval level
-  if (user.role === 'state_admin') {
-    this.stateApproval.status = 'rejected';
-    this.stateApproval.approvedBy = user._id;
-    this.stateApproval.approvedAt = now;
-    this.stateApproval.comments = reason;
+  if (isAreaAdmin(user)) {
+    this.areaApproval.status = 'rejected';
+    this.areaApproval.approvedBy = user._id;
+    this.areaApproval.approvedAt = now;
+    this.areaApproval.comments = reason;
   } else if (user.role === 'district_admin') {
     this.districtApproval.status = 'rejected';
     this.districtApproval.approvedBy = user._id;
     this.districtApproval.approvedAt = now;
     this.districtApproval.comments = reason;
+  } else if (user.role === 'state_admin') {
+    this.stateApproval.status = 'rejected';
+    this.stateApproval.approvedBy = user._id;
+    this.stateApproval.approvedAt = now;
+    this.stateApproval.comments = reason;
   }
 
   await this.save();
@@ -224,24 +232,22 @@ transferRequestSchema.methods.reject = async function(user, reason) {
 // Method to complete transfer (actually move the member)
 transferRequestSchema.methods.complete = async function(user) {
   if (this.status !== 'approved') {
-    throw new Error('Transfer request must be approved before completion');
+    throw new Error('Transfer request must be fully approved before completion');
   }
 
-  // Only state admin or district admin can complete transfers
-  if (!['state_admin', 'district_admin'].includes(user.role)) {
-    throw new Error('You do not have permission to complete this transfer');
+  // Only state admin can complete (they gave final approval)
+  if (user.role !== 'state_admin') {
+    throw new Error('Only State Admin can complete a transfer');
   }
 
   const Member = mongoose.model('Member');
   
-  // Update the member's district and group
   await Member.findByIdAndUpdate(this.member, {
     district: this.targetDistrict,
     group: this.targetGroup,
     updatedBy: user._id
   });
 
-  // Mark transfer as completed
   this.status = 'completed';
   this.completedBy = user._id;
   this.completedAt = new Date();
@@ -250,19 +256,30 @@ transferRequestSchema.methods.complete = async function(user) {
   return this;
 };
 
-// Static method to get pending transfers for a user
+// Static method to get pending transfers for a user (by their tier)
 transferRequestSchema.statics.getPendingForUser = async function(user) {
-  let filter = { status: 'pending' };
+  let filter = {};
 
-  if (user.role === 'district_admin') {
-    // District admin sees only within-district transfers (cross-district needs state approval)
-    filter.currentDistrict = user.district._id;
-    filter.targetDistrict = user.district._id;
-  } else if (user.role === 'group_admin') {
-    // Group admin sees transfers from their group
-    filter.currentGroup = user.group._id;
+  if (isAreaAdmin(user)) {
+    // Area admin sees transfers from their group waiting for area approval
+    filter.areaApproval = { status: 'pending' };
+    filter.currentGroup = user.group?._id;
+    filter.status = 'pending';
+  } else if (user.role === 'district_admin') {
+    // District admin sees transfers that area has approved, waiting for district
+    filter['areaApproval.status'] = 'approved';
+    filter['districtApproval.status'] = 'pending';
+    filter.status = 'area_approved';
+    filter.$or = [
+      { currentDistrict: user.district?._id },
+      { targetDistrict: user.district?._id }
+    ];
+  } else if (user.role === 'state_admin') {
+    // State admin sees transfers district has approved, waiting for state
+    filter['districtApproval.status'] = 'approved';
+    filter['stateApproval.status'] = 'pending';
+    filter.status = 'district_approved';
   }
-  // State admin sees all pending transfers (no additional filter)
 
   return await this.find(filter)
     .populate('member', 'name phone')

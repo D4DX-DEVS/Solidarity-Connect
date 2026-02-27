@@ -19,6 +19,10 @@ interface User {
     name: string;
     code: string;
   };
+  roleTag?: {
+    type: "state" | "district" | "area" | "unit";
+    name?: string;
+  };
   permissions: string[];
   isActive: boolean;
 }
@@ -108,16 +112,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = (tokenValue: string, userData: User, userType?: string) => {
+    const normalizedUserData: User = userType === "member"
+      ? {
+          ...userData,
+          role: "member",
+        }
+      : userData;
+
     localStorage.setItem('token', tokenValue);
     if (userType) {
       localStorage.setItem('userType', userType);
     }
     setToken(tokenValue);
     setIsAuthenticated(true);
-    setUser(userData);
-    setUserRole(userData.role);
-    setUserDistrict(userData.district?.name || null);
-    setUserGroup(userData.group?.name || null);
+    setUser(normalizedUserData);
+    setUserRole(normalizedUserData.role);
+    setUserDistrict(normalizedUserData.district?.name || null);
+    setUserGroup(normalizedUserData.group?.name || null);
   };
 
   const logout = () => {

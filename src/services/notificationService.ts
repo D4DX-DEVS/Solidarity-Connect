@@ -1,5 +1,13 @@
 import { api } from '@/lib/api';
 
+export interface NotificationAttachment {
+  filename?: string;
+  originalName?: string;
+  mimetype?: string;
+  size?: number;
+  url: string;
+}
+
 export interface Notification {
   _id: string;
   title: string;
@@ -8,6 +16,7 @@ export interface Notification {
   priority: string;
   targetAudience: string;
   status: string;
+  attachments?: NotificationAttachment[];
   deliveryStats?: {
     total: number;
     sent: number;

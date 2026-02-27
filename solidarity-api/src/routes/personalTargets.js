@@ -1,7 +1,9 @@
 import express from 'express';
 import PersonalTarget from '../models/PersonalTarget.js';
 import MemberTargetProgress from '../models/MemberTargetProgress.js';
+import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
+import User from '../models/User.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { body, validationResult, query } from 'express-validator';
 
@@ -15,11 +17,9 @@ const createTargetValidation = [
   body('targetType').isIn(['daily', 'weekly', 'monthly']).withMessage('Invalid target type'),
   body('targetValue').isInt({ min: 1 }).withMessage('Target value must be a positive integer'),
   body('unit').trim().isLength({ min: 1, max: 50 }).withMessage('Unit is required and must be less than 50 characters'),
-  body('month').isInt({ min: 1, max: 12 }).withMessage('Month must be between 1 and 12'),
-  body('year').isInt({ min: 2020, max: 2050 }).withMessage('Year must be between 2020 and 2050'),
   body('startDate').isISO8601().withMessage('Start date must be a valid date'),
   body('endDate').isISO8601().withMessage('End date must be a valid date'),
-  body('targetAudience').isIn(['all', 'specific_districts', 'specific_groups']).withMessage('Invalid target audience')
+  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'district_admins']).withMessage('Invalid target audience')
 ];
 
 // @route   POST /api/personal-targets
@@ -54,8 +54,6 @@ router.post('/', authenticate, requireRole('state_admin'), createTargetValidatio
 
     // Populate the created target
     await personalTarget.populate('createdBy', 'name role');
-    await personalTarget.populate('targetDistricts', 'name');
-    await personalTarget.populate('targetGroups', 'name');
 
     // Create progress records for all eligible members
     await createProgressRecords(personalTarget);
@@ -83,38 +81,45 @@ router.get('/', authenticate, async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      month,
-      year,
       category,
       status,
       targetAudience
     } = req.query;
 
+    const now = new Date();
     let filter = {};
 
     // Apply filters based on user role
     if (req.user.role === 'district_admin') {
-      filter = {
-        $or: [
-          { targetAudience: 'all' },
-          { targetAudience: 'specific_districts', targetDistricts: req.user.district }
-        ]
-      };
+      filter.$and = [
+        { $or: [{ targetAudience: 'all_users' }, { targetAudience: 'district_admins' }] },
+        // Only show active targets within date range (or those without dates set)
+        { $or: [
+          { startDate: { $lte: now }, endDate: { $gte: now } },
+          { startDate: { $exists: false } },
+          { startDate: null }
+        ]}
+      ];
+      filter.status = 'active';
     } else if (req.user.role === 'group_admin') {
-      filter = {
-        $or: [
-          { targetAudience: 'all' },
-          { targetAudience: 'specific_districts', targetDistricts: req.user.district },
-          { targetAudience: 'specific_groups', targetGroups: req.user.group }
-        ]
-      };
+      const roleTagType = req.user.roleTag?.type;
+      const roleAudience = roleTagType === 'area' ? 'area_admins' : 'group_admins';
+      filter.$and = [
+        { $or: [{ targetAudience: 'all_users' }, { targetAudience: roleAudience }] },
+        // Only show active targets within date range (or those without dates set)
+        { $or: [
+          { startDate: { $lte: now }, endDate: { $gte: now } },
+          { startDate: { $exists: false } },
+          { startDate: null }
+        ]}
+      ];
+      filter.status = 'active';
     }
 
     // Add additional filters
-    if (month) filter.month = parseInt(month);
-    if (year) filter.year = parseInt(year);
     if (category) filter.category = category;
-    if (status) filter.status = status;
+    // state_admin can filter by status; other roles already have status locked to 'active'
+    if (status && req.user.role === 'state_admin') filter.status = status;
     if (targetAudience) filter.targetAudience = targetAudience;
 
     const options = {
@@ -122,9 +127,7 @@ router.get('/', authenticate, async (req, res) => {
       limit: parseInt(limit),
       sort: { createdAt: -1 },
       populate: [
-        { path: 'createdBy', select: 'name role' },
-        { path: 'targetDistricts', select: 'name' },
-        { path: 'targetGroups', select: 'name' }
+        { path: 'createdBy', select: 'name role' }
       ]
     };
 
@@ -157,9 +160,7 @@ router.get('/', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const personalTarget = await PersonalTarget.findById(req.params.id)
-      .populate('createdBy', 'name role')
-      .populate('targetDistricts', 'name')
-      .populate('targetGroups', 'name');
+      .populate('createdBy', 'name role');
 
     if (!personalTarget) {
       return res.status(404).json({
@@ -225,9 +226,7 @@ router.put('/:id', authenticate, requireRole('state_admin'), createTargetValidat
       req.params.id,
       { ...req.body, updatedBy: req.user._id },
       { new: true, runValidators: true }
-    ).populate('createdBy', 'name role')
-     .populate('targetDistricts', 'name')
-     .populate('targetGroups', 'name');
+    ).populate('createdBy', 'name role');
 
     res.status(200).json({
       success: true,
@@ -321,32 +320,49 @@ router.get('/:id/progress', authenticate, async (req, res) => {
   }
 });
 
-// Helper function to create progress records for eligible members
+// Helper function to create progress records for eligible members AND users
 async function createProgressRecords(personalTarget) {
   try {
-    let memberFilter = { status: 'Active', isApproved: true };
+    const audience = personalTarget.targetAudience;
 
-    // Filter members based on target audience
-    if (personalTarget.targetAudience === 'specific_districts') {
-      memberFilter.district = { $in: personalTarget.targetDistricts };
-    } else if (personalTarget.targetAudience === 'specific_groups') {
-      memberFilter.group = { $in: personalTarget.targetGroups };
+    // Create MemberTargetProgress for members
+    if (audience === 'all_users' || audience === 'members_only') {
+      const members = await Member.find({ status: 'Active', isApproved: true });
+      const memberRecords = members.map(m => ({
+        member: m._id,
+        personalTarget: personalTarget._id,
+        targetValue: personalTarget.targetValue,
+        currentProgress: 0,
+        status: 'not_started'
+      }));
+      if (memberRecords.length > 0) {
+        await MemberTargetProgress.insertMany(memberRecords, { ordered: false });
+      }
     }
 
-    const members = await Member.find(memberFilter);
+    // Create UserTargetProgress for admin users
+    if (audience !== 'members_only') {
+      let userFilter = { isActive: true };
+      if (audience === 'district_admins') {
+        userFilter.role = 'district_admin';
+      } else if (audience === 'area_admins') {
+        userFilter.role = 'group_admin';
+        userFilter['roleTag.type'] = 'area';
+      } else if (audience === 'group_admins') {
+        userFilter.role = 'group_admin';
+      }
+      // 'all_users' → no extra filter, all active users
 
-    const progressRecords = members.map(member => ({
-      member: member._id,
-      personalTarget: personalTarget._id,
-      targetValue: personalTarget.targetValue,
-      currentProgress: 0,
-      status: 'not_started'
-    }));
-
-    if (progressRecords.length > 0) {
-      await MemberTargetProgress.insertMany(progressRecords, { ordered: false });
+      const users = await User.find(userFilter);
+      const userRecords = users.map(u => ({
+        user: u._id,
+        personalTarget: personalTarget._id,
+        status: 'not_started'
+      }));
+      if (userRecords.length > 0) {
+        await UserTargetProgress.insertMany(userRecords, { ordered: false });
+      }
     }
-
   } catch (error) {
     console.error('Error creating progress records:', error);
   }
@@ -354,21 +370,13 @@ async function createProgressRecords(personalTarget) {
 
 // Helper function to check if user has access to a target
 async function checkTargetAccess(personalTarget, user) {
-  if (user.role === 'state_admin') {
-    return true;
-  }
+  if (user.role === 'state_admin') return true;
 
-  if (personalTarget.targetAudience === 'all') {
-    return true;
-  }
-
-  if (personalTarget.targetAudience === 'specific_districts' && user.district) {
-    return personalTarget.targetDistricts.some(d => d._id.toString() === user.district.toString());
-  }
-
-  if (personalTarget.targetAudience === 'specific_groups' && user.group) {
-    return personalTarget.targetGroups.some(g => g._id.toString() === user.group.toString());
-  }
+  const audience = personalTarget.targetAudience;
+  if (audience === 'all_users') return true;
+  if (audience === 'district_admins' && user.role === 'district_admin') return true;
+  if (audience === 'area_admins' && user.role === 'group_admin' && user.roleTag?.type === 'area') return true;
+  if (audience === 'group_admins' && user.role === 'group_admin') return true;
 
   return false;
 }

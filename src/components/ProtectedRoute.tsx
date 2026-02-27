@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -39,7 +40,7 @@ const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
   }
 
   if (requiredRoles && userRole && !requiredRoles.includes(userRole)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={getHomeRouteByRole(userRole)} replace />;
   }
 
   return <>{children}</>;

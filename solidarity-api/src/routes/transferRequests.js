@@ -13,6 +13,10 @@ import { body } from 'express-validator';
 
 const router = express.Router();
 
+// Helper: is user an area admin?
+const isAreaAdmin = (user) =>
+  user.role === 'group_admin' && user.roleTag?.type === 'area';
+
 // Validation for transfer request creation
 const createTransferValidation = [
   body('member')
@@ -56,20 +60,28 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       district
     } = req.query;
 
-    // Build filter based on user role
+    // Build filter based on user role (3-tier hierarchy)
     let filter = {};
     
-    if (req.user.role === 'group_admin') {
-      // Group admin can see transfers from their group
+    if (isAreaAdmin(req.user)) {
+      // Area admin sees only transfers from their group at area-pending stage
       filter.currentGroup = req.user.group._id;
+      filter['areaApproval.status'] = 'pending';
+      filter.status = 'pending';
     } else if (req.user.role === 'district_admin') {
-      // District admin can see transfers involving their district
+      // District admin sees transfers waiting at district tier (area already approved)
+      filter['areaApproval.status'] = 'approved';
+      filter['districtApproval.status'] = 'pending';
+      filter.status = 'area_approved';
       filter.$or = [
         { currentDistrict: req.user.district._id },
         { targetDistrict: req.user.district._id }
       ];
+    } else if (req.user.role === 'group_admin') {
+      // Non-area group_admin: sees only their group's requests
+      filter.currentGroup = req.user.group._id;
     }
-    // State admin can see all transfers (no additional filter)
+    // State admin sees all transfers (no role filter — filtered by status/query params below)
 
     // Apply additional filters
     if (status) filter.status = status;
@@ -92,6 +104,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         { path: 'targetDistrict', select: 'name code' },
         { path: 'targetGroup', select: 'name code' },
         { path: 'requestedBy', select: 'name phone role' },
+        { path: 'areaApproval.approvedBy', select: 'name phone' },
         { path: 'districtApproval.approvedBy', select: 'name phone' },
         { path: 'stateApproval.approvedBy', select: 'name phone' },
         { path: 'completedBy', select: 'name phone' },
@@ -422,6 +435,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       .populate('targetDistrict', 'name code')
       .populate('targetGroup', 'name code')
       .populate('requestedBy', 'name phone role')
+      .populate('areaApproval.approvedBy', 'name phone')
       .populate('districtApproval.approvedBy', 'name phone')
       .populate('stateApproval.approvedBy', 'name phone')
       .populate('completedBy', 'name phone')
