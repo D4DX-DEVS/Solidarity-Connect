@@ -140,7 +140,17 @@ const MemberDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Use the common API utility
+  const syncTargetState = (data: PersonalTarget[]) => {
+    const feedbackMap: Record<string, string> = {};
+    const attachmentMap: Record<string, FileAttachment> = {};
+    data.forEach((t) => {
+      const id = t.personalTarget._id;
+      if (t.feedback) feedbackMap[id] = t.feedback;
+      if (t.fileAttachment?.url) attachmentMap[id] = t.fileAttachment as FileAttachment;
+    });
+    setTargetFeedback(feedbackMap);
+    setUploadedTargetAttachments(attachmentMap);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -249,18 +259,6 @@ const MemberDashboard = () => {
       </div>
     );
   }
-
-  const syncTargetState = (data: PersonalTarget[]) => {
-    const feedbackMap: Record<string, string> = {};
-    const attachmentMap: Record<string, FileAttachment> = {};
-    data.forEach((t) => {
-      const id = t.personalTarget._id;
-      if (t.feedback) feedbackMap[id] = t.feedback;
-      if (t.fileAttachment?.url) attachmentMap[id] = t.fileAttachment as FileAttachment;
-    });
-    setTargetFeedback(feedbackMap);
-    setUploadedTargetAttachments(attachmentMap);
-  };
 
   const uploadTargetFile = async (targetId: string) => {
     const file = pendingTargetFiles[targetId];
