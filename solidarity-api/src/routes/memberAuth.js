@@ -795,6 +795,7 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       .select('name phone role roleTag isLeader district group')
       .populate('district', 'name code')
       .populate('group', 'name code')
+      .populate('roleTag.areaId', 'name code')
       .sort({ 'roleTag.type': 1, name: 1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));

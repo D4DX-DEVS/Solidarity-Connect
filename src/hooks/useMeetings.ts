@@ -21,6 +21,7 @@ export const useMeetings = (params?: {
   targetAudience?: string;
   upcoming?: boolean;
   past?: boolean;
+  search?: string;
 }) => {
   return useQuery({
     queryKey: meetingKeys.list(params || {}),

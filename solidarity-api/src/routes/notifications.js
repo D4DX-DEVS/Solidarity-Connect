@@ -26,11 +26,35 @@ router.get('/', authenticate, async (req, res) => {
     const sort = req.query.sort || '-createdAt';
     const status = req.query.status;
     const type = req.query.type;
+    const search = req.query.search;
+    const audienceFilter = req.query.audienceFilter;
 
     // Build filter
     let filter = {};
     if (status) filter.status = status;
     if (type) filter.type = type;
+
+    // Search by title or message
+    if (search && search.trim()) {
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { title: { $regex: search.trim(), $options: 'i' } },
+          { message: { $regex: search.trim(), $options: 'i' } }
+        ]
+      });
+    }
+
+    // Audience filter (state_admin only: filter by specific targetAudience value)
+    if (audienceFilter && req.user.role === 'state_admin' && audienceFilter !== 'all') {
+      filter.$and = filter.$and || [];
+      filter.$and.push({
+        $or: [
+          { targetAudience: audienceFilter },
+          { targetAudiences: audienceFilter }
+        ]
+      });
+    }
 
     // Apply role-based filtering based on target audience
     if (req.user.role !== 'state_admin') {

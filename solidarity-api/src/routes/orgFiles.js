@@ -118,7 +118,7 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
 // @access  All authenticated users
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { category, fileType } = req.query;
+    const { category, fileType, search } = req.query;
 
     let filter = { isActive: true };
 
@@ -133,6 +133,15 @@ router.get('/', authenticate, async (req, res) => {
 
     if (category) filter.category = category;
     if (fileType && canSeeMembershipForm) filter.fileType = fileType;
+
+    // Text search on title, description, originalName
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } },
+        { originalName: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
 
     const files = await OrgFile.find(filter)
       .populate('uploadedBy', 'name role')

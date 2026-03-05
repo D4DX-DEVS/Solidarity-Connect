@@ -1353,4 +1353,283 @@ router.get('/consolidation', authenticate, authorize(['view_reports']), async (r
   }
 });
 
+// @route   GET /api/reports/org-stats
+// @desc    Get org-wide stats: user role breakdown, target counts, leaders
+// @access  State Admin only
+router.get('/org-stats', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (req.user.role !== 'state_admin') {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const now = new Date();
+
+    // User role breakdown
+    const userRoleStats = await User.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: { role: '$role', tagType: '$roleTag.type' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const roleBreakdown = { district_admin: 0, area_admin: 0, unit_admin: 0, group_admin: 0, other: 0, total: 0 };
+    for (const r of userRoleStats) {
+      roleBreakdown.total += r.count;
+      if (r._id.role === 'district_admin') roleBreakdown.district_admin += r.count;
+      else if (r._id.role === 'group_admin' && r._id.tagType === 'area') roleBreakdown.area_admin += r.count;
+      else if (r._id.role === 'group_admin' && r._id.tagType === 'unit') roleBreakdown.unit_admin += r.count;
+      else if (r._id.role === 'group_admin') roleBreakdown.group_admin += r.count;
+      else roleBreakdown.other += r.count;
+    }
+
+    // Leaders = district + area admins
+    roleBreakdown.leaders = roleBreakdown.district_admin + roleBreakdown.area_admin;
+
+    // Target counts
+    const activeTargets = await PersonalTarget.countDocuments({
+      isTemplate: false,
+      status: 'active',
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
+
+    const totalTargets = await PersonalTarget.countDocuments({ isTemplate: false });
+
+    // Submissions
+    const [userSubmissions, memberSubmissions] = await Promise.all([
+      UserTargetProgress.countDocuments({ status: 'completed' }),
+      MemberTargetProgress.countDocuments({ status: 'completed' })
+    ]);
+
+    const [userInProgress, memberInProgress] = await Promise.all([
+      UserTargetProgress.countDocuments({ status: 'in_progress' }),
+      MemberTargetProgress.countDocuments({ status: 'in_progress' })
+    ]);
+
+    // Group count
+    const totalGroups = await Group.countDocuments({ isActive: true });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: roleBreakdown,
+        targets: {
+          active: activeTargets,
+          total: totalTargets,
+          completedSubmissions: userSubmissions + memberSubmissions,
+          inProgressSubmissions: userInProgress + memberInProgress
+        },
+        totalGroups
+      }
+    });
+  } catch (error) {
+    console.error('Org stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch org stats' });
+  }
+});
+
+// @route   GET /api/reports/recurring-target-stats
+// @desc    Get dashboard stats for all currently active recurring personal targets
+// @access  State Admin only
+router.get('/recurring-target-stats', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (req.user.role !== 'state_admin') {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const mongoose = (await import('mongoose')).default;
+    const now = new Date();
+
+    // Fetch active recurring targets whose window includes today
+    const targets = await PersonalTarget.find({
+      isRecurring: true,
+      isTemplate: false,
+      status: 'active',
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    })
+      .sort({ startDate: -1 })
+      .select('title category recurringFrequency startDate endDate targetAudience')
+      .lean();
+
+    if (targets.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const targetIds = targets.map(t => t._id);
+
+    // --- UserTargetProgress stats (admin users) ---
+    const userProgressStats = await UserTargetProgress.aggregate([
+      { $match: { personalTarget: { $in: targetIds } } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $lookup: {
+          from: 'districts',
+          localField: 'userInfo.district',
+          foreignField: '_id',
+          as: 'districtInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'groups',
+          localField: 'userInfo.group',
+          foreignField: '_id',
+          as: 'groupInfo'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            targetId: '$personalTarget',
+            status: '$status',
+            districtId: { $arrayElemAt: ['$districtInfo._id', 0] },
+            districtName: { $arrayElemAt: ['$districtInfo.name', 0] },
+            groupId: { $arrayElemAt: ['$groupInfo._id', 0] },
+            groupName: { $arrayElemAt: ['$groupInfo.name', 0] }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // --- MemberTargetProgress stats (members) ---
+    const memberProgressStats = await MemberTargetProgress.aggregate([
+      { $match: { personalTarget: { $in: targetIds } } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'member',
+          foreignField: '_id',
+          as: 'memberInfo'
+        }
+      },
+      { $unwind: '$memberInfo' },
+      {
+        $lookup: {
+          from: 'districts',
+          localField: 'memberInfo.district',
+          foreignField: '_id',
+          as: 'districtInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'groups',
+          localField: 'memberInfo.group',
+          foreignField: '_id',
+          as: 'groupInfo'
+        }
+      },
+      {
+        $addFields: {
+          normalizedStatus: {
+            $cond: [
+              { $in: ['$status', ['completed']] },
+              'completed',
+              {
+                $cond: [
+                  { $eq: ['$status', 'in_progress'] },
+                  'in_progress',
+                  'not_started'
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            targetId: '$personalTarget',
+            status: '$normalizedStatus',
+            districtId: { $arrayElemAt: ['$districtInfo._id', 0] },
+            districtName: { $arrayElemAt: ['$districtInfo.name', 0] },
+            groupId: { $arrayElemAt: ['$groupInfo._id', 0] },
+            groupName: { $arrayElemAt: ['$groupInfo.name', 0] }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Merge both result sets
+    const combined = [...userProgressStats, ...memberProgressStats];
+
+    // Build per-target aggregation map
+    const statsMap = {};
+    for (const row of combined) {
+      const tid = row._id.targetId.toString();
+      if (!statsMap[tid]) {
+        statsMap[tid] = {
+          completed: 0, in_progress: 0, not_started: 0,
+          byDistrict: {}, byGroup: {}
+        };
+      }
+      const s = statsMap[tid];
+      const status = row._id.status;
+      s[status] = (s[status] || 0) + row.count;
+
+      // By district
+      if (row._id.districtName) {
+        const dk = row._id.districtName;
+        if (!s.byDistrict[dk]) s.byDistrict[dk] = { _id: row._id.districtId?.toString(), completed: 0, not_completed: 0 };
+        if (status === 'completed') s.byDistrict[dk].completed += row.count;
+        else s.byDistrict[dk].not_completed += row.count;
+      }
+
+      // By group
+      if (row._id.groupName) {
+        const gk = row._id.groupName;
+        if (!s.byGroup[gk]) s.byGroup[gk] = { _id: row._id.groupId?.toString(), completed: 0, not_completed: 0 };
+        if (status === 'completed') s.byGroup[gk].completed += row.count;
+        else s.byGroup[gk].not_completed += row.count;
+      }
+    }
+
+    // Build final response
+    const result = targets.map(t => {
+      const tid = t._id.toString();
+      const raw = statsMap[tid] || { completed: 0, in_progress: 0, not_started: 0, byDistrict: {}, byGroup: {} };
+      const total = raw.completed + raw.in_progress + raw.not_started;
+      const completionRate = total > 0 ? Math.round((raw.completed / total) * 100) : 0;
+
+      return {
+        _id: t._id,
+        title: t.title,
+        category: t.category,
+        recurringFrequency: t.recurringFrequency,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        targetAudience: t.targetAudience,
+        stats: {
+          total,
+          completed: raw.completed,
+          in_progress: raw.in_progress,
+          not_started: raw.not_started,
+          completionRate,
+          byDistrict: Object.entries(raw.byDistrict).map(([name, v]) => ({ name, ...v })),
+          byGroup: Object.entries(raw.byGroup).map(([name, v]) => ({ name, ...v }))
+        }
+      };
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Recurring target stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recurring target stats' });
+  }
+});
+
 export default router;

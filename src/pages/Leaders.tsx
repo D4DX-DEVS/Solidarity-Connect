@@ -23,6 +23,8 @@ const ROLE_TYPES = [
   { value: "district", label: "District" },
   { value: "area", label: "Area" },
   { value: "unit", label: "Unit" },
+  { value: "murabi", label: "Murabi" },
+  { value: "coordinator", label: "Coordinator" },
 ];
 
 const ROLE_TYPE_COLORS: Record<string, string> = {
@@ -30,6 +32,8 @@ const ROLE_TYPE_COLORS: Record<string, string> = {
   district: "bg-blue-100 text-blue-800",
   area: "bg-green-100 text-green-800",
   unit: "bg-orange-100 text-orange-800",
+  murabi: "bg-teal-100 text-teal-800",
+  coordinator: "bg-indigo-100 text-indigo-800",
 };
 
 const ADMIN_ROLE_LABELS: Record<string, string> = {
@@ -44,7 +48,7 @@ interface Leader {
   phone: string;
   role: string;
   isLeader: boolean;
-  roleTag?: { type?: string; name?: string };
+  roleTag?: { type?: string; name?: string; areaId?: { _id?: string; name: string; code?: string }; roleDescription?: string };
   district?: { _id?: string; name: string; code?: string };
   group?: { _id?: string; name: string; code?: string };
 }
@@ -75,10 +79,12 @@ const Leaders = () => {
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
   const [selectedAreaId, setSelectedAreaId] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
+  const [selectedMurabiAreaId, setSelectedMurabiAreaId] = useState("");
 
   const requiresDistrict = activeTab === "district" || activeTab === "area" || activeTab === "unit";
   const requiresArea = activeTab === "area" || activeTab === "unit";
   const requiresUnit = activeTab === "unit";
+  const requiresMurabiArea = activeTab === "murabi";
 
   // Debounce search
   useEffect(() => {
@@ -122,7 +128,31 @@ const Leaders = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDistrictId, selectedAreaId, selectedUnit]);
+  }, [selectedDistrictId, selectedAreaId, selectedUnit, selectedMurabiAreaId]);
+
+  // Load all area groups for murabi filter
+  useEffect(() => {
+    if (!requiresMurabiArea) {
+      setSelectedMurabiAreaId("");
+      return;
+    }
+    const loadMurabiAreas = async () => {
+      try {
+        const groupsResult = userRole === "member"
+          ? await memberAuthAPI.getGroups({})
+          : await groupsAPI.getGroups({ limit: 100, sort: "name" });
+        const groups = groupsResult.data || [];
+        setAreaOptions(
+          groups
+            .filter((g: any) => g?._id && g?.name)
+            .map((g: any) => ({ id: g._id, label: g.name }))
+        );
+      } catch {
+        setAreaOptions([]);
+      }
+    };
+    loadMurabiAreas();
+  }, [requiresMurabiArea, userRole]);
 
   const loadDistrictOptions = useCallback(async () => {
     if (!requiresDistrict) {
@@ -220,6 +250,7 @@ const Leaders = () => {
       if (requiresDistrict && selectedDistrictId) params.districtId = selectedDistrictId;
       if (requiresArea && selectedAreaId) params.groupId = selectedAreaId;
       if (requiresUnit && selectedUnit) params.unitName = selectedUnit;
+      if (requiresMurabiArea && selectedMurabiAreaId) params.groupId = selectedMurabiAreaId;
 
       const result =
         userRole === "member"
@@ -247,9 +278,11 @@ const Leaders = () => {
     requiresDistrict,
     requiresArea,
     requiresUnit,
+    requiresMurabiArea,
     selectedDistrictId,
     selectedAreaId,
     selectedUnit,
+    selectedMurabiAreaId,
   ]);
 
   useEffect(() => {
@@ -347,6 +380,25 @@ const Leaders = () => {
           </Card>
         )}
 
+        {/* Murabi area filter */}
+        {requiresMurabiArea && (
+          <Card className="shadow-sm">
+            <CardContent className="p-3">
+              <Select value={selectedMurabiAreaId || "all"} onValueChange={(value) => setSelectedMurabiAreaId(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by Area (Group)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Areas</SelectItem>
+                  {areaOptions.map((area) => (
+                    <SelectItem key={area.id} value={area.id}>{area.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Leader count */}
         {!loading && (
           <p className="text-sm text-muted-foreground">
@@ -392,6 +444,12 @@ const Leaders = () => {
                         </p>
                       )}
 
+                      {leader.roleTag?.roleDescription && (
+                        <p className="text-xs text-muted-foreground mt-0.5 italic">
+                          {leader.roleTag.roleDescription}
+                        </p>
+                      )}
+
                       <p className="text-sm text-muted-foreground mt-0.5">{leader.phone}</p>
 
                       <div className="flex gap-2 mt-2 flex-wrap">
@@ -406,6 +464,11 @@ const Leaders = () => {
                         {leader.group && (
                           <Badge variant="secondary" className="text-xs">
                             {leader.group.name}
+                          </Badge>
+                        )}
+                        {leader.roleTag?.areaId && (
+                          <Badge variant="secondary" className="text-xs bg-teal-100 text-teal-800">
+                            Area: {leader.roleTag.areaId.name}
                           </Badge>
                         )}
                       </div>

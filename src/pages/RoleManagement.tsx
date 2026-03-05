@@ -24,6 +24,8 @@ const ROLE_TYPE_LABELS: Record<string, string> = {
   district: "District",
   area: "Area",
   unit: "Unit",
+  murabi: "Murabi",
+  coordinator: "Coordinator",
 };
 
 const ROLE_TYPE_COLORS: Record<string, string> = {
@@ -31,12 +33,14 @@ const ROLE_TYPE_COLORS: Record<string, string> = {
   district: "bg-blue-100 text-blue-800",
   area: "bg-green-100 text-green-800",
   unit: "bg-orange-100 text-orange-800",
+  murabi: "bg-teal-100 text-teal-800",
+  coordinator: "bg-indigo-100 text-indigo-800",
 };
 
 const ALLOWED_ROLE_TYPES: Record<string, string[]> = {
-  state_admin: ["state", "district", "area", "unit"],
-  district_admin: ["district", "area", "unit"],
-  group_admin: ["area", "unit"],
+  state_admin: ["state", "district", "area", "unit", "murabi", "coordinator"],
+  district_admin: ["district", "area", "unit", "murabi", "coordinator"],
+  group_admin: ["area", "unit", "murabi", "coordinator"],
 };
 
 interface UserWithLeader {
@@ -77,6 +81,7 @@ const RoleManagement = () => {
   const isInitialLoad = loading && users.length === 0;
 
   const allowedRoleTypes = ALLOWED_ROLE_TYPES[userRole || "group_admin"] || ["area", "unit"];
+
   // Tracks whether the first successful fetch has completed
   const hasLoadedRef = useRef(false);
 

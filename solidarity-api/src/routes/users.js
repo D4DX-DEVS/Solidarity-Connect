@@ -104,6 +104,7 @@ router.get('/leaders', authenticate, async (req, res) => {
       .select('name phone role roleTag isLeader district group')
       .populate('district', 'name code')
       .populate('group', 'name code')
+      .populate('roleTag.areaId', 'name code')
       .sort({ 'roleTag.type': 1, name: 1 })
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit));
@@ -144,9 +145,9 @@ router.patch('/:id/leader',
       }
 
       const allowedRoleTypes = {
-        state_admin: ['state', 'district', 'area', 'unit'],
-        district_admin: ['district', 'area', 'unit'],
-        group_admin: ['area', 'unit']
+        state_admin: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
+        district_admin: ['district', 'area', 'unit', 'murabi', 'coordinator'],
+        group_admin: ['area', 'unit', 'murabi', 'coordinator']
       };
 
       if (roleTag && roleTag.type) {
@@ -166,7 +167,9 @@ router.patch('/:id/leader',
       } else if (roleTag) {
         targetUser.roleTag = {
           type: roleTag.type || (targetUser.roleTag && targetUser.roleTag.type),
-          name: roleTag.name || (targetUser.roleTag && targetUser.roleTag.name)
+          name: roleTag.name || (targetUser.roleTag && targetUser.roleTag.name),
+          areaId: roleTag.areaId !== undefined ? (roleTag.areaId || null) : (targetUser.roleTag && targetUser.roleTag.areaId),
+          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (targetUser.roleTag && targetUser.roleTag.roleDescription)
         };
       }
 
