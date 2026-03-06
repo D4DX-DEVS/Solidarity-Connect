@@ -83,7 +83,7 @@ const App = () => (
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
             <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
             <Route path="/org-files" element={<ProtectedRoute><OrgFiles /></ProtectedRoute>} />
-            <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin']}><Consolidation /></ProtectedRoute>} />
+            <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><Consolidation /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

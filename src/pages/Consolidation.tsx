@@ -14,6 +14,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -299,6 +301,8 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 const Consolidation = () => {
   const navigate = useNavigate();
+  const { userRole, user } = useAuth();
+  const homeRoute = getHomeRouteByRole(userRole);
   const [dashStats,        setDashStats]        = useState<DashboardStats | null>(null);
   const [orgStats,         setOrgStats]         = useState<OrgStats | null>(null);
   const [recurringTargets, setRecurringTargets] = useState<TargetStat[]>([]);
@@ -325,11 +329,15 @@ const Consolidation = () => {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      const districtRequest = userRole === "state_admin"
+        ? apiCall("/districts?limit=100")
+        : Promise.resolve({ data: [] as District[] });
+
       const [dashRes, orgRes, recurringRes, distRes, targetsRes] = await Promise.all([
         apiCall("/reports/dashboard"),
         apiCall("/reports/org-stats"),
         apiCall("/reports/recurring-target-stats"),
-        apiCall("/districts?limit=100"),
+        districtRequest,
         apiCall("/personal-targets?limit=200"),
       ]);
       const d  = dashRes.data;
@@ -351,22 +359,51 @@ const Consolidation = () => {
       });
       setOrgStats(orgRes.data);
       setRecurringTargets(recurringRes.data || []);
-      setDistricts(distRes.data || []);
+      if (userRole === "state_admin") {
+        setDistricts(distRes.data || []);
+      } else if (user?.district) {
+        setDistricts([user.district]);
+      } else {
+        setDistricts([]);
+      }
       setAllTargets(targetsRes.data || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to load dashboard", variant: "destructive" });
     } finally { setLoading(false); }
-  }, []);
+  }, [userRole, user]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  useEffect(() => {
+    if (userRole === "district_admin" && user?.district?._id) {
+      setSfDistrict(user.district._id);
+      setSfGroup("all");
+    }
+    if (userRole === "group_admin" && user?.group?._id) {
+      if (user?.district?._id) setSfDistrict(user.district._id);
+      setSfGroup(user.group._id);
+    }
+  }, [userRole, user]);
+
   // Load groups for standalone filter when district changes
   useEffect(() => {
-    setSfGroup("all"); setSfGroups([]);
+    if (userRole === "group_admin") {
+      if (user?.group) {
+        setSfGroups([user.group]);
+        setSfGroup(user.group._id);
+      } else {
+        setSfGroups([]);
+        setSfGroup("all");
+      }
+      return;
+    }
+
+    setSfGroup("all");
+    setSfGroups([]);
     if (sfDistrict !== "all") {
       apiCall(`/groups?district=${sfDistrict}&limit=200`).then(r => setSfGroups(r.data || [])).catch(() => {});
     }
-  }, [sfDistrict]);
+  }, [sfDistrict, userRole, user]);
 
   // Bar chart click → fetch drilldown list
   const handleBarClick = async (
@@ -420,8 +457,18 @@ const Consolidation = () => {
       const qp = new URLSearchParams();
       qp.set("consolidationType", "personal_target");
       qp.set("targetId", sfTargetId);
-      if (sfDistrict !== "all") qp.set("districtId",   sfDistrict);
-      if (sfGroup    !== "all") qp.set("groupId",      sfGroup);
+      if (userRole === "district_admin" && user?.district?._id) {
+        qp.set("districtId", user.district._id);
+      } else if (sfDistrict !== "all") {
+        qp.set("districtId", sfDistrict);
+      }
+
+      if (userRole === "group_admin" && user?.group?._id) {
+        qp.set("groupId", user.group._id);
+      } else if (sfGroup !== "all") {
+        qp.set("groupId", sfGroup);
+      }
+
       if (sfRole     !== "all") qp.set("roleFilter",   sfRole);
       if (sfStatus   !== "all") qp.set("targetStatus", sfStatus);
       const result = await apiCall(`/reports/consolidation?${qp.toString()}`);
@@ -449,7 +496,7 @@ const Consolidation = () => {
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(homeRoute)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
@@ -643,7 +690,7 @@ const Consolidation = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">District</label>
-                    <Select value={sfDistrict} onValueChange={setSfDistrict}>
+                    <Select value={sfDistrict} onValueChange={setSfDistrict} disabled={userRole !== "state_admin"}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Districts" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Districts</SelectItem>
@@ -653,7 +700,7 @@ const Consolidation = () => {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">Group</label>
-                    <Select value={sfGroup} onValueChange={setSfGroup} disabled={sfDistrict === "all"}>
+                    <Select value={sfGroup} onValueChange={setSfGroup} disabled={sfDistrict === "all" || userRole === "group_admin"}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Groups" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Groups</SelectItem>
