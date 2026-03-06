@@ -1,4 +1,4 @@
-import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText } from "lucide-react";
+import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
@@ -181,6 +181,14 @@ const Dashboard = () => {
               >
                 <Star className="h-5 w-5 text-yellow-500" />
                 <span className="text-xs">Leaders</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 flex flex-col items-center gap-1"
+                onClick={() => navigate("/consolidation")}
+              >
+                <BarChart3 className="h-5 w-5 text-indigo-500" />
+                <span className="text-xs">Consolidation</span>
               </Button>
               <Button
                 variant="outline"

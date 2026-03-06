@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
-import { Target, Plus, Edit, Trash2, Calendar, ArrowLeft, Clock } from "lucide-react";
+import { Target, Plus, Edit, Trash2, Calendar, ArrowLeft, Clock, Search, RefreshCw } from "lucide-react";
 
 interface PersonalTarget {
   _id: string;
@@ -25,6 +25,10 @@ interface PersonalTarget {
   endDate: string;
   instructions?: string;
   rewards?: string;
+  isRecurring?: boolean;
+  recurringFrequency?: string;
+  isTemplate?: boolean;
+  parentTargetId?: string;
   createdBy: { name: string; role: string };
   createdAt: string;
 }
@@ -54,6 +58,10 @@ const PersonalTargets = () => {
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTarget, setEditingTarget] = useState<PersonalTarget | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { userRole } = useAuth();
   const { toast } = useToast();
 
@@ -68,16 +76,30 @@ const PersonalTargets = () => {
     active: true,
     targetAudience: 'all_users' as string,
     instructions: '',
-    rewards: ''
+    rewards: '',
+    isRecurring: false,
+    recurringFrequency: 'monthly' as string
   });
 
-  useEffect(() => { fetchData(); }, []);
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  const fetchData = async () => {
+  useEffect(() => { fetchData(1); }, [debouncedSearch]);
+
+  const fetchData = async (page = currentPage) => {
     try {
       setLoading(true);
-      const targetsData = await apiCall('/personal-targets');
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '9');
+      if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim());
+      const targetsData = await apiCall(`/personal-targets?${params.toString()}`);
       setTargets(targetsData.data);
+      setCurrentPage(targetsData.pagination?.currentPage ?? page);
+      setTotalPages(targetsData.pagination?.totalPages ?? 1);
     } catch {
       toast({ title: "Error", description: "Failed to load targets", variant: "destructive" });
     } finally {
@@ -112,7 +134,11 @@ const PersonalTargets = () => {
         instructions: formData.instructions,
         rewards: formData.rewards,
         startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString()
+        endDate: new Date(formData.endDate).toISOString(),
+        isRecurring: formData.isRecurring,
+        ...(formData.isRecurring && {
+          recurringFrequency: formData.recurringFrequency
+        })
       };
 
       await apiCall(endpoint, { method, body: JSON.stringify(targetData) });
@@ -148,7 +174,9 @@ const PersonalTargets = () => {
       active: true,
       targetAudience: 'all_users',
       instructions: '',
-      rewards: ''
+      rewards: '',
+      isRecurring: false,
+      recurringFrequency: 'monthly'
     });
   };
 
@@ -163,7 +191,9 @@ const PersonalTargets = () => {
       active: target.status === 'active',
       targetAudience: target.targetAudience || 'all_users',
       instructions: target.instructions || '',
-      rewards: target.rewards || ''
+      rewards: target.rewards || '',
+      isRecurring: target.isRecurring || false,
+      recurringFrequency: target.recurringFrequency || 'monthly'
     });
     setIsCreateDialogOpen(true);
   };
@@ -375,6 +405,38 @@ const PersonalTargets = () => {
                     />
                   </div>
 
+                  {/* Recurring */}
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-sm font-medium">Recurring Target</Label>
+                      <p className="text-xs text-muted-foreground">Mark as recurring with a frequency label</p>
+                    </div>
+                    <Switch
+                      checked={formData.isRecurring}
+                      onCheckedChange={(checked) => setFormData({ ...formData, isRecurring: checked })}
+                    />
+                  </div>
+                  {formData.isRecurring && (
+                    <div className="space-y-3 pl-2 border-l-2 border-primary/30">
+                      <div>
+                        <Label>Frequency *</Label>
+                        <Select
+                          value={formData.recurringFrequency}
+                          onValueChange={(v) => setFormData({ ...formData, recurringFrequency: v })}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                            <SelectItem value="quarterly">Quarterly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex justify-end space-x-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                       Cancel
@@ -387,6 +449,17 @@ const PersonalTargets = () => {
               </DialogContent>
             </Dialog>
           )}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search targets..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); }}
+            className="pl-9"
+          />
         </div>
 
         {/* Targets Grid */}
@@ -439,6 +512,12 @@ const PersonalTargets = () => {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {target.isRecurring && (
+                          <Badge className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800">
+                            <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
+                            {target.recurringFrequency}
+                          </Badge>
+                        )}
                         <Badge
                           variant={active ? 'default' : 'secondary'}
                           className={`text-xs px-2 py-0.5 ${
@@ -473,6 +552,29 @@ const PersonalTargets = () => {
             })
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-2 pb-4">
+            <Button
+              variant="outline" size="sm"
+              disabled={currentPage === 1 || loading}
+              onClick={() => fetchData(currentPage - 1)}
+            >
+              ← Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline" size="sm"
+              disabled={currentPage === totalPages || loading}
+              onClick={() => fetchData(currentPage + 1)}
+            >
+              Next →
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FileText, Film, Music, Upload, Trash2, Edit, ArrowLeft,
-  Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff
+  Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff, Search
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,8 @@ const OrgFiles = () => {
   const [files, setFiles] = useState<OrgFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingFile, setEditingFile] = useState<OrgFile | null>(null);
@@ -106,13 +108,28 @@ const OrgFiles = () => {
   });
 
   useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  useEffect(() => {
     fetchFiles();
-  }, []);
+  }, [activeCategory, debouncedSearch]);
 
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      const result = await apiCall("/org-files");
+      const params: Record<string, string> = {};
+      if (activeCategory && activeCategory !== "all") {
+        if (activeCategory === "membership_form") {
+          params.fileType = "membership_form";
+        } else {
+          params.category = activeCategory;
+        }
+      }
+      if (debouncedSearch) params.search = debouncedSearch;
+      const queryString = new URLSearchParams(params).toString();
+      const result = await apiCall(`/org-files${queryString ? `?${queryString}` : ""}`);
       setFiles(result.data || []);
     } catch (error) {
       toast({ title: "Error", description: "Failed to load files", variant: "destructive" });
@@ -192,9 +209,7 @@ const OrgFiles = () => {
 
   const filteredFiles = files.filter(f => {
     if (!f.isActive && !isStateAdmin) return false;
-    if (activeCategory === "all") return true;
-    if (activeCategory === "membership_form") return f.fileType === "membership_form";
-    return f.category === activeCategory;
+    return true;
   });
 
   const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other", ...(canSeeMembershipForm ? ["membership_form"] : [])];
@@ -224,7 +239,7 @@ const OrgFiles = () => {
       </header>
 
       {/* Category Filter */}
-      <div className="px-4 py-3 flex gap-2 overflow-x-auto">
+      <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto">
         {categories.map(cat => (
           <Button
             key={cat}
@@ -236,6 +251,19 @@ const OrgFiles = () => {
             {cat === "all" ? "All" : cat === "membership_form" ? "Membership Form" : categoryLabels[cat] || cat}
           </Button>
         ))}
+      </div>
+
+      {/* Search */}
+      <div className="px-4 pb-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search files by title, description…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </div>
 
       <main className="p-4 space-y-3">

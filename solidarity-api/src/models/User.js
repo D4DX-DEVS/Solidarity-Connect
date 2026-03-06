@@ -83,12 +83,21 @@ const userSchema = new mongoose.Schema({
   roleTag: {
     type: {
       type: String,
-      enum: ['state', 'district', 'area', 'unit'],
+      enum: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
     },
     name: {
       type: String,
       trim: true,
       maxlength: [100, 'Role tag name cannot exceed 100 characters']
+    },
+    areaId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group'
+    },
+    roleDescription: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Role description cannot exceed 100 characters']
     }
   }
 }, {

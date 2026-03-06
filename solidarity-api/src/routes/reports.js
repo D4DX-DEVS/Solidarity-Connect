@@ -1268,22 +1268,57 @@ router.get('/export/members', authenticate, authorize(['view_reports']), async (
   }
 });
 
+const getRoleScope = (user) => {
+  const districtFromGroup = user?.group?.district?._id || user?.group?.district;
+  const districtId = user?.district?._id || districtFromGroup || null;
+  const groupId = user?.group?._id || null;
+
+  if (user.role === 'district_admin') {
+    return { districtId, groupId: null };
+  }
+  if (user.role === 'group_admin') {
+    return { districtId, groupId };
+  }
+  return { districtId: null, groupId: null };
+};
+
+const getAllowedTargetAudiences = (user) => {
+  if (user.role === 'state_admin') return null;
+  if (user.role === 'district_admin') return ['all_users', 'members_only', 'district_admins'];
+  if (user.role === 'group_admin') {
+    const roleAudience = user.roleTag?.type === 'area' ? 'area_admins' : 'group_admins';
+    return ['all_users', 'members_only', roleAudience];
+  }
+  return ['all_users'];
+};
+
 // @route   GET /api/reports/consolidation
-// @desc    Get filtered list of users for consolidation (state admin only)
-// @access  State Admin only
+// @desc    Get filtered list of users for consolidation
+// @access  Admins with view_reports
 router.get('/consolidation', authenticate, authorize(['view_reports']), async (req, res) => {
   try {
-    if (req.user.role !== 'state_admin') {
-      return res.status(403).json({ success: false, message: 'Access denied' });
+    if (!['state_admin', 'district_admin', 'group_admin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied for this role' });
     }
 
     const { districtId, groupId, roleFilter, consolidationType, targetId, targetStatus } = req.query;
     const mongoose = (await import('mongoose')).default;
+    const roleScope = getRoleScope(req.user);
+
+    if (req.user.role === 'district_admin' && !roleScope.districtId) {
+      return res.status(403).json({ success: false, message: 'District access not configured for this user' });
+    }
+    if (req.user.role === 'group_admin' && !roleScope.groupId) {
+      return res.status(403).json({ success: false, message: 'Group access not configured for this user' });
+    }
+
+    const effectiveDistrictId = req.user.role === 'state_admin' ? districtId : roleScope.districtId;
+    const effectiveGroupId = req.user.role === 'state_admin' ? groupId : roleScope.groupId;
 
     // Build user filter
     const userFilter = { isActive: true };
-    if (districtId) userFilter.district = new mongoose.Types.ObjectId(districtId);
-    if (groupId) userFilter.group = new mongoose.Types.ObjectId(groupId);
+    if (effectiveDistrictId) userFilter.district = new mongoose.Types.ObjectId(effectiveDistrictId);
+    if (effectiveGroupId) userFilter.group = new mongoose.Types.ObjectId(effectiveGroupId);
 
     if (roleFilter === 'district_admin') {
       userFilter.role = 'district_admin';
@@ -1344,12 +1379,412 @@ router.get('/consolidation', authenticate, authorize(['view_reports']), async (r
       meta: {
         count: data.length,
         target: targetMeta,
-        filters: { districtId, groupId, roleFilter, consolidationType, targetId, targetStatus }
+        filters: {
+          districtId: effectiveDistrictId || null,
+          groupId: effectiveGroupId || null,
+          roleFilter,
+          consolidationType,
+          targetId,
+          targetStatus
+        }
       }
     });
   } catch (error) {
     console.error('Consolidation report error:', error);
     res.status(500).json({ success: false, message: 'Failed to generate consolidation report' });
+  }
+});
+
+// @route   GET /api/reports/org-stats
+// @desc    Get org-wide stats: user role breakdown, target counts, leaders
+// @access  Admins with view_reports
+router.get('/org-stats', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (!['state_admin', 'district_admin', 'group_admin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied for this role' });
+    }
+
+    const now = new Date();
+    const roleScope = getRoleScope(req.user);
+    const targetAudiences = getAllowedTargetAudiences(req.user);
+
+    if (req.user.role === 'district_admin' && !roleScope.districtId) {
+      return res.status(403).json({ success: false, message: 'District access not configured for this user' });
+    }
+    if (req.user.role === 'group_admin' && !roleScope.groupId) {
+      return res.status(403).json({ success: false, message: 'Group access not configured for this user' });
+    }
+
+    const scopedUserMatch = { isActive: true };
+    if (roleScope.districtId) scopedUserMatch.district = roleScope.districtId;
+    if (roleScope.groupId) scopedUserMatch.group = roleScope.groupId;
+
+    // User role breakdown
+    const userRoleStats = await User.aggregate([
+      { $match: scopedUserMatch },
+      {
+        $group: {
+          _id: { role: '$role', tagType: '$roleTag.type' },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const roleBreakdown = { district_admin: 0, area_admin: 0, unit_admin: 0, group_admin: 0, other: 0, total: 0 };
+    for (const r of userRoleStats) {
+      roleBreakdown.total += r.count;
+      if (r._id.role === 'district_admin') roleBreakdown.district_admin += r.count;
+      else if (r._id.role === 'group_admin' && r._id.tagType === 'area') roleBreakdown.area_admin += r.count;
+      else if (r._id.role === 'group_admin' && r._id.tagType === 'unit') roleBreakdown.unit_admin += r.count;
+      else if (r._id.role === 'group_admin') roleBreakdown.group_admin += r.count;
+      else roleBreakdown.other += r.count;
+    }
+
+    // Leaders = district + area admins
+    roleBreakdown.leaders = roleBreakdown.district_admin + roleBreakdown.area_admin;
+
+    const targetBaseFilter = { isTemplate: false };
+    if (targetAudiences) targetBaseFilter.targetAudience = { $in: targetAudiences };
+
+    // Target counts
+    const activeTargets = await PersonalTarget.countDocuments({
+      ...targetBaseFilter,
+      status: 'active',
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    });
+
+    const totalTargets = await PersonalTarget.countDocuments(targetBaseFilter);
+    const scopedTargetIds = await PersonalTarget.find(targetBaseFilter).distinct('_id');
+
+    const userProgressMatch = { 'userInfo.isActive': true };
+    if (roleScope.districtId) userProgressMatch['userInfo.district'] = roleScope.districtId;
+    if (roleScope.groupId) userProgressMatch['userInfo.group'] = roleScope.groupId;
+
+    const memberProgressMatch = {};
+    if (roleScope.districtId) memberProgressMatch['memberInfo.district'] = roleScope.districtId;
+    if (roleScope.groupId) memberProgressMatch['memberInfo.group'] = roleScope.groupId;
+
+    const targetProgressFilter = {};
+    if (scopedTargetIds.length > 0) {
+      targetProgressFilter.personalTarget = { $in: scopedTargetIds };
+    } else {
+      targetProgressFilter.personalTarget = { $in: [] };
+    }
+
+    // Submissions
+    const [userSubmissionsResult, memberSubmissionsResult] = await Promise.all([
+      UserTargetProgress.aggregate([
+        { $match: { ...targetProgressFilter, status: 'completed' } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userInfo'
+          }
+        },
+        { $unwind: '$userInfo' },
+        { $match: userProgressMatch },
+        { $count: 'count' }
+      ]),
+      MemberTargetProgress.aggregate([
+        { $match: { ...targetProgressFilter, status: 'completed' } },
+        {
+          $lookup: {
+            from: 'members',
+            localField: 'member',
+            foreignField: '_id',
+            as: 'memberInfo'
+          }
+        },
+        { $unwind: '$memberInfo' },
+        { $match: memberProgressMatch },
+        { $count: 'count' }
+      ])
+    ]);
+
+    const [userInProgressResult, memberInProgressResult] = await Promise.all([
+      UserTargetProgress.aggregate([
+        { $match: { ...targetProgressFilter, status: 'in_progress' } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userInfo'
+          }
+        },
+        { $unwind: '$userInfo' },
+        { $match: userProgressMatch },
+        { $count: 'count' }
+      ]),
+      MemberTargetProgress.aggregate([
+        { $match: { ...targetProgressFilter, status: 'in_progress' } },
+        {
+          $lookup: {
+            from: 'members',
+            localField: 'member',
+            foreignField: '_id',
+            as: 'memberInfo'
+          }
+        },
+        { $unwind: '$memberInfo' },
+        { $match: memberProgressMatch },
+        { $count: 'count' }
+      ])
+    ]);
+
+    const userSubmissions = userSubmissionsResult[0]?.count || 0;
+    const memberSubmissions = memberSubmissionsResult[0]?.count || 0;
+    const userInProgress = userInProgressResult[0]?.count || 0;
+    const memberInProgress = memberInProgressResult[0]?.count || 0;
+
+    const groupFilter = { isActive: true };
+    if (roleScope.districtId) groupFilter.district = roleScope.districtId;
+    if (roleScope.groupId) groupFilter._id = roleScope.groupId;
+
+    // Group count
+    const totalGroups = await Group.countDocuments(groupFilter);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users: roleBreakdown,
+        targets: {
+          active: activeTargets,
+          total: totalTargets,
+          completedSubmissions: userSubmissions + memberSubmissions,
+          inProgressSubmissions: userInProgress + memberInProgress
+        },
+        totalGroups
+      }
+    });
+  } catch (error) {
+    console.error('Org stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch org stats' });
+  }
+});
+
+// @route   GET /api/reports/recurring-target-stats
+// @desc    Get dashboard stats for all currently active recurring personal targets
+// @access  Admins with view_reports
+router.get('/recurring-target-stats', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (!['state_admin', 'district_admin', 'group_admin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied for this role' });
+    }
+
+    const now = new Date();
+    const roleScope = getRoleScope(req.user);
+    const targetAudiences = getAllowedTargetAudiences(req.user);
+
+    if (req.user.role === 'district_admin' && !roleScope.districtId) {
+      return res.status(403).json({ success: false, message: 'District access not configured for this user' });
+    }
+    if (req.user.role === 'group_admin' && !roleScope.groupId) {
+      return res.status(403).json({ success: false, message: 'Group access not configured for this user' });
+    }
+
+    const targetFilter = {
+      isRecurring: true,
+      isTemplate: false,
+      status: 'active',
+      startDate: { $lte: now },
+      endDate: { $gte: now }
+    };
+    if (targetAudiences) targetFilter.targetAudience = { $in: targetAudiences };
+
+    // Fetch active recurring targets whose window includes today
+    const targets = await PersonalTarget.find(targetFilter)
+      .sort({ startDate: -1 })
+      .select('title category recurringFrequency startDate endDate targetAudience')
+      .lean();
+
+    if (targets.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const targetIds = targets.map(t => t._id);
+
+    // --- UserTargetProgress stats (admin users) ---
+    const userProgressScopeMatch = { 'userInfo.isActive': true };
+    if (roleScope.districtId) userProgressScopeMatch['userInfo.district'] = roleScope.districtId;
+    if (roleScope.groupId) userProgressScopeMatch['userInfo.group'] = roleScope.groupId;
+
+    const userProgressStats = await UserTargetProgress.aggregate([
+      { $match: { personalTarget: { $in: targetIds } } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      { $match: userProgressScopeMatch },
+      {
+        $lookup: {
+          from: 'districts',
+          localField: 'userInfo.district',
+          foreignField: '_id',
+          as: 'districtInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'groups',
+          localField: 'userInfo.group',
+          foreignField: '_id',
+          as: 'groupInfo'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            targetId: '$personalTarget',
+            status: '$status',
+            districtId: { $arrayElemAt: ['$districtInfo._id', 0] },
+            districtName: { $arrayElemAt: ['$districtInfo.name', 0] },
+            groupId: { $arrayElemAt: ['$groupInfo._id', 0] },
+            groupName: { $arrayElemAt: ['$groupInfo.name', 0] }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // --- MemberTargetProgress stats (members) ---
+    const memberProgressScopeMatch = {};
+    if (roleScope.districtId) memberProgressScopeMatch['memberInfo.district'] = roleScope.districtId;
+    if (roleScope.groupId) memberProgressScopeMatch['memberInfo.group'] = roleScope.groupId;
+
+    const memberProgressStats = await MemberTargetProgress.aggregate([
+      { $match: { personalTarget: { $in: targetIds } } },
+      {
+        $lookup: {
+          from: 'members',
+          localField: 'member',
+          foreignField: '_id',
+          as: 'memberInfo'
+        }
+      },
+      { $unwind: '$memberInfo' },
+      { $match: memberProgressScopeMatch },
+      {
+        $lookup: {
+          from: 'districts',
+          localField: 'memberInfo.district',
+          foreignField: '_id',
+          as: 'districtInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'groups',
+          localField: 'memberInfo.group',
+          foreignField: '_id',
+          as: 'groupInfo'
+        }
+      },
+      {
+        $addFields: {
+          normalizedStatus: {
+            $cond: [
+              { $in: ['$status', ['completed']] },
+              'completed',
+              {
+                $cond: [
+                  { $eq: ['$status', 'in_progress'] },
+                  'in_progress',
+                  'not_started'
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            targetId: '$personalTarget',
+            status: '$normalizedStatus',
+            districtId: { $arrayElemAt: ['$districtInfo._id', 0] },
+            districtName: { $arrayElemAt: ['$districtInfo.name', 0] },
+            groupId: { $arrayElemAt: ['$groupInfo._id', 0] },
+            groupName: { $arrayElemAt: ['$groupInfo.name', 0] }
+          },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Merge both result sets
+    const combined = [...userProgressStats, ...memberProgressStats];
+
+    // Build per-target aggregation map
+    const statsMap = {};
+    for (const row of combined) {
+      const tid = row._id.targetId.toString();
+      if (!statsMap[tid]) {
+        statsMap[tid] = {
+          completed: 0, in_progress: 0, not_started: 0,
+          byDistrict: {}, byGroup: {}
+        };
+      }
+      const s = statsMap[tid];
+      const status = row._id.status;
+      s[status] = (s[status] || 0) + row.count;
+
+      // By district
+      if (row._id.districtName) {
+        const dk = row._id.districtName;
+        if (!s.byDistrict[dk]) s.byDistrict[dk] = { _id: row._id.districtId?.toString(), completed: 0, not_completed: 0 };
+        if (status === 'completed') s.byDistrict[dk].completed += row.count;
+        else s.byDistrict[dk].not_completed += row.count;
+      }
+
+      // By group
+      if (row._id.groupName) {
+        const gk = row._id.groupName;
+        if (!s.byGroup[gk]) s.byGroup[gk] = { _id: row._id.groupId?.toString(), completed: 0, not_completed: 0 };
+        if (status === 'completed') s.byGroup[gk].completed += row.count;
+        else s.byGroup[gk].not_completed += row.count;
+      }
+    }
+
+    // Build final response
+    const result = targets.map(t => {
+      const tid = t._id.toString();
+      const raw = statsMap[tid] || { completed: 0, in_progress: 0, not_started: 0, byDistrict: {}, byGroup: {} };
+      const total = raw.completed + raw.in_progress + raw.not_started;
+      const completionRate = total > 0 ? Math.round((raw.completed / total) * 100) : 0;
+
+      return {
+        _id: t._id,
+        title: t.title,
+        category: t.category,
+        recurringFrequency: t.recurringFrequency,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        targetAudience: t.targetAudience,
+        stats: {
+          total,
+          completed: raw.completed,
+          in_progress: raw.in_progress,
+          not_started: raw.not_started,
+          completionRate,
+          byDistrict: Object.entries(raw.byDistrict).map(([name, v]) => ({ name, ...v })),
+          byGroup: Object.entries(raw.byGroup).map(([name, v]) => ({ name, ...v }))
+        }
+      };
+    });
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Recurring target stats error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recurring target stats' });
   }
 });
 

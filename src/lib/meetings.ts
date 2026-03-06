@@ -95,6 +95,7 @@ export const meetingsApi = {
     targetAudience?: string;
     upcoming?: boolean;
     past?: boolean;
+    search?: string;
   }) => {
     const searchParams = new URLSearchParams();
     if (params) {

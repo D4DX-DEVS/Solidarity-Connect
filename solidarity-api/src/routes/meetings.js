@@ -154,13 +154,22 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       targetAudience,
       upcoming,
       past,
-      myMeetings // New filter for group admins to see meetings they created
+      myMeetings, // New filter for group admins to see meetings they created
+      search
     } = req.query;
 
     let filter = {};
     if (status) filter.status = status;
     if (meetingType) filter.meetingType = meetingType;
     if (targetAudience) filter.targetAudience = targetAudience;
+
+    // Search by title or description
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
 
     // Filter by time
     if (upcoming === 'true') {

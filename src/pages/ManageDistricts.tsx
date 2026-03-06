@@ -1,7 +1,8 @@
-import { ArrowLeft, Plus, Building2, Users, Edit, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
@@ -16,11 +17,13 @@ const ManageDistricts = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [districtToDelete, setDistrictToDelete] = useState<District | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch districts from API
   const { data: districtsResponse, isLoading, error } = useDistricts({ 
     sort: 'name',
-    isActive: true 
+    isActive: true,
+    ...(searchQuery.trim() ? { search: searchQuery.trim() } : {})
   });
   const deleteDistrictMutation = useDeleteDistrict();
 
@@ -79,6 +82,17 @@ const ManageDistricts = () => {
           <Plus className="h-4 w-4 mr-2" />
           Add New District
         </Button>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search districts…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">

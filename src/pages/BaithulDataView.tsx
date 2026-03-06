@@ -177,22 +177,21 @@ const BaithulDataView = () => {
 
   const fetchMonthlyReportData = async (params: Record<string, string>) => {
     try {
-      // Fetch payments for current month only
+      // Fetch payments for selected month (or current month if none selected)
       const monthlyData = [];
-      const now = new Date(); // Use current date
-      
-      const date = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthStr = format(date, 'yyyy-MM');
-      
+      const now = new Date();
+      const targetMonthStr = selectedMonth || format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM');
+      const targetDate = new Date(targetMonthStr + '-01');
+
       const monthlyPayments = await baithulMaalAPI.getPayments({
         ...params,
-        paymentMonth: monthStr,
+        paymentMonth: targetMonthStr,
         limit: '100' // Get payments for the month (max allowed by API)
       });
       
       const monthData = {
-        month: monthStr,
-        monthLabel: format(date, 'MMMM yyyy'),
+        month: targetMonthStr,
+        monthLabel: format(targetDate, 'MMMM yyyy'),
         totalAmount: monthlyPayments.statistics?.totalAmount || 0,
         totalPayments: monthlyPayments.statistics?.totalPayments || 0,
         avgAmount: monthlyPayments.statistics?.avgAmount || 0,
@@ -228,15 +227,21 @@ const BaithulDataView = () => {
     fetchDistricts();
   }, []);
 
-  // Generate month options starting from current month
+  // Generate month options: 24 past months → current → 2 future months
   const getMonthOptions = () => {
     const months = [];
-    const now = new Date(); // Use current date
-    // Start from current month only (no past months)
-    const date = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthStr = format(date, 'yyyy-MM');
-    const monthLabel = format(date, 'MMMM yyyy');
-    months.push({ value: monthStr, label: monthLabel });
+    const now = new Date();
+    // Start from 24 months ago
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 24, 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 2, 1); // 2 future months
+
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      const monthStr = format(current, 'yyyy-MM');
+      const monthLabel = format(current, 'MMMM yyyy');
+      months.push({ value: monthStr, label: monthLabel });
+      current.setMonth(current.getMonth() + 1);
+    }
     return months;
   };
 
@@ -323,21 +328,20 @@ const BaithulDataView = () => {
                 </SelectContent>
               </Select>
 
-              {viewMode === "payments" && (
-                <Select value={selectedMonth || "all"} onValueChange={(value) => setSelectedMonth(value === "all" ? "" : value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Months" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Months</SelectItem>
-                    {getMonthOptions().map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              {/* Month selector – visible for all view modes */}
+              <Select value={selectedMonth || "all"} onValueChange={(value) => setSelectedMonth(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Months</SelectItem>
+                  {getMonthOptions().map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

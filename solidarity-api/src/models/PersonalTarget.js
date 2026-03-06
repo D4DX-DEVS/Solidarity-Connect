@@ -81,6 +81,27 @@ const personalTargetSchema = new mongoose.Schema({
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  // Recurring target support
+  isRecurring: {
+    type: Boolean,
+    default: false
+  },
+  recurringFrequency: {
+    type: String,
+    enum: ['weekly', 'monthly', 'quarterly'],
+    required: function() { return this.isRecurring; }
+  },
+  recurringEndDate: {
+    type: Date
+  },
+  parentTargetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PersonalTarget'
+  },
+  isTemplate: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true
@@ -93,6 +114,8 @@ personalTargetSchema.index({ category: 1 });
 personalTargetSchema.index({ targetAudience: 1 });
 personalTargetSchema.index({ createdBy: 1 });
 personalTargetSchema.index({ startDate: 1, endDate: 1 });
+personalTargetSchema.index({ parentTargetId: 1 });
+personalTargetSchema.index({ isTemplate: 1 });
 
 // Virtual for target period
 personalTargetSchema.virtual('targetPeriod').get(function() {

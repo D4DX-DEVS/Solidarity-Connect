@@ -1,4 +1,4 @@
-import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target } from "lucide-react";
+import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -287,6 +287,7 @@ const DistrictAdmin = () => {
                 { label: "Meetings", path: "/meetings", Icon: FileCheck },
                 { label: "Role Management", path: "/role-management", Icon: Shield },
                 { label: "Leaders", path: "/leaders", Icon: Star },
+                { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
               ].map(({ label, path, Icon }) => (
                 <Button key={label} variant="outline" className="h-14 flex-col gap-1 text-xs" onClick={() => navigate(path)}>
                   <Icon className="h-4 w-4" />

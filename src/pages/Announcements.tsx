@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Megaphone, ChevronLeft, Plus, Paperclip, X, Send, FileText, Image, Film } from "lucide-react";
+import { Megaphone, ChevronLeft, Plus, Paperclip, X, Send, FileText, Image, Film, Search, ChevronRight, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -63,18 +70,48 @@ const Announcements = () => {
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [audienceFilter, setAudienceFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  // Reset page on filter/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, audienceFilter]);
 
   const fetchAnnouncements = useCallback(async () => {
     setLoadingList(true);
     try {
-      const result = await notificationsAPI.getNotifications({ type: "announcement", limit: 50 });
+      const params: Record<string, any> = {
+        type: "announcement",
+        limit: 10,
+        page: currentPage,
+      };
+      if (debouncedSearch) params.search = debouncedSearch;
+      if (audienceFilter && audienceFilter !== "all") params.audienceFilter = audienceFilter;
+      const result = await notificationsAPI.getNotifications(params);
       setAnnouncements(result.data || []);
+      if (result.pagination) {
+        setTotalPages(result.pagination.totalPages || 1);
+        setHasNextPage(result.pagination.hasNextPage || false);
+        setHasPrevPage(result.pagination.hasPrevPage || false);
+      }
     } catch {
       // silently fail for list
     } finally {
       setLoadingList(false);
     }
-  }, []);
+  }, [currentPage, debouncedSearch, audienceFilter]);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -391,6 +428,32 @@ const Announcements = () => {
         {/* Past Announcements */}
         <div>
           <h2 className="font-semibold mb-3">Past Announcements</h2>
+
+          {/* Search + Filter row */}
+          <div className="flex gap-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search announcements…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+              <SelectTrigger className="w-40 flex-shrink-0">
+                <Filter className="h-4 w-4 mr-1 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Audiences</SelectItem>
+                <SelectItem value="members">Members Only</SelectItem>
+                <SelectItem value="group_admins">Group Admins</SelectItem>
+                <SelectItem value="district_admins">District Admins</SelectItem>
+                <SelectItem value="state_admins">State Admins</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {loadingList ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -462,6 +525,31 @@ const Announcements = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between py-2 mt-3">
+              <p className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  disabled={!hasPrevPage || loadingList}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  disabled={!hasNextPage || loadingList}
+                >
+                  Next <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
         </div>

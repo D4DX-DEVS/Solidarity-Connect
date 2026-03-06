@@ -1,8 +1,9 @@
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, UserPlus, Play, MoreVertical, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Clock, Users, AlertCircle, CheckCircle, UserPlus, Play, MoreVertical, ArrowLeft, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -25,10 +26,21 @@ import { meetingsApi } from "@/lib/meetings";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Meetings = () => {
-  const { data: meetingsResponse, isLoading, error, refetch } = useMeetings();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
+  const { data: meetingsResponse, isLoading, error, refetch } = useMeetings(
+    debouncedSearch ? { search: debouncedSearch } : undefined
+  );
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
@@ -266,6 +278,17 @@ const Meetings = () => {
       />
 
       <main className="p-4 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search meetings…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
         {meetings.map((meeting) => {
           // Calculate attendance status - check if any attendance has been recorded
           const hasAttendanceData = meeting.sessionInfo?.totalMembersAcrossSessions > 0 || 

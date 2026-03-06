@@ -49,6 +49,8 @@ router.post('/', authenticate, requireRole('state_admin'), createTargetValidatio
       });
     }
 
+    // Save as a single target record (recurring flag is just metadata)
+    targetData.isTemplate = false;
     const personalTarget = new PersonalTarget(targetData);
     await personalTarget.save();
 
@@ -83,7 +85,8 @@ router.get('/', authenticate, async (req, res) => {
       limit = 10,
       category,
       status,
-      targetAudience
+      targetAudience,
+      search
     } = req.query;
 
     const now = new Date();
@@ -121,6 +124,21 @@ router.get('/', authenticate, async (req, res) => {
     // state_admin can filter by status; other roles already have status locked to 'active'
     if (status && req.user.role === 'state_admin') filter.status = status;
     if (targetAudience) filter.targetAudience = targetAudience;
+
+    // Search filter
+    if (search && search.trim()) {
+      const searchRegex = { $regex: search.trim(), $options: 'i' };
+      const searchCondition = { $or: [{ title: searchRegex }, { description: searchRegex }] };
+      if (filter.$and) {
+        filter.$and.push(searchCondition);
+      } else {
+        filter.$and = [searchCondition];
+      }
+    }
+
+    // Never show template documents
+    if (!filter.$and) filter.$and = [];
+    filter.$and.push({ $or: [{ isTemplate: false }, { isTemplate: { $exists: false } }] });
 
     const options = {
       page: parseInt(page),

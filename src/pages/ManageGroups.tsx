@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import GroupDialog from "@/components/GroupDialog";
@@ -13,6 +14,7 @@ import { Group } from "@/lib/groups";
 const ManageGroups = () => {
   const navigate = useNavigate();
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -35,7 +37,8 @@ const ManageGroups = () => {
   const { data: groupsResponse, isLoading: groupsLoading, error } = useGroups({ 
     district: selectedDistrictId,
     sort: 'name',
-    isActive: true 
+    isActive: true,
+    ...(searchQuery.trim() ? { search: searchQuery.trim() } : {})
   });
   const deleteGroupMutation = useDeleteGroup();
 
@@ -113,6 +116,17 @@ const ManageGroups = () => {
               )}
             </select>
           )}
+        </div>
+
+        {/* Search */}
+        <div className="relative mt-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search groups…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
       </header>
 
