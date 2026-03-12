@@ -14,7 +14,7 @@ const MemberDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
-  
+
   const [member, setMember] = useState<any>(null);
   const [baithulMaalData, setBaithulMaalData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -24,11 +24,11 @@ const MemberDetail = () => {
     const fetchMemberData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch member details
         const memberResult = await membersAPI.getMember(id!);
         setMember(memberResult.data);
-        
+
         // Fetch Baithul Maal data
         try {
           const baithulResult = await baithulMaalAPI.getMemberPayments(id!);
@@ -36,7 +36,7 @@ const MemberDetail = () => {
         } catch (error) {
           console.log('No Baithul Maal data found');
         }
-        
+
       } catch (error) {
         console.error('Error fetching member data:', error);
         toast({
@@ -57,7 +57,7 @@ const MemberDetail = () => {
   const handleDownloadCertificate = async () => {
     try {
       setDownloadingCert(true);
-      
+
       // Create certificate HTML
       const certificateHTML = `
         <!DOCTYPE html>
@@ -196,7 +196,7 @@ const MemberDetail = () => {
           <div class="certificate">
             <div class="watermark">SOLIDARITY</div>
             <div class="header">
-              <div class="logo">🤝</div>
+              <div class="logo"><img src="/logo.jpg" alt="Logo" style="height: 80px; width: auto; object-fit: contain;" /></div>
               <div class="org-name">Solidarity Organization</div>
               <div class="cert-title">Membership Certificate</div>
             </div>
@@ -261,7 +261,7 @@ const MemberDetail = () => {
         </body>
         </html>
       `;
-      
+
       // Create a blob and download
       const blob = new Blob([certificateHTML], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
@@ -272,7 +272,7 @@ const MemberDetail = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Success",
         description: "Membership certificate downloaded successfully. Open the HTML file in a browser and print to PDF."
@@ -381,9 +381,9 @@ const MemberDetail = () => {
               variant={member.status === "Active" ? "default" : "secondary"}
               className={
                 member.status === "Active" ? "bg-success" :
-                member.status === "Applicant" ? "bg-orange-100 text-orange-800" :
-                member.status === "Abroad" ? "bg-blue-100 text-blue-800" :
-                "bg-gray-100 text-gray-800"
+                  member.status === "Applicant" ? "bg-orange-100 text-orange-800" :
+                    member.status === "Abroad" ? "bg-blue-100 text-blue-800" :
+                      "bg-gray-100 text-gray-800"
               }
             >
               {member.status}
@@ -403,8 +403,8 @@ const MemberDetail = () => {
                   </Button>
                 </a>
               )}
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 variant="outline"
                 onClick={handleDownloadCertificate}
                 disabled={downloadingCert}
@@ -517,8 +517,8 @@ const MemberDetail = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm">
-                              {payment.paymentDate ? format(new Date(payment.paymentDate), 'MMM dd, yyyy') : 
-                               payment.createdAt ? format(new Date(payment.createdAt), 'MMM dd, yyyy') : '-'}
+                              {payment.paymentDate ? format(new Date(payment.paymentDate), 'MMM dd, yyyy') :
+                                payment.createdAt ? format(new Date(payment.createdAt), 'MMM dd, yyyy') : '-'}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -588,7 +588,7 @@ const MemberDetail = () => {
                         </TableCell>
                         <TableCell className="text-sm whitespace-nowrap">
                           {attendance.date ? format(new Date(attendance.date), 'MMM dd, yyyy') :
-                           attendance.scheduledDate ? format(new Date(attendance.scheduledDate), 'MMM dd, yyyy') : '-'}
+                            attendance.scheduledDate ? format(new Date(attendance.scheduledDate), 'MMM dd, yyyy') : '-'}
                         </TableCell>
                         <TableCell className="text-center">
                           {attendance.status === 'present' ? (
@@ -619,8 +619,8 @@ const MemberDetail = () => {
                 </Table>
               </div>
               <div className="mt-3 text-sm text-muted-foreground text-center">
-                Total Attendance Records: {member.meetingAttendance.length} | 
-                Attendance Rate: {member.meetingAttendance.length > 0 
+                Total Attendance Records: {member.meetingAttendance.length} |
+                Attendance Rate: {member.meetingAttendance.length > 0
                   ? Math.round((member.meetingAttendance.filter((a: any) => a.status === 'present').length / member.meetingAttendance.length) * 100)
                   : 0}%
               </div>

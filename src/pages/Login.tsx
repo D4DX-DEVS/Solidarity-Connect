@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { authAPI, memberAuthAPI } from "@/utils/api";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
-import logo from "@/assets/logo.png";
 
 const Login = () => {
   const [userType, setUserType] = useState<"state_admin" | "district_admin" | "group_admin" | "member" | "">("");
@@ -173,24 +172,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 shadow-lg">
-        <div className="flex flex-col items-center mb-8">
-          <img src={logo} alt="SOLIDARITY" className="h-16 mb-4" />
-          <h1 className="text-2xl font-bold text-foreground">Members Management</h1>
-          <p className="text-muted-foreground text-sm mt-2">Login with mobile OTP</p>
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md p-8 glass border-none overflow-hidden relative rounded-3xl">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-primary/60" />
+
+        <div className="flex flex-col items-center mb-8 relative z-10">
+          <div className="bg-white p-3 rounded-2xl shadow-sm mb-4">
+            <img src="/logo.jpg" alt="SOLIDARITY" className="h-[72px] object-contain" />
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Welcome Back</h1>
+          <p className="text-muted-foreground text-sm mt-1">Sign in to your account</p>
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">User Type</label>
+        <div className="space-y-5 relative z-10">
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground/80">I am a</label>
             <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
+              className="w-full px-4 py-3 rounded-xl bg-background/50 border border-input focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none hover:bg-background/80"
               value={userType}
               onChange={(e) => setUserType(e.target.value as any)}
               disabled={showOtp}
             >
-              <option value="">Select User Type</option>
+              <option value="" disabled className="text-muted-foreground">Select your role</option>
               <option value="state_admin">State Admin</option>
               <option value="district_admin">District Admin</option>
               <option value="group_admin">Members Group Admin</option>
@@ -198,38 +201,41 @@ const Login = () => {
             </select>
           </div>
 
-          <div>
-            <label className="text-sm font-medium mb-2 block">Mobile Number</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">+91</span>
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-foreground/80">Mobile Number</label>
+            <div className="relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <span className="text-muted-foreground font-medium">+91</span>
+                <div className="w-px h-5 bg-border"></div>
+              </div>
               <Input
                 type="tel"
-                placeholder="10-digit mobile number"
+                placeholder="0000 000 000"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 maxLength={10}
                 disabled={showOtp || !userType}
-                className="pl-12"
+                className="pl-20 py-6 rounded-xl bg-background/50 border-input transition-all duration-200 focus:bg-background hover:bg-background/80 text-lg tracking-wide"
               />
             </div>
             {phone && phone.length !== 10 && (
-              <p className="text-xs text-destructive mt-1">Please enter 10 digits</p>
+              <p className="text-xs text-destructive mt-1.5 font-medium animate-in fade-in slide-in-from-top-1">Please enter a valid 10-digit number</p>
             )}
           </div>
 
           {!showOtp ? (
             <Button
               onClick={handleSendOtp}
-              className="w-full bg-primary hover:bg-primary/90"
+              className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-lg transition-all active:scale-[0.98] shadow-lg shadow-primary/20 mt-4"
               disabled={phone.length !== 10 || !userType || loading}
             >
-              {loading ? "Sending..." : "Send OTP"}
+              {loading ? "Sending..." : "Get OTP"}
             </Button>
           ) : (
-            <>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Enter OTP</label>
-                <div className="flex gap-2 justify-center">
+            <div className="space-y-6 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-foreground/80 text-center block">Enter the 4-digit OTP</label>
+                <div className="flex gap-3 justify-center">
                   {otp.map((digit, index) => (
                     <Input
                       key={index}
@@ -239,47 +245,47 @@ const Login = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-12 h-12 text-center text-lg font-semibold"
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl text-center text-2xl font-bold bg-background/50 border-input focus:bg-background transition-all hover:bg-background/80 ring-offset-background"
                       disabled={loading}
                     />
                   ))}
                 </div>
                 {otpExpiry && (
-                  <p className="text-xs text-muted-foreground mt-2 text-center">
-                    OTP expires at {otpExpiry.toLocaleTimeString()}
+                  <p className="text-xs text-muted-foreground mt-3 text-center font-medium">
+                    Code expires at {otpExpiry.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 )}
               </div>
               <Button
                 onClick={handleVerifyOtp}
-                className="w-full bg-success hover:bg-success/90"
+                className="w-full py-6 rounded-xl bg-success hover:bg-success/90 text-success-foreground font-medium text-lg transition-all active:scale-[0.98] shadow-lg shadow-success/20"
                 disabled={otp.join("").length !== 4 || loading}
               >
-                {loading ? "Verifying..." : "Verify & Login"}
+                {loading ? "Verifying..." : "Verify & Continue"}
               </Button>
-              <div className="flex gap-2">
+              <div className="flex gap-3 pt-2">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => {
                     setShowOtp(false);
                     setOtp(["", "", "", ""]);
                     setOtpExpiry(null);
                   }}
-                  className="flex-1"
+                  className="flex-1 rounded-xl py-5 border-border/50 hover:bg-background/60 transition-colors"
                   disabled={loading}
                 >
                   Change Number
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={handleResendOtp}
-                  className="flex-1"
+                  className="flex-1 rounded-xl py-5 bg-secondary/80 hover:bg-secondary transition-colors"
                   disabled={loading}
                 >
-                  {loading ? "Sending..." : "Resend OTP"}
+                  {loading ? "Sending..." : "Resend"}
                 </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </Card>

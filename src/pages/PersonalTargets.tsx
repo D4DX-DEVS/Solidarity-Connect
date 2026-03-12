@@ -281,171 +281,176 @@ const PersonalTargets = () => {
                   <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
-                <DialogHeader>
-                  <DialogTitle>{editingTarget ? 'Edit Target' : 'Create New Target'}</DialogTitle>
+              <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-6 sm:p-8 rounded-[2rem] border-none shadow-2xl glass font-sans">
+                <div className="flex bg-primary/10 p-3 rounded-full w-14 h-14 items-center justify-center mb-2 ring-8 ring-primary/5 mx-auto shrink-0">
+                  <Target className="h-6 w-6 text-primary" />
+                </div>
+                <DialogHeader className="shrink-0 text-center mb-6">
+                  <DialogTitle className="text-2xl font-bold tracking-tight">{editingTarget ? 'Edit Target' : 'Create New Target'}</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Enter target title"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="category">Category *</Label>
-                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="quran">📖 Quran</SelectItem>
-                        <SelectItem value="hadith">📚 Hadith</SelectItem>
-                        <SelectItem value="prayer">🤲 Prayer</SelectItem>
-                        <SelectItem value="charity">💝 Charity</SelectItem>
-                        <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
-                        <SelectItem value="community">🤝 Community</SelectItem>
-                        <SelectItem value="other">🎯 Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe the target in detail"
-                      rows={3}
-                      required
-                    />
-                  </div>
-
-                  {/* Start & End Date with Time */}
-                  <div className="grid grid-cols-1 gap-3">
-                    <div>
-                      <Label htmlFor="startDate">Start Date & Time *</Label>
+                <div className="overflow-y-auto flex-1 pr-2 -mr-2 custom-scrollbar">
+                  <form onSubmit={handleSubmit} className="space-y-5 px-1 pb-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="font-semibold">Title *</Label>
                       <Input
-                        id="startDate"
-                        type="datetime-local"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="Enter target title"
+                        className="rounded-xl border-input/50 focus:border-primary transition-colors bg-background/50 h-11"
                         required
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="category" className="font-semibold">Category *</Label>
+                      <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="quran">📖 Quran</SelectItem>
+                          <SelectItem value="hadith">📚 Hadith</SelectItem>
+                          <SelectItem value="prayer">🤲 Prayer</SelectItem>
+                          <SelectItem value="charity">💝 Charity</SelectItem>
+                          <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
+                          <SelectItem value="community">🤝 Community</SelectItem>
+                          <SelectItem value="other">🎯 Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div>
-                      <Label htmlFor="endDate">End Date & Time *</Label>
-                      <Input
-                        id="endDate"
-                        type="datetime-local"
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        placeholder="Describe the target in detail"
+                        rows={3}
                         required
                       />
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="active" className="text-sm font-medium">Active Status</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Target is visible only when active and within the date range
-                      </p>
-                    </div>
-                    <Switch
-                      id="active"
-                      checked={formData.active}
-                      onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Target Audience *</Label>
-                    <Select
-                      value={formData.targetAudience}
-                      onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all_users">All Users</SelectItem>
-                        <SelectItem value="members_only">Members Only</SelectItem>
-                        <SelectItem value="group_admins">Group Admins Only</SelectItem>
-                        <SelectItem value="area_admins">Area Admins Only</SelectItem>
-                        <SelectItem value="district_admins">District Admins Only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="instructions">Instructions (Optional)</Label>
-                    <Textarea
-                      id="instructions"
-                      value={formData.instructions}
-                      onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
-                      placeholder="How to complete this target..."
-                      rows={2}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="rewards">Rewards (Optional)</Label>
-                    <Input
-                      id="rewards"
-                      value={formData.rewards}
-                      onChange={(e) => setFormData({ ...formData, rewards: e.target.value })}
-                      placeholder="Reward for completing this target..."
-                    />
-                  </div>
-
-                  {/* Recurring */}
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-medium">Recurring Target</Label>
-                      <p className="text-xs text-muted-foreground">Mark as recurring with a frequency label</p>
-                    </div>
-                    <Switch
-                      checked={formData.isRecurring}
-                      onCheckedChange={(checked) => setFormData({ ...formData, isRecurring: checked })}
-                    />
-                  </div>
-                  {formData.isRecurring && (
-                    <div className="space-y-3 pl-2 border-l-2 border-primary/30">
+                    {/* Start & End Date with Time */}
+                    <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <Label>Frequency *</Label>
-                        <Select
-                          value={formData.recurringFrequency}
-                          onValueChange={(v) => setFormData({ ...formData, recurringFrequency: v })}
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                            <SelectItem value="quarterly">Quarterly</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Label htmlFor="startDate">Start Date & Time *</Label>
+                        <Input
+                          id="startDate"
+                          type="datetime-local"
+                          value={formData.startDate}
+                          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="endDate">End Date & Time *</Label>
+                        <Input
+                          id="endDate"
+                          type="datetime-local"
+                          value={formData.endDate}
+                          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                          required
+                        />
                       </div>
                     </div>
-                  )}
 
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">
-                      {editingTarget ? 'Update Target' : 'Create Target'}
-                    </Button>
-                  </div>
-                </form>
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="active" className="text-sm font-medium">Active Status</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Target is visible only when active and within the date range
+                        </p>
+                      </div>
+                      <Switch
+                        id="active"
+                        checked={formData.active}
+                        onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Target Audience *</Label>
+                      <Select
+                        value={formData.targetAudience}
+                        onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all_users">All Users</SelectItem>
+                          <SelectItem value="members_only">Members Only</SelectItem>
+                          <SelectItem value="group_admins">Group Admins Only</SelectItem>
+                          <SelectItem value="area_admins">Area Admins Only</SelectItem>
+                          <SelectItem value="district_admins">District Admins Only</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="instructions">Instructions (Optional)</Label>
+                      <Textarea
+                        id="instructions"
+                        value={formData.instructions}
+                        onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
+                        placeholder="How to complete this target..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="rewards">Rewards (Optional)</Label>
+                      <Input
+                        id="rewards"
+                        value={formData.rewards}
+                        onChange={(e) => setFormData({ ...formData, rewards: e.target.value })}
+                        placeholder="Reward for completing this target..."
+                      />
+                    </div>
+
+                    {/* Recurring */}
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-medium">Recurring Target</Label>
+                        <p className="text-xs text-muted-foreground">Mark as recurring with a frequency label</p>
+                      </div>
+                      <Switch
+                        checked={formData.isRecurring}
+                        onCheckedChange={(checked) => setFormData({ ...formData, isRecurring: checked })}
+                      />
+                    </div>
+                    {formData.isRecurring && (
+                      <div className="space-y-3 pl-2 border-l-2 border-primary/30">
+                        <div>
+                          <Label>Frequency *</Label>
+                          <Select
+                            value={formData.recurringFrequency}
+                            onValueChange={(v) => setFormData({ ...formData, recurringFrequency: v })}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="quarterly">Quarterly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border/50">
+                      <Button type="button" variant="outline" className="rounded-xl h-11 font-medium border-border/50 hover:bg-background/80" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="rounded-xl h-11 font-medium shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">
+                        {editingTarget ? 'Update Target' : 'Create Target'}
+                      </Button>
+                    </div>
+                  </form>
+                </div>
               </DialogContent>
             </Dialog>
           )}
@@ -520,16 +525,15 @@ const PersonalTargets = () => {
                         )}
                         <Badge
                           variant={active ? 'default' : 'secondary'}
-                          className={`text-xs px-2 py-0.5 ${
-                            active ? 'bg-green-600' :
+                          className={`text-xs px-2 py-0.5 ${active ? 'bg-green-600' :
                             target.status === 'active' && new Date(target.startDate) > new Date() ? 'bg-amber-500 text-white' :
-                            target.status === 'active' && new Date(target.endDate) < new Date() ? 'bg-gray-400 text-white' : ''
-                          }`}
+                              target.status === 'active' && new Date(target.endDate) < new Date() ? 'bg-gray-400 text-white' : ''
+                            }`}
                         >
                           {active ? 'Active' :
                             target.status === 'active' && new Date(target.startDate) > new Date() ? 'Scheduled' :
-                            target.status === 'active' && new Date(target.endDate) < new Date() ? 'Expired' :
-                            'Inactive'}
+                              target.status === 'active' && new Date(target.endDate) < new Date() ? 'Expired' :
+                                'Inactive'}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}

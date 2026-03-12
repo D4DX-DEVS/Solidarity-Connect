@@ -54,7 +54,7 @@ const Members = () => {
   const navigate = useNavigate();
   const { userRole, userDistrict, userGroup } = useAuth();
   const { toast } = useToast();
-  
+
   const [members, setMembers] = useState<Member[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -70,7 +70,7 @@ const Members = () => {
     approved: 0,
     pending: 0
   });
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
@@ -78,7 +78,7 @@ const Members = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showBaithul, setShowBaithul] = useState(false);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -135,7 +135,7 @@ const Members = () => {
     const fetchData = async () => {
       try {
         setLoading(currentPage === 1); // Only show loading on first page
-        
+
         // Build query parameters for filtering and pagination
         const params = new URLSearchParams();
         if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
@@ -147,16 +147,16 @@ const Members = () => {
         params.append('sort', '-createdAt');
         // Skip heavy stats aggregation on page 2+; keep stats when filters change (page resets to 1)
         if (currentPage > 1) params.append('includeStats', 'false');
-        
+
         // Fetch members only
         const membersResult = await membersAPI.getMembers(Object.fromEntries(params));
-        
+
         if (membersResult) {
           setMembers(membersResult.data || []);
           if (membersResult.statistics) {
             setStatistics(membersResult.statistics);
           }
-          
+
           // Update pagination state
           if (membersResult.pagination) {
             setTotalPages(membersResult.pagination.totalPages);
@@ -185,20 +185,20 @@ const Members = () => {
   useEffect(() => {
     if (selectedDistrict && (userRole === 'state_admin' || userRole === 'district_admin')) {
       setSelectedGroup(""); // Clear group selection when district changes
-      
+
       // Fetch groups for the selected district
       const fetchDistrictGroups = async () => {
         try {
-          const groupsResult = await groupsAPI.getGroups({ 
-            district: selectedDistrict, 
-            limit: 100 
+          const groupsResult = await groupsAPI.getGroups({
+            district: selectedDistrict,
+            limit: 100
           });
           setGroups(groupsResult.data || []);
         } catch (error) {
           console.error('Failed to fetch district groups:', error);
         }
       };
-      
+
       fetchDistrictGroups();
     }
   }, [selectedDistrict, userRole]);
@@ -245,24 +245,7 @@ const Members = () => {
     }
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <HeaderWithLogout
-          icon={<Users className="h-6 w-6 text-primary-foreground" />}
-          title="Members"
-        />
-        <div className="flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-            <p className="text-sm text-muted-foreground">Loading members...</p>
-          </div>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
+  // Removed early loading return to prevent search focus loss
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -284,7 +267,7 @@ const Members = () => {
 
         <div className="space-y-2 mb-3">
           {userRole === "state_admin" && (
-            <select 
+            <select
               className="w-full px-3 py-2 border rounded-md text-sm bg-background"
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
@@ -297,10 +280,10 @@ const Members = () => {
               ))}
             </select>
           )}
-          
+
           <div className="grid grid-cols-2 gap-2">
             {(userRole === "state_admin" || userRole === "district_admin") ? (
-              <select 
+              <select
                 className="px-3 py-2 border rounded-md text-sm bg-background"
                 value={selectedGroup}
                 onChange={(e) => setSelectedGroup(e.target.value)}
@@ -315,7 +298,7 @@ const Members = () => {
             ) : (
               <div></div>
             )}
-            <select 
+            <select
               className="px-3 py-2 border rounded-md text-sm bg-background"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
@@ -380,7 +363,7 @@ const Members = () => {
             </div>
           </Card>
         </div>
-        
+
         {/* Pagination Info */}
         <div className="text-center text-sm text-muted-foreground mb-4">
           Showing {members.length} of {totalDocs} members
@@ -390,14 +373,21 @@ const Members = () => {
         </div>
       </div>
 
-      <main className="p-4 space-y-3">
-        {members.length === 0 ? (
+      <main className="p-4 space-y-3 relative">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+              <p className="text-sm text-muted-foreground">Loading members...</p>
+            </div>
+          </div>
+        ) : members.length === 0 ? (
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No members found</p>
             {userRole !== 'group_admin' && (
-              <Button 
-                onClick={() => navigate('/add-member')} 
+              <Button
+                onClick={() => navigate('/add-member')}
                 className="mt-4"
               >
                 Add First Member
@@ -407,7 +397,7 @@ const Members = () => {
         ) : (
           members.map((member) => (
             <Card key={member._id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-              <div 
+              <div
                 className="p-4"
                 onClick={() => navigate(`/member/${member._id}`)}
               >
@@ -433,36 +423,36 @@ const Members = () => {
                     )}
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground mb-1">
                   {member.email || "No email"}
                 </p>
-                <a 
-                  href={`tel:${member.phone}`} 
+                <a
+                  href={`tel:${member.phone}`}
                   className="text-sm text-primary flex items-center gap-1 mb-2"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {member.phone}
                 </a>
-                
+
                 <div className="flex items-center gap-2 mb-2">
                   <Badge
                     variant={member.status === "Active" ? "default" : "secondary"}
                     className={
-                      member.status === "Active" 
-                        ? "bg-success" 
+                      member.status === "Active"
+                        ? "bg-success"
                         : member.status === "Applicant"
-                        ? "bg-orange-100 text-orange-800"
-                        : member.status === "Abroad"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-gray-100 text-gray-800"
+                          ? "bg-orange-100 text-orange-800"
+                          : member.status === "Abroad"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
                     }
                   >
                     {member.status}
                   </Badge>
                   {member.transferRequest && (
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={
                         member.transferRequest.status === 'pending'
                           ? "bg-yellow-100 text-yellow-800 border-yellow-300 flex items-center gap-1"
@@ -474,7 +464,7 @@ const Members = () => {
                     </Badge>
                   )}
                 </div>
-                
+
                 <div className="text-sm text-muted-foreground mb-3">
                   <p>{member.group.name} ({member.group.code})</p>
                   <p>{member.district.name} ({member.district.code})</p>
@@ -537,11 +527,11 @@ const Members = () => {
             </Card>
           ))
         )}
-        
+
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="flex justify-between items-center py-4 px-2">
-            <Button 
+            <Button
               onClick={goToPrevPage}
               disabled={!hasPrevPage}
               variant="outline"
@@ -551,12 +541,12 @@ const Members = () => {
               <ChevronLeft className="h-4 w-4" />
               Previous
             </Button>
-            
+
             <div className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </div>
-            
-            <Button 
+
+            <Button
               onClick={goToNextPage}
               disabled={!hasNextPage}
               variant="outline"
