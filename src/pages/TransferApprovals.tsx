@@ -75,7 +75,7 @@ const TransferApprovals = () => {
       );
 
       if (append) {
-        setTransferRequests(prev => [...prev, ...(response.data || [])]);
+        setTransferRequests(prev => [...prev, ...((response.data as TransferRequest[]) || [])]);
       } else {
         setTransferRequests((response.data as TransferRequest[]) || []);
       }
@@ -245,8 +245,8 @@ const TransferApprovals = () => {
                     {processingId === request._id
                       ? "Processing..."
                       : userRole === "state_admin"
-                      ? "Approve & Complete"
-                      : "Approve"}
+                        ? "Approve & Complete"
+                        : "Approve"}
                   </Button>
                   <Button
                     size="sm"
@@ -287,30 +287,38 @@ const TransferApprovals = () => {
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="max-w-sm mx-auto">
-          <DialogHeader>
-            <DialogTitle>Reject Transfer Request</DialogTitle>
-          </DialogHeader>
-          <div>
-            <label className="text-sm font-medium">Rejection Reason *</label>
+        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-[2rem] border-none shadow-2xl glass font-sans">
+          <div className="flex flex-col items-center text-center">
+            <div className="bg-destructive/10 p-4 rounded-full mb-4 ring-8 ring-destructive/5">
+              <XCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold tracking-tight mb-1">Reject Transfer Request</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to reject this transfer request? This action cannot be undone.
+            </p>
+          </div>
+          <div className="mb-6 space-y-2">
+            <label className="text-sm font-semibold text-destructive">Rejection Reason *</label>
             <Textarea
-              className="mt-1"
-              placeholder="Provide a rejection reason..."
+              className="resize-none rounded-xl border-destructive/20 focus:border-destructive transition-colors bg-destructive/5 mt-1"
+              placeholder="Provide a detailed rejection reason..."
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
             />
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+          <DialogFooter className="gap-3 sm:gap-2">
+            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-background/80" onClick={() => setRejectDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               variant="destructive"
+              className="rounded-xl w-full sm:w-auto h-12 font-medium shadow-lg shadow-destructive/20 active:scale-[0.98] transition-all"
               onClick={handleReject}
               disabled={!!processingId || !rejectReason.trim()}
             >
-              <XCircle className="h-4 w-4 mr-1" />
-              {processingId ? "Rejecting..." : "Reject"}
+              {processingId ? "Processing..." : "Confirm Rejection"}
             </Button>
           </DialogFooter>
         </DialogContent>
