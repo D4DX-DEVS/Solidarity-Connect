@@ -39,7 +39,7 @@ const ROLE_TYPE_COLORS: Record<string, string> = {
 const ADMIN_ROLE_LABELS: Record<string, string> = {
   state_admin: "State Admin",
   district_admin: "District Admin",
-  group_admin: "Area Admin",
+  group_admin: "Group Admin",
 };
 
 interface Leader {

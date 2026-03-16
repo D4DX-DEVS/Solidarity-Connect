@@ -17,7 +17,7 @@ import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { usersAPI, leadersAPI } from "@/utils/api";
+import { usersAPI, leadersAPI, membersAPI } from "@/utils/api";
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
   state: "State",
@@ -47,7 +47,8 @@ interface UserWithLeader {
   _id: string;
   name: string;
   phone: string;
-  role: string;
+  role?: string;
+  status?: string; // for members
   isLeader: boolean;
   roleTag?: { type?: string; name?: string };
   district?: { name: string };
@@ -81,6 +82,7 @@ const RoleManagement = () => {
   const isInitialLoad = loading && users.length === 0;
 
   const allowedRoleTypes = ALLOWED_ROLE_TYPES[userRole || "group_admin"] || ["area", "unit"];
+  const isMemberView = roleFilter === "member";
 
   // Tracks whether the first successful fetch has completed
   const hasLoadedRef = useRef(false);
@@ -97,8 +99,6 @@ const RoleManagement = () => {
   }, [debouncedSearch, roleFilter]);
 
   const fetchUsers = useCallback(async (isBackground = false) => {
-    // On first ever load show the full spinner; for search/filter/page changes keep the
-    // existing list visible and only show a subtle indicator.
     if (isBackground) {
       setFetching(true);
     } else {
@@ -106,9 +106,16 @@ const RoleManagement = () => {
     }
     try {
       const params: Record<string, any> = { page: currentPage, limit: 20 };
-      if (roleFilter !== "all") params.role = roleFilter;
       if (debouncedSearch) params.search = debouncedSearch;
-      const result = await usersAPI.getUsers(params);
+
+      let result;
+      if (isMemberView) {
+        result = await membersAPI.getMembers(params);
+      } else {
+        if (roleFilter !== "all") params.role = roleFilter;
+        result = await usersAPI.getUsers(params);
+      }
+
       const data: UserWithLeader[] = result.data || [];
       setUsers(data);
       if (result.pagination) {
@@ -117,7 +124,6 @@ const RoleManagement = () => {
         setHasNextPage(result.pagination.hasNextPage || false);
         setHasPrevPage(result.pagination.hasPrevPage || false);
       }
-      // Initialize edit states (merge so unsaved edits on other pages aren't lost)
       const states: Record<string, EditState> = {};
       data.forEach((u) => {
         states[u._id] = {
@@ -129,12 +135,12 @@ const RoleManagement = () => {
       setEditStates((prev) => ({ ...prev, ...states }));
       hasLoadedRef.current = true;
     } catch (error) {
-      toast({ title: "Error", description: "Failed to load users", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
     } finally {
       setLoading(false);
       setFetching(false);
     }
-  }, [currentPage, debouncedSearch, roleFilter, toast]);
+  }, [currentPage, debouncedSearch, roleFilter, isMemberView, toast]);
 
   useEffect(() => {
     fetchUsers(hasLoadedRef.current);
@@ -152,7 +158,11 @@ const RoleManagement = () => {
           name: state.roleTagName || undefined,
         };
       }
-      await leadersAPI.updateLeader(userId, payload);
+      if (isMemberView) {
+        await membersAPI.updateMemberLeader(userId, payload);
+      } else {
+        await leadersAPI.updateLeader(userId, payload);
+      }
       toast({ title: "Saved", description: "Leader status updated successfully" });
       fetchUsers(true);
     } catch (error: any) {
@@ -180,13 +190,13 @@ const RoleManagement = () => {
     );
   };
 
-  const roleLabel = (role: string) => {
+  const roleLabel = (role?: string) => {
     const map: Record<string, string> = {
       state_admin: "State Admin",
       district_admin: "District Admin",
-      group_admin: "Area Admin",
+      group_admin: "Group Admin",
     };
-    return map[role] || role;
+    return role ? (map[role] || role) : "Member";
   };
 
   return (
@@ -227,7 +237,8 @@ const RoleManagement = () => {
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="state_admin">State Admins</SelectItem>
                 <SelectItem value="district_admin">District Admins</SelectItem>
-                <SelectItem value="group_admin">Area Admins</SelectItem>
+                <SelectItem value="group_admin">Group Admins</SelectItem>
+                <SelectItem value="member">Members</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>
@@ -268,9 +279,15 @@ const RoleManagement = () => {
                         <p className="font-semibold">{user.name}</p>
                         <p className="text-sm text-muted-foreground">{user.phone}</p>
                         <div className="flex gap-2 mt-1 flex-wrap">
-                          <Badge variant="outline" className="text-xs">
-                            {roleLabel(user.role)}
-                          </Badge>
+                          {isMemberView ? (
+                            <Badge variant="outline" className="text-xs">
+                              {user.status || "Member"}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              {roleLabel(user.role)}
+                            </Badge>
+                          )}
                           {user.district && (
                             <Badge variant="secondary" className="text-xs">
                               {user.district.name}
