@@ -38,6 +38,7 @@ import Leaders from "./pages/Leaders";
 import Announcements from "./pages/Announcements";
 import OrgFiles from "./pages/OrgFiles";
 import Consolidation from "./pages/Consolidation";
+import MyTargets from "./pages/MyTargets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ const App = () => (
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/member-dashboard" element={<ProtectedRoute requiredRoles={['member']}><MemberDashboard /></ProtectedRoute>} />
             <Route path="/personal-targets" element={<ProtectedRoute requiredRoles={['state_admin']}><PersonalTargets /></ProtectedRoute>} />
+            <Route path="/my-targets" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><MyTargets /></ProtectedRoute>} />
             <Route path="/state-admin/users" element={<ProtectedRoute requiredRoles={['state_admin']}><UserManagement /></ProtectedRoute>} />
             <Route path="/role-management" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><RoleManagement /></ProtectedRoute>} />
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />

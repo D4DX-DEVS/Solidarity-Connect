@@ -184,7 +184,7 @@ const RoleManagement = () => {
     const map: Record<string, string> = {
       state_admin: "State Admin",
       district_admin: "District Admin",
-      group_admin: "Group Admin",
+      group_admin: "Area Admin",
     };
     return map[role] || role;
   };
@@ -227,7 +227,7 @@ const RoleManagement = () => {
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="state_admin">State Admins</SelectItem>
                 <SelectItem value="district_admin">District Admins</SelectItem>
-                <SelectItem value="group_admin">Group Admins</SelectItem>
+                <SelectItem value="group_admin">Area Admins</SelectItem>
               </SelectContent>
             </Select>
           </CardContent>

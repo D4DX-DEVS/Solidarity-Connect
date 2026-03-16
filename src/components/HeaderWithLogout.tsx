@@ -32,7 +32,7 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
       case "district_admin":
         return "District Admin";
       case "group_admin":
-        return "Group Admin";
+        return "Area Admin";
       default:
         return "";
     }

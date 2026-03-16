@@ -126,7 +126,7 @@ const UserManagement = () => {
   const roleLabels = {
     state_admin: "State Admin", 
     district_admin: "District Admin",
-    group_admin: "Group Admin"
+    group_admin: "Area Admin"
   };
 
   const roleColors = {
@@ -462,7 +462,7 @@ const UserManagement = () => {
                     <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="state_admin">State Admin</SelectItem>
                     <SelectItem value="district_admin">District Admin</SelectItem>
-                    <SelectItem value="group_admin">Group Admin</SelectItem>
+                    <SelectItem value="group_admin">Area Admin</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -650,7 +650,7 @@ const UserManagement = () => {
                 <SelectContent>
                   <SelectItem value="state_admin">State Admin</SelectItem>
                   <SelectItem value="district_admin">District Admin</SelectItem>
-                  <SelectItem value="group_admin">Group Admin</SelectItem>
+                  <SelectItem value="group_admin">Area Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

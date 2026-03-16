@@ -106,7 +106,7 @@ const MeetingDetail = () => {
       case 'all': return 'All Members';
       case 'state_admins': return 'State Administrators';
       case 'district_admins': return 'District Administrators';
-      case 'group_admins': return 'Group Administrators';
+      case 'group_admins': return 'Area Administrators';
       case 'specific_groups': return 'Specific Groups';
       case 'specific_districts': return 'Specific Districts';
       default: return targetAudience;

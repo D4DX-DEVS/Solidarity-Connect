@@ -7,18 +7,62 @@ import { body, validationResult } from 'express-validator';
 const router = express.Router();
 
 // @route   GET /api/user-target-progress
-// @desc    Get all progress records for the current user
+// @desc    Get all progress records for the current user (includes virtual not_started for untracked targets)
 // @access  All authenticated users (non-member)
 router.get('/', authenticate, async (req, res) => {
   try {
-    const progress = await UserTargetProgress.find({ user: req.user._id })
+    // Determine which targetAudience values apply to this user
+    const role = req.user.role;
+    let audienceFilter = ['all_users'];
+    if (role === 'state_admin') {
+      audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'];
+    } else if (role === 'district_admin') {
+      audienceFilter = ['all_users', 'district_admins'];
+    } else if (role === 'group_admin') {
+      audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins'];
+    }
+
+    // Fetch all active targets applicable to this user
+    const activeTargets = await PersonalTarget.find({
+      status: 'active',
+      targetAudience: { $in: audienceFilter }
+    }).populate('createdBy', 'name role');
+
+    // Fetch existing progress records for the user
+    const existingProgress = await UserTargetProgress.find({ user: req.user._id })
       .populate({
         path: 'personalTarget',
         populate: { path: 'createdBy', select: 'name role' }
-      })
-      .sort({ updatedAt: -1 });
+      });
 
-    res.status(200).json({ success: true, data: progress });
+    // Only keep progress records where personalTarget populated successfully
+    const validExisting = existingProgress.filter(p => p.personalTarget != null);
+    const progressByTargetId = new Map(
+      validExisting.map(p => [p.personalTarget._id.toString(), p])
+    );
+
+    // Merge: existing records + virtual not_started for untracked targets
+    const merged = activeTargets.map(target => {
+      const targetIdStr = target._id.toString();
+      if (progressByTargetId.has(targetIdStr)) {
+        return progressByTargetId.get(targetIdStr);
+      }
+      // Virtual record (not saved to DB)
+      return {
+        _id: `virtual_${targetIdStr}`,
+        user: req.user._id,
+        personalTarget: target,
+        status: 'not_started',
+        feedback: '',
+        currentProgress: 0,
+        targetValue: target.targetValue,
+        progressPercentage: 0,
+        updatedAt: target.updatedAt,
+        createdAt: target.createdAt,
+      };
+    });
+
+    res.status(200).json({ success: true, data: merged });
   } catch (error) {
     console.error('Get user target progress error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch progress' });

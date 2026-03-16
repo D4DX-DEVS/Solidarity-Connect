@@ -98,7 +98,7 @@ const SendNotification = () => {
               >
                 <option value="all">All Members</option>
                 <option value="members">Members Only</option>
-                <option value="group_admins">Group Admins Only</option>
+                <option value="group_admins">Area Admins Only</option>
               </select>
             </div>
 

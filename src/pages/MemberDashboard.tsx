@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { memberAuthAPI } from "@/utils/api";
+import { memberAuthAPI, apiCall } from "@/utils/api";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -31,7 +32,18 @@ import {
   ChevronDown,
   ChevronUp,
   Upload,
-  X
+  X,
+  RefreshCw,
+  FolderOpen,
+  Edit,
+  Save,
+  BookOpen,
+  Book,
+  Music,
+  File,
+  Eye,
+  Download,
+  Search
 } from "lucide-react";
 
 interface MemberProfile {
@@ -46,6 +58,8 @@ interface MemberProfile {
     profession?: string;
     education?: string;
     address?: string;
+    areaOfInterest?: string;
+    skills?: string;
     district: { name: string };
     group: { name: string };
     status: string;
@@ -83,6 +97,8 @@ interface PersonalTarget {
     endDate: string;
     instructions?: string;
     rewards?: string;
+    isRecurring?: boolean;
+    recurringFrequency?: string;
   };
   currentProgress: number;
   targetValue: number;
@@ -91,6 +107,13 @@ interface PersonalTarget {
   completedAt?: string;
   feedback?: string;
   fileAttachment?: FileAttachment | null;
+}
+
+interface RecurringMark {
+  targetId: string;
+  year: number;
+  month: number;
+  completed: boolean;
 }
 
 interface Meeting {
@@ -121,6 +144,43 @@ interface Notification {
   attachments?: { url: string; originalName?: string; mimetype?: string }[];
 }
 
+interface OrgFileItem {
+  _id: string;
+  title: string;
+  description?: string;
+  category: string;
+  fileType: string;
+  url: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+}
+
+const orgCategoryLabels: Record<string, string> = {
+  constitution: "Constitution",
+  guidelines: "Guidelines",
+  video: "Video",
+  audio: "Audio",
+  document: "Document",
+  other: "Other"
+};
+
+const orgCategoryIcons: Record<string, React.ElementType> = {
+  constitution: BookOpen,
+  guidelines: Book,
+  video: Film,
+  audio: Music,
+  document: FileText,
+  other: File
+};
+
+const formatOrgFileSize = (bytes: number) => {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${bytes} B`;
+};
+
 const MemberDashboard = () => {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [targets, setTargets] = useState<PersonalTarget[]>([]);
@@ -136,6 +196,34 @@ const MemberDashboard = () => {
   const [pendingTargetFiles, setPendingTargetFiles] = useState<Record<string, File>>({});
   const [uploadedTargetAttachments, setUploadedTargetAttachments] = useState<Record<string, FileAttachment>>({});
   const targetFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Recurring marks state
+  const [recurringMarks, setRecurringMarks] = useState<RecurringMark[]>([]);
+  const [recurringMarkKey, setRecurringMarkKey] = useState<string | null>(null);
+  const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
+
+  // Org files state
+  const [orgFiles, setOrgFiles] = useState<OrgFileItem[]>([]);
+  const [orgFilesLoading, setOrgFilesLoading] = useState(false);
+  const [orgFilesCategory, setOrgFilesCategory] = useState("all");
+  const [orgFilesSearch, setOrgFilesSearch] = useState("");
+  const [orgFilesDebouncedSearch, setOrgFilesDebouncedSearch] = useState("");
+
+  // Profile edit state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [editProfileForm, setEditProfileForm] = useState({
+    name: "",
+    email: "",
+    profession: "",
+    education: "",
+    address: "",
+    bloodGroup: "",
+    age: "",
+    areaOfInterest: "",
+    skills: ""
+  });
+
   const { token, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -168,6 +256,14 @@ const MemberDashboard = () => {
         setTargets(targetsData.data);
         syncTargetState(targetsData.data);
 
+        // Fetch recurring marks
+        try {
+          const marksData = await apiCall('/member-auth/recurring-marks');
+          setRecurringMarks(marksData.data || []);
+        } catch {
+          // Endpoint may not exist yet — fail silently
+        }
+
         // Fetch upcoming meetings
         const meetingsData = await memberAuthAPI.getMeetings({
           status: 'scheduled',
@@ -197,6 +293,32 @@ const MemberDashboard = () => {
       fetchData();
     }
   }, [token, toast, logout]);
+
+  // Debounce org files search
+  useEffect(() => {
+    const t = setTimeout(() => setOrgFilesDebouncedSearch(orgFilesSearch), 400);
+    return () => clearTimeout(t);
+  }, [orgFilesSearch]);
+
+  // Fetch org files when tab is active
+  useEffect(() => {
+    if (activeView !== "orgfiles") return;
+    const fetchOrgFiles = async () => {
+      try {
+        setOrgFilesLoading(true);
+        const params: Record<string, string> = {};
+        if (orgFilesCategory !== "all") params.category = orgFilesCategory;
+        if (orgFilesDebouncedSearch) params.search = orgFilesDebouncedSearch;
+        const result = await memberAuthAPI.getOrgFiles(params);
+        setOrgFiles(result.data || []);
+      } catch {
+        toast({ title: "Error", description: "Failed to load files", variant: "destructive" });
+      } finally {
+        setOrgFilesLoading(false);
+      }
+    };
+    fetchOrgFiles();
+  }, [activeView, orgFilesCategory, orgFilesDebouncedSearch]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -278,6 +400,33 @@ const MemberDashboard = () => {
     }
   };
 
+  const toggleRecurringMark = async (targetId: string, year: number, month: number) => {
+    const key = `${targetId}-${year}-${month}`;
+    const existing = recurringMarks.find(m => m.targetId === targetId && m.year === year && m.month === month);
+    const newCompleted = !existing?.completed;
+    setRecurringMarkKey(key);
+    // Optimistic update
+    setRecurringMarks(prev => {
+      const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
+      return [...filtered, { targetId, year, month, completed: newCompleted }];
+    });
+    try {
+      await apiCall('/member-auth/recurring-marks', {
+        method: 'POST',
+        body: JSON.stringify({ targetId, year, month, completed: newCompleted }),
+      });
+    } catch {
+      setRecurringMarks(prev => {
+        const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
+        if (existing) return [...filtered, existing];
+        return filtered;
+      });
+      toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
+    } finally {
+      setRecurringMarkKey(null);
+    }
+  };
+
   const updateTargetProgress = async (targetId: string, status: string) => {
     try {
       setTargetSaving(targetId);
@@ -319,11 +468,12 @@ const MemberDashboard = () => {
     { id: "overview", label: "Overview", icon: Home },
     { id: "profile", label: "Profile", icon: User },
     { id: "targets", label: "Targets", icon: Target },
-    { id: "leaders", label: "Leaders", icon: Star },
-    { id: "notifications", label: "Notifications", icon: Bell }
+    { id: "orgfiles", label: "Org Files", icon: FolderOpen },
+    { id: "notifications", label: "Alerts", icon: Bell }
   ];
 
   const handleLeadersClick = () => navigate("/leaders");
+  // Keep for overview quick link
 
   const renderContent = () => {
     switch (activeView) {
@@ -333,6 +483,8 @@ const MemberDashboard = () => {
         return renderProfileContent();
       case "targets":
         return renderTargetsContent();
+      case "orgfiles":
+        return renderOrgFilesContent();
       case "notifications":
         return renderNotificationsContent();
       default:
@@ -514,90 +666,245 @@ const MemberDashboard = () => {
     </div>
   );
 
+  const openEditProfile = () => {
+    setEditProfileForm({
+      name: profile!.profile.name || "",
+      email: profile!.profile.email || "",
+      profession: profile!.profile.profession || "",
+      education: profile!.profile.education || "",
+      address: profile!.profile.address || "",
+      bloodGroup: profile!.profile.bloodGroup || "",
+      age: profile!.profile.age ? String(profile!.profile.age) : "",
+      areaOfInterest: profile!.profile.areaOfInterest || "",
+      skills: profile!.profile.skills || ""
+    });
+    setIsEditingProfile(true);
+  };
+
+  const saveProfile = async () => {
+    try {
+      setProfileSaving(true);
+      const payload: Record<string, any> = { ...editProfileForm };
+      if (payload.age) payload.age = Number(payload.age);
+      else delete payload.age;
+      const result = await memberAuthAPI.updateProfile(payload);
+      // Merge updated data back into profile state
+      setProfile(prev => prev ? {
+        ...prev,
+        profile: { ...prev.profile, ...result.data }
+      } : prev);
+      setIsEditingProfile(false);
+      toast({ title: "Profile Updated", description: "Your profile has been updated successfully." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update profile", variant: "destructive" });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   const renderProfileContent = () => (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Personal Information
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Personal Information
+            </CardTitle>
+            {!isEditingProfile ? (
+              <Button size="sm" variant="outline" onClick={openEditProfile}>
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setIsEditingProfile(false)} disabled={profileSaving}>
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={saveProfile} disabled={profileSaving}>
+                  <Save className="h-4 w-4 mr-1" />
+                  {profileSaving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Name</label>
-              <p className="text-lg">{profile.profile.name}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Phone</label>
-              <p className="text-lg flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                {profile.profile.phone}
-              </p>
-            </div>
-            {profile.profile.email && (
+          {!isEditingProfile ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Email</label>
+                <label className="text-sm font-medium text-muted-foreground">Name</label>
+                <p className="text-lg">{profile.profile.name}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Phone</label>
                 <p className="text-lg flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {profile.profile.email}
+                  <Phone className="h-4 w-4" />
+                  {profile.profile.phone}
                 </p>
               </div>
-            )}
-            {profile.profile.age && (
+              {profile.profile.email && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <p className="text-lg flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    {profile.profile.email}
+                  </p>
+                </div>
+              )}
+              {profile.profile.age && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Age</label>
+                  <p className="text-lg">{profile.profile.age} years</p>
+                </div>
+              )}
+              {profile.profile.bloodGroup && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Blood Group</label>
+                  <p className="text-lg">{profile.profile.bloodGroup}</p>
+                </div>
+              )}
+              {profile.profile.profession && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Profession</label>
+                  <p className="text-lg">{profile.profile.profession}</p>
+                </div>
+              )}
+              {profile.profile.education && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Education</label>
+                  <p className="text-lg">{profile.profile.education}</p>
+                </div>
+              )}
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Age</label>
-                <p className="text-lg">{profile.profile.age} years</p>
+                <label className="text-sm font-medium text-muted-foreground">District</label>
+                <p className="text-lg flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  {profile.profile.district.name}
+                </p>
               </div>
-            )}
-            {profile.profile.bloodGroup && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Blood Group</label>
-                <p className="text-lg">{profile.profile.bloodGroup}</p>
+                <label className="text-sm font-medium text-muted-foreground">Group</label>
+                <p className="text-lg flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  {profile.profile.group.name}
+                </p>
               </div>
-            )}
-            {profile.profile.profession && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Profession</label>
-                <p className="text-lg">{profile.profile.profession}</p>
+                <label className="text-sm font-medium text-muted-foreground">Member Since</label>
+                <p className="text-lg">{formatDate(profile.profile.joinedDate)}</p>
               </div>
-            )}
-            {profile.profile.education && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Education</label>
-                <p className="text-lg">{profile.profile.education}</p>
+                <label className="text-sm font-medium text-muted-foreground">Status</label>
+                <Badge className="bg-green-100 text-green-800">
+                  {profile.profile.status}
+                </Badge>
               </div>
-            )}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">District</label>
-              <p className="text-lg flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                {profile.profile.district.name}
-              </p>
+              {profile.profile.address && (
+                <div className="md:col-span-2">
+                  <label className="text-sm font-medium text-muted-foreground">Address</label>
+                  <p className="text-lg">{profile.profile.address}</p>
+                </div>
+              )}
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Group</label>
-              <p className="text-lg flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                {profile.profile.group.name}
-              </p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Member Since</label>
-              <p className="text-lg">{formatDate(profile.profile.joinedDate)}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Status</label>
-              <Badge className="bg-green-100 text-green-800">
-                {profile.profile.status}
-              </Badge>
-            </div>
-          </div>
-          {profile.profile.address && (
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Address</label>
-              <p className="text-lg">{profile.profile.address}</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name *</label>
+                <Input
+                  value={editProfileForm.name}
+                  onChange={e => setEditProfileForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Full name"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email</label>
+                <Input
+                  type="email"
+                  value={editProfileForm.email}
+                  onChange={e => setEditProfileForm(p => ({ ...p, email: e.target.value }))}
+                  placeholder="Email address"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Age</label>
+                <Input
+                  type="number"
+                  value={editProfileForm.age}
+                  onChange={e => setEditProfileForm(p => ({ ...p, age: e.target.value }))}
+                  placeholder="Age"
+                  min={0}
+                  max={120}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Blood Group</label>
+                <select
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm bg-background"
+                  value={editProfileForm.bloodGroup}
+                  onChange={e => setEditProfileForm(p => ({ ...p, bloodGroup: e.target.value }))}
+                >
+                  <option value="">Select blood group</option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Profession</label>
+                <Input
+                  value={editProfileForm.profession}
+                  onChange={e => setEditProfileForm(p => ({ ...p, profession: e.target.value }))}
+                  placeholder="Your profession"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Education</label>
+                <Input
+                  value={editProfileForm.education}
+                  onChange={e => setEditProfileForm(p => ({ ...p, education: e.target.value }))}
+                  placeholder="Educational qualification"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Area of Interest</label>
+                <Input
+                  value={editProfileForm.areaOfInterest}
+                  onChange={e => setEditProfileForm(p => ({ ...p, areaOfInterest: e.target.value }))}
+                  placeholder="Areas of interest"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Skills</label>
+                <Input
+                  value={editProfileForm.skills}
+                  onChange={e => setEditProfileForm(p => ({ ...p, skills: e.target.value }))}
+                  placeholder="Your skills"
+                  className="mt-1"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="text-sm font-medium">Address</label>
+                <Input
+                  value={editProfileForm.address}
+                  onChange={e => setEditProfileForm(p => ({ ...p, address: e.target.value }))}
+                  placeholder="Home address"
+                  className="mt-1"
+                />
+              </div>
+              <div className="md:col-span-2 p-3 bg-muted/50 rounded-md">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Phone className="h-3 w-3" />
+                  Phone number and group/district cannot be changed here. Contact your admin for such changes.
+                </p>
+              </div>
             </div>
           )}
         </CardContent>
@@ -648,196 +955,392 @@ const MemberDashboard = () => {
     </div>
   );
 
-  const renderTargetsContent = () => (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Personal Targets
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {targets.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">No targets available</p>
-          ) : (
-            <div className="space-y-3">
-              {targets.map((target) => {
-                const targetId = target.personalTarget._id;
-                const isExpanded = expandedTargetId === targetId;
-                const isSaving = targetSaving === targetId;
-                const isUploading = targetUploading === targetId;
-                const attachment = uploadedTargetAttachments[targetId];
-                const pendingFile = pendingTargetFiles[targetId];
+  const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const FREQ_LABELS: Record<string, string> = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly' };
 
-                return (
-                  <Card key={target._id ?? target.personalTarget._id} className="border-l-4 border-l-blue-500">
-                    <CardContent className="pt-3 pb-3">
-                      {/* Header row */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2 flex-1">
-                          <span className="text-2xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <Badge className={getStatusColor(target.status)}>
-                                {target.status === 'completed' ? <CheckCircle className="h-3 w-3 mr-1" /> :
-                                  target.status === 'in_progress' ? <Clock className="h-3 w-3 mr-1" /> :
-                                  <AlertCircle className="h-3 w-3 mr-1" />}
-                                {target.status.replace('_', ' ')}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground font-medium">
-                                {target.progressPercentage.toFixed(0)}%
-                              </span>
-                            </div>
-                            <p className="font-semibold text-sm">{target.personalTarget.title}</p>
-                            <p className="text-xs text-muted-foreground line-clamp-2">{target.personalTarget.description}</p>
-                          </div>
-                        </div>
-                        <button
-                          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
-                          onClick={() => setExpandedTargetId(isExpanded ? null : targetId)}
-                        >
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </button>
-                      </div>
+  const renderTargetsContent = () => {
+    const regularTargets = targets.filter(t => !t.personalTarget?.isRecurring);
+    const recurringTargets = targets.filter(t => t.personalTarget?.isRecurring);
 
-                      {/* Progress bar */}
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                        <div
-                          className="bg-blue-600 h-1.5 rounded-full transition-all"
-                          style={{ width: `${Math.min(100, target.progressPercentage)}%` }}
-                        />
-                      </div>
+    return (
+      <div className="space-y-4">
 
-                      {/* Expanded section */}
-                      {isExpanded && (
-                        <div className="mt-3 space-y-3 border-t pt-3">
-                          {target.personalTarget.instructions && (
-                            <div className="bg-muted/50 p-2 rounded text-xs">
-                              <p className="font-medium mb-1">Instructions:</p>
-                              <p>{target.personalTarget.instructions}</p>
-                            </div>
-                          )}
-                          {target.personalTarget.rewards && (
-                            <div className="bg-yellow-50 p-2 rounded text-xs">
-                              <p className="font-medium mb-1">Rewards:</p>
-                              <p>{target.personalTarget.rewards}</p>
-                            </div>
-                          )}
+        {/* ── Regular Targets ── */}
+        {regularTargets.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Personal Targets
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {regularTargets.map((target) => {
+                  const targetId = target.personalTarget._id;
+                  const isExpanded = expandedTargetId === targetId;
+                  const isSaving = targetSaving === targetId;
+                  const isUploading = targetUploading === targetId;
+                  const attachment = uploadedTargetAttachments[targetId];
+                  const pendingFile = pendingTargetFiles[targetId];
 
-                          {/* Feedback */}
-                          <div>
-                            <label className="text-xs font-medium flex items-center gap-1 mb-1">
-                              <MessageSquare className="h-3 w-3" /> Feedback
-                            </label>
-                            <textarea
-                              className="w-full text-xs border rounded p-2 min-h-[60px] bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                              placeholder="Add your feedback..."
-                              value={targetFeedback[targetId] || ''}
-                              onChange={(e) => setTargetFeedback(prev => ({ ...prev, [targetId]: e.target.value }))}
-                            />
-                          </div>
-
-                          {/* File Upload */}
-                          <div>
-                            <label className="text-xs font-medium flex items-center gap-1 mb-1">
-                              <Paperclip className="h-3 w-3" /> Attachment
-                            </label>
-                            <input
-                              type="file"
-                              className="hidden"
-                              ref={el => { targetFileRefs.current[targetId] = el; }}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) setPendingTargetFiles(prev => ({ ...prev, [targetId]: file }));
-                              }}
-                            />
-                            {(attachment || pendingFile) ? (
-                              <div className="flex items-center gap-2 p-2 bg-muted rounded text-xs">
-                                {(() => {
-                                  const mime = attachment?.mimetype || pendingFile?.type || '';
-                                  const name = attachment?.originalName || pendingFile?.name || 'File';
-                                  const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
-                                  return (
-                                    <>
-                                      <Icon className="h-3 w-3 shrink-0" />
-                                      {attachment?.url ? (
-                                        <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary hover:underline">{name}</a>
-                                      ) : (
-                                        <span className="flex-1 truncate">{name}</span>
-                                      )}
-                                      {pendingFile && <span className="text-amber-600 shrink-0">unsaved</span>}
-                                    </>
-                                  );
-                                })()}
-                                <button
-                                  className="shrink-0 text-muted-foreground hover:text-destructive"
-                                  onClick={() => {
-                                    setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
-                                    setUploadedTargetAttachments(prev => { const n = { ...prev }; delete n[targetId]; return n; });
-                                    if (targetFileRefs.current[targetId]) targetFileRefs.current[targetId]!.value = '';
-                                  }}
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
+                  return (
+                    <Card key={target._id ?? target.personalTarget._id} className="border-l-4 border-l-blue-500">
+                      <CardContent className="pt-3 pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-2 flex-1">
+                            <span className="text-2xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <Badge className={getStatusColor(target.status)}>
+                                  {target.status === 'completed' ? <CheckCircle className="h-3 w-3 mr-1" /> :
+                                    target.status === 'in_progress' ? <Clock className="h-3 w-3 mr-1" /> :
+                                    <AlertCircle className="h-3 w-3 mr-1" />}
+                                  {target.status.replace('_', ' ')}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  {target.progressPercentage.toFixed(0)}%
+                                </span>
                               </div>
-                            ) : (
-                              <button
-                                className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted w-full justify-center"
-                                onClick={() => targetFileRefs.current[targetId]?.click()}
-                              >
-                                <Upload className="h-3 w-3" /> Choose File
-                              </button>
-                            )}
+                              <p className="font-semibold text-sm">{target.personalTarget.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{target.personalTarget.description}</p>
+                            </div>
                           </div>
-
-                          {/* Action buttons */}
-                          <div className="flex gap-2 flex-wrap">
-                            {target.status !== 'in_progress' && (
-                              <button
-                                className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted disabled:opacity-50"
-                                disabled={isSaving || isUploading}
-                                onClick={() => updateTargetProgress(targetId, 'in_progress')}
-                              >
-                                <Clock className="h-3 w-3" /> Mark In Progress
-                              </button>
-                            )}
-                            {target.status !== 'completed' && (
-                              <button
-                                className="text-xs bg-green-600 text-white rounded px-3 py-1.5 flex items-center gap-1 hover:bg-green-700 disabled:opacity-50"
-                                disabled={isSaving || isUploading}
-                                onClick={() => updateTargetProgress(targetId, 'completed')}
-                              >
-                                <CheckCircle className="h-3 w-3" />
-                                {isSaving ? 'Saving...' : isUploading ? 'Uploading...' : 'Mark Complete'}
-                              </button>
-                            )}
-                            <button
-                              className="text-xs border rounded px-3 py-1.5 ml-auto hover:bg-muted disabled:opacity-50"
-                              disabled={isSaving || isUploading}
-                              onClick={() => updateTargetProgress(targetId, target.status)}
-                            >
-                              Save
-                            </button>
-                          </div>
-
-                          {target.completedAt && (
-                            <p className="text-xs text-green-600">
-                              Completed on {formatDate(target.completedAt)}
-                            </p>
-                          )}
+                          <button
+                            className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => setExpandedTargetId(isExpanded ? null : targetId)}
+                          >
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </button>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
+
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+                          <div
+                            className="bg-blue-600 h-1.5 rounded-full transition-all"
+                            style={{ width: `${Math.min(100, target.progressPercentage)}%` }}
+                          />
+                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-3 space-y-3 border-t pt-3">
+                            {target.personalTarget.instructions && (
+                              <div className="bg-muted/50 p-2 rounded text-xs">
+                                <p className="font-medium mb-1">Instructions:</p>
+                                <p>{target.personalTarget.instructions}</p>
+                              </div>
+                            )}
+                            {target.personalTarget.rewards && (
+                              <div className="bg-yellow-50 p-2 rounded text-xs">
+                                <p className="font-medium mb-1">Rewards:</p>
+                                <p>{target.personalTarget.rewards}</p>
+                              </div>
+                            )}
+                            <div>
+                              <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                                <MessageSquare className="h-3 w-3" /> Feedback
+                              </label>
+                              <textarea
+                                className="w-full text-xs border rounded p-2 min-h-[60px] bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+                                placeholder="Add your feedback..."
+                                value={targetFeedback[targetId] || ''}
+                                onChange={(e) => setTargetFeedback(prev => ({ ...prev, [targetId]: e.target.value }))}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                                <Paperclip className="h-3 w-3" /> Attachment
+                              </label>
+                              <input
+                                type="file"
+                                className="hidden"
+                                ref={el => { targetFileRefs.current[targetId] = el; }}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) setPendingTargetFiles(prev => ({ ...prev, [targetId]: file }));
+                                }}
+                              />
+                              {(attachment || pendingFile) ? (
+                                <div className="flex items-center gap-2 p-2 bg-muted rounded text-xs">
+                                  {(() => {
+                                    const mime = attachment?.mimetype || pendingFile?.type || '';
+                                    const name = attachment?.originalName || pendingFile?.name || 'File';
+                                    const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
+                                    return (
+                                      <>
+                                        <Icon className="h-3 w-3 shrink-0" />
+                                        {attachment?.url ? (
+                                          <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary hover:underline">{name}</a>
+                                        ) : (
+                                          <span className="flex-1 truncate">{name}</span>
+                                        )}
+                                        {pendingFile && <span className="text-amber-600 shrink-0">unsaved</span>}
+                                      </>
+                                    );
+                                  })()}
+                                  <button
+                                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                                    onClick={() => {
+                                      setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
+                                      setUploadedTargetAttachments(prev => { const n = { ...prev }; delete n[targetId]; return n; });
+                                      if (targetFileRefs.current[targetId]) targetFileRefs.current[targetId]!.value = '';
+                                    }}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted w-full justify-center"
+                                  onClick={() => targetFileRefs.current[targetId]?.click()}
+                                >
+                                  <Upload className="h-3 w-3" /> Choose File
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              {target.status !== 'in_progress' && (
+                                <button
+                                  className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted disabled:opacity-50"
+                                  disabled={isSaving || isUploading}
+                                  onClick={() => updateTargetProgress(targetId, 'in_progress')}
+                                >
+                                  <Clock className="h-3 w-3" /> Mark In Progress
+                                </button>
+                              )}
+                              {target.status !== 'completed' && (
+                                <button
+                                  className="text-xs bg-green-600 text-white rounded px-3 py-1.5 flex items-center gap-1 hover:bg-green-700 disabled:opacity-50"
+                                  disabled={isSaving || isUploading}
+                                  onClick={() => updateTargetProgress(targetId, 'completed')}
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                  {isSaving ? 'Saving...' : isUploading ? 'Uploading...' : 'Mark Complete'}
+                                </button>
+                              )}
+                              <button
+                                className="text-xs border rounded px-3 py-1.5 ml-auto hover:bg-muted disabled:opacity-50"
+                                disabled={isSaving || isUploading}
+                                onClick={() => updateTargetProgress(targetId, target.status)}
+                              >
+                                Save
+                              </button>
+                            </div>
+                            {target.completedAt && (
+                              <p className="text-xs text-green-600">Completed on {formatDate(target.completedAt)}</p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Recurring Targets (same as district admin: title + month grid, mark done only) ── */}
+        {recurringTargets.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 text-blue-500" />
+                Recurring Targets
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Tick each month you completed the target. You can mark or unmark anytime.
+              </p>
+            </CardHeader>
+            <CardContent>
+              {/* Year selector */}
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setRecurringYear(y => y - 1)}
+                  className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                >←</button>
+                <span className="text-sm font-semibold w-12 text-center">{recurringYear}</span>
+                <button
+                  onClick={() => setRecurringYear(y => y + 1)}
+                  className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                  disabled={recurringYear >= new Date().getFullYear()}
+                >→</button>
+              </div>
+
+              <div className="space-y-4">
+                {recurringTargets.map((target) => {
+                  const targetId = target.personalTarget._id;
+                  const freq = target.personalTarget.recurringFrequency || 'monthly';
+                  return (
+                    <Card key={target._id ?? targetId} className="border border-blue-100">
+                      <CardContent className="p-3">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-medium text-sm truncate">{target.personalTarget.title}</p>
+                              <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">
+                                <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
+                                {FREQ_LABELS[freq] || freq}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mb-2 font-medium">Mark completed months:</p>
+                        <div className="grid grid-cols-6 gap-1.5">
+                          {MONTHS_SHORT.map((month, idx) => {
+                            const monthNum = idx + 1;
+                            const key = `${targetId}-${recurringYear}-${monthNum}`;
+                            const mark = recurringMarks.find(
+                              m => m.targetId === targetId && m.year === recurringYear && m.month === monthNum
+                            );
+                            const isCompleted = mark?.completed || false;
+                            const isMarkLoading = recurringMarkKey === key;
+                            const isFuture = recurringYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+
+                            return (
+                              <button
+                                key={monthNum}
+                                onClick={() => !isFuture && toggleRecurringMark(targetId, recurringYear, monthNum)}
+                                disabled={isMarkLoading || isFuture}
+                                title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
+                                className={`
+                                  h-9 rounded-lg text-xs font-medium transition-all border
+                                  ${isCompleted
+                                    ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                    : isFuture
+                                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                      : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                                  }
+                                  ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
+                                `}
+                              >
+                                {isCompleted ? '✓' : month}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Empty state */}
+        {targets.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-8">
+              <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No targets available</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  };
+
+  const renderOrgFilesContent = () => {
+    const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other"];
+    return (
+      <div className="space-y-3 org-files-malayalam">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5" />
+              Organizational Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0 pb-2">
+            {/* Category filter */}
+            <div className="px-4 pt-1 pb-2 flex gap-2 overflow-x-auto">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setOrgFilesCategory(cat)}
+                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    orgFilesCategory === cat
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:border-primary"
+                  }`}
+                >
+                  {cat === "all" ? "All" : orgCategoryLabels[cat] || cat}
+                </button>
+              ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+            {/* Search */}
+            <div className="px-4 pb-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search files..."
+                  value={orgFilesSearch}
+                  onChange={e => setOrgFilesSearch(e.target.value)}
+                  className="pl-9 h-8 text-sm"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {orgFilesLoading ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">Loading files...</div>
+        ) : orgFiles.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <FolderOpen className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No files available</p>
+            </CardContent>
+          </Card>
+        ) : (
+          orgFiles.map(file => {
+            const Icon = orgCategoryIcons[file.category] || File;
+            return (
+              <Card key={file._id} className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg shrink-0 bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm malayalam-text">{file.title}</p>
+                      {file.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 malayalam-text">{file.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 flex-wrap mt-1">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {orgCategoryLabels[file.category] || file.category}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <a href={file.url} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="outline" className="text-xs h-7">
+                            {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
+                              <><Eye className="h-3 w-3 mr-1" />Open</>
+                            ) : (
+                              <><Eye className="h-3 w-3 mr-1" />View</>
+                            )}
+                          </Button>
+                        </a>
+                        <a href={file.url} download>
+                          <Button size="sm" variant="ghost" className="text-xs h-7">
+                            <Download className="h-3 w-3 mr-1" />Download
+                          </Button>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
+    );
+  };
 
   const renderMeetingsContent = () => (
     <div className="space-y-4">
@@ -1014,7 +1517,7 @@ const MemberDashboard = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => item.id === "leaders" ? navigate("/leaders") : setActiveView(item.id)}
+                onClick={() => setActiveView(item.id)}
                 className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
                   isActive 
                     ? 'text-blue-600 bg-blue-50' 

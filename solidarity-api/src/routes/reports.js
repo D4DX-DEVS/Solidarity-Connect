@@ -11,6 +11,7 @@ import TransferRequest from '../models/TransferRequest.js';
 import PersonalTarget from '../models/PersonalTarget.js';
 import UserTargetProgress from '../models/UserTargetProgress.js';
 import MemberTargetProgress from '../models/MemberTargetProgress.js';
+import RecurringMark from '../models/RecurringMark.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
@@ -1287,7 +1288,7 @@ const getAllowedTargetAudiences = (user) => {
   if (user.role === 'district_admin') return ['all_users', 'members_only', 'district_admins'];
   if (user.role === 'group_admin') {
     const roleAudience = user.roleTag?.type === 'area' ? 'area_admins' : 'group_admins';
-    return ['all_users', 'members_only', roleAudience];
+    return ['all_users', 'members_only', roleAudience, 'group_and_area_admins'];
   }
   return ['all_users'];
 };
@@ -1785,6 +1786,95 @@ router.get('/recurring-target-stats', authenticate, authorize(['view_reports']),
   } catch (error) {
     console.error('Recurring target stats error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch recurring target stats' });
+  }
+});
+
+// @route   GET /api/reports/recurring-marks
+// @desc    Get all users' recurring marks for a target in a given year (admin grid view)
+// @access  state_admin, district_admin, group_admin
+router.get('/recurring-marks', authenticate, async (req, res) => {
+  try {
+    const { targetId, year } = req.query;
+    if (!targetId || !year) {
+      return res.status(400).json({ success: false, message: 'targetId and year are required' });
+    }
+
+    const yearNum = Number(year);
+
+    // Fetch all marks for this target+year
+    const marks = await RecurringMark.find({
+      personalTarget: targetId,
+      year: yearNum
+    });
+
+    // Group marks by userId
+    const marksByUser = {};
+    for (const m of marks) {
+      const uid = m.user.toString();
+      if (!marksByUser[uid]) {
+        marksByUser[uid] = { userType: m.userType, marks: {} };
+      }
+      marksByUser[uid].marks[m.month] = m.completed;
+    }
+
+    const userIds = Object.keys(marksByUser);
+    if (userIds.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    // Separate User and Member IDs
+    const userTypeUser = userIds.filter(id => marksByUser[id].userType === 'User');
+    const userTypeMember = userIds.filter(id => marksByUser[id].userType === 'Member');
+
+    // Scope by admin role
+    const districtFilter = req.user.role === 'district_admin' && req.user.district
+      ? { district: req.user.district }
+      : {};
+    const groupFilter = req.user.role === 'group_admin' && req.user.group
+      ? { group: req.user.group }
+      : {};
+    const scopeFilter = { ...districtFilter, ...groupFilter };
+
+    const [users, members] = await Promise.all([
+      userTypeUser.length > 0
+        ? User.find({ _id: { $in: userTypeUser }, ...scopeFilter })
+            .select('name role roleTag district group')
+            .populate('district', 'name').populate('group', 'name')
+        : Promise.resolve([]),
+      userTypeMember.length > 0
+        ? (await import('../models/Member.js')).default
+            .find({ _id: { $in: userTypeMember }, ...scopeFilter })
+            .select('name district group')
+            .populate('district', 'name').populate('group', 'name')
+        : Promise.resolve([])
+    ]);
+
+    const result = [
+      ...users.map(u => ({
+        userId: u._id.toString(),
+        userName: u.name,
+        role: u.role,
+        district: u.district?.name || '',
+        group: u.group?.name || '',
+        marks: marksByUser[u._id.toString()]?.marks || {}
+      })),
+      ...members.map(m => ({
+        userId: m._id.toString(),
+        userName: m.name,
+        role: 'member',
+        district: m.district?.name || '',
+        group: m.group?.name || '',
+        marks: marksByUser[m._id.toString()]?.marks || {}
+      }))
+    ];
+
+    // Sort by name
+    result.sort((a, b) => a.userName.localeCompare(b.userName));
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    console.error('Recurring marks grid error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recurring marks grid' });
   }
 });
 

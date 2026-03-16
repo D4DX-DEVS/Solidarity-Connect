@@ -52,7 +52,7 @@ interface Group {
 
 const Members = () => {
   const navigate = useNavigate();
-  const { userRole, userDistrict, userGroup } = useAuth();
+  const { userRole, userDistrict, userGroup, user } = useAuth();
   const { toast } = useToast();
 
   const [members, setMembers] = useState<Member[]>([]);
@@ -118,7 +118,7 @@ const Members = () => {
         if (userRole === 'state_admin' || userRole === 'district_admin') {
           const groupParams: any = { limit: 100 };
           if (userRole === 'district_admin' && userDistrict) {
-            groupParams.district = (userDistrict as any)._id || userDistrict;
+            groupParams.district = user?.district?._id;
           }
           const groupsResult = await groupsAPI.getGroups(groupParams);
           setGroups(groupsResult.data || []);
@@ -141,7 +141,11 @@ const Members = () => {
         if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
         if (selectedDistrict) params.append('district', selectedDistrict);
         if (selectedGroup) params.append('group', selectedGroup);
-        if (selectedStatus) params.append('status', selectedStatus);
+        if (selectedStatus === 'pending_approval') {
+          params.append('isApproved', 'false');
+        } else if (selectedStatus) {
+          params.append('status', selectedStatus);
+        }
         params.append('page', currentPage.toString());
         params.append('limit', itemsPerPage.toString());
         params.append('sort', '-createdAt');
@@ -304,6 +308,9 @@ const Members = () => {
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
               <option value="">All Statuses</option>
+              {userRole === 'state_admin' && (
+                <option value="pending_approval">Pending Approval</option>
+              )}
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
               <option value="Abroad">Abroad</option>
@@ -409,7 +416,7 @@ const Members = () => {
                         Pending
                       </Badge>
                     )}
-                    {!member.isApproved && (userRole === 'state_admin' || userRole === 'district_admin') && (
+                    {!member.isApproved && userRole === 'state_admin' && (
                       <Button
                         size="sm"
                         onClick={(e) => {

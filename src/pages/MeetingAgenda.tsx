@@ -50,7 +50,7 @@ const MeetingAgenda = () => {
     
     switch (meeting.targetAudience) {
       case 'all': return 'All Members';
-      case 'group_admins': return 'Group Admins';
+      case 'group_admins': return 'Area Admins';
       case 'district_admins': return 'District Admins';
       case 'specific_groups': return `${meeting.targetGroups?.length || 0} Groups`;
       case 'specific_districts': return `${meeting.targetDistricts?.length || 0} Districts`;

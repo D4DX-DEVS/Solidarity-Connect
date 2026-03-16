@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Noto Sans Malayalam";
+  src: url("./fonts/NotoSansMalayalam-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0D00-0D7F; /* Malayalam script */
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -100,7 +109,19 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Malayalam", sans-serif;
   }
+}
+
+/* Malayalam script support - use !important to override any inherited font */
+.malayalam-text,
+[lang="ml"] {
+  font-family: "Noto Sans Malayalam", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Apply Malayalam font to entire org-files listing for file names */
+.org-files-malayalam {
+  font-family: "Noto Sans Malayalam", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer utilities {
