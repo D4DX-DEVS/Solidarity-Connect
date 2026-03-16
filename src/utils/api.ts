@@ -239,6 +239,12 @@ export const membersAPI = {
     }),
 
   getUserContext: () => apiCall('/members/user-context'),
+
+  updateMemberLeader: (memberId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string } }) =>
+    apiCall(`/members/${memberId}/leader`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Meetings API calls

@@ -102,6 +102,19 @@ const memberSchema = new mongoose.Schema({
     type: String,
     maxlength: [1000, 'Notes cannot exceed 1000 characters']
   },
+  isLeader: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  roleTag: {
+    type: {
+      type: String,
+      enum: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
+    },
+    name: String,
+    roleDescription: String
+  },
   isApproved: {
     type: Boolean,
     default: false

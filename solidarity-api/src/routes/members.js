@@ -548,6 +548,65 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
   }
 });
 
+// @route   PATCH /api/members/:id/leader
+// @desc    Update isLeader and roleTag for a member
+// @access  Private (state_admin, district_admin, group_admin)
+router.patch('/:id/leader',
+  authenticate,
+  requireRole(['state_admin', 'district_admin', 'group_admin']),
+  objectIdValidation('id'),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { isLeader, roleTag } = req.body;
+      const member = await Member.findById(req.params.id);
+
+      if (!member) {
+        return res.status(404).json({ success: false, message: 'Member not found' });
+      }
+
+      const allowedRoleTypes = {
+        state_admin: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
+        district_admin: ['district', 'area', 'unit', 'murabi', 'coordinator'],
+        group_admin: ['area', 'unit', 'murabi', 'coordinator']
+      };
+
+      if (roleTag && roleTag.type) {
+        const allowed = allowedRoleTypes[req.user.role] || [];
+        if (!allowed.includes(roleTag.type)) {
+          return res.status(403).json({
+            success: false,
+            message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
+          });
+        }
+      }
+
+      member.isLeader = isLeader !== undefined ? isLeader : member.isLeader;
+
+      if (isLeader === false) {
+        member.roleTag = undefined;
+      } else if (roleTag) {
+        member.roleTag = {
+          type: roleTag.type || (member.roleTag && member.roleTag.type),
+          name: roleTag.name || (member.roleTag && member.roleTag.name),
+          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (member.roleTag && member.roleTag.roleDescription)
+        };
+      }
+
+      await member.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Member leader status updated successfully',
+        data: member
+      });
+    } catch (error) {
+      console.error('Update member leader error:', error);
+      res.status(500).json({ success: false, message: 'Failed to update member leader status' });
+    }
+  }
+);
+
 // @route   DELETE /api/members/:id
 // @desc    Delete member
 // @access  Private

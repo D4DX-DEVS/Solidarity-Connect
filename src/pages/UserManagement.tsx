@@ -1,24 +1,27 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
-  UserCheck, 
+import {
+  Users,
+  Plus,
+  Search,
+  MoreVertical,
+  Edit,
+  Trash2,
+  UserCheck,
   UserX,
   Shield,
   Building2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Star,
+  StarOff,
+  Tag
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { usersAPI, districtsAPI, groupsAPI } from "@/utils/api";
+import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI } from "@/utils/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 
@@ -61,7 +65,25 @@ interface User {
     code: string;
   };
   isActive: boolean;
+  isLeader?: boolean;
+  roleTag?: { type?: string; name?: string };
   lastLogin?: string;
+  createdAt: string;
+}
+
+interface Member {
+  _id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  status: 'Active' | 'Inactive' | 'Abroad' | 'Applicant' | 'Age over' | 'Dismissed';
+  district?: { _id: string; name: string; code: string };
+  group?: { _id: string; name: string; code: string };
+  isApproved: boolean;
+  isLeader?: boolean;
+  roleTag?: { type?: string; name?: string };
+  profession?: string;
+  age?: number;
   createdAt: string;
 }
 
@@ -96,6 +118,7 @@ const UserManagement = () => {
   const { toast } = useToast();
   
   const [users, setUsers] = useState<User[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -112,6 +135,9 @@ const UserManagement = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [loadingGroups, setLoadingGroups] = useState(false);
+  const [leaderMember, setLeaderMember] = useState<Member | null>(null);
+  const [leaderForm, setLeaderForm] = useState({ isLeader: false, roleTagType: "", roleTagName: "" });
+  const [savingLeader, setSavingLeader] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -131,9 +157,23 @@ const UserManagement = () => {
 
   const roleColors = {
     state_admin: "bg-blue-100 text-blue-800",
-    district_admin: "bg-green-100 text-green-800", 
+    district_admin: "bg-green-100 text-green-800",
     group_admin: "bg-orange-100 text-orange-800"
   };
+
+  const ROLE_TYPE_LABELS: Record<string, string> = {
+    state: "State", district: "District", area: "Area",
+    unit: "Unit", murabi: "Murabi", coordinator: "Coordinator",
+  };
+  const ROLE_TYPE_COLORS: Record<string, string> = {
+    state: "bg-purple-100 text-purple-800",
+    district: "bg-blue-100 text-blue-800",
+    area: "bg-green-100 text-green-800",
+    unit: "bg-orange-100 text-orange-800",
+    murabi: "bg-teal-100 text-teal-800",
+    coordinator: "bg-indigo-100 text-indigo-800",
+  };
+  const LEADER_ROLE_TYPES = ["state", "district", "area", "unit", "murabi", "coordinator"];
 
   // Debounce search
   useEffect(() => {
@@ -165,17 +205,70 @@ const UserManagement = () => {
     init();
   }, []);
 
-  // Fetch users when page or filters change
+  const isMemberView = roleFilter === 'member';
+
+  // Fetch users/members when page or filters change
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         const params: Record<string, any> = { page: currentPage, limit: 20 };
         if (debouncedSearch) params.search = debouncedSearch;
+
+        if (isMemberView) {
+          if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+          const result = await membersAPI.getMembers(params);
+          setMembers(result.data || []);
+          if (result.pagination) {
+            setTotalPages(result.pagination.totalPages || 1);
+            setTotalDocs(result.pagination.totalDocs || 0);
+            setHasNextPage(result.pagination.hasNextPage || false);
+            setHasPrevPage(result.pagination.hasPrevPage || false);
+          }
+        } else {
+          if (roleFilter !== 'all') params.role = roleFilter;
+          if (statusFilter === 'active') params.isActive = true;
+          else if (statusFilter === 'inactive') params.isActive = false;
+          const usersResult = await usersAPI.getUsers(params);
+          setUsers(usersResult.data || []);
+          if (usersResult.pagination) {
+            setTotalPages(usersResult.pagination.totalPages || 1);
+            setTotalDocs(usersResult.pagination.totalDocs || 0);
+            setHasNextPage(usersResult.pagination.hasNextPage || false);
+            setHasPrevPage(usersResult.pagination.hasPrevPage || false);
+          }
+          setGroups([]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter, isMemberView]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const params: Record<string, any> = { page: currentPage, limit: 20 };
+      if (debouncedSearch) params.search = debouncedSearch;
+
+      if (isMemberView) {
+        if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+        const result = await membersAPI.getMembers(params);
+        setMembers(result.data || []);
+        if (result.pagination) {
+          setTotalPages(result.pagination.totalPages || 1);
+          setTotalDocs(result.pagination.totalDocs || 0);
+          setHasNextPage(result.pagination.hasNextPage || false);
+          setHasPrevPage(result.pagination.hasPrevPage || false);
+        }
+      } else {
         if (roleFilter !== 'all') params.role = roleFilter;
         if (statusFilter === 'active') params.isActive = true;
         else if (statusFilter === 'inactive') params.isActive = false;
-
         const usersResult = await usersAPI.getUsers(params);
         setUsers(usersResult.data || []);
         if (usersResult.pagination) {
@@ -184,35 +277,9 @@ const UserManagement = () => {
           setHasNextPage(usersResult.pagination.hasNextPage || false);
           setHasPrevPage(usersResult.pagination.hasPrevPage || false);
         }
-        setGroups([]);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        toast({ title: "Error", description: "Failed to load user data", variant: "destructive" });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, [currentPage, debouncedSearch, roleFilter, statusFilter]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const params: Record<string, any> = { page: currentPage, limit: 20 };
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (roleFilter !== 'all') params.role = roleFilter;
-      if (statusFilter === 'active') params.isActive = true;
-      else if (statusFilter === 'inactive') params.isActive = false;
-      const usersResult = await usersAPI.getUsers(params);
-      setUsers(usersResult.data || []);
-      if (usersResult.pagination) {
-        setTotalPages(usersResult.pagination.totalPages || 1);
-        setTotalDocs(usersResult.pagination.totalDocs || 0);
-        setHasNextPage(usersResult.pagination.hasNextPage || false);
-        setHasPrevPage(usersResult.pagination.hasPrevPage || false);
       }
     } catch (error) {
-      console.error('Error refreshing users:', error);
+      console.error('Error refreshing data:', error);
     } finally {
       setLoading(false);
     }
@@ -283,7 +350,7 @@ const UserManagement = () => {
 
     try {
       const result = await usersAPI.deleteUser(userId);
-      
+
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -295,6 +362,58 @@ const UserManagement = () => {
         description: "Failed to delete user",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleToggleLeader = async (user: User) => {
+    const newIsLeader = !user.isLeader;
+    try {
+      await leadersAPI.updateLeader(user._id, {
+        isLeader: newIsLeader,
+        ...(newIsLeader && user.roleTag ? { roleTag: user.roleTag } : {}),
+      });
+      toast({
+        title: "Success",
+        description: newIsLeader ? "User marked as leader" : "Leader status removed",
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update leader status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openLeaderDialog = (member: Member) => {
+    setLeaderMember(member);
+    setLeaderForm({
+      isLeader: member.isLeader || false,
+      roleTagType: member.roleTag?.type || "",
+      roleTagName: member.roleTag?.name || "",
+    });
+  };
+
+  const handleSaveMemberLeader = async () => {
+    if (!leaderMember) return;
+    setSavingLeader(true);
+    try {
+      const payload: any = { isLeader: leaderForm.isLeader };
+      if (leaderForm.isLeader && (leaderForm.roleTagType || leaderForm.roleTagName)) {
+        payload.roleTag = {
+          type: leaderForm.roleTagType || undefined,
+          name: leaderForm.roleTagName || undefined,
+        };
+      }
+      await membersAPI.updateMemberLeader(leaderMember._id, payload);
+      toast({ title: "Saved", description: "Member leader status updated" });
+      setLeaderMember(null);
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update", variant: "destructive" });
+    } finally {
+      setSavingLeader(false);
     }
   };
 
@@ -463,6 +582,7 @@ const UserManagement = () => {
                     <SelectItem value="state_admin">State Admin</SelectItem>
                     <SelectItem value="district_admin">District Admin</SelectItem>
                     <SelectItem value="group_admin">Area Admin</SelectItem>
+                    <SelectItem value="member">Members</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -481,14 +601,97 @@ const UserManagement = () => {
           </CardContent>
         </Card>
 
+        {/* Members List */}
+        {isMemberView && (
+          <div className="space-y-3">
+            {members.map((member) => {
+              const statusColors: Record<string, string> = {
+                Active: "bg-green-100 text-green-800",
+                Inactive: "bg-gray-100 text-gray-700",
+                Abroad: "bg-blue-100 text-blue-800",
+                Applicant: "bg-yellow-100 text-yellow-800",
+                "Age over": "bg-orange-100 text-orange-800",
+                Dismissed: "bg-red-100 text-red-800",
+              };
+              return (
+                <Card key={member._id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h3 className="font-semibold">{member.name}</h3>
+                          <Badge className={statusColors[member.status] || ""}>
+                            {member.status}
+                          </Badge>
+                          {!member.isApproved && (
+                            <Badge variant="outline" className="text-xs text-yellow-700 border-yellow-400">
+                              Pending Approval
+                            </Badge>
+                          )}
+                          {member.isLeader && member.roleTag?.type && (
+                            <Badge className={`text-xs ${ROLE_TYPE_COLORS[member.roleTag.type] || "bg-yellow-100 text-yellow-800"}`}>
+                              <Star className="h-3 w-3 mr-1" />
+                              {ROLE_TYPE_LABELS[member.roleTag.type]}{member.roleTag.name ? ` · ${member.roleTag.name}` : ""}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>📱 {member.phone}</p>
+                          {member.email && <p>✉️ {member.email}</p>}
+                          {member.district && <p>🏢 {member.district.name}</p>}
+                          {member.group && <p>👥 {member.group.name}</p>}
+                          {member.profession && <p>💼 {member.profession}</p>}
+                          {member.age && <p>🎂 Age: {member.age}</p>}
+                          <p>📅 Created: {new Date(member.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openLeaderDialog(member)}>
+                            {member.isLeader ? (
+                              <>
+                                <StarOff className="h-4 w-4 mr-2" />
+                                Manage Leader Role
+                              </>
+                            ) : (
+                              <>
+                                <Star className="h-4 w-4 mr-2" />
+                                Make Leader
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            {members.length === 0 && !loading && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No members found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Users List */}
-        <div className="space-y-3">
+        {!isMemberView && <div className="space-y-3">
           {users.map((user) => (
             <Card key={user._id}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <h3 className="font-semibold">{user.name}</h3>
                       <Badge className={roleColors[user.role]}>
                         {roleLabels[user.role]}
@@ -496,6 +699,12 @@ const UserManagement = () => {
                       <Badge variant={user.isActive ? "default" : "secondary"}>
                         {user.isActive ? "Active" : "Inactive"}
                       </Badge>
+                      {user.isLeader && (
+                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-300">
+                          <Star className="h-3 w-3 mr-1" />
+                          Leader{user.roleTag?.name ? ` · ${user.roleTag.name}` : ""}
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="space-y-1 text-sm text-muted-foreground">
@@ -534,6 +743,19 @@ const UserManagement = () => {
                           </>
                         )}
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleToggleLeader(user)}>
+                        {user.isLeader ? (
+                          <>
+                            <StarOff className="h-4 w-4 mr-2" />
+                            Remove Leader
+                          </>
+                        ) : (
+                          <>
+                            <Star className="h-4 w-4 mr-2" />
+                            Make Leader
+                          </>
+                        )}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
                         onClick={() => handleDeleteUser(user._id)}
@@ -548,9 +770,9 @@ const UserManagement = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </div>}
 
-        {users.length === 0 && !loading && (
+        {!isMemberView && users.length === 0 && !loading && (
           <Card>
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -732,6 +954,68 @@ const UserManagement = () => {
               >
                 Cancel
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Member Leader Dialog */}
+      <Dialog open={!!leaderMember} onOpenChange={(open) => { if (!open) setLeaderMember(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {leaderMember?.isLeader ? "Manage Leader Role" : "Make Leader"} — {leaderMember?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="member-is-leader"
+                checked={leaderForm.isLeader}
+                onCheckedChange={(checked) =>
+                  setLeaderForm({ isLeader: checked, roleTagType: checked ? leaderForm.roleTagType : "", roleTagName: checked ? leaderForm.roleTagName : "" })
+                }
+              />
+              <Label htmlFor="member-is-leader" className="text-sm font-medium">Is Leader</Label>
+            </div>
+
+            {leaderForm.isLeader && (
+              <div className="space-y-3 pl-1 border-l-2 border-primary/20 ml-1">
+                <div className="flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <Select
+                    value={leaderForm.roleTagType}
+                    onValueChange={(val) => setLeaderForm((f) => ({ ...f, roleTagType: val }))}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Role type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEADER_ROLE_TYPES.map((rt) => (
+                        <SelectItem key={rt} value={rt}>
+                          {ROLE_TYPE_LABELS[rt]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Input
+                  placeholder="Role name (e.g. Secretary, President…)"
+                  value={leaderForm.roleTagName}
+                  onChange={(e) => setLeaderForm((f) => ({ ...f, roleTagName: e.target.value }))}
+                  className="h-9 text-sm"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button className="flex-1" onClick={handleSaveMemberLeader} disabled={savingLeader}>
+                {savingLeader ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                ) : null}
+                Save
+              </Button>
+              <Button variant="outline" onClick={() => setLeaderMember(null)}>Cancel</Button>
             </div>
           </div>
         </DialogContent>

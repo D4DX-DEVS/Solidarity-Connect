@@ -25,7 +25,7 @@ const AUDIENCE_OPTIONS = [
   { value: "all", label: "All Users", description: "Everyone in the system" },
   { value: "state_admins", label: "State Admins", description: "State-level administrators" },
   { value: "district_admins", label: "District Admins", description: "District-level administrators" },
-  { value: "group_admins", label: "Area Admins", description: "Group-level administrators" },
+  { value: "group_admins", label: "Group Admins (Murabbi)", description: "Group-level administrators" },
   { value: "members", label: "Members", description: "All registered members" },
 ];
 
@@ -448,7 +448,7 @@ const Announcements = () => {
               <SelectContent>
                 <SelectItem value="all">All Audiences</SelectItem>
                 <SelectItem value="members">Members Only</SelectItem>
-                <SelectItem value="group_admins">Area Admins</SelectItem>
+                <SelectItem value="group_admins">Group Admins</SelectItem>
                 <SelectItem value="district_admins">District Admins</SelectItem>
                 <SelectItem value="state_admins">State Admins</SelectItem>
               </SelectContent>

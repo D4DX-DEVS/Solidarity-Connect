@@ -266,7 +266,7 @@ const OrgFiles = () => {
         </div>
       </div>
 
-      <main className="p-4 space-y-3 org-files-malayalam">
+      <main className="p-4 space-y-3">
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">Loading files...</div>
         ) : filteredFiles.length === 0 ? (
@@ -292,20 +292,20 @@ const OrgFiles = () => {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <p className="font-medium text-sm malayalam-text">{file.title}</p>
+                            <p className="font-medium text-sm">{file.title}</p>
                             {!file.isActive && (
                               <Badge variant="secondary" className="text-xs">Hidden</Badge>
                             )}
                           </div>
                           {file.description && (
-                            <p className="text-xs text-muted-foreground mb-1 malayalam-text">{file.description}</p>
+                            <p className="text-xs text-muted-foreground mb-1">{file.description}</p>
                           )}
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className="text-xs capitalize">
                               {isMembershipForm ? "Membership Form" : categoryLabels[file.category] || file.category}
                             </Badge>
                             <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                            <span className="text-xs text-muted-foreground malayalam-text">{file.originalName}</span>
+                            <span className="text-xs text-muted-foreground">{file.originalName}</span>
                           </div>
                         </div>
                       </div>
