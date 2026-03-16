@@ -612,6 +612,9 @@ router.post('/:id/approve', authenticate, requireRole(['state_admin', 'district_
     member.isApproved = true;
     member.approvedBy = req.user._id;
     member.approvedAt = new Date();
+    if (member.status === 'Inactive' || member.status === 'Applicant') {
+      member.status = 'Active';
+    }
 
     await member.save();
 

@@ -19,7 +19,7 @@ const createTargetValidation = [
   body('unit').trim().isLength({ min: 1, max: 50 }).withMessage('Unit is required and must be less than 50 characters'),
   body('startDate').isISO8601().withMessage('Start date must be a valid date'),
   body('endDate').isISO8601().withMessage('End date must be a valid date'),
-  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'district_admins']).withMessage('Invalid target audience')
+  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins']).withMessage('Invalid target audience')
 ];
 
 // @route   POST /api/personal-targets
@@ -108,7 +108,7 @@ router.get('/', authenticate, async (req, res) => {
       const roleTagType = req.user.roleTag?.type;
       const roleAudience = roleTagType === 'area' ? 'area_admins' : 'group_admins';
       filter.$and = [
-        { $or: [{ targetAudience: 'all_users' }, { targetAudience: roleAudience }] },
+        { $or: [{ targetAudience: 'all_users' }, { targetAudience: roleAudience }, { targetAudience: 'group_and_area_admins' }] },
         // Only show active targets within date range (or those without dates set)
         { $or: [
           { startDate: { $lte: now }, endDate: { $gte: now } },
@@ -123,7 +123,17 @@ router.get('/', authenticate, async (req, res) => {
     if (category) filter.category = category;
     // state_admin can filter by status; other roles already have status locked to 'active'
     if (status && req.user.role === 'state_admin') filter.status = status;
-    if (targetAudience) filter.targetAudience = targetAudience;
+    if (targetAudience) {
+      let audiences;
+      if (targetAudience === 'group_and_area_admins') {
+        audiences = ['group_admins', 'area_admins', 'group_and_area_admins'];
+      } else {
+        audiences = typeof targetAudience === 'string'
+          ? targetAudience.split(',').map(s => s.trim()).filter(Boolean)
+          : [targetAudience];
+      }
+      filter.targetAudience = audiences.length > 1 ? { $in: audiences } : audiences[0];
+    }
 
     // Search filter
     if (search && search.trim()) {
@@ -366,7 +376,7 @@ async function createProgressRecords(personalTarget) {
       } else if (audience === 'area_admins') {
         userFilter.role = 'group_admin';
         userFilter['roleTag.type'] = 'area';
-      } else if (audience === 'group_admins') {
+      } else if (audience === 'group_admins' || audience === 'group_and_area_admins') {
         userFilter.role = 'group_admin';
       }
       // 'all_users' → no extra filter, all active users
@@ -395,6 +405,7 @@ async function checkTargetAccess(personalTarget, user) {
   if (audience === 'district_admins' && user.role === 'district_admin') return true;
   if (audience === 'area_admins' && user.role === 'group_admin' && user.roleTag?.type === 'area') return true;
   if (audience === 'group_admins' && user.role === 'group_admin') return true;
+  if (audience === 'group_and_area_admins' && user.role === 'group_admin') return true;
 
   return false;
 }

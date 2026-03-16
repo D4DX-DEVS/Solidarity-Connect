@@ -242,7 +242,7 @@ const MemberDetail = () => {
             <div class="footer">
               <div class="signature">
                 <div class="signature-line"></div>
-                <div class="signature-label">Group Admin</div>
+                <div class="signature-label">Area Admin</div>
               </div>
               <div class="signature">
                 <div class="signature-line"></div>

@@ -196,7 +196,7 @@ const Login = () => {
               <option value="" disabled className="text-muted-foreground">Select your role</option>
               <option value="state_admin">State Admin</option>
               <option value="district_admin">District Admin</option>
-              <option value="group_admin">Members Group Admin</option>
+              <option value="group_admin">Area Admin</option>
               <option value="member">Member</option>
             </select>
           </div>

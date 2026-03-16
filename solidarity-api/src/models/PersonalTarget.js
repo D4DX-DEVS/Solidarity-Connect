@@ -47,7 +47,7 @@ const personalTargetSchema = new mongoose.Schema({
   },
   targetAudience: {
     type: String,
-    enum: ['all_users', 'members_only', 'group_admins', 'area_admins', 'district_admins'],
+    enum: ['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'],
     default: 'all_users'
   },
   status: {

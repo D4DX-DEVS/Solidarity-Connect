@@ -14,7 +14,9 @@ import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
+import OrgFile from '../models/OrgFile.js';
 import { body, validationResult } from 'express-validator';
+import RecurringMark from '../models/RecurringMark.js';
 
 // Multer in-memory storage for file uploads
 const memberUpload = multer({
@@ -43,6 +45,12 @@ const formatPhoneNumber = (req, res, next) => {
     req.body.phone = `+91${req.body.phone}`;
   }
   next();
+};
+
+// Build phone query that matches both '+91XXXXXXXXXX' and 'XXXXXXXXXX' formats
+const buildPhoneQuery = (phone) => {
+  const digits = phone.replace(/^\+91/, '');
+  return { $in: [`+91${digits}`, digits] };
 };
 
 // Validation middleware
@@ -127,8 +135,8 @@ router.post('/send-otp', memberLoginValidation, formatPhoneNumber, async (req, r
 
     const { phone } = req.body;
 
-    // Check if member exists and is active
-    const member = await Member.findOne({ phone, status: 'Active', isApproved: true })
+    // Check if member exists and is active (handle both +91XXXXXXXXXX and XXXXXXXXXX formats)
+    const member = await Member.findOne({ phone: buildPhoneQuery(phone), status: 'Active', isApproved: true })
       .populate('district', 'name')
       .populate('group', 'name');
 
@@ -139,10 +147,17 @@ router.post('/send-otp', memberLoginValidation, formatPhoneNumber, async (req, r
       });
     }
 
-    // Create or get member auth record
+    // Create or get member auth record (also search by phone to handle format mismatches)
     let memberAuth = await MemberAuth.findOne({ member: member._id });
     if (!memberAuth) {
-      memberAuth = await MemberAuth.createForMember(member._id);
+      memberAuth = await MemberAuth.findOne({ phone: buildPhoneQuery(phone) });
+      if (memberAuth) {
+        // Fix the member reference to point to the found member
+        memberAuth.member = member._id;
+        await memberAuth.save();
+      } else {
+        memberAuth = await MemberAuth.createForMember(member._id);
+      }
     }
 
     // Check if account is locked
@@ -215,8 +230,8 @@ router.post('/verify-otp', memberVerifyOTPValidation, formatPhoneNumber, async (
 
     const { phone, otp, deviceId, deviceName } = req.body;
 
-    // First find the member from Member model
-    const member = await Member.findOne({ phone, status: 'Active', isApproved: true })
+    // First find the member from Member model (handle both +91XXXXXXXXXX and XXXXXXXXXX formats)
+    const member = await Member.findOne({ phone: buildPhoneQuery(phone), status: 'Active', isApproved: true })
       .populate('district', 'name')
       .populate('group', 'name');
 
@@ -227,14 +242,24 @@ router.post('/verify-otp', memberVerifyOTPValidation, formatPhoneNumber, async (
       });
     }
 
-    // Then find the corresponding MemberAuth record
-    const memberAuth = await MemberAuth.findOne({ member: member._id }).populate({
-      path: 'member',
-      populate: [
-        { path: 'district', select: 'name' },
-        { path: 'group', select: 'name' }
-      ]
-    });
+    // Then find the corresponding MemberAuth record (also search by phone for format mismatches)
+    let memberAuth = await MemberAuth.findOne({ member: member._id });
+    if (!memberAuth) {
+      memberAuth = await MemberAuth.findOne({ phone: buildPhoneQuery(phone) });
+      if (memberAuth) {
+        memberAuth.member = member._id;
+        await memberAuth.save();
+      }
+    }
+    if (memberAuth) {
+      await memberAuth.populate({
+        path: 'member',
+        populate: [
+          { path: 'district', select: 'name' },
+          { path: 'group', select: 'name' }
+        ]
+      });
+    }
 
     if (!memberAuth) {
       return res.status(404).json({
@@ -346,8 +371,8 @@ router.post('/resend-otp', memberLoginValidation, formatPhoneNumber, async (req,
 
     const { phone } = req.body;
 
-    // First find the member from Member model
-    const member = await Member.findOne({ phone, status: 'Active', isApproved: true });
+    // First find the member from Member model (handle both +91XXXXXXXXXX and XXXXXXXXXX formats)
+    const member = await Member.findOne({ phone: buildPhoneQuery(phone), status: 'Active', isApproved: true });
     if (!member) {
       return res.status(404).json({
         success: false,
@@ -861,6 +886,105 @@ router.post('/targets/:targetId/progress', authenticateMember, async (req, res) 
   }
 });
 
+// @route   GET /api/member-auth/recurring-marks
+// @desc    Get all recurring marks for the logged-in member
+// @access  Private (Member)
+router.get('/recurring-marks', authenticateMember, async (req, res) => {
+  try {
+    const marks = await RecurringMark.find({
+      user: req.member._id,
+      userType: 'Member'
+    }).select('personalTarget year month completed markedAt');
+
+    const formatted = marks.map(m => ({
+      targetId: m.personalTarget.toString(),
+      year: m.year,
+      month: m.month,
+      completed: m.completed,
+      markedAt: m.markedAt
+    }));
+
+    res.status(200).json({ success: true, data: formatted });
+  } catch (error) {
+    console.error('Get member recurring marks error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recurring marks' });
+  }
+});
+
+// @route   POST /api/member-auth/recurring-marks
+// @desc    Upsert a recurring mark for the logged-in member
+// @access  Private (Member)
+router.post('/recurring-marks', authenticateMember, async (req, res) => {
+  try {
+    const { targetId, year, month, completed } = req.body;
+
+    if (!targetId || !year || !month || completed === undefined) {
+      return res.status(400).json({ success: false, message: 'targetId, year, month, and completed are required' });
+    }
+
+    const target = await PersonalTarget.findById(targetId);
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Target not found' });
+    }
+    if (!target.isRecurring) {
+      return res.status(400).json({ success: false, message: 'Target is not recurring' });
+    }
+
+    const mark = await RecurringMark.findOneAndUpdate(
+      {
+        user: req.member._id,
+        userType: 'Member',
+        personalTarget: targetId,
+        year: Number(year),
+        month: Number(month)
+      },
+      {
+        $set: {
+          completed: Boolean(completed),
+          markedAt: new Date()
+        }
+      },
+      { new: true, upsert: true }
+    );
+
+    // Sync MemberTargetProgress: completed if any mark for this target is completed
+    const anyCompleted = await RecurringMark.exists({
+      user: req.member._id,
+      userType: 'Member',
+      personalTarget: targetId,
+      completed: true
+    });
+    await MemberTargetProgress.findOneAndUpdate(
+      { member: req.member._id, personalTarget: targetId },
+      {
+        $set: {
+          status: anyCompleted ? 'completed' : 'not_started',
+          targetValue: target.targetValue,
+          currentProgress: anyCompleted ? target.targetValue : 0,
+          progressPercentage: anyCompleted ? 100 : 0,
+          ...(anyCompleted ? { completedAt: new Date() } : { completedAt: null })
+        }
+      },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Mark updated successfully',
+      data: {
+        targetId: mark.personalTarget.toString(),
+        year: mark.year,
+        month: mark.month,
+        completed: mark.completed,
+        markedAt: mark.markedAt
+      }
+    });
+  } catch (error) {
+    console.error('Upsert member recurring mark error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update mark' });
+  }
+});
+
 // @route   POST /api/member-auth/uploads
 // @desc    Upload a file to DigitalOcean Spaces (member)
 // @access  Private (Member)
@@ -948,6 +1072,104 @@ router.get('/groups', authenticateMember, async (req, res) => {
   } catch (error) {
     console.error('Get groups (member) error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch groups' });
+  }
+});
+
+// @route   GET /api/member-auth/org-files
+// @desc    Get organizational files visible to members (general files only, not membership_form)
+// @access  Private (Member)
+router.get('/org-files', authenticateMember, async (req, res) => {
+  try {
+    const { category, search } = req.query;
+
+    const filter = { isActive: true, fileType: 'general' };
+
+    if (category && category !== 'all') filter.category = category;
+
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } },
+        { originalName: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
+
+    const files = await OrgFile.find(filter)
+      .select('title description category fileType url originalName mimetype size createdAt')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: files });
+  } catch (error) {
+    console.error('Get org files (member) error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch files' });
+  }
+});
+
+// @route   PUT /api/member-auth/profile
+// @desc    Update member's own profile (name, email, profession, education, address, bloodGroup, age)
+// @access  Private (Member)
+router.put('/profile', authenticateMember, [
+  body('name').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Name must be between 1 and 100 characters'),
+  body('email').optional({ checkFalsy: true }).isEmail().normalizeEmail().withMessage('Please enter a valid email'),
+  body('profession').optional().trim().isLength({ max: 100 }).withMessage('Profession cannot exceed 100 characters'),
+  body('education').optional().trim().isLength({ max: 100 }).withMessage('Education cannot exceed 100 characters'),
+  body('address').optional().trim().isLength({ max: 500 }).withMessage('Address cannot exceed 500 characters'),
+  body('bloodGroup').optional().isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', '']).withMessage('Invalid blood group'),
+  body('age').optional({ checkFalsy: true }).isInt({ min: 0, max: 120 }).withMessage('Invalid age'),
+  body('areaOfInterest').optional().trim().isLength({ max: 200 }),
+  body('skills').optional().trim().isLength({ max: 200 }),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
+    }
+
+    const allowedFields = ['name', 'email', 'profession', 'education', 'address', 'bloodGroup', 'age', 'areaOfInterest', 'skills'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) updates[field] = req.body[field];
+    });
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid fields to update' });
+    }
+
+    const member = await Member.findByIdAndUpdate(
+      req.member._id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).populate('district', 'name').populate('group', 'name');
+
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Member not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        id: member._id,
+        name: member.name,
+        phone: member.phone,
+        email: member.email,
+        dateOfBirth: member.dateOfBirth,
+        age: member.age,
+        bloodGroup: member.bloodGroup,
+        profession: member.profession,
+        education: member.education,
+        address: member.address,
+        areaOfInterest: member.areaOfInterest,
+        skills: member.skills,
+        district: member.district,
+        group: member.group,
+        status: member.status,
+        joinedDate: member.joinedDate
+      }
+    });
+  } catch (error) {
+    console.error('Update member profile error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update profile' });
   }
 });
 

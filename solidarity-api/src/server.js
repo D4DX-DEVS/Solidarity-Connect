@@ -28,6 +28,11 @@ import memberAuthRoutes from './routes/memberAuth.js';
 import uploadRoutes from './routes/uploads.js';
 import orgFilesRoutes from './routes/orgFiles.js';
 import userTargetProgressRoutes from './routes/userTargetProgress.js';
+import recurringMarksRoutes from './routes/recurringMarks.js';
+import Member from './models/Member.js';
+import RecurringMark from './models/RecurringMark.js';
+import UserTargetProgress from './models/UserTargetProgress.js';
+import MemberTargetProgress from './models/MemberTargetProgress.js';
 
 // Load environment variables
 dotenv.config();
@@ -119,6 +124,7 @@ app.use('/api/member-auth', memberAuthRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/org-files', orgFilesRoutes);
 app.use('/api/user-target-progress', userTargetProgressRoutes);
+app.use('/api/recurring-marks', recurringMarksRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -134,10 +140,63 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// One-time migration: fix approved members stuck in Inactive/Applicant status
+async function runMigrations() {
+  try {
+    // Fix members that are not approved or not active (all migrated members should be active)
+    const result = await Member.updateMany(
+      { $or: [{ isApproved: false }, { isApproved: { $exists: false } }, { status: { $in: ['Inactive', 'Applicant'] } }] },
+      { $set: { isApproved: true, status: 'Active' } }
+    );
+    if (result.modifiedCount > 0) {
+      console.log(`✅ Migration: approved and activated ${result.modifiedCount} member(s)`);
+    }
+
+    // Backfill UserTargetProgress from RecurringMarks for admin users
+    const adminMarks = await RecurringMark.find({ userType: 'User', completed: true }).lean();
+    const adminMarksByUserTarget = {};
+    for (const m of adminMarks) {
+      const key = `${m.user}_${m.personalTarget}`;
+      adminMarksByUserTarget[key] = m;
+    }
+    for (const [, m] of Object.entries(adminMarksByUserTarget)) {
+      await UserTargetProgress.findOneAndUpdate(
+        { user: m.user, personalTarget: m.personalTarget },
+        { $set: { status: 'completed', currentProgress: 1, progressPercentage: 100, completedAt: m.markedAt } },
+        { upsert: true }
+      );
+    }
+    if (Object.keys(adminMarksByUserTarget).length > 0) {
+      console.log(`✅ Migration: synced ${Object.keys(adminMarksByUserTarget).length} recurring mark(s) to UserTargetProgress`);
+    }
+
+    // Backfill MemberTargetProgress from RecurringMarks for members
+    const memberMarks = await RecurringMark.find({ userType: 'Member', completed: true }).lean();
+    const memberMarksByUserTarget = {};
+    for (const m of memberMarks) {
+      const key = `${m.user}_${m.personalTarget}`;
+      memberMarksByUserTarget[key] = m;
+    }
+    for (const [, m] of Object.entries(memberMarksByUserTarget)) {
+      await MemberTargetProgress.findOneAndUpdate(
+        { member: m.user, personalTarget: m.personalTarget },
+        { $set: { status: 'completed', currentProgress: 1, progressPercentage: 100, completedAt: m.markedAt } },
+        { upsert: true }
+      );
+    }
+    if (Object.keys(memberMarksByUserTarget).length > 0) {
+      console.log(`✅ Migration: synced ${Object.keys(memberMarksByUserTarget).length} recurring mark(s) to MemberTargetProgress`);
+    }
+  } catch (err) {
+    console.error('Migration error:', err);
+  }
+}
+
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  await runMigrations();
 });
 
 export default app;

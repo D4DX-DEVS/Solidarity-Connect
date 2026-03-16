@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   BarChart3, ArrowLeft, Filter, Users, Download, CheckCircle, Clock,
   AlertCircle, Target, RefreshCw, TrendingUp,
-  Building2, MapPin, UserCheck, UserX, Globe2, Crown, Shield, X
+  Building2, MapPin, UserCheck, UserX, Globe2, Crown, Shield, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,14 @@ interface UserResult {
   progress: { status: "not_started" | "in_progress" | "completed"; completedAt?: string; feedback?: string } | null;
 }
 interface SimpleTarget { _id: string; title: string; isRecurring?: boolean }
+interface RecurringGridUser {
+  userId: string;
+  userName: string;
+  role: string;
+  district?: string;
+  group?: string;
+  marks: Record<number, boolean>; // month (1–12) → completed
+}
 interface DrillState {
   targetId: string; targetTitle: string;
   filterType: "district" | "group";
@@ -65,6 +73,7 @@ const CATEGORY_EMOJI: Record<string,string> = {
   quran:"📖", hadith:"📜", prayer:"🕌", charity:"💝", knowledge:"🎓", community:"🤝", other:"🎯",
 };
 const FREQ_LABEL: Record<string,string> = { weekly:"Weekly", monthly:"Monthly", quarterly:"Quarterly" };
+const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const STATUS_CONFIG = {
   not_started: { label:"Not Started", icon:AlertCircle, cls:"bg-gray-100 text-gray-700" },
   in_progress:  { label:"In Progress",  icon:Clock,         cls:"bg-blue-100 text-blue-700"  },
@@ -78,7 +87,7 @@ const getRoleLabel = (role: string, tagType?: string) => {
   if (role === "district_admin") return "District Admin";
   if (role === "group_admin" && tagType === "area") return "Area Admin";
   if (role === "group_admin" && tagType === "unit") return "Unit Admin";
-  if (role === "group_admin") return "Group Admin";
+  if (role === "group_admin") return "Area Admin";
   return role;
 };
 
@@ -180,6 +189,8 @@ interface TargetCardProps {
   target: TargetStat;
   onBarClick: (targetId: string, filterType: "district" | "group", id: string | undefined, name: string, status: "completed" | "not_completed") => void;
 }
+const PAGE_SIZE = 10;
+
 const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
   const { stats } = target;
   const emoji     = CATEGORY_EMOJI[target.category] || "🎯";
@@ -188,8 +199,14 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
     { name: "Completed",     value: stats.completed },
     { name: "Not Completed", value: stats.total - stats.completed },
   ];
-  const districtBarData = stats.byDistrict.slice(0, 10);
-  const groupBarData    = stats.byGroup.slice(0, 10);
+
+  const [districtPage, setDistrictPage] = useState(0);
+  const [groupPage,    setGroupPage]    = useState(0);
+
+  const districtTotal   = stats.byDistrict.length;
+  const groupTotal      = stats.byGroup.length;
+  const districtBarData = stats.byDistrict.slice(districtPage * PAGE_SIZE, (districtPage + 1) * PAGE_SIZE);
+  const groupBarData    = stats.byGroup.slice(groupPage * PAGE_SIZE, (groupPage + 1) * PAGE_SIZE);
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -255,10 +272,23 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
         )}
         {districtBarData.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-2">
-              <BarChart3 className="h-3 w-3" /> By District
-              <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <BarChart3 className="h-3 w-3" /> By District
+                <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
+              </p>
+              {districtTotal > PAGE_SIZE && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground">{districtPage * PAGE_SIZE + 1}–{Math.min((districtPage + 1) * PAGE_SIZE, districtTotal)} of {districtTotal}</span>
+                  <button onClick={() => setDistrictPage(p => Math.max(0, p - 1))} disabled={districtPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => setDistrictPage(p => p + 1)} disabled={(districtPage + 1) * PAGE_SIZE >= districtTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
             <ResponsiveContainer width="100%" height={Math.max(120, districtBarData.length * 28)}>
               <BarChart data={districtBarData} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -275,10 +305,23 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
         )}
         {groupBarData.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-2">
-              <Users className="h-3 w-3" /> By Group (top 10)
-              <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
-            </p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
+                <Users className="h-3 w-3" /> By Group
+                <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
+              </p>
+              {groupTotal > PAGE_SIZE && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-muted-foreground">{groupPage * PAGE_SIZE + 1}–{Math.min((groupPage + 1) * PAGE_SIZE, groupTotal)} of {groupTotal}</span>
+                  <button onClick={() => setGroupPage(p => Math.max(0, p - 1))} disabled={groupPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => setGroupPage(p => p + 1)} disabled={(groupPage + 1) * PAGE_SIZE >= groupTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
             <ResponsiveContainer width="100%" height={Math.max(120, groupBarData.length * 28)}>
               <BarChart data={groupBarData} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
@@ -314,6 +357,12 @@ const Consolidation = () => {
   const [drillState,   setDrillState]   = useState<DrillState | null>(null);
   const [drillResults, setDrillResults] = useState<UserResult[]>([]);
   const [drillLoading, setDrillLoading] = useState(false);
+
+  // Recurring grid state
+  const [recurringGridTargetId, setRecurringGridTargetId] = useState<string | null>(null);
+  const [recurringGridYear, setRecurringGridYear] = useState(new Date().getFullYear());
+  const [recurringGridData, setRecurringGridData] = useState<RecurringGridUser[]>([]);
+  const [recurringGridLoading, setRecurringGridLoading] = useState(false);
 
   // Standalone filter section
   const [sfTargetId, setSfTargetId] = useState("");
@@ -430,6 +479,53 @@ const Consolidation = () => {
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to load details", variant: "destructive" });
     } finally { setDrillLoading(false); }
+  };
+
+  const loadRecurringGrid = useCallback(async (targetId: string, year: number) => {
+    setRecurringGridLoading(true);
+    try {
+      const qp = new URLSearchParams();
+      qp.set("targetId", targetId);
+      qp.set("year", String(year));
+      const result = await apiCall(`/reports/recurring-marks?${qp.toString()}`);
+      setRecurringGridData(result.data || []);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to load grid", variant: "destructive" });
+      setRecurringGridData([]);
+    } finally {
+      setRecurringGridLoading(false);
+    }
+  }, []);
+
+  const handleRecurringGridExpand = (targetId: string) => {
+    if (recurringGridTargetId === targetId) {
+      setRecurringGridTargetId(null);
+      setRecurringGridData([]);
+    } else {
+      setRecurringGridTargetId(targetId);
+      loadRecurringGrid(targetId, recurringGridYear);
+    }
+  };
+
+  const handleRecurringGridYearChange = (year: number) => {
+    setRecurringGridYear(year);
+    if (recurringGridTargetId) {
+      loadRecurringGrid(recurringGridTargetId, year);
+    }
+  };
+
+  const exportRecurringGrid = (target: TargetStat) => {
+    const header = ["Name", "Role", "District", "Group", ...MONTHS_SHORT];
+    const rows = recurringGridData.map(u => [
+      u.userName, u.role, u.district || "", u.group || "",
+      ...Array.from({ length: 12 }, (_, i) => u.marks[i + 1] ? "✓" : ""),
+    ]);
+    const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `recurring-${target.title}-${recurringGridYear}.csv`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const exportCSV = (rows: UserResult[], filename: string) => {
@@ -619,11 +715,112 @@ const Consolidation = () => {
             ) : (
               <div className="space-y-4">
                 {recurringTargets.map(target => (
-                  <TargetCard
-                    key={target._id}
-                    target={target}
-                    onBarClick={handleBarClick}
-                  />
+                  <div key={target._id} className="space-y-2">
+                    <TargetCard
+                      target={target}
+                      onBarClick={handleBarClick}
+                    />
+
+                    {/* Monthly Completion Grid toggle */}
+                    <Card className="shadow-sm border-blue-100">
+                      <CardContent className="p-3">
+                        <button
+                          className="w-full flex items-center justify-between text-sm font-medium text-blue-700"
+                          onClick={() => handleRecurringGridExpand(target._id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Monthly Completion Grid
+                          </div>
+                          {recurringGridTargetId === target._id
+                            ? <ChevronUp className="h-4 w-4" />
+                            : <ChevronDown className="h-4 w-4" />
+                          }
+                        </button>
+
+                        {recurringGridTargetId === target._id && (
+                          <div className="mt-3">
+                            {/* Year selector */}
+                            <div className="flex items-center gap-2 mb-3">
+                              <button
+                                onClick={() => handleRecurringGridYearChange(recurringGridYear - 1)}
+                                className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                              >←</button>
+                              <span className="text-sm font-semibold w-12 text-center">{recurringGridYear}</span>
+                              <button
+                                onClick={() => handleRecurringGridYearChange(recurringGridYear + 1)}
+                                className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                                disabled={recurringGridYear >= new Date().getFullYear()}
+                              >→</button>
+                              {recurringGridData.length > 0 && (
+                                <Button
+                                  variant="outline" size="sm"
+                                  className="ml-auto text-xs h-7"
+                                  onClick={() => exportRecurringGrid(target)}
+                                >
+                                  <Download className="h-3 w-3 mr-1" />CSV
+                                </Button>
+                              )}
+                            </div>
+
+                            {recurringGridLoading ? (
+                              <div className="text-center py-4 text-muted-foreground text-xs">
+                                <RefreshCw className="h-4 w-4 animate-spin mx-auto mb-1" />
+                                Loading…
+                              </div>
+                            ) : recurringGridData.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-3">
+                                No completion data for {recurringGridYear}.
+                              </p>
+                            ) : (
+                              <div className="overflow-x-auto -mx-1">
+                                <table className="w-full text-xs border-collapse">
+                                  <thead>
+                                    <tr>
+                                      <th className="text-left p-1.5 font-semibold text-muted-foreground border-b sticky left-0 bg-background min-w-[120px]">
+                                        User
+                                      </th>
+                                      {MONTHS_SHORT.map((m, i) => (
+                                        <th key={i} className="p-1 font-semibold text-muted-foreground border-b text-center min-w-[32px]">
+                                          {m}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {recurringGridData.map((user) => (
+                                      <tr key={user.userId} className="border-b last:border-0 hover:bg-muted/30">
+                                        <td className="p-1.5 sticky left-0 bg-background">
+                                          <p className="font-medium truncate max-w-[110px]">{user.userName}</p>
+                                          <p className="text-muted-foreground truncate max-w-[110px]">{user.district || user.role}</p>
+                                        </td>
+                                        {Array.from({ length: 12 }, (_, i) => {
+                                          const monthNum = i + 1;
+                                          const completed = user.marks[monthNum] === true;
+                                          const isFuture = recurringGridYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                                          return (
+                                            <td key={monthNum} className="p-1 text-center">
+                                              {isFuture ? (
+                                                <span className="text-gray-200">–</span>
+                                              ) : completed ? (
+                                                <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
+                                              ) : (
+                                                <X className="h-3.5 w-3.5 text-gray-300 mx-auto" />
+                                              )}
+                                            </td>
+                                          );
+                                        })}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
                 ))}
               </div>
             )}
@@ -679,14 +876,32 @@ const Consolidation = () => {
                   <Select value={sfTargetId} onValueChange={setSfTargetId}>
                     <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select a target…" /></SelectTrigger>
                     <SelectContent>
-                      {allTargets.map(t => (
-                        <SelectItem key={t._id} value={t._id}>
-                          {t.isRecurring ? "🔁 " : ""}{t.title}
-                        </SelectItem>
-                      ))}
+                      {allTargets.filter(t => !t.isRecurring).length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Regular Targets</div>
+                          {allTargets.filter(t => !t.isRecurring).map(t => (
+                            <SelectItem key={t._id} value={t._id}>{t.title}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {allTargets.filter(t => t.isRecurring).length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground mt-1">Recurring Targets</div>
+                          {allTargets.filter(t => t.isRecurring).map(t => (
+                            <SelectItem key={t._id} value={t._id}>🔁 {t.title}</SelectItem>
+                          ))}
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Note for recurring targets — redirect to grid above */}
+                {allTargets.find(t => t._id === sfTargetId)?.isRecurring && (
+                  <div className="bg-blue-50 border border-blue-100 rounded p-2 text-xs text-blue-700">
+                    <RefreshCw className="h-3 w-3 inline mr-1" />
+                    This is a recurring target. Use the <strong>Monthly Completion Grid</strong> in the Recurring Targets section above to view per-user per-month completion.
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">District</label>
@@ -717,22 +932,25 @@ const Consolidation = () => {
                         <SelectItem value="district_admin">District Admin</SelectItem>
                         <SelectItem value="area_admin">Area Admin</SelectItem>
                         <SelectItem value="unit_admin">Unit Admin</SelectItem>
-                        <SelectItem value="group_admin">Group Admin</SelectItem>
+                        <SelectItem value="group_admin">Area Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
-                    <Select value={sfStatus} onValueChange={setSfStatus}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="not_started">Not Started</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Status filter — hidden for recurring targets (they use monthly grid) */}
+                  {!allTargets.find(t => t._id === sfTargetId)?.isRecurring && (
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                      <Select value={sfStatus} onValueChange={setSfStatus}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="not_started">Not Started</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 <Button
                   className="w-full h-8 text-sm"

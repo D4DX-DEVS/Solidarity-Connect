@@ -146,6 +146,17 @@ export const memberAuthAPI = {
     formData.append('file', file);
     return multipartApiCall('/member-auth/uploads', formData);
   },
+
+  getOrgFiles: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/member-auth/org-files${queryString}`);
+  },
+
+  updateProfile: (data: Record<string, any>) =>
+    apiCall('/member-auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Users API calls
