@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { reportsAPI, usersAPI, baithulMaalAPI } from "@/utils/api";
+import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
 
 interface DashboardData {
   memberStatistics: {
@@ -68,6 +68,14 @@ const StateAdmin = () => {
   const [baithulMaalStats, setBaithulMaalStats] = useState<BaithulMaalStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // State admin recurring targets
+  const [myRecurringTargets, setMyRecurringTargets] = useState<any[]>([]);
+  const [myMarks, setMyMarks] = useState<Record<string, Record<string, boolean>>>({});
+  const [markingLoading, setMarkingLoading] = useState<string | null>(null);
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
   const adminActions = [
     { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
     { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
@@ -121,7 +129,52 @@ const StateAdmin = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchMyRecurringTargets();
+    fetchMyMarks();
   }, []);
+
+  const fetchMyRecurringTargets = async () => {
+    try {
+      const res = await apiCall('/personal-targets?isRecurring=true&targetAudience=state_admins&limit=50');
+      const now = new Date();
+      const filtered = (res.data || []).filter((t: any) =>
+        t.isRecurring && t.targetAudience === 'state_admins' &&
+        t.status === 'active' &&
+        new Date(t.startDate) <= now && new Date(t.endDate) >= now
+      );
+      setMyRecurringTargets(filtered);
+    } catch {}
+  };
+
+  const fetchMyMarks = async () => {
+    try {
+      const res = await apiCall('/recurring-marks/my');
+      const marksMap: Record<string, Record<string, boolean>> = {};
+      for (const m of (res.data || [])) {
+        if (!marksMap[m.targetId]) marksMap[m.targetId] = {};
+        marksMap[m.targetId][`${m.year}-${m.month}`] = m.completed;
+      }
+      setMyMarks(marksMap);
+    } catch {}
+  };
+
+  const toggleMark = async (targetId: string, year: number, month: number) => {
+    const key = `${year}-${month}`;
+    const current = myMarks[targetId]?.[key] || false;
+    const loadingKey = `${targetId}-${key}`;
+    setMarkingLoading(loadingKey);
+    try {
+      await apiCall('/recurring-marks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, year, month, completed: !current }) });
+      setMyMarks(prev => ({
+        ...prev,
+        [targetId]: { ...prev[targetId], [key]: !current }
+      }));
+    } catch {
+      toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
+    } finally {
+      setMarkingLoading(null);
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
@@ -284,6 +337,66 @@ const StateAdmin = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* State Admin Recurring Targets */}
+        {myRecurringTargets.length > 0 && (
+          <Card className="shadow-sm border-blue-100">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <RefreshCw className="h-4 w-4 text-blue-600" />
+                <h2 className="font-semibold text-sm">My Recurring Targets</h2>
+              </div>
+              <div className="space-y-4">
+                {myRecurringTargets.map((target: any) => (
+                  <div key={target._id} className="border rounded-lg p-3">
+                    <p className="font-medium text-sm mb-2">{target.title}</p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr>
+                            {MONTHS_SHORT.map((m, i) => (
+                              <th key={i} className="p-1 text-center text-muted-foreground font-medium min-w-[36px]">{m}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            {Array.from({ length: 12 }, (_, i) => {
+                              const monthNum = i + 1;
+                              const isFuture = monthNum > currentMonth;
+                              const key = `${currentYear}-${monthNum}`;
+                              const completed = myMarks[target._id]?.[key] || false;
+                              const loadingKey = `${target._id}-${key}`;
+                              return (
+                                <td key={monthNum} className="p-1 text-center">
+                                  {isFuture ? (
+                                    <span className="text-gray-200 text-base">–</span>
+                                  ) : (
+                                    <button
+                                      onClick={() => toggleMark(target._id, currentYear, monthNum)}
+                                      disabled={markingLoading === loadingKey}
+                                      className="mx-auto flex items-center justify-center w-7 h-7 rounded-full hover:bg-muted transition-colors"
+                                    >
+                                      {completed
+                                        ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                        : <X className="h-4 w-4 text-gray-300" />
+                                      }
+                                    </button>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2 text-right">{currentYear}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="shadow-sm">
           <CardContent className="p-4">

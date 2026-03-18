@@ -1878,4 +1878,132 @@ router.get('/recurring-marks', authenticate, async (req, res) => {
   }
 });
 
+// @route   GET /api/reports/recurring-marks-filter
+// @desc    Filter recurring marks by target, region, period, and completion status
+// @access  state_admin, district_admin, group_admin with view_reports
+router.get('/recurring-marks-filter', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (!['state_admin', 'district_admin', 'group_admin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const { targetId, districtId, fromYear, fromMonth, toYear, toMonth, status } = req.query;
+
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'targetId is required' });
+    }
+
+    const roleScope = getRoleScope(req.user);
+
+    const target = await PersonalTarget.findById(targetId).lean();
+    if (!target || !target.isRecurring) {
+      return res.status(404).json({ success: false, message: 'Recurring target not found' });
+    }
+
+    // Build mark query with optional period filter
+    const markQuery = { personalTarget: target._id };
+
+    if (fromYear && fromMonth && toYear && toMonth) {
+      const fromYearN = Number(fromYear), fromMonthN = Number(fromMonth);
+      const toYearN = Number(toYear), toMonthN = Number(toMonth);
+      const pairs = [];
+      let y = fromYearN, m = fromMonthN;
+      while (y < toYearN || (y === toYearN && m <= toMonthN)) {
+        pairs.push({ year: y, month: m });
+        m++;
+        if (m > 12) { m = 1; y++; }
+      }
+      if (pairs.length > 0) {
+        markQuery.$or = pairs.map(p => ({ year: p.year, month: p.month }));
+      }
+    }
+
+    const marks = await RecurringMark.find(markQuery).lean();
+
+    // Group marks by userId
+    const userMap = {};
+    for (const m of marks) {
+      const uid = m.user.toString();
+      if (!userMap[uid]) {
+        userMap[uid] = { userType: m.userType, completedMonths: [], notCompletedMonths: [] };
+      }
+      const key = `${m.year}-${m.month}`;
+      if (m.completed) userMap[uid].completedMonths.push(key);
+      else userMap[uid].notCompletedMonths.push(key);
+    }
+
+    let userIds = Object.keys(userMap);
+    if (userIds.length === 0) {
+      return res.status(200).json({ success: true, data: { total: 0, results: [] } });
+    }
+
+    // Filter by completion status at user level
+    if (status === 'completed') {
+      userIds = userIds.filter(uid => userMap[uid].completedMonths.length > 0);
+    } else if (status === 'not_completed') {
+      userIds = userIds.filter(uid => userMap[uid].completedMonths.length === 0);
+    }
+
+    if (userIds.length === 0) {
+      return res.status(200).json({ success: true, data: { total: 0, results: [] } });
+    }
+
+    // Scope filter (respect role-based scope or provided districtId for state_admin)
+    const effectiveDistrictId = req.user.role === 'state_admin' ? (districtId || null) : roleScope.districtId;
+    const effectiveGroupId = req.user.role === 'state_admin' ? null : roleScope.groupId;
+
+    const scopeFilter = {};
+    if (effectiveDistrictId) scopeFilter.district = effectiveDistrictId;
+    if (effectiveGroupId) scopeFilter.group = effectiveGroupId;
+
+    const userTypeUser = userIds.filter(id => userMap[id].userType === 'User');
+    const userTypeMember = userIds.filter(id => userMap[id].userType === 'Member');
+
+    const [users, members] = await Promise.all([
+      userTypeUser.length > 0
+        ? User.find({ _id: { $in: userTypeUser }, ...scopeFilter })
+            .select('name role roleTag district group phone')
+            .populate('district', 'name').populate('group', 'name')
+        : Promise.resolve([]),
+      userTypeMember.length > 0
+        ? Member.find({ _id: { $in: userTypeMember }, ...scopeFilter })
+            .select('name district group phone')
+            .populate('district', 'name').populate('group', 'name')
+        : Promise.resolve([])
+    ]);
+
+    const results = [
+      ...users.map(u => ({
+        userId: u._id.toString(),
+        name: u.name,
+        role: u.role,
+        roleTag: u.roleTag,
+        district: u.district?.name || '',
+        group: u.group?.name || '',
+        phone: u.phone || '',
+        completedMonths: userMap[u._id.toString()]?.completedMonths || [],
+        completedCount: userMap[u._id.toString()]?.completedMonths.length || 0,
+      })),
+      ...members.map(m => ({
+        userId: m._id.toString(),
+        name: m.name,
+        role: 'member',
+        roleTag: null,
+        district: m.district?.name || '',
+        group: m.group?.name || '',
+        phone: m.phone || '',
+        completedMonths: userMap[m._id.toString()]?.completedMonths || [],
+        completedCount: userMap[m._id.toString()]?.completedMonths.length || 0,
+      }))
+    ];
+
+    results.sort((a, b) => a.name.localeCompare(b.name));
+
+    res.status(200).json({ success: true, data: { total: results.length, results } });
+  } catch (error) {
+    console.error('Recurring marks filter error:', error);
+    res.status(500).json({ success: false, message: 'Failed to filter recurring marks' });
+  }
+});
+
 export default router;

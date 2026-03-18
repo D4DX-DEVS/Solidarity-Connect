@@ -19,7 +19,7 @@ const createTargetValidation = [
   body('unit').trim().isLength({ min: 1, max: 50 }).withMessage('Unit is required and must be less than 50 characters'),
   body('startDate').isISO8601().withMessage('Start date must be a valid date'),
   body('endDate').isISO8601().withMessage('End date must be a valid date'),
-  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins']).withMessage('Invalid target audience')
+  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins', 'state_admins']).withMessage('Invalid target audience')
 ];
 
 // @route   POST /api/personal-targets
@@ -371,7 +371,9 @@ async function createProgressRecords(personalTarget) {
     // Create UserTargetProgress for admin users
     if (audience !== 'members_only') {
       let userFilter = { isActive: true };
-      if (audience === 'district_admins') {
+      if (audience === 'state_admins') {
+        userFilter.role = 'state_admin';
+      } else if (audience === 'district_admins') {
         userFilter.role = 'district_admin';
       } else if (audience === 'area_admins') {
         userFilter.role = 'group_admin';

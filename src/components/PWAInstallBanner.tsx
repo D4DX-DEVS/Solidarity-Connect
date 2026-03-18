@@ -20,7 +20,7 @@ export function PWAInstallBanner() {
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50 bg-card border border-border rounded-xl shadow-lg p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4">
-      <img src="/app-icon.png" alt="SOLIDARITY" className="w-10 h-10 rounded-lg flex-shrink-0" />
+      <img src="/logo.png" alt="SOLIDARITY" className="w-10 h-10 rounded-lg flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-sm">Install SOLIDARITY</p>
         <p className="text-xs text-muted-foreground">Add to home screen for offline access</p>
