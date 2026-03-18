@@ -352,6 +352,7 @@ const PersonalTargets = () => {
     area_admins: 'Area Admins',
     group_and_area_admins: 'Area Admins',
     district_admins: 'District Admins',
+    state_admins: 'State Admins Only',
   };
 
   const FREQ_LABELS: Record<string, string> = {
@@ -519,6 +520,7 @@ const PersonalTargets = () => {
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
+                              <SelectItem value="state_admins">State Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -762,6 +764,7 @@ const PersonalTargets = () => {
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
+                              <SelectItem value="state_admins">State Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

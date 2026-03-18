@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "favicon.png", "app-icon.png", "logo.png", "robots.txt"],
+      includeAssets: ["favicon.ico", "favicon.png", "logo.png", "robots.txt"],
       manifest: {
         name: "SOLIDARITY - Members Management",
         short_name: "SOLIDARITY",
@@ -36,13 +36,13 @@ export default defineConfig(({ mode }) => ({
         categories: ["productivity", "utilities"],
         icons: [
           {
-            src: "/app-icon.png",
+            src: "/logo.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any maskable",
           },
           {
-            src: "/app-icon.png",
+            src: "/logo.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable",
@@ -53,13 +53,13 @@ export default defineConfig(({ mode }) => ({
             name: "Members",
             short_name: "Members",
             url: "/members",
-            icons: [{ src: "/app-icon.png", sizes: "96x96" }],
+            icons: [{ src: "/logo.png", sizes: "96x96" }],
           },
           {
             name: "Dashboard",
             short_name: "Dashboard",
             url: "/",
-            icons: [{ src: "/app-icon.png", sizes: "96x96" }],
+            icons: [{ src: "/logo.png", sizes: "96x96" }],
           },
         ],
       },

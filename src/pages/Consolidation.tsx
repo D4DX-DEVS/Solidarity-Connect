@@ -375,6 +375,18 @@ const Consolidation = () => {
   const [sfLoading,  setSfLoading]  = useState(false);
   const [sfApplied,  setSfApplied]  = useState(false);
 
+  // Recurring filter period state
+  const now = new Date();
+  const [rfFromYear,  setRfFromYear]  = useState(now.getFullYear());
+  const [rfFromMonth, setRfFromMonth] = useState(1);
+  const [rfToYear,    setRfToYear]    = useState(now.getFullYear());
+  const [rfToMonth,   setRfToMonth]   = useState(now.getMonth() + 1);
+  const [rfStatus,    setRfStatus]    = useState("all");
+  const [rfResults,   setRfResults]   = useState<any[]>([]);
+  const [rfTotal,     setRfTotal]     = useState(0);
+  const [rfLoading,   setRfLoading]   = useState(false);
+  const [rfApplied,   setRfApplied]   = useState(false);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -574,6 +586,45 @@ const Consolidation = () => {
     } finally { setSfLoading(false); }
   };
 
+  const applyRecurringFilter = async () => {
+    if (!sfTargetId) {
+      toast({ title: "Select a target", description: "Please select a recurring target first", variant: "destructive" });
+      return;
+    }
+    setRfLoading(true); setRfApplied(true);
+    try {
+      const qp = new URLSearchParams();
+      qp.set("targetId", sfTargetId);
+      qp.set("fromYear",  String(rfFromYear));
+      qp.set("fromMonth", String(rfFromMonth));
+      qp.set("toYear",    String(rfToYear));
+      qp.set("toMonth",   String(rfToMonth));
+      if (sfDistrict !== "all") qp.set("districtId", sfDistrict);
+      if (rfStatus !== "all") qp.set("status", rfStatus);
+      const result = await apiCall(`/reports/recurring-marks-filter?${qp.toString()}`);
+      setRfResults(result.data?.results || []);
+      setRfTotal(result.data?.total || 0);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to filter", variant: "destructive" });
+    } finally { setRfLoading(false); }
+  };
+
+  const exportRecurringFilterCSV = () => {
+    const headers = ["Name", "Phone", "Role", "District", "Group", "Completed Months", "Completed Count"];
+    const data = rfResults.map(r => [
+      r.name, r.phone || "", getRoleLabel(r.role, r.roleTag?.type),
+      r.district || "", r.group || "",
+      (r.completedMonths || []).join("; "),
+      String(r.completedCount || 0),
+    ]);
+    const csv = [headers, ...data].map(row => row.map(f => `"${f}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `recurring-filter-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const memberPieData = dashStats ? [
     { name: "Active",   value: dashStats.members.active   },
     { name: "Inactive", value: dashStats.members.inactive },
@@ -612,6 +663,210 @@ const Consolidation = () => {
         </div>
       ) : (
         <div className="px-4 pt-4 space-y-6">
+
+          {/* ── Filter Details (top) ── */}
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="h-4 w-4 text-primary" />
+              <h2 className="font-bold text-sm">Filter Details</h2>
+            </div>
+            <Card className="shadow-sm border-dashed">
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Target *</label>
+                  <Select value={sfTargetId} onValueChange={v => { setSfTargetId(v); setRfApplied(false); setSfApplied(false); }}>
+                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select a target…" /></SelectTrigger>
+                    <SelectContent>
+                      {allTargets.filter(t => !t.isRecurring).length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Regular Targets</div>
+                          {allTargets.filter(t => !t.isRecurring).map(t => (
+                            <SelectItem key={t._id} value={t._id}>{t.title}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {allTargets.filter(t => t.isRecurring).length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground mt-1">Recurring Targets</div>
+                          {allTargets.filter(t => t.isRecurring).map(t => (
+                            <SelectItem key={t._id} value={t._id}>🔁 {t.title}</SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* District filter (shared for both regular and recurring) */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">District / Region</label>
+                  <Select value={sfDistrict} onValueChange={setSfDistrict} disabled={userRole !== "state_admin"}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Districts" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Districts</SelectItem>
+                      {districts.map(d => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* ── Regular target filters ── */}
+                {!allTargets.find(t => t._id === sfTargetId)?.isRecurring && sfTargetId && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Group</label>
+                        <Select value={sfGroup} onValueChange={setSfGroup} disabled={sfDistrict === "all" || userRole === "group_admin"}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Groups" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Groups</SelectItem>
+                            {sfGroups.map(g => <SelectItem key={g._id} value={g._id}>{g.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Role</label>
+                        <Select value={sfRole} onValueChange={setSfRole}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Roles" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Roles</SelectItem>
+                            <SelectItem value="district_admin">District Admin</SelectItem>
+                            <SelectItem value="area_admin">Area Admin</SelectItem>
+                            <SelectItem value="unit_admin">Unit Admin</SelectItem>
+                            <SelectItem value="group_admin">Group Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+                        <Select value={sfStatus} onValueChange={setSfStatus}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="not_started">Not Started</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Button className="w-full h-8 text-sm" onClick={applyStandaloneFilter} disabled={sfLoading}>
+                      {sfLoading ? "Loading…" : "Apply Filters"}
+                    </Button>
+                    {sfApplied && (
+                      <UserResultList
+                        results={sfResults}
+                        loading={sfLoading}
+                        applied={sfApplied}
+                        onExport={sfResults.length > 0 ? () => exportCSV(sfResults, `consolidation-${Date.now()}.csv`) : undefined}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* ── Recurring target filters ── */}
+                {allTargets.find(t => t._id === sfTargetId)?.isRecurring && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">From Month</label>
+                        <Select value={String(rfFromMonth)} onValueChange={v => setRfFromMonth(Number(v))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MONTHS_SHORT.map((m, i) => (
+                              <SelectItem key={i+1} value={String(i+1)}>{m}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">From Year</label>
+                        <Select value={String(rfFromYear)} onValueChange={v => setRfFromYear(Number(v))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()].map(y => (
+                              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">To Month</label>
+                        <Select value={String(rfToMonth)} onValueChange={v => setRfToMonth(Number(v))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MONTHS_SHORT.map((m, i) => (
+                              <SelectItem key={i+1} value={String(i+1)}>{m}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">To Year</label>
+                        <Select value={String(rfToYear)} onValueChange={v => setRfToYear(Number(v))}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()].map(y => (
+                              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Completion Status</label>
+                        <Select value={rfStatus} onValueChange={setRfStatus}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="completed">Completed (at least one month)</SelectItem>
+                            <SelectItem value="not_completed">Not Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Button className="w-full h-8 text-sm" onClick={applyRecurringFilter} disabled={rfLoading}>
+                      {rfLoading ? "Loading…" : "Apply Filters"}
+                    </Button>
+
+                    {rfApplied && !rfLoading && (
+                      <div className="space-y-2 mt-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold">
+                            Total: <span className="text-primary">{rfTotal}</span> {rfTotal === 1 ? "result" : "results"}
+                          </p>
+                          {rfResults.length > 0 && (
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={exportRecurringFilterCSV}>
+                              <Download className="h-3 w-3 mr-1" /> CSV
+                            </Button>
+                          )}
+                        </div>
+                        {rfResults.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-3">No results found.</p>
+                        ) : (
+                          <div className="space-y-1.5 max-h-72 overflow-y-auto">
+                            {rfResults.map(r => (
+                              <div key={r.userId} className="flex items-start justify-between gap-2 p-2 rounded border text-xs bg-muted/20">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{r.name}</p>
+                                  <p className="text-muted-foreground truncate">
+                                    {getRoleLabel(r.role, r.roleTag?.type)}
+                                    {r.district ? ` · ${r.district}` : ""}
+                                  </p>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="font-semibold text-green-600">{r.completedCount} ✓</p>
+                                  <p className="text-muted-foreground">{(r.completedMonths || []).join(", ") || "—"}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
           {/* ── Section 1: Members ── */}
           <section>
@@ -862,116 +1117,6 @@ const Consolidation = () => {
               </Card>
             </section>
           )}
-
-          {/* ── Section 5: Filter Details (Standalone Consolidation) ── */}
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Filter className="h-4 w-4 text-primary" />
-              <h2 className="font-bold text-sm">Filter Details</h2>
-            </div>
-            <Card className="shadow-sm border-dashed">
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Target *</label>
-                  <Select value={sfTargetId} onValueChange={setSfTargetId}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Select a target…" /></SelectTrigger>
-                    <SelectContent>
-                      {allTargets.filter(t => !t.isRecurring).length > 0 && (
-                        <>
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Regular Targets</div>
-                          {allTargets.filter(t => !t.isRecurring).map(t => (
-                            <SelectItem key={t._id} value={t._id}>{t.title}</SelectItem>
-                          ))}
-                        </>
-                      )}
-                      {allTargets.filter(t => t.isRecurring).length > 0 && (
-                        <>
-                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground mt-1">Recurring Targets</div>
-                          {allTargets.filter(t => t.isRecurring).map(t => (
-                            <SelectItem key={t._id} value={t._id}>🔁 {t.title}</SelectItem>
-                          ))}
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Note for recurring targets — redirect to grid above */}
-                {allTargets.find(t => t._id === sfTargetId)?.isRecurring && (
-                  <div className="bg-blue-50 border border-blue-100 rounded p-2 text-xs text-blue-700">
-                    <RefreshCw className="h-3 w-3 inline mr-1" />
-                    This is a recurring target. Use the <strong>Monthly Completion Grid</strong> in the Recurring Targets section above to view per-user per-month completion.
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">District</label>
-                    <Select value={sfDistrict} onValueChange={setSfDistrict} disabled={userRole !== "state_admin"}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Districts" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Districts</SelectItem>
-                        {districts.map(d => <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Group</label>
-                    <Select value={sfGroup} onValueChange={setSfGroup} disabled={sfDistrict === "all" || userRole === "group_admin"}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Groups" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Groups</SelectItem>
-                        {sfGroups.map(g => <SelectItem key={g._id} value={g._id}>{g.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Role</label>
-                    <Select value={sfRole} onValueChange={setSfRole}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Roles" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        <SelectItem value="district_admin">District Admin</SelectItem>
-                        <SelectItem value="area_admin">Area Admin</SelectItem>
-                        <SelectItem value="unit_admin">Unit Admin</SelectItem>
-                        <SelectItem value="group_admin">Area Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {/* Status filter — hidden for recurring targets (they use monthly grid) */}
-                  {!allTargets.find(t => t._id === sfTargetId)?.isRecurring && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
-                      <Select value={sfStatus} onValueChange={setSfStatus}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="not_started">Not Started</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                <Button
-                  className="w-full h-8 text-sm"
-                  onClick={applyStandaloneFilter}
-                  disabled={sfLoading || !sfTargetId}
-                >
-                  {sfLoading ? "Loading…" : "Apply Filters"}
-                </Button>
-              </CardContent>
-            </Card>
-            {sfApplied && (
-              <div className="mt-3 space-y-2">
-                <UserResultList
-                  results={sfResults}
-                  loading={sfLoading}
-                  applied={sfApplied}
-                  onExport={sfResults.length > 0 ? () => exportCSV(sfResults, `consolidation-${Date.now()}.csv`) : undefined}
-                />
-              </div>
-            )}
-          </section>
 
         </div>
       )}
