@@ -764,7 +764,7 @@ router.post('/logout', authenticateMember, async (req, res) => {
 });
 
 // @route   GET /api/member-auth/leaders
-// @desc    Get all users marked as leaders (accessible to authenticated members)
+// @desc    Get all leaders from both User and Member collections (accessible to authenticated members)
 // @access  Private (Member)
 router.get('/leaders', authenticateMember, async (req, res) => {
   try {
@@ -777,6 +777,9 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       page = 1,
       limit = 50,
     } = req.query;
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
 
     const filter = { isLeader: true };
     if (roleType) filter['roleTag.type'] = roleType;
@@ -791,25 +794,51 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       ];
     }
 
-    const users = await User.find(filter)
-      .select('name phone role roleTag isLeader district group')
-      .populate('district', 'name code')
-      .populate('group', 'name code')
-      .populate('roleTag.areaId', 'name code')
-      .sort({ 'roleTag.type': 1, name: 1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+    // Query both collections in parallel
+    const [users, members, userCount, memberCount] = await Promise.all([
+      User.find(filter)
+        .select('name phone role roleTag isLeader district group')
+        .populate('district', 'name code')
+        .populate('group', 'name code')
+        .populate('roleTag.areaId', 'name code')
+        .lean(),
+      Member.find(filter)
+        .select('name phone roleTag isLeader district group')
+        .populate('district', 'name code')
+        .populate('group', 'name code')
+        .lean(),
+      User.countDocuments(filter),
+      Member.countDocuments(filter),
+    ]);
 
-    const total = await User.countDocuments(filter);
+    // Normalize member records to match user shape
+    const normalizedMembers = members.map(m => ({
+      ...m,
+      role: 'member',
+    }));
+
+    // Merge, sort, and paginate
+    const combined = [...users, ...normalizedMembers].sort((a, b) => {
+      const typeA = a.roleTag?.type || '';
+      const typeB = b.roleTag?.type || '';
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const total = userCount + memberCount;
+    const start = (pageNum - 1) * limitNum;
+    const paginated = combined.slice(start, start + limitNum);
 
     res.status(200).json({
       success: true,
-      data: users,
+      data: paginated,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: pageNum,
         totalDocs: total,
-        totalPages: Math.ceil(total / parseInt(limit)),
-        limit: parseInt(limit)
+        totalPages: Math.ceil(total / limitNum),
+        limit: limitNum,
+        hasNextPage: start + limitNum < total,
+        hasPrevPage: pageNum > 1,
       }
     });
   } catch (error) {

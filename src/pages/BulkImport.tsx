@@ -137,7 +137,8 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
                 >
                   <option value="">Select District</option>
                   <option value="Thrissur">Thrissur</option>
-                  <option value="Malappuram">Malappuram</option>
+                  <option value="Malappuram East">Malappuram East</option>
+                  <option value="Malappuram West">Malappuram West</option>
                   <option value="Kozhikode">Kozhikode</option>
                 </select>
               </div>

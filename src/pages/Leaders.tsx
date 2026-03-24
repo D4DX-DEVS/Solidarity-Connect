@@ -40,6 +40,7 @@ const ADMIN_ROLE_LABELS: Record<string, string> = {
   state_admin: "State Admin",
   district_admin: "District Admin",
   group_admin: "Group Admin",
+  member: "Member",
 };
 
 interface Leader {
