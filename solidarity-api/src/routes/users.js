@@ -1,5 +1,6 @@
 import express from 'express';
 import User from '../models/User.js';
+import Member from '../models/Member.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { 
   paginationValidation,
@@ -73,7 +74,7 @@ router.get('/', authenticate, requireRole('state_admin'), paginationValidation, 
 });
 
 // @route   GET /api/users/leaders
-// @desc    Get all users marked as leaders (accessible to all authenticated admin users)
+// @desc    Get all leaders from both User and Member collections
 // @access  Private
 router.get('/leaders', authenticate, async (req, res) => {
   try {
@@ -87,6 +88,10 @@ router.get('/leaders', authenticate, async (req, res) => {
       limit = 50,
     } = req.query;
 
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    // Build filter common to both collections
     const filter = { isLeader: true };
     if (roleType) filter['roleTag.type'] = roleType;
     if (districtId) filter.district = districtId;
@@ -100,25 +105,51 @@ router.get('/leaders', authenticate, async (req, res) => {
       ];
     }
 
-    const users = await User.find(filter)
-      .select('name phone role roleTag isLeader district group')
-      .populate('district', 'name code')
-      .populate('group', 'name code')
-      .populate('roleTag.areaId', 'name code')
-      .sort({ 'roleTag.type': 1, name: 1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+    // Query both collections in parallel
+    const [users, members, userCount, memberCount] = await Promise.all([
+      User.find(filter)
+        .select('name phone role roleTag isLeader district group')
+        .populate('district', 'name code')
+        .populate('group', 'name code')
+        .populate('roleTag.areaId', 'name code')
+        .lean(),
+      Member.find(filter)
+        .select('name phone roleTag isLeader district group')
+        .populate('district', 'name code')
+        .populate('group', 'name code')
+        .lean(),
+      User.countDocuments(filter),
+      Member.countDocuments(filter),
+    ]);
 
-    const total = await User.countDocuments(filter);
+    // Normalize member records to match user shape
+    const normalizedMembers = members.map(m => ({
+      ...m,
+      role: 'member',
+    }));
+
+    // Merge, sort, and paginate
+    const combined = [...users, ...normalizedMembers].sort((a, b) => {
+      const typeA = a.roleTag?.type || '';
+      const typeB = b.roleTag?.type || '';
+      if (typeA !== typeB) return typeA.localeCompare(typeB);
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    const total = userCount + memberCount;
+    const start = (pageNum - 1) * limitNum;
+    const paginated = combined.slice(start, start + limitNum);
 
     res.status(200).json({
       success: true,
-      data: users,
+      data: paginated,
       pagination: {
-        currentPage: parseInt(page),
+        currentPage: pageNum,
         totalDocs: total,
-        totalPages: Math.ceil(total / parseInt(limit)),
-        limit: parseInt(limit)
+        totalPages: Math.ceil(total / limitNum),
+        limit: limitNum,
+        hasNextPage: start + limitNum < total,
+        hasPrevPage: pageNum > 1,
       }
     });
   } catch (error) {
