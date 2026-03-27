@@ -27,6 +27,7 @@ interface PersonalTarget {
   rewards?: string;
   isRecurring?: boolean;
   recurringFrequency?: string;
+  attendanceNeeded?: boolean;
   createdBy: { name: string; role: string };
   createdAt: string;
 }
@@ -102,6 +103,7 @@ const PersonalTargets = () => {
     instructions: '',
     rewards: '',
     active: true,
+    attendanceNeeded: false,
   });
 
   // ── Debounce ────────────────────────────────────────────────
@@ -266,6 +268,7 @@ const PersonalTargets = () => {
         rewards: recurringForm.rewards,
         isRecurring: true,
         recurringFrequency: recurringForm.recurringFrequency,
+        attendanceNeeded: recurringForm.attendanceNeeded,
         // No meaningful start/end — use a wide open range
         startDate: new Date(now.getFullYear(), 0, 1).toISOString(),
         endDate: new Date('2099-12-31T23:59:59').toISOString(),
@@ -301,6 +304,7 @@ const PersonalTargets = () => {
       instructions: '',
       rewards: '',
       active: true,
+      attendanceNeeded: false,
     });
   };
 
@@ -314,6 +318,7 @@ const PersonalTargets = () => {
       instructions: target.instructions || '',
       rewards: target.rewards || '',
       active: target.status === 'active',
+      attendanceNeeded: target.attendanceNeeded || false,
     });
     setIsRecurringDialogOpen(true);
   };
@@ -780,6 +785,17 @@ const PersonalTargets = () => {
                           />
                         </div>
 
+                        <div className="flex items-center justify-between">
+                          <div className="space-y-0.5">
+                            <Label className="text-sm font-medium">Attendance Needed</Label>
+                            <p className="text-xs text-muted-foreground">Area admins must mark member attendance when completing this target</p>
+                          </div>
+                          <Switch
+                            checked={recurringForm.attendanceNeeded}
+                            onCheckedChange={(checked) => setRecurringForm({ ...recurringForm, attendanceNeeded: checked })}
+                          />
+                        </div>
+
                         <div>
                           <Label htmlFor="r-instructions">Instructions (Optional)</Label>
                           <Textarea
@@ -884,6 +900,11 @@ const PersonalTargets = () => {
                           <Badge variant={target.status === 'active' ? 'default' : 'secondary'} className={`text-xs px-2 py-0.5 ${target.status === 'active' ? 'bg-green-600' : ''}`}>
                             {target.status === 'active' ? 'Active' : 'Inactive'}
                           </Badge>
+                          {target.attendanceNeeded && (
+                            <Badge className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800">
+                              Attendance
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between">

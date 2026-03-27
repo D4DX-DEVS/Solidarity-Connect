@@ -24,7 +24,7 @@ import {
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface TargetStat {
   _id: string; title: string; category: string; recurringFrequency: string;
-  startDate: string; endDate: string; targetAudience: string;
+  startDate: string; endDate: string; targetAudience: string; attendanceNeeded?: boolean;
   stats: {
     total: number; completed: number; in_progress: number; not_started: number;
     completionRate: number;
@@ -52,7 +52,7 @@ interface UserResult {
   phone?: string;
   progress: { status: "not_started" | "in_progress" | "completed"; completedAt?: string; feedback?: string } | null;
 }
-interface SimpleTarget { _id: string; title: string; isRecurring?: boolean }
+interface SimpleTarget { _id: string; title: string; isRecurring?: boolean; attendanceNeeded?: boolean }
 interface RecurringGridUser {
   userId: string;
   userName: string;
@@ -66,6 +66,18 @@ interface DrillState {
   filterType: "district" | "group";
   id?: string; name: string;
   clickedStatus: "completed" | "not_completed";
+}
+interface AttendanceMember {
+  memberId: string; name: string; phone: string; group: string;
+  months: Record<string, boolean>;
+  presentCount: number; absentCount: number; unmarkedCount: number;
+}
+interface AttendanceData {
+  targetTitle: string;
+  periods: string[];
+  members: AttendanceMember[];
+  periodSummary: Record<string, { present: number; absent: number; total: number }>;
+  totalMembers: number; totalPeriods: number;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -387,6 +399,10 @@ const Consolidation = () => {
   const [rfLoading,   setRfLoading]   = useState(false);
   const [rfApplied,   setRfApplied]   = useState(false);
 
+  // Attendance consolidation state
+  const [attData,      setAttData]      = useState<AttendanceData | null>(null);
+  const [attFilter,    setAttFilter]    = useState<"all" | "present" | "absent">("all");
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -592,6 +608,7 @@ const Consolidation = () => {
       return;
     }
     setRfLoading(true); setRfApplied(true);
+    setAttData(null);
     try {
       const qp = new URLSearchParams();
       qp.set("targetId", sfTargetId);
@@ -601,9 +618,30 @@ const Consolidation = () => {
       qp.set("toMonth",   String(rfToMonth));
       if (sfDistrict !== "all") qp.set("districtId", sfDistrict);
       if (rfStatus !== "all") qp.set("status", rfStatus);
-      const result = await apiCall(`/reports/recurring-marks-filter?${qp.toString()}`);
-      setRfResults(result.data?.results || []);
-      setRfTotal(result.data?.total || 0);
+
+      const selectedTarget = allTargets.find(t => t._id === sfTargetId);
+      const promises: Promise<any>[] = [
+        apiCall(`/reports/recurring-marks-filter?${qp.toString()}`)
+      ];
+      // Also fetch attendance if target has attendanceNeeded
+      if (selectedTarget?.attendanceNeeded) {
+        const attQp = new URLSearchParams();
+        attQp.set("targetId", sfTargetId);
+        attQp.set("fromYear", String(rfFromYear));
+        attQp.set("fromMonth", String(rfFromMonth));
+        attQp.set("toYear", String(rfToYear));
+        attQp.set("toMonth", String(rfToMonth));
+        if (sfDistrict !== "all") attQp.set("districtId", sfDistrict);
+        promises.push(apiCall(`/reports/attendance-consolidation?${attQp.toString()}`));
+      }
+
+      const results = await Promise.all(promises);
+      setRfResults(results[0].data?.results || []);
+      setRfTotal(results[0].data?.total || 0);
+      if (results[1]) {
+        setAttData(results[1].data || null);
+        setAttFilter("all");
+      }
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to filter", variant: "destructive" });
     } finally { setRfLoading(false); }
@@ -622,6 +660,26 @@ const Consolidation = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = `recurring-filter-${Date.now()}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportAttendanceCSV = () => {
+    if (!attData) return;
+    const periodLabels = attData.periods.map(p => {
+      const [y, m] = p.split("-");
+      return `${MONTHS_SHORT[Number(m) - 1]} ${y}`;
+    });
+    const headers = ["Name", "Phone", "Group", ...periodLabels, "Present", "Absent", "Unmarked"];
+    const rows = attData.members.map(m => [
+      m.name, m.phone, m.group,
+      ...attData.periods.map(p => m.months[p] === true ? "Present" : m.months[p] === false ? "Absent" : "—"),
+      String(m.presentCount), String(m.absentCount), String(m.unmarkedCount)
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(f => `"${f}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `attendance-${Date.now()}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -862,6 +920,142 @@ const Consolidation = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Attendance Consolidation Results */}
+                    {rfApplied && !rfLoading && attData && (
+                      <div className="space-y-3 mt-4 pt-4 border-t border-amber-200">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-amber-600" />
+                          <h3 className="font-semibold text-sm text-amber-700">Attendance Consolidation</h3>
+                        </div>
+
+                        {/* Summary stats */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="bg-green-50 rounded p-2 text-center">
+                            <p className="text-lg font-bold text-green-600">
+                              {attData.members.reduce((s, m) => s + m.presentCount, 0)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Total Present</p>
+                          </div>
+                          <div className="bg-red-50 rounded p-2 text-center">
+                            <p className="text-lg font-bold text-red-500">
+                              {attData.members.reduce((s, m) => s + m.absentCount, 0)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">Total Absent</p>
+                          </div>
+                          <div className="bg-blue-50 rounded p-2 text-center">
+                            <p className="text-lg font-bold text-blue-600">{attData.totalMembers}</p>
+                            <p className="text-xs text-muted-foreground">Members</p>
+                          </div>
+                        </div>
+
+                        {/* Period-wise summary */}
+                        {attData.periods.length > 0 && (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr>
+                                  <th className="text-left p-1.5 font-semibold text-muted-foreground border-b">Period</th>
+                                  <th className="p-1.5 font-semibold text-green-600 border-b text-center">Present</th>
+                                  <th className="p-1.5 font-semibold text-red-500 border-b text-center">Absent</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {attData.periods.map(p => {
+                                  const [py, pm] = p.split("-");
+                                  const summary = attData.periodSummary[p];
+                                  return (
+                                    <tr key={p} className="border-b last:border-0">
+                                      <td className="p-1.5 font-medium">{MONTHS_SHORT[Number(pm) - 1]} {py}</td>
+                                      <td className="p-1.5 text-center text-green-600 font-semibold">{summary?.present || 0}</td>
+                                      <td className="p-1.5 text-center text-red-500 font-semibold">{summary?.absent || 0}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Filter and export row */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex gap-1">
+                            {(["all", "present", "absent"] as const).map(f => (
+                              <Button
+                                key={f}
+                                size="sm" variant={attFilter === f ? "default" : "outline"}
+                                className={`h-7 text-xs ${attFilter === f && f === "present" ? "bg-green-600 hover:bg-green-700" : ""} ${attFilter === f && f === "absent" ? "bg-red-500 hover:bg-red-600" : ""}`}
+                                onClick={() => setAttFilter(f)}
+                              >
+                                {f === "all" ? `All (${attData.totalMembers})` : f === "present" ? "Present" : "Absent"}
+                              </Button>
+                            ))}
+                          </div>
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={exportAttendanceCSV}>
+                            <Download className="h-3 w-3 mr-1" /> CSV
+                          </Button>
+                        </div>
+
+                        {/* Member attendance grid */}
+                        <div className="overflow-x-auto -mx-1">
+                          <table className="w-full text-xs border-collapse">
+                            <thead>
+                              <tr>
+                                <th className="text-left p-1.5 font-semibold text-muted-foreground border-b sticky left-0 bg-background min-w-[120px]">
+                                  Member
+                                </th>
+                                {attData.periods.map(p => {
+                                  const [, pm] = p.split("-");
+                                  return (
+                                    <th key={p} className="p-1 font-semibold text-muted-foreground border-b text-center min-w-[36px]">
+                                      {MONTHS_SHORT[Number(pm) - 1]}
+                                    </th>
+                                  );
+                                })}
+                                <th className="p-1 font-semibold text-green-600 border-b text-center min-w-[28px]">P</th>
+                                <th className="p-1 font-semibold text-red-500 border-b text-center min-w-[28px]">A</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {attData.members
+                                .filter(m => {
+                                  if (attFilter === "all") return true;
+                                  if (attFilter === "present") return m.presentCount > 0;
+                                  return m.absentCount > 0;
+                                })
+                                .map(member => (
+                                  <tr key={member.memberId} className="border-b last:border-0 hover:bg-muted/30">
+                                    <td className="p-1.5 sticky left-0 bg-background">
+                                      <p className="font-medium truncate max-w-[110px]">{member.name}</p>
+                                      <p className="text-muted-foreground truncate max-w-[110px]">{member.group}</p>
+                                    </td>
+                                    {attData.periods.map(p => (
+                                      <td key={p} className="p-1 text-center">
+                                        {member.months[p] === true ? (
+                                          <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
+                                        ) : member.months[p] === false ? (
+                                          <X className="h-3.5 w-3.5 text-red-400 mx-auto" />
+                                        ) : (
+                                          <span className="text-gray-200">–</span>
+                                        )}
+                                      </td>
+                                    ))}
+                                    <td className="p-1 text-center font-semibold text-green-600">{member.presentCount}</td>
+                                    <td className="p-1 text-center font-semibold text-red-500">{member.absentCount}</td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                          {attData.members.filter(m => {
+                            if (attFilter === "all") return true;
+                            if (attFilter === "present") return m.presentCount > 0;
+                            return m.absentCount > 0;
+                          }).length === 0 && (
+                            <p className="text-xs text-muted-foreground text-center py-3">No members match the filter.</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>
@@ -1075,6 +1269,7 @@ const Consolidation = () => {
                         )}
                       </CardContent>
                     </Card>
+
                   </div>
                 ))}
               </div>

@@ -131,6 +131,7 @@ router.get('/me', authenticate, async (req, res) => {
         role: user.role,
         district: user.district,
         group: user.group,
+        roleTag: user.roleTag,
         permissions: user.permissions,
         lastLogin: user.lastLogin,
         isActive: user.isActive
