@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Target, CheckCircle, Clock, AlertCircle, MessageSquare,
-  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw
+  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { apiCall, uploadsAPI } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PersonalTarget {
   _id: string;
@@ -22,6 +25,7 @@ interface PersonalTarget {
   status: string;
   isRecurring?: boolean;
   recurringFrequency?: string;
+  attendanceNeeded?: boolean;
 }
 
 interface FileAttachment {
@@ -47,6 +51,24 @@ interface RecurringMark {
   year: number;
   month: number; // 1–12
   completed: boolean;
+  attendance?: { member: string; present: boolean }[];
+}
+
+interface AreaMember {
+  _id: string;
+  name: string;
+  phone: string;
+  group?: { _id: string; name: string };
+  status: string;
+  isLeader?: boolean;
+  roleTag?: { type?: string; name?: string };
+}
+
+interface AreaLeader {
+  _id: string;
+  name: string;
+  phone: string;
+  roleTag?: { type?: string; name?: string; roleDescription?: string };
 }
 
 const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -63,13 +85,13 @@ const statusConfig = {
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case 'quran': return '📖';
-    case 'hadith': return '📚';
-    case 'prayer': return '🤲';
-    case 'charity': return '💝';
-    case 'knowledge': return '🎓';
-    case 'community': return '🤝';
-    default: return '🎯';
+    case 'quran': return '\u{1F4D6}';
+    case 'hadith': return '\u{1F4DA}';
+    case 'prayer': return '\u{1F932}';
+    case 'charity': return '\u{1F49D}';
+    case 'knowledge': return '\u{1F393}';
+    case 'community': return '\u{1F91D}';
+    default: return '\u{1F3AF}';
   }
 };
 
@@ -80,6 +102,9 @@ const FREQ_LABELS: Record<string, string> = {
 };
 
 const UserTargetsSection = () => {
+  const { user } = useAuth();
+  const isAreaAdmin = user?.role === 'group_admin' && user?.roleTag?.type === 'area';
+
   const [progressList, setProgressList] = useState<ProgressRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -95,6 +120,18 @@ const UserTargetsSection = () => {
   const [markingKey, setMarkingKey] = useState<string | null>(null);
   const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
   const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
+
+  // ── Attendance dialog state ──────────────────────────────
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
+  const [attendanceTargetId, setAttendanceTargetId] = useState<string | null>(null);
+  const [attendanceYear, setAttendanceYear] = useState(0);
+  const [attendanceMonth, setAttendanceMonth] = useState(0);
+  const [areaMembers, setAreaMembers] = useState<AreaMember[]>([]);
+  const [areaLeaders, setAreaLeaders] = useState<AreaLeader[]>([]);
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [savingAttendance, setSavingAttendance] = useState(false);
+  const [attendanceIsUnmarking, setAttendanceIsUnmarking] = useState(false);
 
   useEffect(() => {
     fetchProgress();
@@ -127,8 +164,137 @@ const UserTargetsSection = () => {
       const result = await apiCall("/recurring-marks/my");
       setRecurringMarks(result.data || []);
     } catch (error) {
-      // Endpoint may not exist yet — fail silently
       console.error("Failed to fetch recurring marks:", error);
+    }
+  };
+
+  // ── Attendance helpers ─────────────────────────────────────
+  const openAttendanceDialog = async (targetId: string, year: number, month: number) => {
+    const existing = recurringMarks.find(
+      m => m.targetId === targetId && m.year === year && m.month === month
+    );
+    // If already completed, this is an unmark action — confirm and unmark directly
+    if (existing?.completed) {
+      setAttendanceIsUnmarking(true);
+      setAttendanceTargetId(targetId);
+      setAttendanceYear(year);
+      setAttendanceMonth(month);
+      setAttendanceOpen(true);
+      return;
+    }
+
+    setAttendanceIsUnmarking(false);
+    setAttendanceTargetId(targetId);
+    setAttendanceYear(year);
+    setAttendanceMonth(month);
+    setAttendanceOpen(true);
+    setLoadingMembers(true);
+
+    try {
+      // Fetch area members and existing attendance in parallel
+      const [membersRes, attendanceRes] = await Promise.all([
+        apiCall("/recurring-marks/area-members"),
+        apiCall(`/recurring-marks/attendance/${targetId}?year=${year}&month=${month}`)
+      ]);
+
+      const members: AreaMember[] = membersRes.data?.members || [];
+      const leaders: AreaLeader[] = membersRes.data?.areaLeaders || [];
+      setAreaMembers(members);
+      setAreaLeaders(leaders);
+
+      // Pre-fill attendance from existing data
+      const existingAttendance = attendanceRes.data?.attendance || [];
+      const map: Record<string, boolean> = {};
+      // Default all to false
+      members.forEach(m => { map[m._id] = false; });
+      // Override with existing
+      existingAttendance.forEach((a: { member: string | { _id: string }; present: boolean }) => {
+        const id = typeof a.member === 'string' ? a.member : a.member._id;
+        map[id] = a.present;
+      });
+      setAttendanceMap(map);
+    } catch {
+      toast({ title: "Error", description: "Failed to load area members", variant: "destructive" });
+      setAttendanceOpen(false);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const submitAttendance = async () => {
+    if (!attendanceTargetId) return;
+    setSavingAttendance(true);
+
+    const attendance = Object.entries(attendanceMap).map(([memberId, present]) => ({
+      memberId,
+      present
+    }));
+
+    try {
+      await apiCall("/recurring-marks", {
+        method: "POST",
+        body: JSON.stringify({
+          targetId: attendanceTargetId,
+          year: attendanceYear,
+          month: attendanceMonth,
+          completed: true,
+          attendance
+        }),
+      });
+      // Update local state
+      setRecurringMarks(prev => {
+        const filtered = prev.filter(
+          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth)
+        );
+        return [...filtered, {
+          targetId: attendanceTargetId!,
+          year: attendanceYear,
+          month: attendanceMonth,
+          completed: true,
+          attendance: attendance.map(a => ({ member: a.memberId, present: a.present }))
+        }];
+      });
+      toast({ title: "Success", description: "Attendance marked and target completed" });
+      setAttendanceOpen(false);
+    } catch {
+      toast({ title: "Error", description: "Failed to save attendance", variant: "destructive" });
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
+
+  const handleUnmarkAttendance = async () => {
+    if (!attendanceTargetId) return;
+    setSavingAttendance(true);
+    try {
+      await apiCall("/recurring-marks", {
+        method: "POST",
+        body: JSON.stringify({
+          targetId: attendanceTargetId,
+          year: attendanceYear,
+          month: attendanceMonth,
+          completed: false,
+          attendance: []
+        }),
+      });
+      setRecurringMarks(prev => {
+        const filtered = prev.filter(
+          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth)
+        );
+        return [...filtered, {
+          targetId: attendanceTargetId!,
+          year: attendanceYear,
+          month: attendanceMonth,
+          completed: false,
+          attendance: []
+        }];
+      });
+      toast({ title: "Unmarked", description: "Month mark and attendance cleared" });
+      setAttendanceOpen(false);
+    } catch {
+      toast({ title: "Error", description: "Failed to unmark", variant: "destructive" });
+    } finally {
+      setSavingAttendance(false);
     }
   };
 
@@ -157,6 +323,15 @@ const UserTargetsSection = () => {
       toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
     } finally {
       setMarkingKey(null);
+    }
+  };
+
+  const handleMonthClick = (target: PersonalTarget, year: number, monthNum: number) => {
+    // If target has attendanceNeeded and user is area admin, open attendance dialog
+    if (target.attendanceNeeded && isAreaAdmin) {
+      openAttendanceDialog(target._id, year, monthNum);
+    } else {
+      toggleRecurringMark(target._id, year, monthNum);
     }
   };
 
@@ -252,6 +427,9 @@ const UserTargetsSection = () => {
       </Card>
     );
   }
+
+  const presentCount = Object.values(attendanceMap).filter(Boolean).length;
+  const totalAttendance = Object.keys(attendanceMap).length;
 
   return (
     <div className="space-y-4">
@@ -456,7 +634,7 @@ const UserTargetsSection = () => {
                 onClick={() => setRecurringYear(y => y - 1)}
                 className="px-2 py-1 rounded border text-xs hover:bg-muted"
               >
-                ←
+                &larr;
               </button>
               <span className="text-sm font-semibold w-12 text-center">{recurringYear}</span>
               <button
@@ -464,7 +642,7 @@ const UserTargetsSection = () => {
                 className="px-2 py-1 rounded border text-xs hover:bg-muted"
                 disabled={recurringYear >= new Date().getFullYear()}
               >
-                →
+                &rarr;
               </button>
             </div>
 
@@ -489,6 +667,12 @@ const UserTargetsSection = () => {
                                 <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
                                 {FREQ_LABELS[freq] || freq}
                               </Badge>
+                              {target.attendanceNeeded && isAreaAdmin && (
+                                <Badge className="text-xs bg-amber-100 text-amber-700 shrink-0">
+                                  <Users className="h-2.5 w-2.5 mr-1 inline" />
+                                  Attendance
+                                </Badge>
+                              )}
                             </div>
                             {target.instructions && (
                               <p className="text-xs text-muted-foreground line-clamp-1">{target.instructions}</p>
@@ -520,7 +704,7 @@ const UserTargetsSection = () => {
                             return (
                               <button
                                 key={monthNum}
-                                onClick={() => !isFuture && toggleRecurringMark(target._id, recurringYear, monthNum)}
+                                onClick={() => !isFuture && handleMonthClick(target, recurringYear, monthNum)}
                                 disabled={isLoading || isFuture}
                                 title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
                                 className={`
@@ -534,7 +718,7 @@ const UserTargetsSection = () => {
                                   ${isLoading ? 'opacity-60 cursor-wait' : ''}
                                 `}
                               >
-                                {isCompleted ? '✓' : month}
+                                {isCompleted ? '\u2713' : month}
                               </button>
                             );
                           })}
@@ -566,6 +750,162 @@ const UserTargetsSection = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* ══════════ ATTENDANCE DIALOG ══════════ */}
+      <Dialog open={attendanceOpen} onOpenChange={setAttendanceOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              {attendanceIsUnmarking
+                ? `Unmark ${MONTHS_FULL[attendanceMonth - 1]} ${attendanceYear}`
+                : `Mark Attendance - ${MONTHS_FULL[attendanceMonth - 1]} ${attendanceYear}`
+              }
+            </DialogTitle>
+          </DialogHeader>
+
+          {attendanceIsUnmarking ? (
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                This will unmark the target completion and clear the attendance for this month. Continue?
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setAttendanceOpen(false)} disabled={savingAttendance}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleUnmarkAttendance}
+                  disabled={savingAttendance}
+                >
+                  {savingAttendance ? "Unmarking..." : "Unmark Month"}
+                </Button>
+              </div>
+            </div>
+          ) : loadingMembers ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : (
+            <div className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <p className="text-sm text-muted-foreground">
+                  Mark attendance for each member in your area
+                </p>
+                <Badge variant="outline" className="shrink-0">
+                  {presentCount}/{totalAttendance} present
+                </Badge>
+              </div>
+
+              {/* Select All / Deselect All */}
+              <div className="flex gap-2 mb-3 px-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => {
+                    const newMap: Record<string, boolean> = {};
+                    Object.keys(attendanceMap).forEach(id => { newMap[id] = true; });
+                    setAttendanceMap(newMap);
+                  }}
+                >
+                  Select All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => {
+                    const newMap: Record<string, boolean> = {};
+                    Object.keys(attendanceMap).forEach(id => { newMap[id] = false; });
+                    setAttendanceMap(newMap);
+                  }}
+                >
+                  Deselect All
+                </Button>
+              </div>
+
+              {/* Member list */}
+              <div className="overflow-y-auto flex-1 space-y-1 pr-1">
+                {/* Area Leaders section */}
+                {areaLeaders.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 px-1">Area Leaders</p>
+                    {areaLeaders.map(leader => {
+                      // Leaders are Users, not Members — show them as info-only (not in attendanceMap)
+                      return (
+                        <div key={`leader-${leader._id}`} className="flex items-center gap-3 px-2 py-1.5 rounded bg-blue-50/50">
+                          <Users className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{leader.name}</p>
+                            <p className="text-xs text-muted-foreground">{leader.roleTag?.name} - {leader.phone}</p>
+                          </div>
+                          <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">Leader</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Members section */}
+                {areaMembers.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 px-1">
+                      Members ({areaMembers.length})
+                    </p>
+                    {areaMembers.map(member => (
+                      <label
+                        key={member._id}
+                        className="flex items-center gap-3 px-2 py-2 rounded hover:bg-muted/50 cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={attendanceMap[member._id] || false}
+                          onCheckedChange={(checked) => {
+                            setAttendanceMap(prev => ({
+                              ...prev,
+                              [member._id]: Boolean(checked)
+                            }));
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{member.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.group?.name || 'No group'} - {member.phone}
+                          </p>
+                        </div>
+                        {member.isLeader && (
+                          <Badge className="text-xs bg-green-100 text-green-700 shrink-0">
+                            {member.roleTag?.name || 'Leader'}
+                          </Badge>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {areaMembers.length === 0 && areaLeaders.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No members found in your area</p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <div className="flex justify-end gap-3 pt-4 mt-3 border-t">
+                <Button variant="outline" onClick={() => setAttendanceOpen(false)} disabled={savingAttendance}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={submitAttendance}
+                  disabled={savingAttendance}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  {savingAttendance ? "Saving..." : "Mark Complete with Attendance"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

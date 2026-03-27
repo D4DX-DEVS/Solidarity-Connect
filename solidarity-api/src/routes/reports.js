@@ -1599,7 +1599,7 @@ router.get('/recurring-target-stats', authenticate, authorize(['view_reports']),
     // Fetch active recurring targets whose window includes today
     const targets = await PersonalTarget.find(targetFilter)
       .sort({ startDate: -1 })
-      .select('title category recurringFrequency startDate endDate targetAudience')
+      .select('title category recurringFrequency startDate endDate targetAudience attendanceNeeded')
       .lean();
 
     if (targets.length === 0) {
@@ -2003,6 +2003,170 @@ router.get('/recurring-marks-filter', authenticate, authorize(['view_reports']),
   } catch (error) {
     console.error('Recurring marks filter error:', error);
     res.status(500).json({ success: false, message: 'Failed to filter recurring marks' });
+  }
+});
+
+// @route   GET /api/reports/attendance-consolidation
+// @desc    Get attendance data for a target across selected months
+// @access  state_admin, district_admin with view_reports
+router.get('/attendance-consolidation', authenticate, authorize(['view_reports']), async (req, res) => {
+  try {
+    if (!['state_admin', 'district_admin'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
+
+    const { targetId, fromYear, fromMonth, toYear, toMonth, districtId } = req.query;
+
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'targetId is required' });
+    }
+
+    const target = await PersonalTarget.findById(targetId).lean();
+    if (!target || !target.isRecurring || !target.attendanceNeeded) {
+      return res.status(404).json({ success: false, message: 'Attendance-enabled recurring target not found' });
+    }
+
+    // Build period pairs
+    const fromYearN = Number(fromYear) || new Date().getFullYear();
+    const fromMonthN = Number(fromMonth) || 1;
+    const toYearN = Number(toYear) || new Date().getFullYear();
+    const toMonthN = Number(toMonth) || (new Date().getMonth() + 1);
+
+    const periods = [];
+    let y = fromYearN, m = fromMonthN;
+    while (y < toYearN || (y === toYearN && m <= toMonthN)) {
+      periods.push({ year: y, month: m });
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+
+    if (periods.length === 0) {
+      return res.status(200).json({ success: true, data: { periods: [], members: [], summary: {} } });
+    }
+
+    // Fetch all recurring marks for this target in the period
+    const markQuery = {
+      personalTarget: target._id,
+      $or: periods.map(p => ({ year: p.year, month: p.month }))
+    };
+
+    // Scope: district_admin sees only marks from users in their district
+    const roleScope = getRoleScope(req.user);
+    const effectiveDistrictId = req.user.role === 'state_admin' ? (districtId || null) : roleScope.districtId;
+
+    const marks = await RecurringMark.find(markQuery)
+      .populate('attendance.member', 'name phone group')
+      .lean();
+
+    // Build member attendance map: memberId → { name, phone, group, months: { "2026-3": true/false } }
+    const memberMap = {};
+    // Also track which area admins marked each period
+    const adminMarks = [];
+
+    for (const mark of marks) {
+      if (!mark.attendance || mark.attendance.length === 0) continue;
+
+      const periodKey = `${mark.year}-${mark.month}`;
+
+      // Get the marking user's info for admin tracking
+      adminMarks.push({
+        userId: mark.user.toString(),
+        userType: mark.userType,
+        period: periodKey,
+        completed: mark.completed
+      });
+
+      for (const att of mark.attendance) {
+        if (!att.member) continue;
+        const memberId = typeof att.member === 'object' ? att.member._id.toString() : att.member.toString();
+
+        if (!memberMap[memberId]) {
+          const memberObj = typeof att.member === 'object' ? att.member : null;
+          memberMap[memberId] = {
+            memberId,
+            name: memberObj?.name || 'Unknown',
+            phone: memberObj?.phone || '',
+            groupId: memberObj?.group?.toString() || '',
+            months: {}
+          };
+        }
+        memberMap[memberId].months[periodKey] = att.present;
+      }
+    }
+
+    let memberList = Object.values(memberMap);
+
+    // Populate group names and filter by district if needed
+    if (memberList.length > 0) {
+      const memberIds = memberList.map(m => m.memberId);
+      const memberFilter = { _id: { $in: memberIds } };
+      if (effectiveDistrictId) memberFilter.district = effectiveDistrictId;
+
+      const membersFromDB = await Member.find(memberFilter)
+        .select('name phone group district')
+        .populate('group', 'name')
+        .lean();
+
+      const memberDBMap = {};
+      for (const m of membersFromDB) {
+        memberDBMap[m._id.toString()] = m;
+      }
+
+      // Filter and enrich
+      memberList = memberList
+        .filter(m => memberDBMap[m.memberId])
+        .map(m => {
+          const dbMember = memberDBMap[m.memberId];
+          return {
+            ...m,
+            name: dbMember.name,
+            phone: dbMember.phone || '',
+            group: dbMember.group?.name || ''
+          };
+        });
+    }
+
+    // Calculate summary
+    const totalMembers = memberList.length;
+    const periodSummary = {};
+    for (const period of periods) {
+      const key = `${period.year}-${period.month}`;
+      let present = 0, absent = 0;
+      for (const member of memberList) {
+        if (member.months[key] === true) present++;
+        else if (member.months[key] === false) absent++;
+      }
+      periodSummary[key] = { present, absent, total: present + absent };
+    }
+
+    // Overall attendance stats per member
+    const periodKeys = periods.map(p => `${p.year}-${p.month}`);
+    memberList = memberList.map(m => {
+      let presentCount = 0, absentCount = 0, unmarkedCount = 0;
+      for (const key of periodKeys) {
+        if (m.months[key] === true) presentCount++;
+        else if (m.months[key] === false) absentCount++;
+        else unmarkedCount++;
+      }
+      return { ...m, presentCount, absentCount, unmarkedCount };
+    });
+
+    memberList.sort((a, b) => a.name.localeCompare(b.name));
+
+    res.status(200).json({
+      success: true,
+      data: {
+        targetTitle: target.title,
+        periods: periods.map(p => `${p.year}-${p.month}`),
+        members: memberList,
+        periodSummary,
+        totalMembers,
+        totalPeriods: periods.length
+      }
+    });
+  } catch (error) {
+    console.error('Attendance consolidation error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch attendance consolidation' });
   }
 });
 

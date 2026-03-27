@@ -47,7 +47,7 @@ const personalTargetSchema = new mongoose.Schema({
   },
   targetAudience: {
     type: String,
-    enum: ['all_users', 'members_only', 'group_admins', 'area_admins', 'district_admins', 'state_admins'],
+    enum: ['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins', 'state_admins'],
     default: 'all_users'
   },
   status: {
@@ -100,6 +100,10 @@ const personalTargetSchema = new mongoose.Schema({
     ref: 'PersonalTarget'
   },
   isTemplate: {
+    type: Boolean,
+    default: false
+  },
+  attendanceNeeded: {
     type: Boolean,
     default: false
   }

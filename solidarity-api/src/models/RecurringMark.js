@@ -37,7 +37,20 @@ const recurringMarkSchema = new mongoose.Schema({
   markedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  // Area attendance — only populated when the target has attendanceNeeded=true
+  // and the marking user is an area admin
+  attendance: [{
+    member: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Member',
+      required: true
+    },
+    present: {
+      type: Boolean,
+      default: false
+    }
+  }]
 }, {
   timestamps: true
 });
