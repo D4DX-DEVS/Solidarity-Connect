@@ -59,7 +59,7 @@ interface RecurringGridUser {
   role: string;
   district?: string;
   group?: string;
-  marks: Record<number, boolean>; // month (1–12) → completed
+  marks: Record<string, boolean>; // "month" or "month-week" → completed
 }
 interface DrillState {
   targetId: string; targetTitle: string;
@@ -375,6 +375,7 @@ const Consolidation = () => {
   const [recurringGridYear, setRecurringGridYear] = useState(new Date().getFullYear());
   const [recurringGridData, setRecurringGridData] = useState<RecurringGridUser[]>([]);
   const [recurringGridLoading, setRecurringGridLoading] = useState(false);
+  const [recurringGridFrequency, setRecurringGridFrequency] = useState<string>('monthly');
 
   // Standalone filter section
   const [sfTargetId, setSfTargetId] = useState("");
@@ -517,6 +518,7 @@ const Consolidation = () => {
       qp.set("year", String(year));
       const result = await apiCall(`/reports/recurring-marks?${qp.toString()}`);
       setRecurringGridData(result.data || []);
+      setRecurringGridFrequency(result.frequency || 'monthly');
     } catch (error: any) {
       toast({ title: "Error", description: error.message || "Failed to load grid", variant: "destructive" });
       setRecurringGridData([]);
@@ -543,17 +545,55 @@ const Consolidation = () => {
   };
 
   const exportRecurringGrid = (target: TargetStat) => {
-    const header = ["Name", "Role", "District", "Group", ...MONTHS_SHORT];
-    const rows = recurringGridData.map(u => [
-      u.userName, u.role, u.district || "", u.group || "",
-      ...Array.from({ length: 12 }, (_, i) => u.marks[i + 1] ? "✓" : ""),
-    ]);
-    const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `recurring-${target.title}-${recurringGridYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    const isWeekly = recurringGridFrequency === 'weekly';
+    if (isWeekly) {
+      // Weekly: columns for each month-week
+      const weekCols: string[] = [];
+      for (let m = 0; m < 12; m++) {
+        const firstDay = new Date(recurringGridYear, m, 1).getDay();
+        const daysInMonth = new Date(recurringGridYear, m + 1, 0).getDate();
+        const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+        for (let w = 1; w <= weeks; w++) {
+          weekCols.push(`${MONTHS_SHORT[m]}-W${w}`);
+        }
+      }
+      const header = ["Name", "Role", "District", "Group", ...weekCols];
+      const rows = recurringGridData.map(u => [
+        u.userName, u.role, u.district || "", u.group || "",
+        ...weekCols.map((_, idx) => {
+          // Reconstruct month-week from column index
+          let col = 0;
+          for (let m = 0; m < 12; m++) {
+            const firstDay = new Date(recurringGridYear, m, 1).getDay();
+            const daysInMonth = new Date(recurringGridYear, m + 1, 0).getDate();
+            const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+            for (let w = 1; w <= weeks; w++) {
+              if (col === idx) return u.marks[`${m + 1}-${w}`] ? "✓" : "";
+              col++;
+            }
+          }
+          return "";
+        }),
+      ]);
+      const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `recurring-weekly-${target.title}-${recurringGridYear}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const header = ["Name", "Role", "District", "Group", ...MONTHS_SHORT];
+      const rows = recurringGridData.map(u => [
+        u.userName, u.role, u.district || "", u.group || "",
+        ...Array.from({ length: 12 }, (_, i) => u.marks[i + 1] ? "✓" : ""),
+      ]);
+      const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = `recurring-${target.title}-${recurringGridYear}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const exportCSV = (rows: UserResult[], filename: string) => {
@@ -1179,7 +1219,7 @@ const Consolidation = () => {
                         >
                           <div className="flex items-center gap-2">
                             <RefreshCw className="h-3.5 w-3.5" />
-                            Monthly Completion Grid
+                            {target.recurringFrequency === 'weekly' ? 'Weekly' : 'Monthly'} Completion Grid
                           </div>
                           {recurringGridTargetId === target._id
                             ? <ChevronUp className="h-4 w-4" />
@@ -1223,46 +1263,114 @@ const Consolidation = () => {
                               </p>
                             ) : (
                               <div className="overflow-x-auto -mx-1">
-                                <table className="w-full text-xs border-collapse">
-                                  <thead>
-                                    <tr>
-                                      <th className="text-left p-1.5 font-semibold text-muted-foreground border-b sticky left-0 bg-background min-w-[120px]">
-                                        User
-                                      </th>
-                                      {MONTHS_SHORT.map((m, i) => (
-                                        <th key={i} className="p-1 font-semibold text-muted-foreground border-b text-center min-w-[32px]">
-                                          {m}
+                                {recurringGridFrequency === 'weekly' ? (
+                                  /* ── Weekly grid: month groups × week columns ── */
+                                  <table className="w-full text-xs border-collapse">
+                                    <thead>
+                                      <tr>
+                                        <th rowSpan={2} className="text-left p-1.5 font-semibold text-muted-foreground border-b sticky left-0 bg-background min-w-[120px]">
+                                          User
                                         </th>
-                                      ))}
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {recurringGridData.map((user) => (
-                                      <tr key={user.userId} className="border-b last:border-0 hover:bg-muted/30">
-                                        <td className="p-1.5 sticky left-0 bg-background">
-                                          <p className="font-medium truncate max-w-[110px]">{user.userName}</p>
-                                          <p className="text-muted-foreground truncate max-w-[110px]">{user.district || user.role}</p>
-                                        </td>
-                                        {Array.from({ length: 12 }, (_, i) => {
-                                          const monthNum = i + 1;
-                                          const completed = user.marks[monthNum] === true;
-                                          const isFuture = recurringGridYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                                        {MONTHS_SHORT.map((m, mIdx) => {
+                                          const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
+                                          const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
+                                          const weeks = Math.ceil((firstDay + daysInMonth) / 7);
                                           return (
-                                            <td key={monthNum} className="p-1 text-center">
-                                              {isFuture ? (
-                                                <span className="text-gray-200">–</span>
-                                              ) : completed ? (
-                                                <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
-                                              ) : (
-                                                <X className="h-3.5 w-3.5 text-gray-300 mx-auto" />
-                                              )}
-                                            </td>
+                                            <th key={mIdx} colSpan={weeks} className="p-1 font-semibold text-muted-foreground border-b text-center border-l">
+                                              {m}
+                                            </th>
                                           );
                                         })}
                                       </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                                      <tr>
+                                        {MONTHS_SHORT.map((_, mIdx) => {
+                                          const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
+                                          const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
+                                          const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+                                          return Array.from({ length: weeks }, (__, w) => (
+                                            <th key={`${mIdx}-${w}`} className="p-0.5 text-[9px] text-muted-foreground/60 border-b text-center min-w-[24px]">
+                                              W{w + 1}
+                                            </th>
+                                          ));
+                                        })}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {recurringGridData.map((user) => (
+                                        <tr key={user.userId} className="border-b last:border-0 hover:bg-muted/30">
+                                          <td className="p-1.5 sticky left-0 bg-background">
+                                            <p className="font-medium truncate max-w-[110px]">{user.userName}</p>
+                                            <p className="text-muted-foreground truncate max-w-[110px]">{user.district || user.role}</p>
+                                          </td>
+                                          {MONTHS_SHORT.map((_, mIdx) => {
+                                            const monthNum = mIdx + 1;
+                                            const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
+                                            const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
+                                            const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+                                            const isFutureMonth = recurringGridYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                                            return Array.from({ length: weeks }, (__, w) => {
+                                              const weekNum = w + 1;
+                                              const completed = user.marks[`${monthNum}-${weekNum}`] === true;
+                                              return (
+                                                <td key={`${mIdx}-${w}`} className="p-0.5 text-center">
+                                                  {isFutureMonth ? (
+                                                    <span className="text-gray-200">–</span>
+                                                  ) : completed ? (
+                                                    <CheckCircle className="h-3.5 w-3.5 text-green-500 mx-auto" />
+                                                  ) : (
+                                                    <X className="h-3 w-3 text-gray-300 mx-auto" />
+                                                  )}
+                                                </td>
+                                              );
+                                            });
+                                          })}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                ) : (
+                                  /* ── Monthly grid (existing) ── */
+                                  <table className="w-full text-xs border-collapse">
+                                    <thead>
+                                      <tr>
+                                        <th className="text-left p-1.5 font-semibold text-muted-foreground border-b sticky left-0 bg-background min-w-[120px]">
+                                          User
+                                        </th>
+                                        {MONTHS_SHORT.map((m, i) => (
+                                          <th key={i} className="p-1 font-semibold text-muted-foreground border-b text-center min-w-[32px]">
+                                            {m}
+                                          </th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {recurringGridData.map((user) => (
+                                        <tr key={user.userId} className="border-b last:border-0 hover:bg-muted/30">
+                                          <td className="p-1.5 sticky left-0 bg-background">
+                                            <p className="font-medium truncate max-w-[110px]">{user.userName}</p>
+                                            <p className="text-muted-foreground truncate max-w-[110px]">{user.district || user.role}</p>
+                                          </td>
+                                          {Array.from({ length: 12 }, (_, i) => {
+                                            const monthNum = i + 1;
+                                            const completed = user.marks[monthNum] === true;
+                                            const isFuture = recurringGridYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                                            return (
+                                              <td key={monthNum} className="p-1 text-center">
+                                                {isFuture ? (
+                                                  <span className="text-gray-200">–</span>
+                                                ) : completed ? (
+                                                  <CheckCircle className="h-4 w-4 text-green-500 mx-auto" />
+                                                ) : (
+                                                  <X className="h-3.5 w-3.5 text-gray-300 mx-auto" />
+                                                )}
+                                              </td>
+                                            );
+                                          })}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
                               </div>
                             )}
                           </div>

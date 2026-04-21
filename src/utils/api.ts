@@ -240,7 +240,7 @@ export const membersAPI = {
 
   getUserContext: () => apiCall('/members/user-context'),
 
-  updateMemberLeader: (memberId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string } }) =>
+  updateMemberLeader: (memberId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string; listingOrder?: number | null } }) =>
     apiCall(`/members/${memberId}/leader`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -351,7 +351,7 @@ export const leadersAPI = {
     const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
     return apiCall(`/member-auth/leaders${queryString}`);
   },
-  updateLeader: (userId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string } }) =>
+  updateLeader: (userId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string; listingOrder?: number | null } }) =>
     apiCall(`/users/${userId}/leader`, {
       method: 'PATCH',
       body: JSON.stringify(data),

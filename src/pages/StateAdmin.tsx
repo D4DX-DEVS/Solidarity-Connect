@@ -75,6 +75,13 @@ const StateAdmin = () => {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
   const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const WEEKLY_SLOTS = [1, 2, 3, 4, 5];
+
+  const getWeeksInMonth = (year: number, monthIdx0: number): number => {
+    const firstDay = new Date(year, monthIdx0, 1).getDay();
+    const daysInMonth = new Date(year, monthIdx0 + 1, 0).getDate();
+    return Math.ceil((firstDay + daysInMonth) / 7);
+  };
 
   const adminActions = [
     { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
@@ -152,19 +159,20 @@ const StateAdmin = () => {
       const marksMap: Record<string, Record<string, boolean>> = {};
       for (const m of (res.data || [])) {
         if (!marksMap[m.targetId]) marksMap[m.targetId] = {};
-        marksMap[m.targetId][`${m.year}-${m.month}`] = m.completed;
+        const week = m.week || 0;
+        marksMap[m.targetId][`${m.year}-${m.month}-${week}`] = m.completed;
       }
       setMyMarks(marksMap);
     } catch {}
   };
 
-  const toggleMark = async (targetId: string, year: number, month: number) => {
-    const key = `${year}-${month}`;
+  const toggleMark = async (targetId: string, year: number, month: number, week: number = 0) => {
+    const key = `${year}-${month}-${week}`;
     const current = myMarks[targetId]?.[key] || false;
     const loadingKey = `${targetId}-${key}`;
     setMarkingLoading(loadingKey);
     try {
-      await apiCall('/recurring-marks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, year, month, completed: !current }) });
+      await apiCall('/recurring-marks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, year, month, week, completed: !current }) });
       setMyMarks(prev => ({
         ...prev,
         [targetId]: { ...prev[targetId], [key]: !current }
@@ -347,52 +355,107 @@ const StateAdmin = () => {
                 <h2 className="font-semibold text-sm">My Recurring Targets</h2>
               </div>
               <div className="space-y-4">
-                {myRecurringTargets.map((target: any) => (
-                  <div key={target._id} className="border rounded-lg p-3">
-                    <p className="font-medium text-sm mb-2">{target.title}</p>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs border-collapse">
-                        <thead>
-                          <tr>
-                            {MONTHS_SHORT.map((m, i) => (
-                              <th key={i} className="p-1 text-center text-muted-foreground font-medium min-w-[36px]">{m}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            {Array.from({ length: 12 }, (_, i) => {
-                              const monthNum = i + 1;
-                              const isFuture = monthNum > currentMonth;
-                              const key = `${currentYear}-${monthNum}`;
-                              const completed = myMarks[target._id]?.[key] || false;
-                              const loadingKey = `${target._id}-${key}`;
-                              return (
-                                <td key={monthNum} className="p-1 text-center">
-                                  {isFuture ? (
-                                    <span className="text-gray-200 text-base">–</span>
-                                  ) : (
-                                    <button
-                                      onClick={() => toggleMark(target._id, currentYear, monthNum)}
-                                      disabled={markingLoading === loadingKey}
-                                      className="mx-auto flex items-center justify-center w-7 h-7 rounded-full hover:bg-muted transition-colors"
-                                    >
-                                      {completed
-                                        ? <CheckCircle className="h-5 w-5 text-green-500" />
-                                        : <X className="h-4 w-4 text-gray-300" />
-                                      }
-                                    </button>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        </tbody>
-                      </table>
+                {myRecurringTargets.map((target: any) => {
+                  const freq = target.recurringFrequency || 'monthly';
+                  const isWeekly = freq === 'weekly';
+                  return (
+                    <div key={target._id} className="border rounded-lg p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <p className="font-medium text-sm">{target.title}</p>
+                        {isWeekly && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">Weekly</span>
+                        )}
+                      </div>
+
+                      {isWeekly ? (
+                        /* ── Weekly grid: month rows × week columns ── */
+                        <div className="space-y-1.5">
+                          {MONTHS_SHORT.map((month, idx) => {
+                            const monthNum = idx + 1;
+                            const weeksInMonth = getWeeksInMonth(currentYear, idx);
+                            const monthIsFuture = monthNum > currentMonth;
+                            return (
+                              <div key={monthNum} className="flex items-center gap-2">
+                                <span className="text-xs font-medium w-8 shrink-0 text-muted-foreground">{month}</span>
+                                <div className="grid grid-cols-5 gap-1 flex-1">
+                                  {WEEKLY_SLOTS.map((weekNum) => {
+                                    const exists = weekNum <= weeksInMonth;
+                                    if (!exists) return <div key={weekNum} className="h-7" aria-hidden />;
+                                    const key = `${currentYear}-${monthNum}-${weekNum}`;
+                                    const completed = myMarks[target._id]?.[key] || false;
+                                    const loadingKey = `${target._id}-${key}`;
+                                    const isFuture = monthIsFuture;
+                                    return (
+                                      <button
+                                        key={weekNum}
+                                        onClick={() => !isFuture && toggleMark(target._id, currentYear, monthNum, weekNum)}
+                                        disabled={markingLoading === loadingKey || isFuture}
+                                        title={isFuture ? 'Future week' : `${month} W${weekNum}`}
+                                        className={`h-7 rounded text-[10px] font-medium transition-all border ${
+                                          completed
+                                            ? 'bg-green-500 border-green-500 text-white'
+                                            : isFuture
+                                              ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                              : 'bg-white border-gray-200 text-gray-500 hover:border-primary hover:text-primary'
+                                        } ${markingLoading === loadingKey ? 'opacity-60 cursor-wait' : ''}`}
+                                      >
+                                        {completed ? '✓' : `W${weekNum}`}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        /* ── Monthly grid (existing) ── */
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs border-collapse">
+                            <thead>
+                              <tr>
+                                {MONTHS_SHORT.map((m, i) => (
+                                  <th key={i} className="p-1 text-center text-muted-foreground font-medium min-w-[36px]">{m}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                {Array.from({ length: 12 }, (_, i) => {
+                                  const monthNum = i + 1;
+                                  const isFuture = monthNum > currentMonth;
+                                  const key = `${currentYear}-${monthNum}-0`;
+                                  const completed = myMarks[target._id]?.[key] || false;
+                                  const loadingKey = `${target._id}-${key}`;
+                                  return (
+                                    <td key={monthNum} className="p-1 text-center">
+                                      {isFuture ? (
+                                        <span className="text-gray-200 text-base">–</span>
+                                      ) : (
+                                        <button
+                                          onClick={() => toggleMark(target._id, currentYear, monthNum, 0)}
+                                          disabled={markingLoading === loadingKey}
+                                          className="mx-auto flex items-center justify-center w-7 h-7 rounded-full hover:bg-muted transition-colors"
+                                        >
+                                          {completed
+                                            ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                            : <X className="h-4 w-4 text-gray-300" />
+                                          }
+                                        </button>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-muted-foreground mt-2 text-right">{currentYear}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2 text-right">{currentYear}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

@@ -113,7 +113,14 @@ const memberSchema = new mongoose.Schema({
       enum: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
     },
     name: String,
-    roleDescription: String
+    roleDescription: String,
+    // Listing order used to sort leaders in member-facing dashboards.
+    // Lower values appear first; leaders without a value are pushed to the end.
+    listingOrder: {
+      type: Number,
+      min: [0, 'Listing order cannot be negative'],
+      default: null
+    }
   },
   isApproved: {
     type: Boolean,

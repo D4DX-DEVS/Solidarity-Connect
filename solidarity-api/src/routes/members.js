@@ -586,10 +586,22 @@ router.patch('/:id/leader',
       if (isLeader === false) {
         member.roleTag = undefined;
       } else if (roleTag) {
+        // Normalise listingOrder: allow null/"" to clear it, cast strings to numbers.
+        let nextListingOrder = member.roleTag && member.roleTag.listingOrder;
+        if (roleTag.listingOrder !== undefined) {
+          if (roleTag.listingOrder === null || roleTag.listingOrder === '') {
+            nextListingOrder = null;
+          } else {
+            const parsed = Number(roleTag.listingOrder);
+            nextListingOrder = Number.isFinite(parsed) ? parsed : null;
+          }
+        }
+
         member.roleTag = {
           type: roleTag.type || (member.roleTag && member.roleTag.type),
           name: roleTag.name || (member.roleTag && member.roleTag.name),
-          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (member.roleTag && member.roleTag.roleDescription)
+          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (member.roleTag && member.roleTag.roleDescription),
+          listingOrder: nextListingOrder
         };
       }
 
