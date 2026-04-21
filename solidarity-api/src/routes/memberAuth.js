@@ -817,11 +817,19 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       role: 'member',
     }));
 
-    // Merge, sort, and paginate
+    // Merge, sort, and paginate.
+    // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
+    // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
+    const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
     const combined = [...users, ...normalizedMembers].sort((a, b) => {
+      const orderA = normalizeOrder(a.roleTag?.listingOrder);
+      const orderB = normalizeOrder(b.roleTag?.listingOrder);
+      if (orderA !== orderB) return orderA - orderB;
+
       const typeA = a.roleTag?.type || '';
       const typeB = b.roleTag?.type || '';
       if (typeA !== typeB) return typeA.localeCompare(typeB);
+
       return (a.name || '').localeCompare(b.name || '');
     });
 

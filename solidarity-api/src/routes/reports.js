@@ -1799,6 +1799,13 @@ router.get('/recurring-marks', authenticate, async (req, res) => {
       return res.status(400).json({ success: false, message: 'targetId and year are required' });
     }
 
+    // Fetch target to determine frequency
+    const target = await PersonalTarget.findById(targetId).select('recurringFrequency').lean();
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Target not found' });
+    }
+    const isWeekly = target.recurringFrequency === 'weekly';
+
     const yearNum = Number(year);
 
     // Fetch all marks for this target+year
@@ -1814,7 +1821,12 @@ router.get('/recurring-marks', authenticate, async (req, res) => {
       if (!marksByUser[uid]) {
         marksByUser[uid] = { userType: m.userType, marks: {} };
       }
-      marksByUser[uid].marks[m.month] = m.completed;
+      if (isWeekly) {
+        // Key: "month-week" e.g. "1-1", "1-2", "2-1"
+        marksByUser[uid].marks[`${m.month}-${m.week}`] = m.completed;
+      } else {
+        marksByUser[uid].marks[m.month] = m.completed;
+      }
     }
 
     const userIds = Object.keys(marksByUser);
@@ -1871,7 +1883,7 @@ router.get('/recurring-marks', authenticate, async (req, res) => {
     // Sort by name
     result.sort((a, b) => a.userName.localeCompare(b.userName));
 
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, data: result, frequency: target.recurringFrequency || 'monthly' });
   } catch (error) {
     console.error('Recurring marks grid error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch recurring marks grid' });

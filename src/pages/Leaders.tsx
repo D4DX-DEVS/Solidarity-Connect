@@ -49,7 +49,7 @@ interface Leader {
   phone: string;
   role: string;
   isLeader: boolean;
-  roleTag?: { type?: string; name?: string; areaId?: { _id?: string; name: string; code?: string }; roleDescription?: string };
+  roleTag?: { type?: string; name?: string; areaId?: { _id?: string; name: string; code?: string }; roleDescription?: string; listingOrder?: number | null };
   district?: { _id?: string; name: string; code?: string };
   group?: { _id?: string; name: string; code?: string };
 }
@@ -427,6 +427,11 @@ const Leaders = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {typeof leader.roleTag?.listingOrder === "number" && (
+                          <span className="text-[11px] font-semibold bg-primary/10 text-primary rounded-full w-6 h-6 inline-flex items-center justify-center flex-shrink-0">
+                            {leader.roleTag.listingOrder}
+                          </span>
+                        )}
                         <p className="font-semibold truncate">{leader.name}</p>
                         {leader.roleTag?.type && (
                           <span

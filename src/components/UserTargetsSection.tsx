@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Target, CheckCircle, Clock, AlertCircle, MessageSquare,
-  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users
+  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users, Plus, Minus
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,9 @@ interface RecurringMark {
   targetId: string;
   year: number;
   month: number; // 1–12
+  week: number; // 0 = month-level, 1..5 = week-within-month (weekly targets only)
   completed: boolean;
+  completionCount?: number;
   attendance?: { member: string; present: boolean }[];
 }
 
@@ -76,6 +78,17 @@ const MONTHS_FULL = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
+
+// Each month is split into 5 slots for weekly targets. Week 5 only exists
+// if the month actually has a 5th calendar week (days 29–31 that fall in a new week).
+const WEEKLY_SLOTS = [1, 2, 3, 4, 5];
+
+const getWeeksInMonth = (year: number, monthIdx0: number): number => {
+  // monthIdx0 is 0-based (0 = Jan). Returns number of calendar weeks overlapping this month.
+  const firstDay = new Date(year, monthIdx0, 1).getDay(); // 0 (Sun) .. 6 (Sat)
+  const daysInMonth = new Date(year, monthIdx0 + 1, 0).getDate();
+  return Math.ceil((firstDay + daysInMonth) / 7);
+};
 
 const statusConfig = {
   not_started: { label: "Not Started", icon: AlertCircle, color: "text-muted-foreground", badge: "secondary" as const },
@@ -126,6 +139,7 @@ const UserTargetsSection = () => {
   const [attendanceTargetId, setAttendanceTargetId] = useState<string | null>(null);
   const [attendanceYear, setAttendanceYear] = useState(0);
   const [attendanceMonth, setAttendanceMonth] = useState(0);
+  const [attendanceWeek, setAttendanceWeek] = useState(0);
   const [areaMembers, setAreaMembers] = useState<AreaMember[]>([]);
   const [areaLeaders, setAreaLeaders] = useState<AreaLeader[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
@@ -169,9 +183,14 @@ const UserTargetsSection = () => {
   };
 
   // ── Attendance helpers ─────────────────────────────────────
-  const openAttendanceDialog = async (targetId: string, year: number, month: number) => {
+  const openAttendanceDialog = async (
+    targetId: string,
+    year: number,
+    month: number,
+    week: number = 0,
+  ) => {
     const existing = recurringMarks.find(
-      m => m.targetId === targetId && m.year === year && m.month === month
+      m => m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === week
     );
     // If already completed, this is an unmark action — confirm and unmark directly
     if (existing?.completed) {
@@ -179,6 +198,7 @@ const UserTargetsSection = () => {
       setAttendanceTargetId(targetId);
       setAttendanceYear(year);
       setAttendanceMonth(month);
+      setAttendanceWeek(week);
       setAttendanceOpen(true);
       return;
     }
@@ -187,14 +207,16 @@ const UserTargetsSection = () => {
     setAttendanceTargetId(targetId);
     setAttendanceYear(year);
     setAttendanceMonth(month);
+    setAttendanceWeek(week);
     setAttendanceOpen(true);
     setLoadingMembers(true);
 
     try {
       // Fetch area members and existing attendance in parallel
+      const attendanceQS = `year=${year}&month=${month}${week ? `&week=${week}` : ''}`;
       const [membersRes, attendanceRes] = await Promise.all([
         apiCall("/recurring-marks/area-members"),
-        apiCall(`/recurring-marks/attendance/${targetId}?year=${year}&month=${month}`)
+        apiCall(`/recurring-marks/attendance/${targetId}?${attendanceQS}`)
       ]);
 
       const members: AreaMember[] = membersRes.data?.members || [];
@@ -237,20 +259,22 @@ const UserTargetsSection = () => {
           targetId: attendanceTargetId,
           year: attendanceYear,
           month: attendanceMonth,
+          week: attendanceWeek,
           completed: true,
           attendance
         }),
       });
-      // Update local state
       setRecurringMarks(prev => {
         const filtered = prev.filter(
-          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth)
+          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth && (m.week || 0) === attendanceWeek)
         );
         return [...filtered, {
           targetId: attendanceTargetId!,
           year: attendanceYear,
           month: attendanceMonth,
+          week: attendanceWeek,
           completed: true,
+          completionCount: 1,
           attendance: attendance.map(a => ({ member: a.memberId, present: a.present }))
         }];
       });
@@ -273,23 +297,27 @@ const UserTargetsSection = () => {
           targetId: attendanceTargetId,
           year: attendanceYear,
           month: attendanceMonth,
+          week: attendanceWeek,
           completed: false,
+          completionCount: 0,
           attendance: []
         }),
       });
       setRecurringMarks(prev => {
         const filtered = prev.filter(
-          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth)
+          m => !(m.targetId === attendanceTargetId && m.year === attendanceYear && m.month === attendanceMonth && (m.week || 0) === attendanceWeek)
         );
         return [...filtered, {
           targetId: attendanceTargetId!,
           year: attendanceYear,
           month: attendanceMonth,
+          week: attendanceWeek,
           completed: false,
+          completionCount: 0,
           attendance: []
         }];
       });
-      toast({ title: "Unmarked", description: "Month mark and attendance cleared" });
+      toast({ title: "Unmarked", description: "Mark and attendance cleared" });
       setAttendanceOpen(false);
     } catch {
       toast({ title: "Error", description: "Failed to unmark", variant: "destructive" });
@@ -298,25 +326,41 @@ const UserTargetsSection = () => {
     }
   };
 
-  const toggleRecurringMark = async (targetId: string, year: number, month: number) => {
-    const key = `${targetId}-${year}-${month}`;
-    const existing = recurringMarks.find(m => m.targetId === targetId && m.year === year && m.month === month);
+  // Look up a stored mark for a specific slot. `week` defaults to 0 (month-level).
+  const findMark = (targetId: string, year: number, month: number, week: number = 0) =>
+    recurringMarks.find(
+      m => m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === week
+    );
+
+  const toggleRecurringMark = async (
+    targetId: string,
+    year: number,
+    month: number,
+    week: number = 0,
+  ) => {
+    const key = `${targetId}-${year}-${month}-${week}`;
+    const existing = findMark(targetId, year, month, week);
     const newCompleted = !existing?.completed;
+    const newCount = newCompleted ? Math.max(1, existing?.completionCount || 0) : 0;
     setMarkingKey(key);
     // Optimistic update
     setRecurringMarks(prev => {
-      const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
-      return [...filtered, { targetId, year, month, completed: newCompleted }];
+      const filtered = prev.filter(
+        m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === week)
+      );
+      return [...filtered, { targetId, year, month, week, completed: newCompleted, completionCount: newCount }];
     });
     try {
       await apiCall("/recurring-marks", {
         method: "POST",
-        body: JSON.stringify({ targetId, year, month, completed: newCompleted }),
+        body: JSON.stringify({ targetId, year, month, week, completed: newCompleted, completionCount: newCount }),
       });
     } catch {
       // Revert on failure
       setRecurringMarks(prev => {
-        const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
+        const filtered = prev.filter(
+          m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === week)
+        );
         if (existing) return [...filtered, existing];
         return filtered;
       });
@@ -326,12 +370,62 @@ const UserTargetsSection = () => {
     }
   };
 
-  const handleMonthClick = (target: PersonalTarget, year: number, monthNum: number) => {
-    // If target has attendanceNeeded and user is area admin, open attendance dialog
-    if (target.attendanceNeeded && isAreaAdmin) {
-      openAttendanceDialog(target._id, year, monthNum);
+  // Adjust the optional completion count for a monthly mark (extra completions in the same month).
+  // The month stays marked as completed as long as count > 0.
+  const adjustCompletionCount = async (
+    targetId: string,
+    year: number,
+    month: number,
+    delta: number,
+  ) => {
+    const key = `${targetId}-${year}-${month}-0-count`;
+    const existing = findMark(targetId, year, month, 0);
+    const nextCount = Math.max(0, (existing?.completionCount || 0) + delta);
+    const nextCompleted = nextCount > 0;
+    setMarkingKey(key);
+    setRecurringMarks(prev => {
+      const filtered = prev.filter(
+        m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === 0)
+      );
+      return [...filtered, { targetId, year, month, week: 0, completed: nextCompleted, completionCount: nextCount }];
+    });
+    try {
+      await apiCall("/recurring-marks", {
+        method: "POST",
+        body: JSON.stringify({
+          targetId,
+          year,
+          month,
+          week: 0,
+          completed: nextCompleted,
+          completionCount: nextCount,
+        }),
+      });
+    } catch {
+      setRecurringMarks(prev => {
+        const filtered = prev.filter(
+          m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week || 0) === 0)
+        );
+        if (existing) return [...filtered, existing];
+        return filtered;
+      });
+      toast({ title: "Error", description: "Failed to update count", variant: "destructive" });
+    } finally {
+      setMarkingKey(null);
+    }
+  };
+
+  const handleSlotClick = (
+    target: PersonalTarget,
+    year: number,
+    monthNum: number,
+    week: number = 0,
+  ) => {
+    // Attendance dialog only applies to month-level marks (attendanceNeeded + area admin).
+    if (target.attendanceNeeded && isAreaAdmin && week === 0) {
+      openAttendanceDialog(target._id, year, monthNum, 0);
     } else {
-      toggleRecurringMark(target._id, year, monthNum);
+      toggleRecurringMark(target._id, year, monthNum, week);
     }
   };
 
@@ -687,42 +781,139 @@ const UserTargetsSection = () => {
                         </button>
                       </div>
 
-                      {/* Month grid — always visible */}
+                      {/* Grid — always visible */}
                       <div className="mt-3">
-                        <p className="text-xs text-muted-foreground mb-2 font-medium">Mark completed months:</p>
-                        <div className="grid grid-cols-6 gap-1.5">
-                          {MONTHS_SHORT.map((month, idx) => {
-                            const monthNum = idx + 1;
-                            const key = `${target._id}-${recurringYear}-${monthNum}`;
-                            const mark = recurringMarks.find(
-                              m => m.targetId === target._id && m.year === recurringYear && m.month === monthNum
-                            );
-                            const isCompleted = mark?.completed || false;
-                            const isLoading = markingKey === key;
-                            const isFuture = recurringYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                        {freq === 'weekly' ? (
+                          <>
+                            <p className="text-xs text-muted-foreground mb-2 font-medium">
+                              Mark each week you completed the target:
+                            </p>
+                            <div className="space-y-2">
+                              {MONTHS_SHORT.map((month, idx) => {
+                                const monthNum = idx + 1;
+                                const today = new Date();
+                                const weeksInMonth = getWeeksInMonth(recurringYear, idx);
+                                const monthIsFuture =
+                                  recurringYear > today.getFullYear() ||
+                                  (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
 
-                            return (
-                              <button
-                                key={monthNum}
-                                onClick={() => !isFuture && handleMonthClick(target, recurringYear, monthNum)}
-                                disabled={isLoading || isFuture}
-                                title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
-                                className={`
-                                  h-9 rounded-lg text-xs font-medium transition-all border
-                                  ${isCompleted
-                                    ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                                    : isFuture
-                                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                      : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
-                                  }
-                                  ${isLoading ? 'opacity-60 cursor-wait' : ''}
-                                `}
-                              >
-                                {isCompleted ? '\u2713' : month}
-                              </button>
-                            );
-                          })}
-                        </div>
+                                return (
+                                  <div key={monthNum} className="flex items-center gap-2">
+                                    <span className="text-xs font-medium w-10 shrink-0 text-muted-foreground">
+                                      {month}
+                                    </span>
+                                    <div className="grid grid-cols-5 gap-1.5 flex-1">
+                                      {WEEKLY_SLOTS.map((weekNum) => {
+                                        const exists = weekNum <= weeksInMonth;
+                                        if (!exists) {
+                                          return <div key={weekNum} className="h-8" aria-hidden />;
+                                        }
+                                        const slotKey = `${target._id}-${recurringYear}-${monthNum}-${weekNum}`;
+                                        const mark = findMark(target._id, recurringYear, monthNum, weekNum);
+                                        const isCompleted = mark?.completed || false;
+                                        const isLoading = markingKey === slotKey;
+                                        const isFuture = monthIsFuture;
+                                        return (
+                                          <button
+                                            key={weekNum}
+                                            onClick={() =>
+                                              !isFuture && handleSlotClick(target, recurringYear, monthNum, weekNum)
+                                            }
+                                            disabled={isLoading || isFuture}
+                                            title={isFuture ? 'Future week' : `${month} ${recurringYear} · W${weekNum}`}
+                                            className={`
+                                              h-8 rounded-md text-[11px] font-medium transition-all border
+                                              ${isCompleted
+                                                ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                                : isFuture
+                                                  ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                                  : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+                                              }
+                                              ${isLoading ? 'opacity-60 cursor-wait' : ''}
+                                            `}
+                                          >
+                                            {isCompleted ? '\u2713' : `W${weekNum}`}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-muted-foreground mb-2 font-medium">
+                              Mark completed months. Use +/- if you completed it more than once in a month.
+                            </p>
+                            <div className="grid grid-cols-6 gap-1.5">
+                              {MONTHS_SHORT.map((month, idx) => {
+                                const monthNum = idx + 1;
+                                const slotKey = `${target._id}-${recurringYear}-${monthNum}-0`;
+                                const countKey = `${target._id}-${recurringYear}-${monthNum}-0-count`;
+                                const mark = findMark(target._id, recurringYear, monthNum, 0);
+                                const isCompleted = mark?.completed || false;
+                                const count = mark?.completionCount || (isCompleted ? 1 : 0);
+                                const isLoading = markingKey === slotKey || markingKey === countKey;
+                                const today = new Date();
+                                const isFuture =
+                                  recurringYear > today.getFullYear() ||
+                                  (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+
+                                return (
+                                  <div key={monthNum} className="relative">
+                                    <button
+                                      onClick={() => !isFuture && handleSlotClick(target, recurringYear, monthNum, 0)}
+                                      disabled={isLoading || isFuture}
+                                      title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
+                                      className={`
+                                        w-full h-9 rounded-lg text-xs font-medium transition-all border
+                                        ${isCompleted
+                                          ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                          : isFuture
+                                            ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                            : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+                                        }
+                                        ${isLoading ? 'opacity-60 cursor-wait' : ''}
+                                      `}
+                                    >
+                                      {isCompleted ? `\u2713 ${month}` : month}
+                                    </button>
+
+                                    {/* Count controls: visible once the month has been marked at least once */}
+                                    {isCompleted && !isFuture && (
+                                      <div className="mt-1 flex items-center justify-between gap-1 px-1">
+                                        <button
+                                          onClick={() => adjustCompletionCount(target._id, recurringYear, monthNum, -1)}
+                                          disabled={isLoading || count <= 0}
+                                          className="h-5 w-5 rounded-full bg-muted hover:bg-muted/70 text-muted-foreground disabled:opacity-40 inline-flex items-center justify-center"
+                                          aria-label="Decrease completion count"
+                                        >
+                                          <Minus className="h-3 w-3" />
+                                        </button>
+                                        <span
+                                          className="text-[11px] font-semibold tabular-nums min-w-[18px] text-center text-green-700"
+                                          title="Times completed this month"
+                                        >
+                                          ×{count}
+                                        </span>
+                                        <button
+                                          onClick={() => adjustCompletionCount(target._id, recurringYear, monthNum, +1)}
+                                          disabled={isLoading || count >= 99}
+                                          className="h-5 w-5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary disabled:opacity-40 inline-flex items-center justify-center"
+                                          aria-label="Increase completion count"
+                                        >
+                                          <Plus className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Expanded: instructions / rewards */}

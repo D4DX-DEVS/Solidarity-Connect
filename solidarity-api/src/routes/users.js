@@ -128,11 +128,19 @@ router.get('/leaders', authenticate, async (req, res) => {
       role: 'member',
     }));
 
-    // Merge, sort, and paginate
+    // Merge, sort, and paginate.
+    // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
+    // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
+    const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
     const combined = [...users, ...normalizedMembers].sort((a, b) => {
+      const orderA = normalizeOrder(a.roleTag?.listingOrder);
+      const orderB = normalizeOrder(b.roleTag?.listingOrder);
+      if (orderA !== orderB) return orderA - orderB;
+
       const typeA = a.roleTag?.type || '';
       const typeB = b.roleTag?.type || '';
       if (typeA !== typeB) return typeA.localeCompare(typeB);
+
       return (a.name || '').localeCompare(b.name || '');
     });
 
@@ -196,11 +204,23 @@ router.patch('/:id/leader',
       if (isLeader === false) {
         targetUser.roleTag = undefined;
       } else if (roleTag) {
+        // Normalise listingOrder: allow null/"" to clear it, cast strings to numbers.
+        let nextListingOrder = targetUser.roleTag && targetUser.roleTag.listingOrder;
+        if (roleTag.listingOrder !== undefined) {
+          if (roleTag.listingOrder === null || roleTag.listingOrder === '') {
+            nextListingOrder = null;
+          } else {
+            const parsed = Number(roleTag.listingOrder);
+            nextListingOrder = Number.isFinite(parsed) ? parsed : null;
+          }
+        }
+
         targetUser.roleTag = {
           type: roleTag.type || (targetUser.roleTag && targetUser.roleTag.type),
           name: roleTag.name || (targetUser.roleTag && targetUser.roleTag.name),
           areaId: roleTag.areaId !== undefined ? (roleTag.areaId || null) : (targetUser.roleTag && targetUser.roleTag.areaId),
-          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (targetUser.roleTag && targetUser.roleTag.roleDescription)
+          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (targetUser.roleTag && targetUser.roleTag.roleDescription),
+          listingOrder: nextListingOrder
         };
       }
 

@@ -13,6 +13,29 @@ const router = express.Router();
 const isAreaAdmin = (user) =>
   user.role === 'group_admin' && user.roleTag?.type === 'area';
 
+// Normalise the week value coming from clients.
+// - weekly targets: 1..5 (defaults to 1 if missing / invalid)
+// - non-weekly targets: always 0 (month-level mark)
+const normaliseWeek = (target, rawWeek) => {
+  const isWeekly = target.recurringFrequency === 'weekly';
+  if (!isWeekly) return 0;
+  const parsed = Number(rawWeek);
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 5) return 1;
+  return Math.trunc(parsed);
+};
+
+// Shape a RecurringMark document for client consumption.
+const formatMark = (m) => ({
+  targetId: m.personalTarget.toString(),
+  year: m.year,
+  month: m.month,
+  week: m.week || 0,
+  completed: m.completed,
+  completionCount: m.completionCount || 0,
+  markedAt: m.markedAt,
+  attendance: m.attendance || []
+});
+
 // @route   GET /api/recurring-marks/my
 // @desc    Get all recurring marks for the current (non-member) user
 // @access  Authenticated users (non-member)
@@ -21,18 +44,9 @@ router.get('/my', authenticate, async (req, res) => {
     const marks = await RecurringMark.find({
       user: req.user._id,
       userType: 'User'
-    }).select('personalTarget year month completed markedAt attendance');
+    }).select('personalTarget year month week completed completionCount markedAt attendance');
 
-    const formatted = marks.map(m => ({
-      targetId: m.personalTarget.toString(),
-      year: m.year,
-      month: m.month,
-      completed: m.completed,
-      markedAt: m.markedAt,
-      attendance: m.attendance || []
-    }));
-
-    res.status(200).json({ success: true, data: formatted });
+    res.status(200).json({ success: true, data: marks.map(formatMark) });
   } catch (error) {
     console.error('Get recurring marks error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch recurring marks' });
@@ -92,7 +106,7 @@ router.get('/area-members', authenticate, async (req, res) => {
 });
 
 // @route   GET /api/recurring-marks/attendance/:targetId
-// @desc    Get attendance data for a specific target/year/month
+// @desc    Get attendance data for a specific target/year/month (+ optional week for weekly targets)
 // @access  Area admins only
 router.get('/attendance/:targetId', authenticate, async (req, res) => {
   try {
@@ -101,18 +115,21 @@ router.get('/attendance/:targetId', authenticate, async (req, res) => {
     }
 
     const { targetId } = req.params;
-    const { year, month } = req.query;
+    const { year, month, week } = req.query;
 
     if (!year || !month) {
       return res.status(400).json({ success: false, message: 'year and month are required' });
     }
+
+    const weekNum = week !== undefined && week !== '' ? Number(week) : 0;
 
     const mark = await RecurringMark.findOne({
       user: req.user._id,
       userType: 'User',
       personalTarget: targetId,
       year: Number(year),
-      month: Number(month)
+      month: Number(month),
+      week: Number.isFinite(weekNum) ? weekNum : 0
     }).populate('attendance.member', 'name phone');
 
     res.status(200).json({
@@ -132,17 +149,19 @@ router.get('/attendance/:targetId', authenticate, async (req, res) => {
 });
 
 // @route   POST /api/recurring-marks
-// @desc    Upsert a recurring mark for the current user (toggle month completion)
+// @desc    Upsert a recurring mark for the current user
+//          - weekly targets: one mark per week (body.week = 1..5)
+//          - monthly targets: one mark per month; optional body.completionCount to track
+//            additional completions beyond the first.
 // @access  Authenticated users (non-member)
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { targetId, year, month, completed, attendance } = req.body;
+    const { targetId, year, month, completed, attendance, completionCount } = req.body;
 
     if (!targetId || !year || !month || completed === undefined) {
       return res.status(400).json({ success: false, message: 'targetId, year, month, and completed are required' });
     }
 
-    // Verify target exists and is recurring
     const target = await PersonalTarget.findById(targetId);
     if (!target) {
       return res.status(404).json({ success: false, message: 'Target not found' });
@@ -151,13 +170,28 @@ router.post('/', authenticate, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Target is not recurring' });
     }
 
-    // Build the update payload
+    const week = normaliseWeek(target, req.body.week);
+    const isCompleted = Boolean(completed);
+
+    // Resolve completionCount:
+    //   - If the client sends an explicit numeric value, clamp it to 0..99 and use it.
+    //   - Otherwise default to 1 when completed, 0 when unmarking.
+    let nextCount;
+    if (completionCount !== undefined && completionCount !== null) {
+      const parsed = Number(completionCount);
+      if (Number.isFinite(parsed)) {
+        nextCount = Math.max(0, Math.min(99, Math.trunc(parsed)));
+      }
+    }
+    if (nextCount === undefined) nextCount = isCompleted ? 1 : 0;
+
     const updatePayload = {
-      completed: Boolean(completed),
+      completed: isCompleted,
+      completionCount: nextCount,
       markedAt: new Date()
     };
 
-    // If target has attendanceNeeded and user is area admin, include attendance
+    // Attendance only applies to area-admin-marked targets with attendanceNeeded
     if (target.attendanceNeeded && isAreaAdmin(req.user) && Array.isArray(attendance)) {
       updatePayload.attendance = attendance.map(a => ({
         member: a.memberId,
@@ -171,13 +205,14 @@ router.post('/', authenticate, async (req, res) => {
         userType: 'User',
         personalTarget: targetId,
         year: Number(year),
-        month: Number(month)
+        month: Number(month),
+        week
       },
       { $set: updatePayload },
-      { new: true, upsert: true }
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    // Sync UserTargetProgress: completed if any mark for this target is completed
+    // Sync UserTargetProgress: target is "completed" if ANY mark for this target is completed.
     const anyCompleted = await RecurringMark.exists({
       user: req.user._id,
       userType: 'User',
@@ -201,14 +236,7 @@ router.post('/', authenticate, async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Mark updated successfully',
-      data: {
-        targetId: mark.personalTarget.toString(),
-        year: mark.year,
-        month: mark.month,
-        completed: mark.completed,
-        markedAt: mark.markedAt,
-        attendance: mark.attendance || []
-      }
+      data: formatMark(mark)
     });
   } catch (error) {
     console.error('Upsert recurring mark error:', error);

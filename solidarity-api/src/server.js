@@ -187,6 +187,38 @@ async function runMigrations() {
     if (Object.keys(memberMarksByUserTarget).length > 0) {
       console.log(`✅ Migration: synced ${Object.keys(memberMarksByUserTarget).length} recurring mark(s) to MemberTargetProgress`);
     }
+
+    // RecurringMark: replace the legacy {user, personalTarget, year, month} unique index
+    // with the new {..., week} unique index so weekly targets can record multiple marks per month.
+    try {
+      const recurringCol = RecurringMark.collection;
+      const indexes = await recurringCol.indexes();
+      const legacy = indexes.find(
+        (ix) =>
+          ix.unique &&
+          ix.key &&
+          ix.key.user === 1 &&
+          ix.key.personalTarget === 1 &&
+          ix.key.year === 1 &&
+          ix.key.month === 1 &&
+          ix.key.week === undefined
+      );
+      if (legacy) {
+        await recurringCol.dropIndex(legacy.name);
+        console.log(`✅ Migration: dropped legacy RecurringMark index "${legacy.name}"`);
+      }
+      // Backfill week=0 on any historical docs missing the new field so the unique index is happy.
+      const updated = await RecurringMark.updateMany(
+        { week: { $exists: false } },
+        { $set: { week: 0 } }
+      );
+      if (updated.modifiedCount > 0) {
+        console.log(`✅ Migration: set week=0 on ${updated.modifiedCount} existing RecurringMark doc(s)`);
+      }
+      await RecurringMark.syncIndexes();
+    } catch (indexErr) {
+      console.error('RecurringMark index migration error:', indexErr);
+    }
   } catch (err) {
     console.error('Migration error:', err);
   }
