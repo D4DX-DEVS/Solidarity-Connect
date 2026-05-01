@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, Users, MapPin, Edit, Save, X, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Users, MapPin, Edit, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
 import { useMeeting, useUpdateMeeting } from "@/hooks/useMeetings";
 import { format } from "date-fns";
@@ -115,72 +116,99 @@ const MeetingDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading meeting details...</p>
-        </div>
-      </div>
+      <PageShell>
+        <PageHero
+          title="Meeting Details"
+          subtitle="Review the meeting setup, sessions, and status information."
+          eyebrow="Meetings"
+          icon={<Calendar className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          }
+        />
+        <SectionCard title="Loading" description="Fetching meeting details.">
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+              <p>Loading meeting details...</p>
+            </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   if (error || !meeting) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <Calendar className="h-12 w-12 mx-auto mb-2" />
+      <PageShell>
+        <PageHero
+          title="Meeting Details"
+          subtitle="Review the meeting setup, sessions, and status information."
+          eyebrow="Meetings"
+          icon={<Calendar className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          }
+        />
+        <SectionCard title="Meeting Not Found" description="The meeting could not be loaded or is not accessible.">
+          <div className="text-center text-red-500">
+            <Calendar className="mx-auto mb-2 h-12 w-12" />
             <h2 className="text-lg font-semibold">Meeting Not Found</h2>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="mt-2 text-sm text-muted-foreground">
               {error?.message || "The meeting you're looking for doesn't exist or you don't have permission to view it."}
             </p>
+            <Button className="mt-4" onClick={() => navigate(-1)}>
+              Back to Meetings
+            </Button>
           </div>
-          <Button onClick={() => navigate("/state-admin/meeting-agenda")}>
-            Back to Meetings
-          </Button>
-        </div>
-      </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-6">
-      <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin/meeting-agenda")}>
-              <ArrowLeft className="h-5 w-5" />
+    <PageShell>
+      <PageHero
+        title={isEditing ? "Edit Meeting" : "Meeting Details"}
+        subtitle="Review the meeting setup, sessions, and status information."
+        eyebrow="Meetings"
+        icon={<Calendar className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <h1 className="text-xl font-bold">
-              {isEditing ? "Edit Meeting" : "Meeting Details"}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
             {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
+              <Button size="sm" onClick={() => setIsEditing(true)}>
+                <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
             ) : (
               <>
-                <Button variant="outline" onClick={handleCancel}>
-                  <X className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" onClick={handleCancel}>
+                  <X className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>
-                <Button onClick={handleSave} disabled={updateMeeting.isPending}>
-                  <Save className="h-4 w-4 mr-2" />
+                <Button size="sm" onClick={handleSave} disabled={updateMeeting.isPending}>
+                  <Save className="mr-2 h-4 w-4" />
                   {updateMeeting.isPending ? "Saving..." : "Save"}
                 </Button>
               </>
             )}
           </div>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4">
-        <div className="space-y-6">
+      <div className="space-y-6">
           {/* Basic Information */}
-          <Card>
+          <Card className="surface-card">
             <CardHeader>
               <CardTitle>Meeting Information</CardTitle>
             </CardHeader>
@@ -298,7 +326,7 @@ const MeetingDetail = () => {
 
           {/* Monthly Series Information */}
           {meeting.meetingType === 'monthly_series' && meeting.monthlyDetails && (
-            <Card>
+            <Card className="surface-card">
               <CardHeader>
                 <CardTitle>Monthly Series Details</CardTitle>
               </CardHeader>
@@ -327,7 +355,7 @@ const MeetingDetail = () => {
 
           {/* Sessions (if monthly series) */}
           {meeting.meetingType === 'monthly_series' && meeting.sessions && (
-            <Card>
+            <Card className="surface-card">
               <CardHeader>
                 <CardTitle>Sessions</CardTitle>
               </CardHeader>
@@ -340,7 +368,7 @@ const MeetingDetail = () => {
                 ) : (
                   <div className="space-y-4">
                     {meeting.sessions.map((session: any, index: number) => (
-                      <Card key={session._id} className="border-l-4 border-l-primary">
+                      <Card key={session._id} className="surface-card border-l-4 border-l-primary">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium">Session {session.sessionNumber}: {session.title}</h4>
@@ -373,7 +401,7 @@ const MeetingDetail = () => {
           )}
 
           {/* Meeting Details */}
-          <Card>
+          <Card className="surface-card">
             <CardHeader>
               <CardTitle>Additional Information</CardTitle>
             </CardHeader>
@@ -404,9 +432,8 @@ const MeetingDetail = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </main>
-    </div>
+      </div>
+    </PageShell>
   );
 };
 

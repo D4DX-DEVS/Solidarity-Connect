@@ -15,12 +15,19 @@ import {
   ChevronRight,
   Star,
   StarOff,
-  Tag
+  Tag,
+  Phone,
+  Mail,
+  CalendarDays,
+  Clock3,
+  Briefcase,
+  Cake,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI } from "@/utils/api";
 import {
   DropdownMenu,
@@ -466,6 +473,13 @@ const UserManagement = () => {
     }
   };
 
+  const topStats = userStats ? [
+    { title: "Total Users", value: String(userStats.totalUsers), icon: Users, tone: "primary" as const },
+    { title: "Active", value: String(userStats.activeUsers), icon: UserCheck, tone: "success" as const },
+    { title: "State Admins", value: String(userStats.stateAdmins), icon: Shield, tone: "neutral" as const },
+    { title: "District Admins", value: String(userStats.districtAdmins), icon: Building2, tone: "warning" as const },
+  ] : [];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
@@ -478,81 +492,30 @@ const UserManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg">
-            <Users className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">User Management</h1>
-            <p className="text-sm text-muted-foreground">Manage admin users and permissions</p>
-          </div>
+    <PageShell>
+      <PageHero
+        eyebrow="Access Control"
+        title="User Management"
+        subtitle="Manage admin users, filters, and leader assignments with a cleaner responsive control surface."
+        icon={<Users className="h-6 w-6" />}
+        actions={
           <Button onClick={() => navigate(-1)} variant="outline" size="sm">
             Back
           </Button>
+        }
+      />
+
+      {userStats && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {topStats.map((item) => (
+            <MetricCard key={item.title} title={item.title} value={item.value} icon={item.icon} tone={item.tone} />
+          ))}
         </div>
-      </header>
+      )}
 
-      <main className="p-4 space-y-4">
-        {/* Statistics Cards */}
-        {userStats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-primary">{userStats.totalUsers}</p>
-                    <p className="text-xs text-muted-foreground">Total Users</p>
-                  </div>
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">{userStats.activeUsers}</p>
-                    <p className="text-xs text-muted-foreground">Active</p>
-                  </div>
-                  <UserCheck className="h-5 w-5 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-blue-600">{userStats.stateAdmins}</p>
-                    <p className="text-xs text-muted-foreground">State Admins</p>
-                  </div>
-                  <Shield className="h-5 w-5 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-2xl font-bold text-orange-600">{userStats.districtAdmins}</p>
-                    <p className="text-xs text-muted-foreground">District Admins</p>
-                  </div>
-                  <Building2 className="h-5 w-5 text-orange-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-4">
+      <SectionCard title="Search & Filters" description="Search by person and narrow by role or status.">
             <div className="flex flex-col gap-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 lg:flex-row">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -562,19 +525,11 @@ const UserManagement = () => {
                     className="pl-10"
                   />
                 </div>
-                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add User
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full sm:w-44">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -587,7 +542,7 @@ const UserManagement = () => {
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-full sm:w-40">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -596,12 +551,23 @@ const UserManagement = () => {
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="sm:ml-auto">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add User
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </div>
             </div>
-          </CardContent>
-        </Card>
+      </SectionCard>
 
-        {/* Members List */}
+      <SectionCard
+        title={isMemberView ? "Members" : "Users"}
+        description={isMemberView ? "Member records surfaced through the same search and filter controls." : "Admin accounts and their current access status."}
+      >
         {isMemberView && (
           <div className="space-y-3">
             {members.map((member) => {
@@ -614,7 +580,7 @@ const UserManagement = () => {
                 Dismissed: "bg-red-100 text-red-800",
               };
               return (
-                <Card key={member._id}>
+                <Card key={member._id} className="surface-card transition-transform hover:-translate-y-0.5">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -635,14 +601,14 @@ const UserManagement = () => {
                             </Badge>
                           )}
                         </div>
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>📱 {member.phone}</p>
-                          {member.email && <p>✉️ {member.email}</p>}
-                          {member.district && <p>🏢 {member.district.name}</p>}
-                          {member.group && <p>👥 {member.group.name}</p>}
-                          {member.profession && <p>💼 {member.profession}</p>}
-                          {member.age && <p>🎂 Age: {member.age}</p>}
-                          <p>📅 Created: {new Date(member.createdAt).toLocaleDateString()}</p>
+                        <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
+                          <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Phone className="h-4 w-4" />{member.phone}</div>
+                          {member.email && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Mail className="h-4 w-4" />{member.email}</div>}
+                          {member.district && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Building2 className="h-4 w-4" />{member.district.name}</div>}
+                          {member.group && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Users className="h-4 w-4" />{member.group.name}</div>}
+                          {member.profession && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Briefcase className="h-4 w-4" />{member.profession}</div>}
+                          {member.age && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Cake className="h-4 w-4" />Age: {member.age}</div>}
+                          <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><CalendarDays className="h-4 w-4" />Created: {new Date(member.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <DropdownMenu>
@@ -673,7 +639,7 @@ const UserManagement = () => {
               );
             })}
             {members.length === 0 && !loading && (
-              <Card>
+              <Card className="surface-card">
                 <CardContent className="p-8 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No members found</h3>
@@ -687,7 +653,7 @@ const UserManagement = () => {
         {/* Users List */}
         {!isMemberView && <div className="space-y-3">
           {users.map((user) => (
-            <Card key={user._id}>
+            <Card key={user._id} className="surface-card transition-transform hover:-translate-y-0.5">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -707,14 +673,14 @@ const UserManagement = () => {
                       )}
                     </div>
                     
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <p>📱 {user.phone}</p>
-                      {user.email && <p>✉️ {user.email}</p>}
-                      {user.district && <p>🏢 {user.district.name}</p>}
-                      {user.group && <p>👥 {user.group.name}</p>}
-                      <p>📅 Created: {new Date(user.createdAt).toLocaleDateString()}</p>
+                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Phone className="h-4 w-4" />{user.phone}</div>
+                      {user.email && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Mail className="h-4 w-4" />{user.email}</div>}
+                      {user.district && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Building2 className="h-4 w-4" />{user.district.name}</div>}
+                      {user.group && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Users className="h-4 w-4" />{user.group.name}</div>}
+                      <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><CalendarDays className="h-4 w-4" />Created: {new Date(user.createdAt).toLocaleDateString()}</div>
                       {user.lastLogin && (
-                        <p>🕒 Last login: {new Date(user.lastLogin).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Clock3 className="h-4 w-4" />Last login: {new Date(user.lastLogin).toLocaleDateString()}</div>
                       )}
                     </div>
                   </div>
@@ -773,7 +739,7 @@ const UserManagement = () => {
         </div>}
 
         {!isMemberView && users.length === 0 && !loading && (
-          <Card>
+          <Card className="surface-card">
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No users found</h3>
@@ -786,10 +752,10 @@ const UserManagement = () => {
             </CardContent>
           </Card>
         )}
+      </SectionCard>
 
-        {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between py-2">
+          <div className="data-strip flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages} ({totalDocs} users)
             </p>
@@ -813,7 +779,6 @@ const UserManagement = () => {
             </div>
           </div>
         )}
-      </main>
 
       {/* Create/Edit User Dialog */}
       <Dialog open={showCreateDialog || !!editingUser} onOpenChange={(open) => {
@@ -1022,7 +987,7 @@ const UserManagement = () => {
       </Dialog>
 
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 

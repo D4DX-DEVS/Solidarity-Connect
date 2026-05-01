@@ -20,6 +20,7 @@ import {
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MeetingAttendance } from "@/components/MeetingAttendance";
+import { SectionCard } from "@/components/app/AppShell";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useBulkSessionActions, useCompleteSession } from "@/hooks/useSessionManagement";
 import { meetingsApi } from "@/lib/meetings";
@@ -142,7 +143,7 @@ const Meetings = () => {
   // If a meeting is selected, show detailed attendance view
   if (selectedMeeting) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page pb-20">
         <HeaderWithLogout
           icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
           title={selectedMeeting.title}
@@ -157,9 +158,9 @@ const Meetings = () => {
           }
         />
 
-        <main className="p-4">
+        <main className="app-main space-y-4">
           {/* Meeting Info */}
-          <Card className="p-4 mb-4">
+          <Card className="surface-card p-4">
             <div className="flex justify-between items-start mb-2">
               <h2 className="font-semibold text-lg">{selectedMeeting.title}</h2>
               <Badge variant={selectedMeeting.status === 'scheduled' ? 'default' : 'secondary'}>
@@ -209,14 +210,14 @@ const Meetings = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page pb-20">
         <HeaderWithLogout
           icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
           title="Meetings"
         />
-        <main className="p-4 space-y-4">
+        <main className="app-main space-y-4">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-4">
+            <Card key={i} className="surface-card p-4">
               <Skeleton className="h-6 w-3/4 mb-2" />
               <Skeleton className="h-4 w-1/2 mb-2" />
               <Skeleton className="h-4 w-1/4" />
@@ -230,13 +231,13 @@ const Meetings = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page pb-20">
         <HeaderWithLogout
           icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
           title="Meetings"
         />
-        <main className="p-4">
-          <Card className="p-8 shadow-sm text-center">
+        <main className="app-main">
+          <Card className="surface-card p-8 shadow-sm text-center">
             <AlertCircle className="h-16 w-16 mx-auto mb-4 text-destructive" />
             <h2 className="font-semibold text-lg mb-2">Error Loading Meetings</h2>
             <p className="text-sm text-muted-foreground">
@@ -251,13 +252,13 @@ const Meetings = () => {
 
   if (meetings.length === 0) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page pb-20">
         <HeaderWithLogout
           icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
           title="Meetings"
         />
-        <main className="p-4">
-          <Card className="p-8 shadow-sm text-center">
+        <main className="app-main">
+          <Card className="surface-card p-8 shadow-sm text-center">
             <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Meetings Scheduled</h2>
             <p className="text-sm text-muted-foreground">
@@ -271,23 +272,25 @@ const Meetings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="app-page pb-20">
       <HeaderWithLogout
         icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
         title="Meetings"
       />
 
-      <main className="p-4 space-y-4">
+      <main className="app-main space-y-4">
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search meetings…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SectionCard title="Search Meetings" description="Filter the meeting list by title or details.">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search meetings…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </SectionCard>
 
         {meetings.map((meeting) => {
           // Calculate attendance status - check if any attendance has been recorded
@@ -303,7 +306,7 @@ const Meetings = () => {
           const completedSessions = meeting.sessionInfo?.completedSessions || 0;
 
           return (
-            <Card key={meeting._id} className="overflow-hidden hover:shadow-md transition-shadow">
+            <Card key={meeting._id} className="surface-card overflow-hidden transition-shadow hover:shadow-md">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value={meeting._id} className="border-none">
                   <AccordionTrigger className="px-4 pt-4 pb-2 hover:no-underline">
@@ -399,7 +402,7 @@ const Meetings = () => {
                     {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && (
                       <div className="space-y-4">
                         {/* Session Progress */}
-                        <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="data-strip p-3">
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-sm font-medium">Session Progress</span>
                             <span className="text-xs text-muted-foreground">
@@ -422,28 +425,28 @@ const Meetings = () => {
 
                         {/* Attendance Summary */}
                         {hasAttendanceData && userInfo?.role === 'group_admin' && (
-                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                          <div className="data-strip border-blue-200 bg-blue-50 p-3">
+                            <h4 className="mb-2 text-sm font-medium text-blue-800">
                               Attendance Summary
                             </h4>
                             <div className="grid grid-cols-3 gap-2 text-xs">
                               <div className="text-center">
-                                <div className="font-semibold text-blue-700 dark:text-blue-300">
+                                <div className="font-semibold text-blue-700">
                                   {totalParticipants}
                                 </div>
-                                <div className="text-blue-600 dark:text-blue-400">Total</div>
+                                <div className="text-blue-600">Total</div>
                               </div>
                               <div className="text-center">
-                                <div className="font-semibold text-green-700 dark:text-green-300">
+                                <div className="font-semibold text-green-700">
                                   {Math.round((attendanceRate / 100) * totalParticipants)}
                                 </div>
-                                <div className="text-green-600 dark:text-green-400">Present</div>
+                                <div className="text-green-600">Present</div>
                               </div>
                               <div className="text-center">
-                                <div className="font-semibold text-red-700 dark:text-red-300">
+                                <div className="font-semibold text-red-700">
                                   {Math.max(0, totalParticipants - Math.round((attendanceRate / 100) * totalParticipants))}
                                 </div>
-                                <div className="text-red-600 dark:text-red-400">Absent</div>
+                                <div className="text-red-600">Absent</div>
                               </div>
                             </div>
                           </div>

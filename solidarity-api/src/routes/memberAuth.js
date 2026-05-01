@@ -8,12 +8,14 @@ import MemberAuth from '../models/MemberAuth.js';
 import Member from '../models/Member.js';
 import PersonalTarget from '../models/PersonalTarget.js';
 import MemberTargetProgress from '../models/MemberTargetProgress.js';
+import RecurringMark from '../models/RecurringMark.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
+import OrgFile from '../models/OrgFile.js';
 import { body, validationResult } from 'express-validator';
 
 // Multer in-memory storage for file uploads
@@ -482,6 +484,66 @@ router.get('/profile', authenticateMember, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch profile information'
+    });
+  }
+});
+
+// @route   PUT /api/member-auth/profile
+// @desc    Update member profile information
+// @access  Private (Member)
+router.put('/profile', authenticateMember, async (req, res) => {
+  try {
+    const member = req.member;
+    const allowedFields = ['name', 'email', 'profession', 'education', 'address', 'bloodGroup', 'age', 'areaOfInterest', 'skills'];
+    const updates = {};
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid fields to update'
+      });
+    }
+
+    const updatedMember = await Member.findByIdAndUpdate(
+      member._id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedMember) {
+      return res.status(404).json({
+        success: false,
+        message: 'Member not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        name: updatedMember.name,
+        email: updatedMember.email,
+        profession: updatedMember.profession,
+        education: updatedMember.education,
+        address: updatedMember.address,
+        bloodGroup: updatedMember.bloodGroup,
+        age: updatedMember.age,
+        areaOfInterest: updatedMember.areaOfInterest,
+        skills: updatedMember.skills
+      }
+    });
+
+  } catch (error) {
+    console.error('Update member profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update profile'
     });
   }
 });
@@ -988,5 +1050,111 @@ router.get('/groups', authenticateMember, async (req, res) => {
   }
 });
 
+// @route   GET /api/member-auth/recurring-marks
+// @desc    Get all recurring marks for the authenticated member
+// @access  Private (Member)
+router.get('/recurring-marks', authenticateMember, async (req, res) => {
+  try {
+    const marks = await RecurringMark.find({
+      user: req.member._id,
+      userType: 'Member'
+    }).select('personalTarget year month week completed completionCount markedAt');
+
+    const data = marks.map(m => ({
+      targetId: m.personalTarget.toString(),
+      year: m.year,
+      month: m.month,
+      week: m.week || 0,
+      completed: m.completed,
+      completionCount: m.completionCount || 0,
+      markedAt: m.markedAt
+    }));
+
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('Get member recurring marks error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch recurring marks' });
+  }
+});
+
+// @route   POST /api/member-auth/recurring-marks
+// @desc    Toggle (upsert) a recurring mark for the authenticated member
+// @access  Private (Member)
+router.post('/recurring-marks', authenticateMember, async (req, res) => {
+  try {
+    const { targetId, year, month, completed } = req.body;
+
+    if (!targetId || !year || !month) {
+      return res.status(400).json({ success: false, message: 'targetId, year, and month are required' });
+    }
+
+    const target = await PersonalTarget.findById(targetId);
+    if (!target) {
+      return res.status(404).json({ success: false, message: 'Target not found' });
+    }
+
+    const week = target.recurringFrequency === 'weekly' ? (req.body.week || 1) : 0;
+
+    const mark = await RecurringMark.findOneAndUpdate(
+      { user: req.member._id, userType: 'Member', personalTarget: targetId, year, month, week },
+      {
+        $set: {
+          completed: !!completed,
+          completionCount: completed ? 1 : 0,
+          markedAt: new Date()
+        }
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        targetId: mark.personalTarget.toString(),
+        year: mark.year,
+        month: mark.month,
+        week: mark.week || 0,
+        completed: mark.completed,
+        completionCount: mark.completionCount || 0,
+        markedAt: mark.markedAt
+      }
+    });
+  } catch (error) {
+    console.error('Toggle member recurring mark error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update recurring mark' });
+  }
+});
+
 export { authenticateMember };
+
+// @route   GET /api/member-auth/org-files
+// @desc    Get organizational files visible to members (general files only)
+// @access  Authenticated members
+router.get('/org-files', authenticateMember, async (req, res) => {
+  try {
+    const { category, search } = req.query;
+
+    const filter = { isActive: true, fileType: 'general' };
+
+    if (category && category !== 'all') filter.category = category;
+
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: 'i' } },
+        { description: { $regex: search.trim(), $options: 'i' } },
+        { originalName: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
+
+    const files = await OrgFile.find(filter)
+      .select('title description category url originalName mimetype size createdAt')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: files });
+  } catch (error) {
+    console.error('Member get org files error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch files' });
+  }
+});
+
 export default router;

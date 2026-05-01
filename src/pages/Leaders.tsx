@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Star, Search, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Star, Search, ChevronLeft, ChevronRight, Users, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -291,24 +293,22 @@ const Leaders = () => {
   }, [fetchLeaders]);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
+      <HeaderWithLogout
+        icon={<Star className="h-6 w-6 text-primary-foreground" />}
+        title="Leaders"
+        subtitle="All designated leaders"
+        leftAction={
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="bg-primary p-2 rounded-lg">
-            <Star className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Leaders</h1>
-            <p className="text-sm text-muted-foreground">All designated leaders</p>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4 space-y-4">
-        {/* Search */}
+      <main className="app-main pt-4 space-y-4">
+        <SectionCard title="Search & Filters" description="Browse leaders by role type, district, area, or unit.">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -383,8 +383,7 @@ const Leaders = () => {
 
         {/* Murabi area filter */}
         {requiresMurabiArea && (
-          <Card className="shadow-sm">
-            <CardContent className="p-3">
+          <div>
               <Select value={selectedMurabiAreaId || "all"} onValueChange={(value) => setSelectedMurabiAreaId(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by Area (Group)" />
@@ -396,15 +395,15 @@ const Leaders = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </CardContent>
-          </Card>
+          </div>
         )}
+        </SectionCard>
 
         {/* Leader count */}
         {!loading && (
-          <p className="text-sm text-muted-foreground">
+          <div className="data-strip text-sm text-muted-foreground">
             {totalDocs} leader{totalDocs !== 1 ? "s" : ""} found
-          </p>
+          </div>
         )}
 
         {/* Leaders list */}
@@ -413,7 +412,7 @@ const Leaders = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         ) : leaders.length === 0 ? (
-          <Card className="shadow-sm">
+          <Card className="surface-card">
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">No leaders found</p>
@@ -422,7 +421,7 @@ const Leaders = () => {
         ) : (
           <div className="space-y-3">
             {leaders.map((leader) => (
-              <Card key={leader._id} className="shadow-sm">
+              <Card key={leader._id} className="surface-card transition-all hover:-translate-y-0.5">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -456,7 +455,10 @@ const Leaders = () => {
                         </p>
                       )}
 
-                      <p className="text-sm text-muted-foreground mt-0.5">{leader.phone}</p>
+                      <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2 text-sm text-muted-foreground">
+                        <Phone className="h-4 w-4" />
+                        {leader.phone}
+                      </div>
 
                       <div className="flex gap-2 mt-2 flex-wrap">
                         <Badge variant="outline" className="text-xs">
@@ -492,7 +494,7 @@ const Leaders = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between py-2">
+          <div className="data-strip flex items-center justify-between py-4">
             <p className="text-sm text-muted-foreground">
               Page {currentPage} of {totalPages}
             </p>

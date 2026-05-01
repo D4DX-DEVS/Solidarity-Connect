@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI, apiCall } from "@/utils/api";
@@ -113,6 +114,7 @@ interface RecurringMark {
   targetId: string;
   year: number;
   month: number;
+  week?: number;
   completed: boolean;
 }
 
@@ -201,6 +203,8 @@ const MemberDashboard = () => {
   const [recurringMarks, setRecurringMarks] = useState<RecurringMark[]>([]);
   const [recurringMarkKey, setRecurringMarkKey] = useState<string | null>(null);
   const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
+  const [weeklyViewMonth, setWeeklyViewMonth] = useState(new Date().getMonth() + 1);
+  const [weeklyViewYear, setWeeklyViewYear] = useState(new Date().getFullYear());
 
   // Org files state
   const [orgFiles, setOrgFiles] = useState<OrgFileItem[]>([]);
@@ -277,8 +281,7 @@ const MemberDashboard = () => {
         });
         setNotifications(notificationsData.data.notifications);
 
-      } catch (error) {
-        console.error('Error fetching data:', error);
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load dashboard data",
@@ -292,7 +295,7 @@ const MemberDashboard = () => {
     if (token) {
       fetchData();
     }
-  }, [token, toast, logout]);
+  }, [token, toast]);
 
   // Debounce org files search
   useEffect(() => {
@@ -360,25 +363,43 @@ const MemberDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
+      <PageShell contentClassName="pb-32">
+        <PageHero
+          title="Member Dashboard"
+          subtitle="Loading your profile, targets, meetings, and notifications."
+          eyebrow="Member Portal"
+          icon={<Home className="h-6 w-6" />}
+        />
+        <SectionCard title="Preparing Dashboard" description="Fetching the latest member workspace data.">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
+              <p className="text-muted-foreground">Loading dashboard...</p>
+            </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-destructive">Failed to load profile data</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Retry
-          </Button>
-        </div>
-      </div>
+      <PageShell contentClassName="pb-32">
+        <PageHero
+          title="Member Dashboard"
+          subtitle="We couldn’t load the member profile for this workspace yet."
+          eyebrow="Member Portal"
+          icon={<Home className="h-6 w-6" />}
+        />
+        <SectionCard title="Profile Unavailable" description="Retry loading the member profile data.">
+          <div className="py-12 text-center">
+            <p className="text-destructive">Failed to load profile data</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Retry
+            </Button>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
@@ -400,24 +421,24 @@ const MemberDashboard = () => {
     }
   };
 
-  const toggleRecurringMark = async (targetId: string, year: number, month: number) => {
-    const key = `${targetId}-${year}-${month}`;
-    const existing = recurringMarks.find(m => m.targetId === targetId && m.year === year && m.month === month);
+  const toggleRecurringMark = async (targetId: string, year: number, month: number, week = 0) => {
+    const key = `${targetId}-${year}-${month}-${week}`;
+    const existing = recurringMarks.find(m => m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week);
     const newCompleted = !existing?.completed;
     setRecurringMarkKey(key);
     // Optimistic update
     setRecurringMarks(prev => {
-      const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
-      return [...filtered, { targetId, year, month, completed: newCompleted }];
+      const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week));
+      return [...filtered, { targetId, year, month, week, completed: newCompleted }];
     });
     try {
       await apiCall('/member-auth/recurring-marks', {
         method: 'POST',
-        body: JSON.stringify({ targetId, year, month, completed: newCompleted }),
+        body: JSON.stringify({ targetId, year, month, week, completed: newCompleted }),
       });
     } catch {
       setRecurringMarks(prev => {
-        const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month));
+        const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week));
         if (existing) return [...filtered, existing];
         return filtered;
       });
@@ -468,10 +489,14 @@ const MemberDashboard = () => {
     { id: "overview", label: "Overview", icon: Home },
     { id: "profile", label: "Profile", icon: User },
     { id: "targets", label: "Targets", icon: Target },
+    { id: "meetings", label: "Meetings", icon: Calendar },
     { id: "orgfiles", label: "Org Files", icon: FolderOpen },
     { id: "notifications", label: "Alerts", icon: Bell }
   ];
 
+
+  const activeViewLabel = menuItems.find((item) => item.id === activeView)?.label || "Overview";
+  const unreadNotificationCount = notifications.filter((notification) => !notification.isRead).length;
   const handleLeadersClick = () => navigate("/leaders");
   // Keep for overview quick link
 
@@ -483,6 +508,8 @@ const MemberDashboard = () => {
         return renderProfileContent();
       case "targets":
         return renderTargetsContent();
+      case "meetings":
+        return renderMeetingsContent();
       case "orgfiles":
         return renderOrgFilesContent();
       case "notifications":
@@ -551,7 +578,7 @@ const MemberDashboard = () => {
               {meetings.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              This month
+              Next scheduled items
             </p>
           </CardContent>
         </Card>
@@ -797,9 +824,11 @@ const MemberDashboard = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Status</label>
-                <Badge className="bg-green-100 text-green-800">
-                  {profile.profile.status}
-                </Badge>
+                <p className="text-lg flex items-center">
+                  <Badge className={`${profile.profile.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                    {profile.profile.status}
+                  </Badge>
+                </p>
               </div>
               {profile.profile.address && (
                 <div className="md:col-span-2">
@@ -811,8 +840,9 @@ const MemberDashboard = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Name *</label>
+                <label htmlFor="member-profile-name" className="text-sm font-medium">Name *</label>
                 <Input
+                  id="member-profile-name"
                   value={editProfileForm.name}
                   onChange={e => setEditProfileForm(p => ({ ...p, name: e.target.value }))}
                   placeholder="Full name"
@@ -820,8 +850,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Email</label>
+                <label htmlFor="member-profile-email" className="text-sm font-medium">Email</label>
                 <Input
+                  id="member-profile-email"
                   type="email"
                   value={editProfileForm.email}
                   onChange={e => setEditProfileForm(p => ({ ...p, email: e.target.value }))}
@@ -830,8 +861,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Age</label>
+                <label htmlFor="member-profile-age" className="text-sm font-medium">Age</label>
                 <Input
+                  id="member-profile-age"
                   type="number"
                   value={editProfileForm.age}
                   onChange={e => setEditProfileForm(p => ({ ...p, age: e.target.value }))}
@@ -842,8 +874,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Blood Group</label>
+                <label htmlFor="member-profile-blood-group" className="text-sm font-medium">Blood Group</label>
                 <select
+                  id="member-profile-blood-group"
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm bg-background"
                   value={editProfileForm.bloodGroup}
                   onChange={e => setEditProfileForm(p => ({ ...p, bloodGroup: e.target.value }))}
@@ -855,8 +888,9 @@ const MemberDashboard = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Profession</label>
+                <label htmlFor="member-profile-profession" className="text-sm font-medium">Profession</label>
                 <Input
+                  id="member-profile-profession"
                   value={editProfileForm.profession}
                   onChange={e => setEditProfileForm(p => ({ ...p, profession: e.target.value }))}
                   placeholder="Your profession"
@@ -864,8 +898,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Education</label>
+                <label htmlFor="member-profile-education" className="text-sm font-medium">Education</label>
                 <Input
+                  id="member-profile-education"
                   value={editProfileForm.education}
                   onChange={e => setEditProfileForm(p => ({ ...p, education: e.target.value }))}
                   placeholder="Educational qualification"
@@ -873,8 +908,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Area of Interest</label>
+                <label htmlFor="member-profile-area-of-interest" className="text-sm font-medium">Area of Interest</label>
                 <Input
+                  id="member-profile-area-of-interest"
                   value={editProfileForm.areaOfInterest}
                   onChange={e => setEditProfileForm(p => ({ ...p, areaOfInterest: e.target.value }))}
                   placeholder="Areas of interest"
@@ -882,8 +918,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Skills</label>
+                <label htmlFor="member-profile-skills" className="text-sm font-medium">Skills</label>
                 <Input
+                  id="member-profile-skills"
                   value={editProfileForm.skills}
                   onChange={e => setEditProfileForm(p => ({ ...p, skills: e.target.value }))}
                   placeholder="Your skills"
@@ -891,8 +928,9 @@ const MemberDashboard = () => {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="text-sm font-medium">Address</label>
+                <label htmlFor="member-profile-address" className="text-sm font-medium">Address</label>
                 <Input
+                  id="member-profile-address"
                   value={editProfileForm.address}
                   onChange={e => setEditProfileForm(p => ({ ...p, address: e.target.value }))}
                   placeholder="Home address"
@@ -956,6 +994,30 @@ const MemberDashboard = () => {
   );
 
   const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const getWeeksInMonth = (year: number, month: number) => {
+    const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+    const daysInMonth = new Date(year, month, 0).getDate();
+    return Math.ceil((firstDayOfWeek + daysInMonth) / 7);
+  };
+
+  const prevWeeklyMonth = () => {
+    if (weeklyViewMonth === 1) {
+      setWeeklyViewMonth(12);
+      setWeeklyViewYear(y => y - 1);
+    } else {
+      setWeeklyViewMonth(m => m - 1);
+    }
+  };
+
+  const nextWeeklyMonth = () => {
+    if (weeklyViewMonth === 12) {
+      setWeeklyViewMonth(1);
+      setWeeklyViewYear(y => y + 1);
+    } else {
+      setWeeklyViewMonth(m => m + 1);
+    }
+  };
   const FREQ_LABELS: Record<string, string> = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly' };
 
   const renderTargetsContent = () => {
@@ -1009,6 +1071,7 @@ const MemberDashboard = () => {
                           <button
                             className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
                             onClick={() => setExpandedTargetId(isExpanded ? null : targetId)}
+                            aria-label={isExpanded ? `Collapse ${target.personalTarget.title}` : `Expand ${target.personalTarget.title}`}
                           >
                             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                           </button>
@@ -1036,10 +1099,11 @@ const MemberDashboard = () => {
                               </div>
                             )}
                             <div>
-                              <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                              <label htmlFor={`target-feedback-${targetId}`} className="text-xs font-medium flex items-center gap-1 mb-1">
                                 <MessageSquare className="h-3 w-3" /> Feedback
                               </label>
                               <textarea
+                                id={`target-feedback-${targetId}`}
                                 className="w-full text-xs border rounded p-2 min-h-[60px] bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
                                 placeholder="Add your feedback..."
                                 value={targetFeedback[targetId] || ''}
@@ -1047,10 +1111,11 @@ const MemberDashboard = () => {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-medium flex items-center gap-1 mb-1">
+                              <label htmlFor={`target-file-${targetId}`} className="text-xs font-medium flex items-center gap-1 mb-1">
                                 <Paperclip className="h-3 w-3" /> Attachment
                               </label>
                               <input
+                                id={`target-file-${targetId}`}
                                 type="file"
                                 className="hidden"
                                 ref={el => { targetFileRefs.current[targetId] = el; }}
@@ -1084,6 +1149,7 @@ const MemberDashboard = () => {
                                       setUploadedTargetAttachments(prev => { const n = { ...prev }; delete n[targetId]; return n; });
                                       if (targetFileRefs.current[targetId]) targetFileRefs.current[targetId]!.value = '';
                                     }}
+                                    aria-label={`Remove attachment for ${target.personalTarget.title}`}
                                   >
                                     <X className="h-3 w-3" />
                                   </button>
@@ -1157,12 +1223,14 @@ const MemberDashboard = () => {
                 <button
                   onClick={() => setRecurringYear(y => y - 1)}
                   className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                  aria-label={`Show recurring targets for ${recurringYear - 1}`}
                 >←</button>
                 <span className="text-sm font-semibold w-12 text-center">{recurringYear}</span>
                 <button
                   onClick={() => setRecurringYear(y => y + 1)}
                   className="px-2 py-1 rounded border text-xs hover:bg-muted"
                   disabled={recurringYear >= new Date().getFullYear()}
+                  aria-label={`Show recurring targets for ${recurringYear + 1}`}
                 >→</button>
               </div>
 
@@ -1186,40 +1254,100 @@ const MemberDashboard = () => {
                           </div>
                         </div>
 
-                        <p className="text-xs text-muted-foreground mb-2 font-medium">Mark completed months:</p>
-                        <div className="grid grid-cols-6 gap-1.5">
-                          {MONTHS_SHORT.map((month, idx) => {
-                            const monthNum = idx + 1;
-                            const key = `${targetId}-${recurringYear}-${monthNum}`;
-                            const mark = recurringMarks.find(
-                              m => m.targetId === targetId && m.year === recurringYear && m.month === monthNum
-                            );
-                            const isCompleted = mark?.completed || false;
-                            const isMarkLoading = recurringMarkKey === key;
-                            const isFuture = recurringYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
-
-                            return (
-                              <button
-                                key={monthNum}
-                                onClick={() => !isFuture && toggleRecurringMark(targetId, recurringYear, monthNum)}
-                                disabled={isMarkLoading || isFuture}
-                                title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
-                                className={`
-                                  h-9 rounded-lg text-xs font-medium transition-all border
-                                  ${isCompleted
-                                    ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                                    : isFuture
-                                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                      : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
-                                  }
-                                  ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
-                                `}
-                              >
-                                {isCompleted ? '✓' : month}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        {freq === 'weekly' ? (
+                          <>
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="text-xs text-muted-foreground font-medium flex-1">Mark completed weeks:</p>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={prevWeeklyMonth}
+                                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 text-xs"
+                                  aria-label="Previous month"
+                                >←</button>
+                                <span className="text-xs font-semibold w-16 text-center">{MONTHS_SHORT[weeklyViewMonth - 1]} {weeklyViewYear}</span>
+                                <button
+                                  onClick={nextWeeklyMonth}
+                                  disabled={weeklyViewYear > new Date().getFullYear() || (weeklyViewYear === new Date().getFullYear() && weeklyViewMonth >= new Date().getMonth() + 1)}
+                                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                                  aria-label="Next month"
+                                >→</button>
+                              </div>
+                            </div>
+                            {(() => {
+                              const totalWeeks = getWeeksInMonth(weeklyViewYear, weeklyViewMonth);
+                              const isFutureMonth = weeklyViewYear > new Date().getFullYear() || (weeklyViewYear === new Date().getFullYear() && weeklyViewMonth > new Date().getMonth() + 1);
+                              return (
+                                <div className={`grid gap-1.5`} style={{ gridTemplateColumns: `repeat(${totalWeeks}, minmax(0, 1fr))` }}>
+                                  {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((weekNum) => {
+                                    const key = `${targetId}-${weeklyViewYear}-${weeklyViewMonth}-${weekNum}`;
+                                    const mark = recurringMarks.find(
+                                      m => m.targetId === targetId && m.year === weeklyViewYear && m.month === weeklyViewMonth && (m.week ?? 0) === weekNum
+                                    );
+                                    const isCompleted = mark?.completed || false;
+                                    const isMarkLoading = recurringMarkKey === key;
+                                    return (
+                                      <button
+                                        key={weekNum}
+                                        onClick={() => !isFutureMonth && toggleRecurringMark(targetId, weeklyViewYear, weeklyViewMonth, weekNum)}
+                                        disabled={isMarkLoading || isFutureMonth}
+                                        title={isFutureMonth ? 'Future week' : `Week ${weekNum} – ${MONTHS_SHORT[weeklyViewMonth - 1]} ${weeklyViewYear}`}
+                                        className={`
+                                          h-9 rounded-lg text-xs font-medium transition-all border
+                                          ${isCompleted
+                                            ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                            : isFutureMonth
+                                              ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                                          }
+                                          ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
+                                        `}
+                                      >
+                                        {isCompleted ? '✓' : `Wk ${weekNum}`}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })()}
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-xs text-muted-foreground mb-2 font-medium">Mark completed months:</p>
+                            <div className="grid grid-cols-6 gap-1.5">
+                              {MONTHS_SHORT.map((month, idx) => {
+                                const monthNum = idx + 1;
+                                const key = `${targetId}-${recurringYear}-${monthNum}-0`;
+                                const mark = recurringMarks.find(
+                                  m => m.targetId === targetId && m.year === recurringYear && m.month === monthNum && (m.week ?? 0) === 0
+                                );
+                                const isCompleted = mark?.completed || false;
+                                const isMarkLoading = recurringMarkKey === key;
+                                const isFuture = recurringYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
+                                return (
+                                  <button
+                                    key={monthNum}
+                                    onClick={() => !isFuture && toggleRecurringMark(targetId, recurringYear, monthNum, 0)}
+                                    disabled={isMarkLoading || isFuture}
+                                    title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
+                                    aria-label={isFuture ? `${month} ${recurringYear} is a future month` : `Toggle ${month} ${recurringYear} for ${target.personalTarget.title}`}
+                                    className={`
+                                      h-9 rounded-lg text-xs font-medium transition-all border
+                                      ${isCompleted
+                                        ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                        : isFuture
+                                          ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                                          : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                                      }
+                                      ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
+                                    `}
+                                  >
+                                    {isCompleted ? '✓' : month}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   );
@@ -1485,32 +1613,52 @@ const MemberDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome, {profile.profile.name}
-            </h1>
-            <p className="text-muted-foreground">
-              {profile.profile.group.name} • {profile.profile.district.name}
-            </p>
-          </div>
+    <PageShell contentClassName="pb-40">
+      <PageHero
+        title={`Welcome, ${profile.profile.name}`}
+        subtitle={`${profile.profile.group.name} • ${profile.profile.district.name}`}
+        eyebrow="Member Portal"
+        icon={<Home className="h-6 w-6" />}
+        actions={
           <Button variant="outline" onClick={logout}>
             Logout
           </Button>
-        </div>
+        }
+        details={
+          <>
+            <div className="data-strip space-y-1 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+              <p className="text-sm font-semibold text-foreground">{profile.profile.status || "Member"}</p>
+            </div>
+            <div className="data-strip space-y-1 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Joined</p>
+              <p className="text-sm font-semibold text-foreground">{formatDate(profile.profile.joinedDate)}</p>
+            </div>
+            <div className="data-strip space-y-1 px-4 py-3">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Current View</p>
+              <p className="text-sm font-semibold text-foreground">{activeViewLabel}</p>
+            </div>
+          </>
+        }
+      />
 
-        {/* Content Area */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Targets" value={String(targets.length)} icon={Target} tone="primary" />
+        <MetricCard title="Upcoming Meetings" value={String(meetings.length)} icon={Calendar} tone="success" />
+        <MetricCard title="Unread Alerts" value={String(unreadNotificationCount)} icon={Bell} tone="warning" />
+      </div>
+
+      <SectionCard
+        title={`${activeViewLabel} Workspace`}
+        description="Use the bottom tabs to move between member sections while keeping the existing dashboard actions unchanged."
+      >
         <div className="space-y-4">
           {renderContent()}
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-        <div className="flex justify-around items-center max-w-md mx-auto">
+      <div className="fixed bottom-4 left-4 right-4 z-30">
+        <div className="mx-auto flex max-w-md items-center justify-around rounded-[1.6rem] border border-border/70 bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
           {menuItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = activeView === item.id;
@@ -1518,14 +1666,15 @@ const MemberDashboard = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
-                className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
+                aria-pressed={isActive}
+                className={`flex min-w-0 flex-col items-center space-y-1 rounded-2xl px-3 py-2 transition-colors ${
                   isActive 
-                    ? 'text-blue-600 bg-blue-50' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-primary/10 text-primary' 
+                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
-                <IconComponent className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-600'}`} />
-                <span className={`text-xs font-medium ${isActive ? 'text-blue-600' : 'text-gray-600'}`}>
+                <IconComponent className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className={`text-[11px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
                   {item.label}
                 </span>
               </button>
@@ -1533,7 +1682,7 @@ const MemberDashboard = () => {
           })}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

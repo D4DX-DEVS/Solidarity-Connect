@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -369,30 +370,48 @@ const PersonalTargets = () => {
   // ── Loading state ───────────────────────────────────────────
   if (loading && activeTab === 'regular') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading targets...</p>
-        </div>
-      </div>
+      <PageShell>
+        <PageHero
+          title="Personal Targets"
+          subtitle="Loading the current target catalogue and recurring schedules."
+          eyebrow="Targets"
+          icon={<Target className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          }
+        />
+        <SectionCard title="Preparing Targets" description="Fetching regular and recurring targets for this workspace.">
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary" />
+              <p className="text-muted-foreground">Loading targets...</p>
+            </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-5 w-5" />
+    <PageShell>
+      <PageHero
+        title="Personal Targets"
+        subtitle="Create, search, and manage regular or recurring targets without changing the existing workflows."
+        eyebrow="Targets"
+        icon={<Target className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Personal Targets</h1>
-            <p className="text-sm text-muted-foreground">Create and manage targets for users</p>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
+      <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
+      <div className="container mx-auto max-w-7xl space-y-6 px-0 py-0">
 
         {/* ── Tab Toggle ── */}
         <div className="flex gap-2 bg-muted p-1 rounded-xl w-fit">
@@ -943,7 +962,8 @@ const PersonalTargets = () => {
         )}
 
       </div>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 };
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import {
   Select,
   SelectContent,
@@ -213,76 +214,88 @@ const OrgFiles = () => {
   });
 
   const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other", ...(canSeeMembershipForm ? ["membership_form"] : [])];
+  const hiddenFiles = files.filter((file) => !file.isActive).length;
+  const membershipFiles = files.filter((file) => file.fileType === "membership_form").length;
 
   const getBackPath = () => {
     return getHomeRouteByRole(user?.role);
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(getBackPath())}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Organizational Files</h1>
-            <p className="text-sm text-muted-foreground">Documents, Videos & Audio Resources</p>
-          </div>
-          {isStateAdmin && (
-            <Button size="sm" onClick={() => setShowUploadDialog(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              Upload
+    <PageShell contentClassName="pb-24">
+      <PageHero
+        title="Organizational Files"
+        subtitle="Browse documents, training media, and membership resources from one searchable library."
+        eyebrow="Resources"
+        icon={<FileText className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(getBackPath())}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-          )}
-        </div>
-      </header>
+            {isStateAdmin ? (
+              <Button size="sm" onClick={() => setShowUploadDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Upload
+              </Button>
+            ) : null}
+          </div>
+        }
+      />
 
-      {/* Category Filter */}
-      <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto">
-        {categories.map(cat => (
-          <Button
-            key={cat}
-            variant={activeCategory === cat ? "default" : "outline"}
-            size="sm"
-            className="shrink-0 capitalize"
-            onClick={() => setActiveCategory(cat)}
-          >
-            {cat === "all" ? "All" : cat === "membership_form" ? "Membership Form" : categoryLabels[cat] || cat}
-          </Button>
-        ))}
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Total Files" value={String(files.length)} icon={FileText} tone="primary" />
+        <MetricCard title="Membership Forms" value={String(membershipFiles)} icon={BookOpen} tone="warning" />
+        <MetricCard title="Hidden Files" value={String(hiddenFiles)} icon={EyeOff} tone="neutral" />
       </div>
 
-      {/* Search */}
-      <div className="px-4 pb-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search files by title, description…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
+      <SectionCard title="Browse Library" description="Filter by category, search by title or description, and open management actions when allowed.">
+        <div className="space-y-4">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map(cat => (
+              <Button
+                key={cat}
+                variant={activeCategory === cat ? "default" : "outline"}
+                size="sm"
+                className="shrink-0 capitalize"
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat === "all" ? "All" : cat === "membership_form" ? "Membership Form" : categoryLabels[cat] || cat}
+              </Button>
+            ))}
+          </div>
 
-      <main className="p-4 space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search files by title, description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="File Library" description="Open, download, edit, or hide organizational resources based on your access level.">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading files...</div>
+          <div className="py-12 text-center text-muted-foreground">Loading files...</div>
         ) : filteredFiles.length === 0 ? (
-          <Card className="p-8 text-center shadow-sm">
+          <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
             <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
             <p className="font-semibold">No files found</p>
             <p className="text-sm text-muted-foreground mt-1">
               {isStateAdmin ? "Upload your first file using the button above." : "No files have been uploaded yet."}
             </p>
-          </Card>
+          </div>
         ) : (
-          filteredFiles.map(file => {
+          <div className="space-y-3">
+          {filteredFiles.map(file => {
             const Icon = categoryIcons[file.category] || File;
             const isMembershipForm = file.fileType === "membership_form";
             return (
-              <Card key={file._id} className={`shadow-sm ${!file.isActive ? "opacity-60" : ""}`}>
+              <Card key={file._id} className={`surface-card border-border/70 ${!file.isActive ? "opacity-60" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-lg shrink-0 ${isMembershipForm ? "bg-yellow-100" : "bg-primary/10"}`}>
@@ -348,8 +361,10 @@ const OrgFiles = () => {
               </Card>
             );
           })
+          }
+          </div>
         )}
-      </main>
+      </SectionCard>
 
       {/* Upload Dialog */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
@@ -504,7 +519,7 @@ const OrgFiles = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 };
 

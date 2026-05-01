@@ -3,10 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
+
+const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 interface GroupStats {
   _id: string;
@@ -69,7 +72,6 @@ const MembersGroupReport = () => {
     const fetchDistricts = async () => {
       try {
         const districtsResponse = await districtsAPI.getDistricts();
-        console.log('Districts API response:', districtsResponse);
         if (districtsResponse.success) {
           setDistricts(districtsResponse.data || []);
         }
@@ -102,15 +104,11 @@ const MembersGroupReport = () => {
 
         // Fetch reports data
         const reportsResponse = await reportsAPI.getMembers(params);
-        console.log('Reports API response:', reportsResponse);
         if (reportsResponse.success) {
           setReportsData(reportsResponse.data);
           setGroups(reportsResponse.data.groupStatistics || []);
           if (reportsResponse.pagination) {
-            console.log('Pagination data:', reportsResponse.pagination);
             setPagination(reportsResponse.pagination);
-          } else {
-            console.log('No pagination data in response');
           }
         }
 
@@ -243,50 +241,45 @@ const MembersGroupReport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/state-admin")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="bg-primary p-2 rounded-lg">
-            <Users className="h-6 w-6 text-primary-foreground" />
+    <PageShell contentClassName="pb-24">
+      <PageHero
+        title="Group Reports"
+        subtitle="Analyze member totals, status distribution, and Baithul Maal coverage across groups."
+        eyebrow="Reports"
+        icon={<Users className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExport}
+              disabled={loading}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
           </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Group Reports</h1>
-            <p className="text-sm text-muted-foreground">Member Statistics</p>
-          </div>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleExport}
-            disabled={loading}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4 space-y-4">
         {/* Loading State */}
         {loading && (
-          <Card className="shadow-sm">
-            <CardContent className="p-8 text-center">
+          <SectionCard title="Preparing Report" description="Loading group statistics and active filter options.">
+            <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
               <p className="text-muted-foreground">Loading group reports...</p>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         )}
 
         {/* Error State */}
         {error && (
-          <Card className="shadow-sm border-destructive">
-            <CardContent className="p-4">
+          <SectionCard title="Report Error" description="The report could not be loaded with the current filters.">
+            <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-4 text-center">
               <p className="text-destructive text-center">{error}</p>
               <Button 
                 variant="outline" 
@@ -296,17 +289,17 @@ const MembersGroupReport = () => {
               >
                 Retry
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         )}
 
         {/* Filters */}
         {!loading && !error && (
-          <Card className="shadow-sm">
-            <CardContent className="p-3 space-y-2">
+          <SectionCard title="Report Filters" description="Limit the report to a district, group, or different page size.">
+            <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <select
-                  className="px-3 py-2 border rounded-md text-sm bg-background"
+                  className={formSelectClassName}
                   value={selectedDistrict}
                   onChange={(e) => handleDistrictChange(e.target.value)}
                 >
@@ -318,7 +311,7 @@ const MembersGroupReport = () => {
                   ))}
                 </select>
                 <select
-                  className="px-3 py-2 border rounded-md text-sm bg-background"
+                  className={formSelectClassName}
                   value={selectedGroup}
                   onChange={(e) => setSelectedGroup(e.target.value)}
                 >
@@ -350,49 +343,24 @@ const MembersGroupReport = () => {
                   Clear Filters
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
         )}
 
         {/* Summary Cards - Status Based Statistics */}
         {!loading && !error && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Card className="shadow-sm">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total</p>
-                <p className="text-3xl font-bold text-primary">{totalMembers}</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Active</p>
-                <p className="text-3xl font-bold text-green-600">{totalActive}</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Inactive</p>
-                <p className="text-3xl font-bold text-gray-600">{totalInactive}</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Abroad</p>
-                <p className="text-3xl font-bold text-blue-600">{totalAbroad}</p>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Applicant</p>
-                <p className="text-3xl font-bold text-orange-600">{totalApplicant}</p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+            <MetricCard title="Total" value={String(totalMembers)} icon={Users} tone="primary" />
+            <MetricCard title="Active" value={String(totalActive)} icon={TrendingUp} tone="success" />
+            <MetricCard title="Inactive" value={String(totalInactive)} icon={Users} tone="neutral" />
+            <MetricCard title="Abroad" value={String(totalAbroad)} icon={Users} tone="warning" />
+            <MetricCard title="Applicant" value={String(totalApplicant)} icon={Users} tone="danger" />
           </div>
         )}
 
         {/* Pagination Controls */}
         {!loading && !error && pagination && pagination.totalDocs > 0 && (
-          <Card className="shadow-sm">
+          <Card className="surface-card border-border/70">
             <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -405,7 +373,7 @@ const MembersGroupReport = () => {
                 
                 <div className="flex items-center gap-2">
                   <select
-                    className="px-2 py-1 border rounded text-sm bg-background"
+                    className="rounded-md border border-border/70 bg-background px-2 py-1 text-sm"
                     value={pageSize}
                     onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                   >
@@ -448,9 +416,8 @@ const MembersGroupReport = () => {
         {!loading && !error && (
           <>
             {Object.entries(groupsByDistrict).map(([districtName, districtGroups]) => (
-              <div key={districtName} className="space-y-3">
-                <h2 className="font-semibold">{districtName}</h2>
-                <Card className="shadow-sm">
+              <SectionCard key={districtName} title={districtName} description="Group-level totals and contribution data for the current selection.">
+                <Card className="surface-card border-border/70">
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
@@ -496,10 +463,10 @@ const MembersGroupReport = () => {
                     </Table>
                   </CardContent>
                 </Card>
-              </div>
+              </SectionCard>
             ))}
             {Object.keys(groupsByDistrict).length === 0 && (
-              <Card className="shadow-sm">
+              <Card className="surface-card border-border/70">
                 <CardContent className="p-8 text-center">
                   <p className="text-muted-foreground">No groups found matching the selected filters.</p>
                 </CardContent>
@@ -510,7 +477,7 @@ const MembersGroupReport = () => {
 
         {/* Bottom Pagination */}
         {!loading && !error && pagination && pagination.totalPages > 1 && (
-          <Card className="shadow-sm">
+          <Card className="surface-card border-border/70">
             <CardContent className="p-3">
               <div className="flex items-center justify-center gap-2">
                 <Button
@@ -582,10 +549,8 @@ const MembersGroupReport = () => {
             </CardContent>
           </Card>
         )}
-      </main>
-
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 

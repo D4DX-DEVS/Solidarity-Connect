@@ -2,6 +2,7 @@ import { Wallet, ArrowLeft, Download, Users, TrendingUp, AlertCircle, Calendar }
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -245,35 +246,48 @@ const BaithulDataView = () => {
     return months;
   };
 
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/state-admin")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="bg-primary p-2 rounded-lg">
-            <Wallet className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Baithul Maal Data</h1>
-            <p className="text-sm text-muted-foreground">Financial Records</p>
-          </div>
-          <Button size="sm" variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </header>
+  const contentTitleMap = {
+    members: "Contributing Members",
+    payments: "Recent Payments",
+    groups: "Group Statistics",
+    monthly: "Monthly Report"
+  } as const;
 
-      <main className="p-4 space-y-4">
+  const contentDescriptionMap = {
+    members: "Member-level contribution totals and pending amounts.",
+    payments: "Recorded payment history for the active filters.",
+    groups: "Group-level contribution performance and averages.",
+    monthly: "Month-by-month collection totals and trends."
+  } as const;
+
+  return (
+    <PageShell contentClassName="pb-24">
+      <PageHero
+        title="Baithul Maal Data"
+        subtitle="Review members, payments, group performance, and monthly trends from the same financial workspace."
+        eyebrow="Finance"
+        icon={<Wallet className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/state-admin")}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button size="sm" variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        }
+      />
+
         {/* Filters */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
+        <SectionCard title="Filters & Views" description="Switch between member, payment, group, and monthly financial views.">
+          <div className="space-y-3">
             {/* View Mode Tabs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <Button
@@ -343,70 +357,28 @@ const BaithulDataView = () => {
                 </SelectContent>
               </Select>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
         {/* Summary Statistics */}
         {baithulStats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
-                <p className="text-2xl font-bold text-blue-600">
-                  {baithulStats.overallStatistics.contributingMembers}
-                </p>
-                <p className="text-xs text-muted-foreground">Contributing Members</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                </div>
-                <p className="text-2xl font-bold text-green-600">
-                  ₹{baithulStats.overallStatistics.totalMonthlyAmount.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Monthly Target</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Wallet className="h-5 w-5 text-purple-600" />
-                </div>
-                <p className="text-2xl font-bold text-purple-600">
-                  ₹{baithulStats.overallStatistics.totalPaidAmount.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Total Collected</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardContent className="p-4 text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <AlertCircle className="h-5 w-5 text-orange-600" />
-                </div>
-                <p className="text-2xl font-bold text-orange-600">
-                  ₹{Math.round(baithulStats.overallStatistics.averageMonthlyAmount).toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Avg per Member</p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <MetricCard title="Contributing Members" value={String(baithulStats.overallStatistics.contributingMembers)} icon={Users} tone="primary" />
+            <MetricCard title="Monthly Target" value={`₹${baithulStats.overallStatistics.totalMonthlyAmount.toLocaleString()}`} icon={TrendingUp} tone="success" />
+            <MetricCard title="Total Collected" value={`₹${baithulStats.overallStatistics.totalPaidAmount.toLocaleString()}`} icon={Wallet} tone="warning" />
+            <MetricCard title="Avg per Member" value={`₹${Math.round(baithulStats.overallStatistics.averageMonthlyAmount).toLocaleString()}`} icon={AlertCircle} tone="neutral" />
           </div>
         )}
 
         {/* Content based on view mode */}
+        <SectionCard title={contentTitleMap[viewMode]} description={contentDescriptionMap[viewMode]}>
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <Card key={i}>
+              <Card key={i} className="surface-card border-border/70">
                 <CardContent className="p-4">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <Skeleton className="mb-2 h-6 w-3/4" />
+                  <Skeleton className="mb-2 h-4 w-1/2" />
                   <Skeleton className="h-8 w-1/4" />
                 </CardContent>
               </Card>
@@ -857,10 +829,10 @@ const BaithulDataView = () => {
             )}
           </>
         )}
-      </main>
+        </SectionCard>
 
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 

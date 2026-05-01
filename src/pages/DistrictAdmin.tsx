@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useNavigate } from "react-router-dom";
@@ -139,32 +140,37 @@ const DistrictAdmin = () => {
   const totalMembers = stats?.memberStatistics?.totalMembers ?? "—";
   const activeMembers = stats?.memberStatistics?.activeMembers ?? "—";
 
+  const districtTools = [
+    { label: "Members", path: "/members", Icon: Users },
+    { label: "Meetings", path: "/meetings", Icon: FileCheck },
+    { label: "Role Management", path: "/role-management", Icon: Shield },
+    { label: "Leaders", path: "/leaders", Icon: Star },
+    { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg">
-            <Building2 className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">District Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">{user?.district?.name || "District"}</p>
-          </div>
+    <PageShell>
+      <PageHero
+        eyebrow="District Control"
+        title="District Admin Panel"
+        subtitle={user?.district?.name || "District"}
+        icon={<Building2 className="h-6 w-6" />}
+        actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="outline" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="glass w-56 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
               <DropdownMenuItem onClick={() => navigate("/members")}>Members</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/meetings")}>Meeting Agendas</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/role-management")}>
-                <Shield className="h-4 w-4 mr-2" />Role Management
+                <Shield className="mr-2 h-4 w-4" />Role Management
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/leaders")}>
-                <Star className="h-4 w-4 mr-2" />Leaders
+                <Star className="mr-2 h-4 w-4" />Leaders
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/login")} className="text-destructive">
@@ -172,66 +178,61 @@ const DistrictAdmin = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </header>
+        }
+        details={
+          <>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Transfers</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{loadingTransfers ? "Loading..." : pendingTransfers.length}</p>
+            </div>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{user?.district?.name || "District"}</p>
+            </div>
+          </>
+        }
+      />
 
-      <main className="p-4 space-y-4">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card className="shadow-sm">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground mb-1">Groups</p>
-              <p className="text-2xl font-bold text-primary">{loadingStats ? "..." : totalGroups}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground mb-1">Total</p>
-              <p className="text-2xl font-bold text-orange-500">{loadingStats ? "..." : totalMembers}</p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm">
-            <CardContent className="p-3">
-              <p className="text-xs text-muted-foreground mb-1">Active</p>
-              <p className="text-2xl font-bold text-green-500">{loadingStats ? "..." : activeMembers}</p>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <MetricCard title="Groups" value={loadingStats ? "..." : String(totalGroups)} icon={Building2} tone="primary" />
+        <MetricCard title="Total Members" value={loadingStats ? "..." : String(totalMembers)} icon={Users} tone="warning" />
+        <MetricCard title="Active Members" value={loadingStats ? "..." : String(activeMembers)} icon={CheckCircle} tone="success" />
+      </div>
 
-        {/* My Targets */}
         <UserTargetsSection />
 
-        {/* Pending Transfer Approvals */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
+      <SectionCard
+        title="Transfer Approvals"
+        description="Requests that need district review before state-level approval."
+        action={
+          <div className="flex items-center gap-2">
+            {pendingTransfers.length > 0 && <Badge variant="destructive">{pendingTransfers.length}</Badge>}
+            <Button variant="outline" size="icon" className="h-9 w-9" onClick={fetchPendingTransfers}>
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+          </div>
+        }
+      >
               <div className="flex items-center gap-2">
                 <ArrowRightLeft className="h-5 w-5 text-orange-500" />
-                <h2 className="font-semibold">Transfer Approvals</h2>
+                <p className="text-sm font-semibold text-foreground">Approval Queue</p>
               </div>
-              <div className="flex items-center gap-2">
-                {pendingTransfers.length > 0 && <Badge variant="destructive">{pendingTransfers.length}</Badge>}
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={fetchPendingTransfers}>
-                  <RefreshCcw className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
 
             {loadingTransfers ? (
-              <p className="text-sm text-muted-foreground">Loading...</p>
+              <p className="pt-4 text-sm text-muted-foreground">Loading...</p>
             ) : pendingTransfers.length === 0 ? (
-              <div className="text-center py-4">
+              <div className="py-6 text-center">
                 <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
                 <p className="text-sm text-muted-foreground">No pending transfers to approve</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {pendingTransfers.map(transfer => (
-                  <Card key={transfer._id} className="border">
-                    <CardContent className="p-3">
+              <div className="mt-4 space-y-3">
+                {pendingTransfers.map((transfer) => (
+                  <Card key={transfer._id} className="surface-card transition-transform hover:-translate-y-0.5">
+                    <CardContent className="p-4">
                       <p className="font-semibold text-sm">{transfer.member?.name}</p>
                       <p className="text-xs text-muted-foreground">{transfer.member?.phone}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                      <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                         <span>{transfer.currentGroup?.name}</span>
                         <span>→</span>
                         <span>{transfer.targetGroup?.name}</span>
@@ -239,7 +240,7 @@ const DistrictAdmin = () => {
                           <Badge variant="outline" className="text-xs ml-1">Cross-District</Badge>
                         )}
                       </div>
-                      <div className="flex gap-1 mt-1 flex-wrap">
+                      <div className="mt-2 flex flex-wrap gap-1">
                         <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                           Source: {transfer.sourceDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
                         </Badge>
@@ -249,11 +250,11 @@ const DistrictAdmin = () => {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 bg-muted p-1 rounded">{transfer.reason}</p>
-                      <div className="flex gap-2 mt-2">
+                      <p className="mt-3 rounded-2xl bg-muted/70 p-3 text-xs text-muted-foreground">{transfer.reason}</p>
+                      <div className="mt-3 flex gap-2">
                         <Button
                           size="sm"
-                          className="flex-1 bg-green-600 hover:bg-green-700 text-xs h-7"
+                          className="h-9 flex-1 bg-green-600 text-xs hover:bg-green-700"
                           disabled={processingId === transfer._id}
                           onClick={() => { setSelectedTransfer(transfer); setApproveDialogOpen(true); }}
                         >
@@ -262,7 +263,7 @@ const DistrictAdmin = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 text-destructive text-xs h-7"
+                          className="h-9 flex-1 text-destructive text-xs"
                           disabled={processingId === transfer._id}
                           onClick={() => { setSelectedTransfer(transfer); setRejectDialogOpen(true); }}
                         >
@@ -274,30 +275,23 @@ const DistrictAdmin = () => {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+      </SectionCard>
 
-        {/* District Tools */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-3">District Tools</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "Members", path: "/members", Icon: Users },
-                { label: "Meetings", path: "/meetings", Icon: FileCheck },
-                { label: "Role Management", path: "/role-management", Icon: Shield },
-                { label: "Leaders", path: "/leaders", Icon: Star },
-                { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
-              ].map(({ label, path, Icon }) => (
-                <Button key={label} variant="outline" className="h-14 flex-col gap-1 text-xs" onClick={() => navigate(path)}>
-                  <Icon className="h-4 w-4" />
-                  {label}
+      <SectionCard title="District Tools" description="Fast access to the most used district workflows.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {districtTools.map(({ label, path, Icon }) => (
+                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
+                  <div className="action-tile-icon">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
+                  </div>
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      </main>
+      </SectionCard>
 
       {/* Approve Dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
@@ -354,7 +348,7 @@ const DistrictAdmin = () => {
       </Dialog>
 
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 

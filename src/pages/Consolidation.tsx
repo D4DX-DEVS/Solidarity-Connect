@@ -7,6 +7,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Progress } from "@/components/ui/progress";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -95,6 +96,11 @@ const PIE_COLORS        = ["#22c55e","#f87171","#f59e0b","#94a3b8"];
 const MEMBER_PIE_COLORS = ["#22c55e","#f87171","#3b82f6","#a78bfa"];
 const BAR_COLORS = { completed:"#22c55e", not_completed:"#f87171" };
 
+const sanitizeCsvCell = (value: string | number) => {
+  const stringValue = String(value ?? "");
+  return /^[=+\-@\t\r]/.test(stringValue) ? `'${stringValue}` : stringValue;
+};
+
 const getRoleLabel = (role: string, tagType?: string) => {
   if (role === "district_admin") return "District Admin";
   if (role === "group_admin" && tagType === "area") return "Area Admin";
@@ -172,12 +178,9 @@ const UserResultList = ({
                     <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium shrink-0 ${cfg.cls}`}>
                       <StatusIcon className="h-3 w-3" />{cfg.label}
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium shrink-0 bg-gray-100 text-gray-600">
-                      <AlertCircle className="h-3 w-3" />Not Started
-                    </div>
+                  ) : user.progress ? null : (
+                    <span className="text-xs text-muted-foreground shrink-0">#{idx + 1}</span>
                   )}
-                  {!user.progress && <span className="text-xs text-muted-foreground shrink-0">#{idx + 1}</span>}
                 </div>
                 {user.progress?.completedAt && (
                   <p className="text-xs text-green-600 mt-1">
@@ -292,10 +295,10 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
               {districtTotal > PAGE_SIZE && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-muted-foreground">{districtPage * PAGE_SIZE + 1}–{Math.min((districtPage + 1) * PAGE_SIZE, districtTotal)} of {districtTotal}</span>
-                  <button onClick={() => setDistrictPage(p => Math.max(0, p - 1))} disabled={districtPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                  <button onClick={() => setDistrictPage(p => Math.max(0, p - 1))} disabled={districtPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show previous district page">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <button onClick={() => setDistrictPage(p => p + 1)} disabled={(districtPage + 1) * PAGE_SIZE >= districtTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                  <button onClick={() => setDistrictPage(p => p + 1)} disabled={(districtPage + 1) * PAGE_SIZE >= districtTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show next district page">
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -308,9 +311,9 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
                 <Tooltip />
                 <Bar dataKey="completed" name="Completed" fill={BAR_COLORS.completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => onBarClick(target._id, "district", data._id, data.name, "completed")} />
+                  onClick={(data) => data?._id && onBarClick(target._id, "district", data._id, data.name, "completed")} />
                 <Bar dataKey="not_completed" name="Not Completed" fill={BAR_COLORS.not_completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => onBarClick(target._id, "district", data._id, data.name, "not_completed")} />
+                  onClick={(data) => data?._id && onBarClick(target._id, "district", data._id, data.name, "not_completed")} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -325,10 +328,10 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
               {groupTotal > PAGE_SIZE && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-muted-foreground">{groupPage * PAGE_SIZE + 1}–{Math.min((groupPage + 1) * PAGE_SIZE, groupTotal)} of {groupTotal}</span>
-                  <button onClick={() => setGroupPage(p => Math.max(0, p - 1))} disabled={groupPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                  <button onClick={() => setGroupPage(p => Math.max(0, p - 1))} disabled={groupPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show previous group page">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <button onClick={() => setGroupPage(p => p + 1)} disabled={(groupPage + 1) * PAGE_SIZE >= groupTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                  <button onClick={() => setGroupPage(p => p + 1)} disabled={(groupPage + 1) * PAGE_SIZE >= groupTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show next group page">
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -341,9 +344,9 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
                 <Tooltip />
                 <Bar dataKey="completed" name="Completed" fill={BAR_COLORS.completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => onBarClick(target._id, "group", data._id, data.name, "completed")} />
+                  onClick={(data) => data?._id && onBarClick(target._id, "group", data._id, data.name, "completed")} />
                 <Bar dataKey="not_completed" name="Not Completed" fill={BAR_COLORS.not_completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => onBarClick(target._id, "group", data._id, data.name, "not_completed")} />
+                  onClick={(data) => data?._id && onBarClick(target._id, "group", data._id, data.name, "not_completed")} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -575,7 +578,7 @@ const Consolidation = () => {
           return "";
         }),
       ]);
-      const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+      const csv = [header, ...rows].map(r => r.map(f => `"${sanitizeCsvCell(f)}"`).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -587,7 +590,7 @@ const Consolidation = () => {
         u.userName, u.role, u.district || "", u.group || "",
         ...Array.from({ length: 12 }, (_, i) => u.marks[i + 1] ? "✓" : ""),
       ]);
-      const csv = [header, ...rows].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+      const csv = [header, ...rows].map(r => r.map(f => `"${sanitizeCsvCell(f)}"`).join(",")).join("\n");
       const blob = new Blob([csv], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -604,7 +607,7 @@ const Consolidation = () => {
       u.progress?.status || "not_started",
       u.progress?.completedAt ? new Date(u.progress.completedAt).toLocaleDateString() : "",
     ]);
-    const csv  = [headers, ...data].map(r => r.map(f => `"${f}"`).join(",")).join("\n");
+    const csv  = [headers, ...data].map(r => r.map(f => `"${sanitizeCsvCell(f)}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement("a");
@@ -645,6 +648,16 @@ const Consolidation = () => {
   const applyRecurringFilter = async () => {
     if (!sfTargetId) {
       toast({ title: "Select a target", description: "Please select a recurring target first", variant: "destructive" });
+      return;
+    }
+    const fromKey = rfFromYear * 100 + rfFromMonth;
+    const toKey = rfToYear * 100 + rfToMonth;
+    if (fromKey > toKey) {
+      toast({
+        title: "Invalid date range",
+        description: "The start month must be before or equal to the end month.",
+        variant: "destructive"
+      });
       return;
     }
     setRfLoading(true); setRfApplied(true);
@@ -695,7 +708,7 @@ const Consolidation = () => {
       (r.completedMonths || []).join("; "),
       String(r.completedCount || 0),
     ]);
-    const csv = [headers, ...data].map(row => row.map(f => `"${f}"`).join(",")).join("\n");
+    const csv = [headers, ...data].map(row => row.map(f => `"${sanitizeCsvCell(f)}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -715,7 +728,7 @@ const Consolidation = () => {
       ...attData.periods.map(p => m.months[p] === true ? "Present" : m.months[p] === false ? "Absent" : "—"),
       String(m.presentCount), String(m.absentCount), String(m.unmarkedCount)
     ]);
-    const csv = [headers, ...rows].map(row => row.map(f => `"${f}"`).join(",")).join("\n");
+    const csv = [headers, ...rows].map(row => row.map(f => `"${sanitizeCsvCell(f)}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -738,29 +751,41 @@ const Consolidation = () => {
   ] : [];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(homeRoute)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Consolidation</h1>
-            <p className="text-xs text-muted-foreground">Organisation overview & recurring targets</p>
+    <PageShell contentClassName="pb-32">
+      <PageHero
+        title="Consolidation"
+        subtitle="Review organisation health, target completion, and recurring performance from a single reporting workspace."
+        eyebrow="Reporting"
+        icon={<BarChart3 className="h-6 w-6" />}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(homeRoute)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button variant="outline" size="icon" onClick={loadData} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            </Button>
           </div>
-          <Button variant="ghost" size="icon" onClick={loadData} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
-      </header>
+        }
+      />
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-3 text-muted-foreground">
-          <RefreshCw className="h-8 w-8 animate-spin" />
-          <p className="text-sm">Loading dashboard…</p>
-        </div>
+        <SectionCard title="Preparing Consolidation" description="Loading organisation totals, targets, and recurring dashboards.">
+          <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
+            <RefreshCw className="h-8 w-8 animate-spin" />
+            <p className="text-sm">Loading dashboard…</p>
+          </div>
+        </SectionCard>
       ) : (
-        <div className="px-4 pt-4 space-y-6">
+        <>
+          <div className="grid gap-3 md:grid-cols-3">
+            <MetricCard title="Members" value={String(dashStats?.members.total ?? "—")} icon={Users} tone="primary" />
+            <MetricCard title="Active Targets" value={String(orgStats?.targets.active ?? "—")} icon={Target} tone="success" />
+            <MetricCard title="Recurring Targets" value={String(recurringTargets.length)} icon={RefreshCw} tone="warning" />
+          </div>
+
+          <div className="space-y-6">
 
           {/* ── Filter Details (top) ── */}
           <section>
@@ -1421,9 +1446,10 @@ const Consolidation = () => {
             </section>
           )}
 
-        </div>
+          </div>
+        </>
       )}
-    </div>
+    </PageShell>
   );
 };
 

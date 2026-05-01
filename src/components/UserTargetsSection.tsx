@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SectionCard } from "@/components/app/AppShell";
 import { toast } from "@/hooks/use-toast";
 import { apiCall, uploadsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -492,15 +493,12 @@ const UserTargetsSection = () => {
 
   if (loading) {
     return (
-      <Card className="shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold">My Targets</h2>
-          </div>
+      <SectionCard title="My Targets" description="Track assigned targets, notes, and recurring completion status.">
+        <div className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-primary" />
           <p className="text-sm text-muted-foreground">Loading targets...</p>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
     );
   }
 
@@ -510,15 +508,12 @@ const UserTargetsSection = () => {
 
   if (progressList.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold">My Targets</h2>
-          </div>
+      <SectionCard title="My Targets" description="Track assigned targets, notes, and recurring completion status.">
+        <div className="flex items-center gap-2">
+          <Target className="h-5 w-5 text-primary" />
           <p className="text-sm text-muted-foreground">No targets assigned to you yet.</p>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
     );
   }
 
@@ -530,16 +525,11 @@ const UserTargetsSection = () => {
 
       {/* ══════════ REGULAR TARGETS ══════════ */}
       {regularProgress.length > 0 && (
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <h2 className="font-semibold">My Targets</h2>
-              </div>
-              <Badge variant="outline">{regularProgress.length}</Badge>
-            </div>
-
+        <SectionCard
+          title="My Targets"
+          description="Update progress, upload proof, and keep notes in one place."
+          action={<Badge variant="outline">{regularProgress.length}</Badge>}
+        >
             <div className="space-y-3">
               {regularProgress.map((progress) => {
                 const target = progress.personalTarget;
@@ -549,7 +539,7 @@ const UserTargetsSection = () => {
                 const isExpanded = expandedId === progress._id;
 
                 return (
-                  <Card key={progress._id} className="border">
+                  <Card key={progress._id} className="surface-card border-primary/10">
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
@@ -578,13 +568,13 @@ const UserTargetsSection = () => {
                       {isExpanded && (
                         <div className="mt-3 space-y-3 border-t pt-3">
                           {target.instructions && (
-                            <div className="bg-muted/50 p-2 rounded text-xs">
+                            <div className="rounded-2xl bg-muted/60 p-3 text-xs">
                               <p className="font-medium mb-1">Instructions:</p>
                               <p>{target.instructions}</p>
                             </div>
                           )}
                           {target.rewards && (
-                            <div className="bg-yellow-50 p-2 rounded text-xs">
+                            <div className="rounded-2xl bg-amber-50 p-3 text-xs text-amber-900">
                               <p className="font-medium mb-1">Rewards:</p>
                               <p>{target.rewards}</p>
                             </div>
@@ -618,7 +608,7 @@ const UserTargetsSection = () => {
                               }}
                             />
                             {(uploadedAttachments[progress._id] || pendingFiles[progress._id]) ? (
-                              <div className="flex items-center gap-2 p-2 bg-muted rounded text-xs">
+                              <div className="flex items-center gap-2 rounded-2xl bg-muted p-3 text-xs">
                                 {(() => {
                                   const att = uploadedAttachments[progress._id];
                                   const pending = pendingFiles[progress._id];
@@ -701,23 +691,16 @@ const UserTargetsSection = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </SectionCard>
       )}
 
       {/* ══════════ RECURRING TARGETS ══════════ */}
       {recurringProgress.length > 0 && (
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <RefreshCw className="h-5 w-5 text-blue-500" />
-                <h2 className="font-semibold">Recurring Targets</h2>
-              </div>
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                {recurringProgress.length}
-              </Badge>
-            </div>
+        <SectionCard
+          title="Recurring Targets"
+          description="Mark monthly and weekly progress without losing context."
+          action={<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>}
+        >
             <p className="text-xs text-muted-foreground mb-3">
               Tick each month/period you completed the target. You can mark or unmark anytime.
             </p>
@@ -748,7 +731,7 @@ const UserTargetsSection = () => {
                 const freq = target.recurringFrequency || 'monthly';
 
                 return (
-                  <Card key={progress._id} className="border border-blue-100">
+                  <Card key={progress._id} className="surface-card border-blue-100/80">
                     <CardContent className="p-3">
                       {/* Header */}
                       <div className="flex items-start justify-between gap-2">
@@ -920,13 +903,13 @@ const UserTargetsSection = () => {
                       {isExpanded && (
                         <div className="mt-3 space-y-2 border-t pt-3">
                           {target.instructions && (
-                            <div className="bg-muted/50 p-2 rounded text-xs">
+                            <div className="rounded-2xl bg-muted/60 p-3 text-xs">
                               <p className="font-medium mb-1">Instructions:</p>
                               <p>{target.instructions}</p>
                             </div>
                           )}
                           {target.rewards && (
-                            <div className="bg-yellow-50 p-2 rounded text-xs">
+                            <div className="rounded-2xl bg-amber-50 p-3 text-xs text-amber-900">
                               <p className="font-medium mb-1">Rewards:</p>
                               <p>{target.rewards}</p>
                             </div>
@@ -938,13 +921,12 @@ const UserTargetsSection = () => {
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </SectionCard>
       )}
 
       {/* ══════════ ATTENDANCE DIALOG ══════════ */}
       <Dialog open={attendanceOpen} onOpenChange={setAttendanceOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="glass sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-[1.8rem] border-border/60">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -1025,7 +1007,7 @@ const UserTargetsSection = () => {
                     {areaLeaders.map(leader => {
                       // Leaders are Users, not Members — show them as info-only (not in attendanceMap)
                       return (
-                        <div key={`leader-${leader._id}`} className="flex items-center gap-3 px-2 py-1.5 rounded bg-blue-50/50">
+                        <div key={`leader-${leader._id}`} className="flex items-center gap-3 rounded-2xl bg-blue-50/70 px-3 py-2">
                           <Users className="h-3.5 w-3.5 text-blue-500 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{leader.name}</p>
@@ -1047,7 +1029,7 @@ const UserTargetsSection = () => {
                     {areaMembers.map(member => (
                       <label
                         key={member._id}
-                        className="flex items-center gap-3 px-2 py-2 rounded hover:bg-muted/50 cursor-pointer"
+                        className="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-muted/60 cursor-pointer"
                       >
                         <Checkbox
                           checked={attendanceMap[member._id] || false}

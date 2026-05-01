@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { SectionCard } from "@/components/app/AppShell";
 import {
   Select,
   SelectContent,
@@ -16,9 +17,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import BottomNav from "@/components/BottomNav";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { uploadsAPI, notificationsAPI } from "@/utils/api";
+import { uploadsAPI, notificationsAPI, memberAuthAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AUDIENCE_OPTIONS = [
@@ -99,7 +101,10 @@ const Announcements = () => {
       };
       if (debouncedSearch) params.search = debouncedSearch;
       if (audienceFilter && audienceFilter !== "all") params.audienceFilter = audienceFilter;
-      const result = await notificationsAPI.getNotifications(params);
+      const userType = localStorage.getItem('userType');
+      const result = userType === 'member'
+        ? await memberAuthAPI.getNotifications(Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])))
+        : await notificationsAPI.getNotifications(params);
       setAnnouncements(result.data || []);
       if (result.pagination) {
         setTotalPages(result.pagination.totalPages || 1);
@@ -256,34 +261,24 @@ const Announcements = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
+      <HeaderWithLogout
+        icon={<Megaphone className="h-6 w-6 text-primary-foreground" />}
+        title="Announcements"
+        subtitle="Send announcements to users"
+        leftAction={
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="bg-primary p-2 rounded-lg">
-            <Megaphone className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Announcements</h1>
-            <p className="text-sm text-muted-foreground">Send announcements to users</p>
-          </div>
-          {isStateAdmin && (
-            <Button size="sm" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-1" />}
-              {showForm ? "" : "New"}
-            </Button>
-          )}
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4 space-y-4">
+      <main className="app-main pt-4 space-y-4">
         {/* Create Form */}
         {isStateAdmin && showForm && (
-          <Card className="shadow-sm border-primary/30">
-            <CardContent className="p-4 space-y-4">
-              <h2 className="font-semibold text-base">New Announcement</h2>
+          <SectionCard title="New Announcement" description="Write a message, attach files, and choose the audience.">
 
               {/* Title */}
               <div className="space-y-1">
@@ -421,16 +416,23 @@ const Announcements = () => {
                   Cancel
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </SectionCard>
         )}
 
         {/* Past Announcements */}
-        <div>
-          <h2 className="font-semibold mb-3">Past Announcements</h2>
+        <SectionCard
+          title="Past Announcements"
+          description="Search and review previously published announcement messages."
+          action={isStateAdmin ? (
+            <Button size="sm" onClick={() => setShowForm((v) => !v)}>
+              {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-1" />}
+              {showForm ? "Close" : "New"}
+            </Button>
+          ) : undefined}
+        >
 
           {/* Search + Filter row */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex flex-col gap-2 mb-3 sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -459,7 +461,7 @@ const Announcements = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : announcements.length === 0 ? (
-            <Card className="shadow-sm">
+            <Card className="surface-card">
               <CardContent className="p-8 text-center">
                 <Megaphone className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-muted-foreground">No announcements yet</p>
@@ -473,7 +475,7 @@ const Announcements = () => {
           ) : (
             <div className="space-y-3">
               {announcements.map((ann) => (
-                <Card key={ann._id} className="shadow-sm">
+                <Card key={ann._id} className="surface-card transition-all hover:-translate-y-0.5">
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
@@ -530,7 +532,7 @@ const Announcements = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between py-2 mt-3">
+            <div className="data-strip flex items-center justify-between py-4 mt-3">
               <p className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</p>
               <div className="flex gap-2">
                 <Button
@@ -552,7 +554,7 @@ const Announcements = () => {
               </div>
             </div>
           )}
-        </div>
+        </SectionCard>
       </main>
 
       <BottomNav />

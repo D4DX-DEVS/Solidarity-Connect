@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, baithulMaalAPI } from "@/utils/api";
 import { format } from "date-fns";
@@ -33,8 +33,8 @@ const MemberDetail = () => {
         try {
           const baithulResult = await baithulMaalAPI.getMemberPayments(id!);
           setBaithulMaalData(baithulResult.data);
-        } catch (error) {
-          console.log('No Baithul Maal data found');
+        } catch {
+          setBaithulMaalData(null);
         }
 
       } catch (error) {
@@ -290,7 +290,7 @@ const MemberDetail = () => {
   };
 
   const InfoRow = ({ icon: Icon, label, value }: any) => (
-    <div className="flex items-start gap-3 py-3 border-b last:border-b-0">
+    <div className="data-strip flex items-start gap-3 rounded-[1.3rem] px-4 py-3">
       <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
       <div className="flex-1">
         <p className="text-sm text-muted-foreground">{label}</p>
@@ -299,196 +299,217 @@ const MemberDetail = () => {
     </div>
   );
 
+  const renderMemberStatus = (status: string) => {
+    if (status === "Active") {
+      return (
+        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          <span>{status}</span>
+        </div>
+      );
+    }
+
+    if (status === "Applicant") {
+      return (
+        <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-800">
+          <span className="h-2.5 w-2.5 rounded-full bg-orange-500" aria-hidden="true" />
+          <span>{status}</span>
+        </div>
+      );
+    }
+
+    if (status === "Abroad") {
+      return (
+        <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
+          <span>{status}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800">
+        <span className="h-2.5 w-2.5 rounded-full bg-gray-500" aria-hidden="true" />
+        <span>{status}</span>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-6">
-        <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/members")}>
-              <ArrowLeft className="h-5 w-5" />
+      <PageShell>
+        <PageHero
+          title="Member Details"
+          subtitle="Loading the latest member profile and supporting records."
+          eyebrow="Members"
+          icon={<User className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Members
             </Button>
-            <h1 className="text-xl font-bold">Member Details</h1>
-          </div>
-        </header>
-        <main className="p-4 space-y-4">
-          <Card>
-            <CardContent className="p-6">
+          }
+        />
+        <SectionCard title="Preparing Member View" description="Fetching profile, contribution, and attendance data.">
+          <div className="space-y-4">
+            <div className="rounded-[1.8rem] border border-border/60 bg-background/80 p-6 text-center">
               <Skeleton className="h-20 w-20 rounded-full mx-auto mb-4" />
               <Skeleton className="h-8 w-48 mx-auto mb-2" />
               <Skeleton className="h-6 w-24 mx-auto" />
-            </CardContent>
-          </Card>
+            </div>
           {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
+            <div key={i} className="rounded-[1.6rem] border border-border/60 bg-background/80 p-4">
                 <Skeleton className="h-6 w-32 mb-3" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-3/4" />
-              </CardContent>
-            </Card>
+            </div>
           ))}
-        </main>
-      </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   if (!member) {
     return (
-      <div className="min-h-screen bg-background pb-6">
-        <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/members")}>
-              <ArrowLeft className="h-5 w-5" />
+      <PageShell>
+        <PageHero
+          title="Member Details"
+          subtitle="The requested member record could not be loaded."
+          eyebrow="Members"
+          icon={<User className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Members
             </Button>
-            <h1 className="text-xl font-bold">Member Details</h1>
-          </div>
-        </header>
-        <main className="p-4">
-          <Card>
-            <CardContent className="p-8 text-center">
+          }
+        />
+        <SectionCard title="Member Not Found" description="The member may have been removed or the link may be outdated.">
+          <div className="rounded-[1.8rem] border border-border/60 bg-background/80 p-8 text-center">
               <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="font-semibold text-lg mb-2">Member Not Found</h3>
               <p className="text-muted-foreground mb-4">The member you're looking for doesn't exist.</p>
               <Button onClick={() => navigate("/members")}>Back to Members</Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-6">
-      <header className="bg-card border-b px-4 py-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/members")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">Member Details</h1>
-        </div>
-      </header>
-
-      <main className="p-4 space-y-4">
-        {/* Header Card */}
-        <Card className="shadow-sm">
-          <CardContent className="p-6 text-center">
-            <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="h-10 w-10 text-primary" />
+    <PageShell>
+      <PageHero
+        title={member.name}
+        subtitle={`${member.group?.name || "Group not assigned"} • ${member.district?.name || "District not assigned"}`}
+        eyebrow="Member Profile"
+        icon={<User className="h-6 w-6" />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/member/${member._id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Request
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Members
+            </Button>
+          </>
+        }
+        details={
+          <>
+            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+              <div className="mt-2">{renderMemberStatus(member.status)}</div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">{member.name}</h2>
-            <Badge
-              variant={member.status === "Active" ? "default" : "secondary"}
-              className={
-                member.status === "Active" ? "bg-success" :
-                  member.status === "Applicant" ? "bg-orange-100 text-orange-800" :
-                    member.status === "Abroad" ? "bg-blue-100 text-blue-800" :
-                      "bg-gray-100 text-gray-800"
-              }
-            >
-              {member.status}
-            </Badge>
-            <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Phone</p>
+              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
+                <Phone className="h-4 w-4 text-primary" />
+                <span className="min-w-0 break-words leading-5">{member.phone}</span>
+              </div>
+            </div>
+            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Joined</p>
+              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="min-w-0 break-words leading-5">{member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : 'Unknown'}</span>
+              </div>
+            </div>
+            <div className="min-w-[220px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Actions</p>
+              <div className="mt-2 flex flex-wrap gap-2">
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">
-                  <Phone className="h-4 w-4 mr-2" />
+                  <Phone className="mr-2 h-4 w-4" />
                   Call
                 </Button>
               </a>
-              {member.email && (
+              {member.email ? (
                 <a href={`mailto:${member.email}`}>
                   <Button size="sm" variant="outline">
-                    <Mail className="h-4 w-4 mr-2" />
+                    <Mail className="mr-2 h-4 w-4" />
                     Email
                   </Button>
                 </a>
-              )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleDownloadCertificate}
-                disabled={downloadingCert}
-              >
-                <Download className="h-4 w-4 mr-2" />
+              ) : null}
+              <Button size="sm" variant="outline" onClick={handleDownloadCertificate} disabled={downloadingCert}>
+                <Download className="mr-2 h-4 w-4" />
                 {downloadingCert ? "Downloading..." : "Certificate"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
+            </div>
+          </>
+        }
+      />
 
-        {/* Contact Information */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Contact Information</h3>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <SectionCard title="Contact Information" description="Primary ways to reach and identify this member.">
+          <div className="space-y-3">
             <InfoRow icon={Phone} label="Phone Number" value={member.phone} />
             <InfoRow icon={Mail} label="Email" value={member.email} />
             <InfoRow icon={MapPin} label="Address" value={member.address} />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        {/* Personal Information */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Personal Information</h3>
+        <SectionCard title="Personal Information" description="Identity and profile details saved for this member.">
+          <div className="space-y-3">
             <InfoRow icon={Calendar} label="Date of Birth" value={member.dateOfBirth ? format(new Date(member.dateOfBirth), 'MMM dd, yyyy') : 'Not provided'} />
             <InfoRow icon={User} label="Age" value={member.age ? `${member.age} years` : 'Not provided'} />
             <InfoRow icon={Droplet} label="Blood Group" value={member.bloodGroup} />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        {/* Professional Information */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Professional Information</h3>
+        <SectionCard title="Professional Information" description="Occupation and education details recorded for the member.">
+          <div className="space-y-3">
             <InfoRow icon={Briefcase} label="Profession" value={member.profession} />
             <InfoRow icon={GraduationCap} label="Education" value={member.education} />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        {/* Organization Information */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3">Organization Details</h3>
+        <SectionCard title="Organization Details" description="How this member is mapped into the organization structure.">
+          <div className="space-y-3">
             <InfoRow icon={MapPin} label="District" value={member.district?.name || 'Not assigned'} />
             <InfoRow icon={User} label="Group" value={member.group?.name || 'Not assigned'} />
             <InfoRow icon={Calendar} label="Joined Date" value={member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : 'Not available'} />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
+      </div>
 
-        {/* Baithul Maal Information */}
-        {baithulMaalData && (
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet className="h-5 w-5" />
-                Baithul Maal - Monthly Records
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">₹{baithulMaalData.monthlyAmount || 0}</p>
-                  <p className="text-xs text-muted-foreground">Monthly Amount</p>
-                </div>
-                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">₹{baithulMaalData.totalCollected || 0}</p>
-                  <p className="text-xs text-muted-foreground">Total Collected</p>
-                </div>
-                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-red-600">₹{baithulMaalData.totalPaid || 0}</p>
-                  <p className="text-xs text-muted-foreground">Total Paid</p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-purple-600">₹{baithulMaalData.balance || 0}</p>
-                  <p className="text-xs text-muted-foreground">Balance</p>
-                </div>
-              </div>
+      {baithulMaalData ? (
+        <SectionCard title="Baithul Maal" description="Contribution summary and monthly payment records.">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 mb-5">
+            <MetricCard title="Monthly Amount" value={`₹${baithulMaalData.monthlyAmount || 0}`} icon={Wallet} tone="primary" />
+            <MetricCard title="Total Collected" value={`₹${baithulMaalData.totalCollected || 0}`} icon={CheckCircle} tone="success" />
+            <MetricCard title="Total Paid" value={`₹${baithulMaalData.totalPaid || 0}`} icon={XCircle} tone="danger" />
+            <MetricCard title="Balance" value={`₹${baithulMaalData.balance || 0}`} icon={Wallet} tone="warning" />
+          </div>
 
-              {/* Monthly Payment Records */}
-              {baithulMaalData.payments && baithulMaalData.payments.length > 0 ? (
-                <div>
-                  <h4 className="font-medium mb-3">All Monthly Payments</h4>
-                  <div className="overflow-x-auto">
+          {baithulMaalData.payments && baithulMaalData.payments.length > 0 ? (
+            <div>
+              <h4 className="mb-3 font-medium">All Monthly Payments</h4>
+              <div className="overflow-x-auto rounded-[1.2rem] border border-border/60 bg-background/70 p-2">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -524,50 +545,28 @@ const MemberDetail = () => {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                  <div className="mt-3 text-sm text-muted-foreground text-center">
-                    Total Records: {baithulMaalData.payments.length}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  No payment records found
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Meeting Attendance */}
-        {member.meetingAttendance && member.meetingAttendance.length > 0 ? (
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Meeting Attendance - All Records
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{member.meetingAttendance.length}</p>
-                  <p className="text-xs text-muted-foreground">Total Meetings</p>
-                </div>
-                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">
-                    {member.meetingAttendance.filter((a: any) => a.status === 'present').length}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Present</p>
-                </div>
-                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                  <p className="text-2xl font-bold text-red-600">
-                    {member.meetingAttendance.filter((a: any) => a.status === 'absent').length}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Absent</p>
-                </div>
               </div>
+              <div className="mt-3 text-center text-sm text-muted-foreground">
+                Total Records: {baithulMaalData.payments.length}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-[1.4rem] border border-border/60 bg-background/70 py-6 text-center text-muted-foreground">
+              No payment records found
+            </div>
+          )}
+        </SectionCard>
+      ) : null}
 
-              <div className="overflow-x-auto">
+      {member.meetingAttendance && member.meetingAttendance.length > 0 ? (
+        <SectionCard title="Meeting Attendance" description="Full history of recorded meeting participation.">
+          <div className="grid gap-3 md:grid-cols-3 mb-5">
+            <MetricCard title="Total Meetings" value={String(member.meetingAttendance.length)} icon={Calendar} tone="primary" />
+            <MetricCard title="Present" value={String(member.meetingAttendance.filter((a: any) => a.status === 'present').length)} icon={CheckCircle} tone="success" />
+            <MetricCard title="Absent" value={String(member.meetingAttendance.filter((a: any) => a.status === 'absent').length)} icon={XCircle} tone="danger" />
+          </div>
+
+          <div className="overflow-x-auto rounded-[1.2rem] border border-border/60 bg-background/70 p-2">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -617,51 +616,22 @@ const MemberDetail = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-              <div className="mt-3 text-sm text-muted-foreground text-center">
-                Total Attendance Records: {member.meetingAttendance.length} |
-                Attendance Rate: {member.meetingAttendance.length > 0
-                  ? Math.round((member.meetingAttendance.filter((a: any) => a.status === 'present').length / member.meetingAttendance.length) * 100)
-                  : 0}%
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Meeting Attendance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-4 text-muted-foreground">
-                No attendance records found
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            onClick={() => navigate(`/member/${member._id}/edit`)}
-            variant="outline"
-            className="w-full"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Request
-          </Button>
-          <Button
-            onClick={() => navigate('/members')}
-            className="w-full"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to List
-          </Button>
-        </div>
-      </main>
-    </div>
+          </div>
+          <div className="mt-3 text-center text-sm text-muted-foreground">
+            Total Attendance Records: {member.meetingAttendance.length} |
+            {' '}Attendance Rate: {member.meetingAttendance.length > 0
+              ? Math.round((member.meetingAttendance.filter((a: any) => a.status === 'present').length / member.meetingAttendance.length) * 100)
+              : 0}%
+          </div>
+        </SectionCard>
+      ) : (
+        <SectionCard title="Meeting Attendance" description="Meeting participation history will appear here once records are available.">
+          <div className="rounded-[1.4rem] border border-border/60 bg-background/70 py-6 text-center text-muted-foreground">
+            No attendance records found
+          </div>
+        </SectionCard>
+      )}
+    </PageShell>
   );
 };
 

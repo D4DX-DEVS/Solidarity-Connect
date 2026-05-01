@@ -2,6 +2,7 @@ import { ArrowLeft, CheckCircle, XCircle, ArrowRightLeft, Clock } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +60,9 @@ const TransferApprovals = () => {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const itemsPerPage = 20;
+
+  const crossDistrictCount = transferRequests.filter((request) => request.isCrossDistrict).length;
+  const waitingOnStateCount = transferRequests.filter((request) => request.stateApproval?.status === "pending").length;
 
   useEffect(() => {
     fetchTransferRequests();
@@ -144,33 +148,39 @@ const TransferApprovals = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
+    <PageShell>
+      <PageHero
+        title="Transfer Approvals"
+        subtitle={`${transferRequests.length} request${transferRequests.length !== 1 ? "s" : ""} currently need review or action.`}
+        eyebrow="Approvals"
+        icon={<ArrowRightLeft className="h-6 w-6" />}
+        actions={
           <Button
-            variant="ghost"
-            size="icon"
+            variant="outline"
+            size="sm"
             onClick={() => navigate(userRole === "district_admin" ? "/district-admin" : "/state-admin")}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Transfer Approvals</h1>
-            <p className="text-sm text-muted-foreground">
-              {transferRequests.length} request{transferRequests.length !== 1 ? "s" : ""} pending your action
-            </p>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4 space-y-3">
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Pending Requests" value={String(transferRequests.length)} icon={ArrowRightLeft} tone="primary" />
+        <MetricCard title="Cross-District" value={String(crossDistrictCount)} icon={Clock} tone="warning" />
+        <MetricCard title="Waiting on State" value={String(waitingOnStateCount)} icon={CheckCircle} tone="success" />
+      </div>
+
+      <SectionCard title="Approval Queue" description="Review source, target, reason, and approval chain before taking action.">
         {loading ? (
-          <div className="flex justify-center items-center py-8">
-            <div className="text-muted-foreground">Loading transfer requests...</div>
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            Loading transfer requests...
           </div>
         ) : (
-          transferRequests.map((request) => (
-            <Card key={request._id} className="shadow-sm">
+          <div className="space-y-3">
+          {transferRequests.map((request) => (
+            <Card key={request._id} className="surface-card border-border/70">
               <CardContent className="p-4">
                 <div className="mb-3">
                   {/* Transfer type + district approval badges */}
@@ -261,19 +271,20 @@ const TransferApprovals = () => {
                 </div>
               </CardContent>
             </Card>
-          ))
+          ))}
+          </div>
         )}
 
         {/* Load more */}
         {!loading && hasNextPage && (
-          <Button variant="outline" className="w-full" onClick={loadMoreRequests} disabled={loadingMore}>
+          <Button variant="outline" className="mt-3 w-full" onClick={loadMoreRequests} disabled={loadingMore}>
             {loadingMore ? "Loading..." : "Load More"}
           </Button>
         )}
 
         {/* Empty state */}
         {!loading && transferRequests.length === 0 && (
-          <Card className="p-8 text-center shadow-sm">
+          <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
             <ArrowRightLeft className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Pending Transfers</h2>
             <p className="text-sm text-muted-foreground">
@@ -281,9 +292,9 @@ const TransferApprovals = () => {
                 ? "No transfers are awaiting your final approval."
                 : "No transfers require your approval at this time."}
             </p>
-          </Card>
+          </div>
         )}
-      </main>
+      </SectionCard>
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
@@ -323,7 +334,7 @@ const TransferApprovals = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 };
 

@@ -1,5 +1,6 @@
 import { ArrowLeft, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import BottomNav from "@/components/BottomNav";
@@ -11,21 +12,28 @@ const MyTargets = () => {
   const { userRole } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      <header className="sticky top-0 z-40 bg-card border-b px-4 py-4 flex items-center gap-3 shadow-sm">
-        <Button variant="ghost" size="icon" onClick={() => navigate(getHomeRouteByRole(userRole))}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" />
-          <h1 className="font-bold text-lg">My Targets</h1>
+    <PageShell contentClassName="pb-28">
+      <PageHero
+        title="My Targets"
+        subtitle="Track recurring and personal targets from a single member-focused workspace."
+        eyebrow="Targets"
+        icon={<Target className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate(getHomeRouteByRole(userRole))}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        }
+      />
+
+      <SectionCard title="Target Progress" description="Review your target list, recurring cadence, and progress updates.">
+        <div className="mx-auto max-w-3xl">
+          <UserTargetsSection />
         </div>
-      </header>
-      <main className="p-4 max-w-2xl mx-auto">
-        <UserTargetsSection />
-      </main>
+      </SectionCard>
+
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 

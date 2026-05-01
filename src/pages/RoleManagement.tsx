@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,24 @@ interface EditState {
   roleTagName: string;
   listingOrder: string; // kept as string for a controlled input; empty means "no order"
 }
+
+const buildEditState = (user: UserWithLeader): EditState => ({
+  isLeader: user.isLeader || false,
+  roleTagType: user.roleTag?.type || "",
+  roleTagName: user.roleTag?.name || "",
+  listingOrder: typeof user.roleTag?.listingOrder === "number" ? String(user.roleTag.listingOrder) : "",
+});
+
+const hasPendingEditState = (state: EditState | undefined, user: UserWithLeader) => {
+  if (!state) return false;
+
+  return (
+    state.isLeader !== (user.isLeader || false) ||
+    state.roleTagType !== (user.roleTag?.type || "") ||
+    state.roleTagName !== (user.roleTag?.name || "") ||
+    state.listingOrder.trim() !== (typeof user.roleTag?.listingOrder === "number" ? String(user.roleTag.listingOrder) : "")
+  );
+};
 
 const RoleManagement = () => {
   const navigate = useNavigate();
@@ -138,17 +157,17 @@ const RoleManagement = () => {
         setHasNextPage(result.pagination.hasNextPage || false);
         setHasPrevPage(result.pagination.hasPrevPage || false);
       }
-      const states: Record<string, EditState> = {};
-      data.forEach((u) => {
-        states[u._id] = {
-          isLeader: u.isLeader || false,
-          roleTagType: u.roleTag?.type || "",
-          roleTagName: u.roleTag?.name || "",
-          listingOrder:
-            typeof u.roleTag?.listingOrder === "number" ? String(u.roleTag.listingOrder) : "",
-        };
+      setEditStates((prev) => {
+        const next = { ...prev };
+
+        data.forEach((user) => {
+          if (!hasPendingEditState(prev[user._id], user)) {
+            next[user._id] = buildEditState(user);
+          }
+        });
+
+        return next;
       });
-      setEditStates((prev) => ({ ...prev, ...states }));
       hasLoadedRef.current = true;
     } catch (error) {
       toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
@@ -186,16 +205,17 @@ const RoleManagement = () => {
       const data: UserWithLeader[] = result.data || [];
 
       // Build edit states
-      const states: Record<string, EditState> = {};
-      data.forEach((u: UserWithLeader) => {
-        states[u._id] = {
-          isLeader: u.isLeader || false,
-          roleTagType: u.roleTag?.type || "",
-          roleTagName: u.roleTag?.name || "",
-          listingOrder: typeof u.roleTag?.listingOrder === "number" ? String(u.roleTag.listingOrder) : "",
-        };
+      setEditStates((prev) => {
+        const next = { ...prev };
+
+        data.forEach((user) => {
+          if (!hasPendingEditState(prev[user._id], user)) {
+            next[user._id] = buildEditState(user);
+          }
+        });
+
+        return next;
       });
-      setEditStates((prev) => ({ ...prev, ...states }));
 
       // Group leaders by scope
       const groups: Record<string, UserWithLeader[]> = {};
@@ -327,30 +347,55 @@ const RoleManagement = () => {
     return role ? (map[role] || role) : "Member";
   };
 
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <div className="bg-primary p-2 rounded-lg">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Role Management</h1>
-            <p className="text-sm text-muted-foreground">Assign leader roles to admin users</p>
-          </div>
-        </div>
-      </header>
+  const leaderDirectoryCount = leaderGroups.reduce((sum, group) => sum + group.leaders.length, 0);
+  const currentViewLabel = isLeadersView
+    ? "Leaders"
+    : isMemberView
+      ? "Members"
+      : roleFilter === "all"
+        ? "All Roles"
+        : roleLabel(roleFilter);
+  const currentRecordCount = isLeadersView ? leaderDirectoryCount : (totalDocs || users.length);
+  const leaderSummaryCount = isLeadersView ? leaderGroups.length : users.filter((user) => user.isLeader).length;
 
-      <main className="p-4 space-y-4">
-        {/* Filters */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4 space-y-3">
+  return (
+    <PageShell contentClassName="pb-28">
+      <PageHero
+        title="Role Management"
+        subtitle="Assign leader roles, tune listing order, and manage leader visibility without changing the existing permissions flow."
+        eyebrow="Administration"
+        icon={<Shield className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+        }
+      />
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Current View" value={currentViewLabel} icon={Filter} tone="primary" />
+        <MetricCard title="Records" value={String(currentRecordCount)} icon={Users} tone="warning" />
+        <MetricCard
+          title={isLeadersView ? "Leader Groups" : "Visible Leaders"}
+          value={String(leaderSummaryCount)}
+          icon={Star}
+          tone="success"
+        />
+      </div>
+
+      <SectionCard
+        title="Directory Filters"
+        description="Search users, switch role scopes, and narrow the current management view."
+      >
+        <div className="space-y-3">
+            <label htmlFor="role-management-search" className="text-sm font-medium text-foreground">
+              Search Users
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="role-management-search"
                 placeholder="Search by name or phone..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -403,27 +448,34 @@ const RoleManagement = () => {
                 </Select>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Background fetch indicator */}
-        {(fetching || leadersLoading) && !isInitialLoad && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
-            <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-primary" />
-            <span>Updating…</span>
           </div>
-        )}
+      </SectionCard>
 
-        {/* ══════════ LEADERS GROUPED VIEW ══════════ */}
+      <SectionCard
+        title={isLeadersView ? "Leader Directory" : "Role Assignments"}
+        description={
+          isLeadersView
+            ? "Review grouped leaders by scope and update listing names or order without leaving the directory."
+            : "Toggle leader access, set role tags, and save assignment changes for each record."
+        }
+        action={
+          (fetching || leadersLoading) && !isInitialLoad ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-b-2 border-primary" />
+              <span>Updating…</span>
+            </div>
+          ) : undefined
+        }
+      >
         {isLeadersView ? (
           leadersLoading && leaderGroups.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
             </div>
           ) : leaderGroups.length === 0 ? (
             <Card className="shadow-sm">
               <CardContent className="p-8 text-center">
-                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                <Star className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
                 <p className="text-muted-foreground">No leaders found</p>
               </CardContent>
             </Card>
@@ -431,10 +483,10 @@ const RoleManagement = () => {
             <div className="space-y-5">
               {leaderGroups.map((group) => (
                 <div key={group.key}>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-2 flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-500" />
-                    <h3 className="font-semibold text-sm">{group.label}</h3>
-                    <Badge variant="outline" className="text-xs ml-auto">{group.leaders.length}</Badge>
+                    <h3 className="text-sm font-semibold">{group.label}</h3>
+                    <Badge variant="outline" className="ml-auto text-xs">{group.leaders.length}</Badge>
                   </div>
                   <div className="space-y-2">
                     {group.leaders.map((leader) => {
@@ -443,29 +495,29 @@ const RoleManagement = () => {
                       const changed = hasChanges(leader, state);
                       return (
                         <Card key={leader._id} className={`shadow-sm ${leadersLoading ? "opacity-60" : ""}`}>
-                          <CardContent className="p-3 space-y-2">
+                          <CardContent className="space-y-2 p-3">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <p className="font-medium text-sm">{leader.name}</p>
+                                <p className="text-sm font-medium">{leader.name}</p>
                                 <p className="text-xs text-muted-foreground">{leader.phone}</p>
-                                <div className="flex gap-1 mt-1 flex-wrap">
+                                <div className="mt-1 flex flex-wrap gap-1">
                                   {leader.roleTag?.type && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${ROLE_TYPE_COLORS[leader.roleTag.type] || "bg-gray-100 text-gray-700"}`}>
+                                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${ROLE_TYPE_COLORS[leader.roleTag.type] || "bg-gray-100 text-gray-700"}`}>
                                       {ROLE_TYPE_LABELS[leader.roleTag.type] || leader.roleTag.type}
                                     </span>
                                   )}
                                   {leader.roleTag?.name && (
-                                    <Badge variant="secondary" className="text-[10px] h-5">{leader.roleTag.name}</Badge>
+                                    <Badge variant="secondary" className="h-5 text-[10px]">{leader.roleTag.name}</Badge>
                                   )}
                                   {leader.district && (
-                                    <Badge variant="outline" className="text-[10px] h-5">{leader.district.name}</Badge>
+                                    <Badge variant="outline" className="h-5 text-[10px]">{leader.district.name}</Badge>
                                   )}
                                   {leader.group && (
-                                    <Badge variant="outline" className="text-[10px] h-5">{leader.group.name}</Badge>
+                                    <Badge variant="outline" className="h-5 text-[10px]">{leader.group.name}</Badge>
                                   )}
                                 </div>
                               </div>
-                              <div className="text-right shrink-0">
+                              <div className="shrink-0 text-right">
                                 {state.listingOrder ? (
                                   <span className="text-lg font-bold text-primary">#{state.listingOrder}</span>
                                 ) : (
@@ -474,16 +526,15 @@ const RoleManagement = () => {
                               </div>
                             </div>
 
-                            {/* Editable fields */}
                             <div className="flex items-center gap-2">
-                              <Tag className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <Input
                                 placeholder="Role name"
                                 value={state.roleTagName}
                                 onChange={(e) => updateEditState(leader._id, { roleTagName: e.target.value })}
-                                className="h-7 text-xs flex-1"
+                                className="h-7 flex-1 text-xs"
                               />
-                              <ListOrdered className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <ListOrdered className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <Input
                                 type="number"
                                 min={0}
@@ -495,7 +546,7 @@ const RoleManagement = () => {
                                     listingOrder: e.target.value.replace(/[^\d]/g, ""),
                                   })
                                 }
-                                className="h-7 text-xs w-20"
+                                className="h-7 w-20 text-xs"
                               />
                             </div>
 
@@ -503,14 +554,14 @@ const RoleManagement = () => {
                               <div className="flex gap-2">
                                 <Button
                                   size="sm"
-                                  className="flex-1 h-7 text-xs"
+                                  className="h-7 flex-1 text-xs"
                                   onClick={() => handleSave(leader._id)}
                                   disabled={saving === leader._id}
                                 >
                                   {saving === leader._id ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1" />
+                                    <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />
                                   ) : (
-                                    <Save className="h-3 w-3 mr-1" />
+                                    <Save className="mr-1 h-3 w-3" />
                                   )}
                                   Save
                                 </Button>
@@ -518,6 +569,7 @@ const RoleManagement = () => {
                                   size="sm"
                                   variant="outline"
                                   className="h-7"
+                                  aria-label={`Discard changes for ${leader.name}`}
                                   onClick={() =>
                                     updateEditState(leader._id, {
                                       isLeader: leader.isLeader || false,
@@ -541,212 +593,207 @@ const RoleManagement = () => {
                   </div>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground text-center py-2">
-                Same listing order number can be used across different districts/areas — ordering is per scope.
+              <p className="py-2 text-center text-xs text-muted-foreground">
+                Same listing order number can be used across different districts or areas because ordering is per scope.
               </p>
             </div>
           )
         ) : (
-        /* ══════════ REGULAR USERS LIST ══════════ */
-        <>
-        {/* Users list */}
-        {isInitialLoad ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
-        ) : users.length === 0 && !fetching ? (
-          <Card className="shadow-sm">
-            <CardContent className="p-8 text-center">
-              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No users found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {users.map((user) => {
-              const state = editStates[user._id];
-              if (!state) return null;
-              const changed = hasChanges(user, state);
-              return (
-                <Card key={user._id} className={`shadow-sm transition-opacity duration-200 ${fetching ? "opacity-60" : "opacity-100"}`}>
-                  <CardContent className="p-4 space-y-3">
-                    {/* User info row */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.phone}</p>
-                        <div className="flex gap-2 mt-1 flex-wrap">
-                          {isMemberView ? (
-                            <Badge variant="outline" className="text-xs">
-                              {user.status || "Member"}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs">
-                              {roleLabel(user.role)}
-                            </Badge>
-                          )}
-                          {user.district && (
-                            <Badge variant="secondary" className="text-xs">
-                              {user.district.name}
-                            </Badge>
-                          )}
-                          {user.group && (
-                            <Badge variant="secondary" className="text-xs">
-                              {user.group.name}
-                            </Badge>
+          <>
+            {isInitialLoad ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+              </div>
+            ) : users.length === 0 && !fetching ? (
+              <Card className="shadow-sm">
+                <CardContent className="p-8 text-center">
+                  <Users className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="text-muted-foreground">No users found</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {users.map((user) => {
+                  const state = editStates[user._id];
+                  if (!state) return null;
+                  const changed = hasChanges(user, state);
+                  return (
+                    <Card key={user._id} className={`shadow-sm transition-opacity duration-200 ${fetching ? "opacity-60" : "opacity-100"}`}>
+                      <CardContent className="space-y-3 p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold">{user.name}</p>
+                            <p className="text-sm text-muted-foreground">{user.phone}</p>
+                            <div className="mt-1 flex flex-wrap gap-2">
+                              {isMemberView ? (
+                                <Badge variant="outline" className="text-xs">
+                                  {user.status || "Member"}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-xs">
+                                  {roleLabel(user.role)}
+                                </Badge>
+                              )}
+                              {user.district && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {user.district.name}
+                                </Badge>
+                              )}
+                              {user.group && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {user.group.name}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          {user.isLeader && user.roleTag?.type && (
+                            <span className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
+                              {ROLE_TYPE_LABELS[user.roleTag.type]}
+                              {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
+                            </span>
                           )}
                         </div>
-                      </div>
-                      {user.isLeader && user.roleTag?.type && (
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
-                          {ROLE_TYPE_LABELS[user.roleTag.type]}
-                          {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
-                        </span>
-                      )}
-                    </div>
 
-                    {/* Is Leader toggle */}
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        id={`leader-${user._id}`}
-                        checked={state.isLeader}
-                        onCheckedChange={(checked) =>
-                          updateEditState(user._id, {
-                            isLeader: checked,
-                            roleTagType: checked ? state.roleTagType : "",
-                            roleTagName: checked ? state.roleTagName : "",
-                            listingOrder: checked ? state.listingOrder : "",
-                          })
-                        }
-                      />
-                      <Label htmlFor={`leader-${user._id}`} className="text-sm font-medium">
-                        Is Leader
-                      </Label>
-                    </div>
-
-                    {/* Role tag fields (only when isLeader=true) */}
-                    {state.isLeader && (
-                      <div className="space-y-2 pl-1 border-l-2 border-primary/20 ml-1">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <Select
-                            value={state.roleTagType}
-                            onValueChange={(val) => updateEditState(user._id, { roleTagType: val })}
-                          >
-                            <SelectTrigger className="h-8 text-sm">
-                              <SelectValue placeholder="Role type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {allowedRoleTypes.map((rt) => (
-                                <SelectItem key={rt} value={rt}>
-                                  {ROLE_TYPE_LABELS[rt]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Input
-                          placeholder="Role name (e.g. Secretary, President…)"
-                          value={state.roleTagName}
-                          onChange={(e) => updateEditState(user._id, { roleTagName: e.target.value })}
-                          className="h-8 text-sm"
-                        />
-                        <div className="flex items-center gap-2">
-                          <ListOrdered className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <Input
-                            type="number"
-                            min={0}
-                            inputMode="numeric"
-                            placeholder="Listing order (e.g. 1, 2, 3…)"
-                            value={state.listingOrder}
-                            onChange={(e) =>
+                        <div className="flex items-center gap-3">
+                          <Switch
+                            id={`leader-${user._id}`}
+                            checked={state.isLeader}
+                            onCheckedChange={(checked) =>
                               updateEditState(user._id, {
-                                listingOrder: e.target.value.replace(/[^\d]/g, ""),
+                                isLeader: checked,
+                                roleTagType: checked ? state.roleTagType : "",
+                                roleTagName: checked ? state.roleTagName : "",
+                                listingOrder: checked ? state.listingOrder : "",
                               })
                             }
-                            className="h-8 text-sm"
                           />
+                          <Label htmlFor={`leader-${user._id}`} className="text-sm font-medium">
+                            Is Leader
+                          </Label>
                         </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          Leaders are shown in ascending listing order across every dashboard. Leave blank to appear last.
-                        </p>
-                      </div>
-                    )}
 
-                    {/* Save / discard */}
-                    {changed && (
-                      <div className="flex gap-2 pt-1">
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => handleSave(user._id)}
-                          disabled={saving === user._id}
-                        >
-                          {saving === user._id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1" />
-                          ) : (
-                            <Save className="h-4 w-4 mr-1" />
-                          )}
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            updateEditState(user._id, {
-                              isLeader: user.isLeader || false,
-                              roleTagType: user.roleTag?.type || "",
-                              roleTagName: user.roleTag?.name || "",
-                              listingOrder:
-                                typeof user.roleTag?.listingOrder === "number"
-                                  ? String(user.roleTag.listingOrder)
-                                  : "",
-                            })
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                        {state.isLeader && (
+                          <div className="ml-1 space-y-2 border-l-2 border-primary/20 pl-1">
+                            <div className="flex items-center gap-2">
+                              <Tag className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                              <Select
+                                value={state.roleTagType}
+                                onValueChange={(val) => updateEditState(user._id, { roleTagType: val })}
+                              >
+                                <SelectTrigger className="h-8 text-sm" aria-label={`Leader role type for ${user.name}`}>
+                                  <SelectValue placeholder="Role type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {allowedRoleTypes.map((rt) => (
+                                    <SelectItem key={rt} value={rt}>
+                                      {ROLE_TYPE_LABELS[rt]}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Input
+                              placeholder="Role name (e.g. Secretary, President...)"
+                              value={state.roleTagName}
+                              onChange={(e) => updateEditState(user._id, { roleTagName: e.target.value })}
+                              className="h-8 text-sm"
+                            />
+                            <div className="flex items-center gap-2">
+                              <ListOrdered className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                              <Input
+                                type="number"
+                                min={0}
+                                inputMode="numeric"
+                                placeholder="Listing order (e.g. 1, 2, 3...)"
+                                aria-label={`Leader listing order for ${user.name}`}
+                                value={state.listingOrder}
+                                onChange={(e) =>
+                                  updateEditState(user._id, {
+                                    listingOrder: e.target.value.replace(/[^\d]/g, ""),
+                                  })
+                                }
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Leaders are shown in ascending listing order across every dashboard. Leave blank to appear last.
+                            </p>
+                          </div>
+                        )}
 
-        {/* Pagination */}
-        {totalPages > 1 && !isLeadersView && (
-          <div className="flex items-center justify-between py-2">
-            <p className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({totalDocs} users)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => p - 1)}
-                disabled={!hasPrevPage || loading || fetching}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => p + 1)}
-                disabled={!hasNextPage || loading || fetching}
-              >
-                Next <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
+                        {changed && (
+                          <div className="flex gap-2 pt-1">
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => handleSave(user._id)}
+                              disabled={saving === user._id}
+                            >
+                              {saving === user._id ? (
+                                <div className="mr-1 h-4 w-4 animate-spin rounded-full border-b-2 border-white" />
+                              ) : (
+                                <Save className="mr-1 h-4 w-4" />
+                              )}
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              aria-label={`Discard changes for ${user.name}`}
+                              onClick={() =>
+                                updateEditState(user._id, {
+                                  isLeader: user.isLeader || false,
+                                  roleTagType: user.roleTag?.type || "",
+                                  roleTagName: user.roleTag?.name || "",
+                                  listingOrder:
+                                    typeof user.roleTag?.listingOrder === "number"
+                                      ? String(user.roleTag.listingOrder)
+                                      : "",
+                                })
+                              }
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {totalPages > 1 && !isLeadersView && (
+              <div className="flex items-center justify-between py-2">
+                <p className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages} ({totalDocs} users)
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => p - 1)}
+                    disabled={!hasPrevPage || loading || fetching}
+                  >
+                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    disabled={!hasNextPage || loading || fetching}
+                  >
+                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
-        </>
-        )}
-      </main>
+      </SectionCard>
 
       <BottomNav />
-    </div>
+    </PageShell>
   );
 };
 
