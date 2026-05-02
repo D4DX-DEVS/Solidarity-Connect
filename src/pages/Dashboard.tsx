@@ -181,6 +181,8 @@ const Dashboard = () => {
                 { label: "Role Management", path: "/role-management", Icon: Shield },
                 { label: "Leaders", path: "/leaders", Icon: Star },
                 { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
+                { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
+                { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
                 { label: "Bulk Import", path: "/bulk-import", Icon: Upload },
                 { label: "Membership Form & Files", path: "/org-files", Icon: FileText },
               ].map(({ label, path, Icon }) => (

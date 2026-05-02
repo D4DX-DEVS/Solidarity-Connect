@@ -143,9 +143,13 @@ const DistrictAdmin = () => {
   const districtTools = [
     { label: "Members", path: "/members", Icon: Users },
     { label: "Meetings", path: "/meetings", Icon: FileCheck },
+    { label: "Meeting Agenda", path: "/state-admin/meeting-agenda", Icon: FileCheck },
+    { label: "Groups", path: "/state-admin/groups", Icon: Users },
     { label: "Role Management", path: "/role-management", Icon: Shield },
     { label: "Leaders", path: "/leaders", Icon: Star },
     { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
+    { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
+    { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
   ];
 
   return (

@@ -101,14 +101,6 @@ const BottomNav = () => {
                         </DropdownMenuItem>
                       </>
                     )}
-                    {userRole === "district_admin" && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")} className="rounded-xl py-2.5 px-3 cursor-pointer focus:bg-primary/10 transition-colors font-medium mt-1">
-                          <Menu className="h-4 w-4 mr-2.5 text-primary" />
-                          View Meeting Agendas
-                        </DropdownMenuItem>
-                      </>
-                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               );
