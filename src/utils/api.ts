@@ -34,7 +34,16 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Handle non-JSON responses (e.g. 429 rate limit plain text)
+    const contentType = response.headers.get('content-type');
+    let data: any;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || `HTTP ${response.status}` };
+    }
 
     if (!response.ok) {
       console.error(`❌ API Error: ${response.status}`, data);

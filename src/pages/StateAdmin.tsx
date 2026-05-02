@@ -54,10 +54,10 @@ interface BaithulMaalStats {
     totalMembers: number;
     contributingMembers: number;
     totalMonthlyAmount: number;
+    totalPaidAmount: number;
     averageMonthlyAmount: number;
-    totalCollected: number;
-    totalPaid: number;
-    totalBalance: number;
+    minAmount: number;
+    maxAmount: number;
   };
 }
 
@@ -238,8 +238,8 @@ const StateAdmin = () => {
     },
     {
       title: "Baithul Maal",
-      value: baithulMaalStats?.overallStatistics?.totalBalance ? formatCurrency(baithulMaalStats.overallStatistics.totalBalance) : "₹0",
-      detail: `${formatCurrency(baithulMaalStats?.overallStatistics?.totalMonthlyAmount || 0)} monthly`,
+      value: baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0",
+      detail: `${baithulMaalStats?.overallStatistics?.contributingMembers || 0} contributing members`,
       icon: Wallet,
       tone: "warning" as const,
     },
@@ -301,8 +301,8 @@ const StateAdmin = () => {
               <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.memberStatistics?.activeMembers?.toLocaleString() || "0"}</p>
             </div>
             <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Baithul Balance</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{baithulMaalStats?.overallStatistics?.totalBalance ? formatCurrency(baithulMaalStats.overallStatistics.totalBalance) : "₹0"}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Monthly Collection</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0"}</p>
             </div>
             <div className="data-strip">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Actions</p>

@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   BarChart3, ArrowLeft, Filter, Users, Download, CheckCircle, Clock,
-  AlertCircle, Target, RefreshCw, TrendingUp,
-  Building2, MapPin, UserCheck, UserX, Globe2, Crown, Shield, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight
+  AlertCircle, Target, RefreshCw,
+  Building2, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
-import { Progress } from "@/components/ui/progress";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -17,10 +16,7 @@ import { toast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
-import {
-  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from "recharts";
+// Charts removed – using inline visual indicators instead
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface TargetStat {
@@ -92,9 +88,6 @@ const STATUS_CONFIG = {
   in_progress:  { label:"In Progress",  icon:Clock,         cls:"bg-blue-100 text-blue-700"  },
   completed:    { label:"Completed",     icon:CheckCircle,   cls:"bg-green-100 text-green-700" },
 };
-const PIE_COLORS        = ["#22c55e","#f87171","#f59e0b","#94a3b8"];
-const MEMBER_PIE_COLORS = ["#22c55e","#f87171","#3b82f6","#a78bfa"];
-const BAR_COLORS = { completed:"#22c55e", not_completed:"#f87171" };
 
 const sanitizeCsvCell = (value: string | number) => {
   const stringValue = String(value ?? "");
@@ -109,21 +102,7 @@ const getRoleLabel = (role: string, tagType?: string) => {
   return role;
 };
 
-// ── Stat Card ──────────────────────────────────────────────────────────────────
-const StatCard = ({
-  label, value, sub, icon: Icon, color = "text-primary", bg = "bg-primary/10"
-}: { label:string; value:string|number; sub?:string; icon:React.ElementType; color?:string; bg?:string }) => (
-  <Card className="shadow-sm">
-    <CardContent className="p-3">
-      <div className="flex items-center gap-2 mb-1">
-        <div className={`p-1.5 rounded-md ${bg}`}><Icon className={`h-3.5 w-3.5 ${color}`} /></div>
-        <p className="text-xs text-muted-foreground leading-tight">{label}</p>
-      </div>
-      <p className={`text-2xl font-bold leading-none ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
-    </CardContent>
-  </Card>
-);
+
 
 // ── Shared User Result List ────────────────────────────────────────────────────
 const UserResultList = ({
@@ -199,6 +178,21 @@ const UserResultList = ({
   );
 };
 
+// ── Inline Progress Bar ────────────────────────────────────────────────────────
+const InlineBar = ({ completed, total, className = "" }: { completed: number; total: number; className?: string }) => {
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  return (
+    <div className={`h-1.5 w-full rounded-full bg-gray-200 overflow-hidden ${className}`}>
+      {pct > 0 && (
+        <div
+          className="h-full rounded-full bg-green-500 transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      )}
+    </div>
+  );
+};
+
 // ── Recurring Target Card ──────────────────────────────────────────────────────
 interface TargetCardProps {
   target: TargetStat;
@@ -210,148 +204,144 @@ const TargetCard = ({ target, onBarClick }: TargetCardProps) => {
   const { stats } = target;
   const emoji     = CATEGORY_EMOJI[target.category] || "🎯";
   const freqLabel = FREQ_LABEL[target.recurringFrequency] || target.recurringFrequency;
-  const pieData   = [
-    { name: "Completed",     value: stats.completed },
-    { name: "Not Completed", value: stats.total - stats.completed },
-  ];
 
   const [districtPage, setDistrictPage] = useState(0);
   const [groupPage,    setGroupPage]    = useState(0);
 
   const districtTotal   = stats.byDistrict.length;
   const groupTotal      = stats.byGroup.length;
-  const districtBarData = stats.byDistrict.slice(districtPage * PAGE_SIZE, (districtPage + 1) * PAGE_SIZE);
-  const groupBarData    = stats.byGroup.slice(groupPage * PAGE_SIZE, (groupPage + 1) * PAGE_SIZE);
+  const districtListData = stats.byDistrict.slice(districtPage * PAGE_SIZE, (districtPage + 1) * PAGE_SIZE);
+  const groupListData    = stats.byGroup.slice(groupPage * PAGE_SIZE, (groupPage + 1) * PAGE_SIZE);
   const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <Card className="shadow-md overflow-hidden">
-      <CardHeader className="pb-3 pt-4 px-4 bg-gradient-to-r from-primary/5 to-primary/10">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span className="text-lg">{emoji}</span>
-              <CardTitle className="text-base leading-tight">{target.title}</CardTitle>
-              <Badge variant="secondary" className="text-xs shrink-0">{freqLabel}</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {fmtDate(target.startDate)} → {fmtDate(target.endDate)}
-            </p>
+    <Card className="shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="p-4 pb-3 border-b bg-muted/30">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-base">{emoji}</span>
+            <h3 className="text-sm font-semibold truncate">{target.title}</h3>
+            <Badge variant="secondary" className="text-[10px] shrink-0 px-1.5 py-0">{freqLabel}</Badge>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-2xl font-bold text-primary">{stats.completionRate}%</p>
-            <p className="text-xs text-muted-foreground">completed</p>
-          </div>
+          <span className={`text-lg font-bold shrink-0 ${stats.completionRate >= 50 ? "text-green-600" : stats.completionRate > 0 ? "text-amber-600" : "text-red-500"}`}>
+            {stats.completionRate}%
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="px-4 pb-4 pt-3 space-y-4">
-        <div>
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>Progress</span><span>{stats.completed} / {stats.total}</span>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {fmtDate(target.startDate)} → {fmtDate(target.endDate)}
+        </p>
+      </div>
+
+      <div className="p-4 space-y-3">
+        {/* Summary row */}
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-green-500" />
+            <span className="font-medium text-green-700">{stats.completed}</span>
+            <span className="text-muted-foreground">done</span>
           </div>
-          <Progress value={stats.completionRate} className="h-2" />
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-blue-500" />
+            <span className="font-medium text-blue-700">{stats.in_progress}</span>
+            <span className="text-muted-foreground">active</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="h-2 w-2 rounded-full bg-gray-400" />
+            <span className="font-medium text-gray-600">{stats.not_started}</span>
+            <span className="text-muted-foreground">pending</span>
+          </div>
+          <span className="ml-auto text-muted-foreground">{stats.completed}/{stats.total}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
-            <CheckCircle className="h-4 w-4 text-green-600 mx-auto mb-0.5" />
-            <p className="text-lg font-bold text-green-700">{stats.completed}</p>
-            <p className="text-xs text-green-600">Completed</p>
-          </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-center">
-            <Clock className="h-4 w-4 text-blue-600 mx-auto mb-0.5" />
-            <p className="text-lg font-bold text-blue-700">{stats.in_progress}</p>
-            <p className="text-xs text-blue-600">In Progress</p>
-          </div>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
-            <AlertCircle className="h-4 w-4 text-gray-500 mx-auto mb-0.5" />
-            <p className="text-lg font-bold text-gray-600">{stats.not_started}</p>
-            <p className="text-xs text-gray-500">Not Started</p>
-          </div>
-        </div>
-        {stats.total > 0 && (
+
+        {/* Progress */}
+        <InlineBar completed={stats.completed} total={stats.total} className="h-2" />
+
+        {/* By District */}
+        {districtListData.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" /> Completion Overview
-            </p>
-            <ResponsiveContainer width="100%" height={180}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                  {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                </Pie>
-                <Tooltip formatter={(v) => [`${v}`, ""]} />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-        {districtBarData.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="h-3 w-3" /> By District
-                <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
-              </p>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">By District</p>
               {districtTotal > PAGE_SIZE && (
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground">{districtPage * PAGE_SIZE + 1}–{Math.min((districtPage + 1) * PAGE_SIZE, districtTotal)} of {districtTotal}</span>
-                  <button onClick={() => setDistrictPage(p => Math.max(0, p - 1))} disabled={districtPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show previous district page">
-                    <ChevronLeft className="h-4 w-4" />
+                  <button onClick={() => setDistrictPage(p => Math.max(0, p - 1))} disabled={districtPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronLeft className="h-3 w-3" />
                   </button>
-                  <button onClick={() => setDistrictPage(p => p + 1)} disabled={(districtPage + 1) * PAGE_SIZE >= districtTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show next district page">
-                    <ChevronRight className="h-4 w-4" />
+                  <span className="text-[10px] text-muted-foreground">{districtPage + 1}/{Math.ceil(districtTotal / PAGE_SIZE)}</span>
+                  <button onClick={() => setDistrictPage(p => p + 1)} disabled={(districtPage + 1) * PAGE_SIZE >= districtTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronRight className="h-3 w-3" />
                   </button>
                 </div>
               )}
             </div>
-            <ResponsiveContainer width="100%" height={Math.max(120, districtBarData.length * 28)}>
-              <BarChart data={districtBarData} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
-                <Tooltip />
-                <Bar dataKey="completed" name="Completed" fill={BAR_COLORS.completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => data?._id && onBarClick(target._id, "district", data._id, data.name, "completed")} />
-                <Bar dataKey="not_completed" name="Not Completed" fill={BAR_COLORS.not_completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => data?._id && onBarClick(target._id, "district", data._id, data.name, "not_completed")} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="divide-y">
+              {districtListData.map(d => {
+                const total = d.completed + d.not_completed;
+                const pct = total > 0 ? Math.round((d.completed / total) * 100) : 0;
+                return (
+                  <div
+                    key={d._id || d.name}
+                    className="flex items-center gap-3 py-2 cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors"
+                    onClick={() => d._id && onBarClick(target._id, "district", d._id, d.name, "not_completed")}
+                  >
+                    <span className="text-xs font-medium truncate flex-1 min-w-0">{d.name}</span>
+                    <span className="text-[10px] font-semibold text-green-600 w-6 text-right">{d.completed}</span>
+                    <span className="text-[10px] text-muted-foreground">/</span>
+                    <span className="text-[10px] text-muted-foreground w-6">{total}</span>
+                    <div className="w-16 shrink-0">
+                      <InlineBar completed={d.completed} total={total} className="h-1.5" />
+                    </div>
+                    <span className={`text-[10px] font-semibold w-8 text-right ${pct > 0 ? "text-green-600" : "text-muted-foreground"}`}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
-        {groupBarData.length > 0 && (
+
+        {/* By Group */}
+        {groupListData.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-2">
-                <Users className="h-3 w-3" /> By Group
-                <span className="font-normal text-muted-foreground/70">· tap a bar to drill down</span>
-              </p>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">By Group</p>
               {groupTotal > PAGE_SIZE && (
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground">{groupPage * PAGE_SIZE + 1}–{Math.min((groupPage + 1) * PAGE_SIZE, groupTotal)} of {groupTotal}</span>
-                  <button onClick={() => setGroupPage(p => Math.max(0, p - 1))} disabled={groupPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show previous group page">
-                    <ChevronLeft className="h-4 w-4" />
+                  <button onClick={() => setGroupPage(p => Math.max(0, p - 1))} disabled={groupPage === 0} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronLeft className="h-3 w-3" />
                   </button>
-                  <button onClick={() => setGroupPage(p => p + 1)} disabled={(groupPage + 1) * PAGE_SIZE >= groupTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted" aria-label="Show next group page">
-                    <ChevronRight className="h-4 w-4" />
+                  <span className="text-[10px] text-muted-foreground">{groupPage + 1}/{Math.ceil(groupTotal / PAGE_SIZE)}</span>
+                  <button onClick={() => setGroupPage(p => p + 1)} disabled={(groupPage + 1) * PAGE_SIZE >= groupTotal} className="p-0.5 rounded disabled:opacity-30 hover:bg-muted">
+                    <ChevronRight className="h-3 w-3" />
                   </button>
                 </div>
               )}
             </div>
-            <ResponsiveContainer width="100%" height={Math.max(120, groupBarData.length * 28)}>
-              <BarChart data={groupBarData} layout="vertical" margin={{ top: 0, right: 8, left: 4, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
-                <Tooltip />
-                <Bar dataKey="completed" name="Completed" fill={BAR_COLORS.completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => data?._id && onBarClick(target._id, "group", data._id, data.name, "completed")} />
-                <Bar dataKey="not_completed" name="Not Completed" fill={BAR_COLORS.not_completed} radius={[0, 2, 2, 0]} cursor="pointer"
-                  onClick={(data) => data?._id && onBarClick(target._id, "group", data._id, data.name, "not_completed")} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="divide-y">
+              {groupListData.map(g => {
+                const total = g.completed + g.not_completed;
+                const pct = total > 0 ? Math.round((g.completed / total) * 100) : 0;
+                return (
+                  <div
+                    key={g._id || g.name}
+                    className="flex items-center gap-3 py-2 cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1 transition-colors"
+                    onClick={() => g._id && onBarClick(target._id, "group", g._id, g.name, "not_completed")}
+                  >
+                    <span className="text-xs font-medium truncate flex-1 min-w-0">{g.name}</span>
+                    <span className="text-[10px] font-semibold text-green-600 w-6 text-right">{g.completed}</span>
+                    <span className="text-[10px] text-muted-foreground">/</span>
+                    <span className="text-[10px] text-muted-foreground w-6">{total}</span>
+                    <div className="w-16 shrink-0">
+                      <InlineBar completed={g.completed} total={total} className="h-1.5" />
+                    </div>
+                    <span className={`text-[10px] font-semibold w-8 text-right ${pct > 0 ? "text-green-600" : "text-muted-foreground"}`}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 };
@@ -735,13 +725,6 @@ const Consolidation = () => {
     a.href = url; a.download = `attendance-${Date.now()}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
-
-  const memberPieData = dashStats ? [
-    { name: "Active",   value: dashStats.members.active   },
-    { name: "Inactive", value: dashStats.members.inactive },
-    { name: "Abroad",   value: dashStats.members.abroad   },
-    { name: "Pending",  value: dashStats.members.pending  },
-  ].filter(d => d.value > 0) : [];
 
   const adminBarData = orgStats ? [
     { role: "District", count: orgStats.users.district_admin },
@@ -1129,83 +1112,125 @@ const Consolidation = () => {
 
           {/* ── Section 1: Members ── */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-primary" />
-              <h2 className="font-bold text-sm">Members</h2>
-              {dashStats && (
-                <Badge variant="outline" className="text-xs ml-auto">Total: {dashStats.members.total}</Badge>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Active Members"   value={dashStats?.members.active   ?? "—"} icon={UserCheck} color="text-green-600" bg="bg-green-100" />
-              <StatCard label="Inactive Members" value={dashStats?.members.inactive ?? "—"} icon={UserX}     color="text-red-500"   bg="bg-red-100"   />
-              <StatCard label="Abroad Members"   value={dashStats?.members.abroad   ?? "—"} icon={Globe2}    color="text-blue-600"  bg="bg-blue-100"  />
-              <StatCard label="Pending Approval" value={dashStats?.members.pending  ?? "—"} icon={Clock}     color="text-amber-600" bg="bg-amber-100" />
-            </div>
-            {memberPieData.length > 0 && (
-              <Card className="mt-3 shadow-sm">
-                <CardContent className="p-3">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" /> Member Status Distribution
-                  </p>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <PieChart>
-                      <Pie data={memberPieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
-                        {memberPieData.map((_, i) => <Cell key={i} fill={MEMBER_PIE_COLORS[i % MEMBER_PIE_COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(v) => [`${v}`, ""]} />
-                      <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            )}
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <h2 className="font-semibold text-sm">Members</h2>
+                  </div>
+                  <span className="text-lg font-bold">{dashStats?.members.total ?? "—"}</span>
+                </div>
+                {dashStats && dashStats.members.total > 0 && (
+                  <>
+                    {/* Stacked bar */}
+                    <div className="h-3 w-full rounded-full overflow-hidden flex bg-gray-200 mb-2">
+                      {dashStats.members.active > 0 && (
+                        <div className="h-full bg-green-500" style={{ width: `${(dashStats.members.active / dashStats.members.total) * 100}%` }} />
+                      )}
+                      {dashStats.members.inactive > 0 && (
+                        <div className="h-full bg-red-400" style={{ width: `${(dashStats.members.inactive / dashStats.members.total) * 100}%` }} />
+                      )}
+                      {dashStats.members.abroad > 0 && (
+                        <div className="h-full bg-blue-400" style={{ width: `${(dashStats.members.abroad / dashStats.members.total) * 100}%` }} />
+                      )}
+                      {dashStats.members.pending > 0 && (
+                        <div className="h-full bg-amber-400" style={{ width: `${(dashStats.members.pending / dashStats.members.total) * 100}%` }} />
+                      )}
+                    </div>
+                    {/* Counts row */}
+                    <div className="grid grid-cols-4 gap-1 text-center">
+                      {[
+                        { label: "Active", value: dashStats.members.active, color: "text-green-600", dot: "bg-green-500" },
+                        { label: "Inactive", value: dashStats.members.inactive, color: "text-red-500", dot: "bg-red-400" },
+                        { label: "Abroad", value: dashStats.members.abroad, color: "text-blue-600", dot: "bg-blue-400" },
+                        { label: "Pending", value: dashStats.members.pending, color: "text-amber-600", dot: "bg-amber-400" },
+                      ].map(item => (
+                        <div key={item.label} className="py-1.5">
+                          <div className="flex items-center justify-center gap-1 mb-0.5">
+                            <div className={`h-1.5 w-1.5 rounded-full ${item.dot}`} />
+                            <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                          </div>
+                          <p className={`text-sm font-bold ${item.color}`}>{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </section>
 
           {/* ── Section 2: Organisation Structure ── */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Building2 className="h-4 w-4 text-primary" />
-              <h2 className="font-bold text-sm">Organisation Structure</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Districts"    value={dashStats?.districts.total ?? "—"} icon={MapPin}    color="text-violet-600" bg="bg-violet-100" sub={`${dashStats?.districts.active ?? 0} active`} />
-              <StatCard label="Groups"       value={orgStats?.totalGroups ?? dashStats?.groups.total ?? "—"} icon={Building2} color="text-indigo-600" bg="bg-indigo-100" />
-              <StatCard label="Leaders"      value={orgStats?.users.leaders ?? "—"}    icon={Crown}     color="text-amber-600"  bg="bg-amber-100"  sub="District + Area admins" />
-              <StatCard label="Total Admins" value={orgStats?.users.total   ?? "—"}    icon={Shield}    color="text-primary"    bg="bg-primary/10" />
-            </div>
-            {adminBarData.length > 0 && orgStats && (
-              <Card className="mt-3 shadow-sm">
-                <CardContent className="p-3">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-                    <BarChart3 className="h-3 w-3" /> Admin Role Breakdown
-                  </p>
-                  <ResponsiveContainer width="100%" height={140}>
-                    <BarChart data={adminBarData} margin={{ top: 0, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="role" tick={{ fontSize: 11 }} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
-                      <Tooltip />
-                      <Bar dataKey="count" name="Admins" fill="#6366f1" radius={[3, 3, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            )}
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <h2 className="font-semibold text-sm">Organisation</h2>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {[
+                    { label: "Districts", value: dashStats?.districts.total ?? 0, sub: `${dashStats?.districts.active ?? 0} active` },
+                    { label: "Groups", value: orgStats?.totalGroups ?? dashStats?.groups.total ?? 0 },
+                    { label: "Leaders", value: orgStats?.users.leaders ?? 0 },
+                    { label: "Total Admins", value: orgStats?.users.total ?? 0 },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-center justify-between py-1.5 border-b last:border-0">
+                      <span className="text-xs text-muted-foreground">{item.label}</span>
+                      <div className="text-right">
+                        <span className="text-sm font-bold">{item.value}</span>
+                        {item.sub && <p className="text-[10px] text-muted-foreground">{item.sub}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {adminBarData.length > 0 && orgStats && orgStats.users.total > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Role Distribution</p>
+                    <div className="space-y-1.5">
+                      {adminBarData.filter(a => a.count > 0).map(item => (
+                        <div key={item.role} className="flex items-center gap-2">
+                          <span className="text-xs w-14 shrink-0">{item.role}</span>
+                          <div className="flex-1 h-2 rounded-full bg-gray-200 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-indigo-500"
+                              style={{ width: `${(item.count / Math.max(...adminBarData.map(a => a.count), 1)) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold w-6 text-right">{item.count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </section>
 
           {/* ── Section 3: Targets Overview ── */}
           <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-primary" />
-              <h2 className="font-bold text-sm">Targets Overview</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Active Targets" value={orgStats?.targets.active ?? "—"} icon={Target}      color="text-green-600" bg="bg-green-100" />
-              <StatCard label="Total Targets"  value={orgStats?.targets.total  ?? "—"} icon={BarChart3}   color="text-blue-600"  bg="bg-blue-100"  />
-              <StatCard label="Completed"      value={orgStats?.targets.completedSubmissions  ?? "—"} icon={CheckCircle} color="text-green-700" bg="bg-green-100" sub="submissions" />
-              <StatCard label="In Progress"    value={orgStats?.targets.inProgressSubmissions ?? "—"} icon={Clock}       color="text-blue-600"  bg="bg-blue-100"  sub="submissions" />
-            </div>
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="h-4 w-4 text-primary" />
+                  <h2 className="font-semibold text-sm">Targets</h2>
+                </div>
+                <div className="grid grid-cols-4 gap-1 text-center">
+                  {[
+                    { label: "Active", value: orgStats?.targets.active ?? 0, color: "text-green-600" },
+                    { label: "Total", value: orgStats?.targets.total ?? 0, color: "text-foreground" },
+                    { label: "Done", value: orgStats?.targets.completedSubmissions ?? 0, color: "text-green-700" },
+                    { label: "In Progress", value: orgStats?.targets.inProgressSubmissions ?? 0, color: "text-blue-600" },
+                  ].map(item => (
+                    <div key={item.label} className="py-1.5">
+                      <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           {/* ── Section 4: Recurring Targets ── */}

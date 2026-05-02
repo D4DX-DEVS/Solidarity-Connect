@@ -464,6 +464,8 @@ router.get('/profile', authenticateMember, async (req, res) => {
           profession: member.profession,
           education: member.education,
           address: member.address,
+          areaOfInterest: member.areaOfInterest,
+          skills: member.skills,
           district: member.district,
           group: member.group,
           status: member.status,

@@ -91,7 +91,7 @@ const RoleManagement = () => {
   const [fetching, setFetching] = useState(false); // background refetch (search/filter)
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState(userRole === 'state_admin' ? "all" : "member");
   const [saving, setSaving] = useState<string | null>(null);
   const [editStates, setEditStates] = useState<Record<string, EditState>>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -407,10 +407,10 @@ const RoleManagement = () => {
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="state_admin">State Admins</SelectItem>
-                <SelectItem value="district_admin">District Admins</SelectItem>
-                <SelectItem value="group_admin">Group Admins</SelectItem>
+                {userRole === 'state_admin' && <SelectItem value="all">All Roles</SelectItem>}
+                {userRole === 'state_admin' && <SelectItem value="state_admin">State Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="district_admin">District Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin">Group Admins</SelectItem>}
                 <SelectItem value="member">Members</SelectItem>
                 <SelectItem value="leaders">
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Leaders Only</span>

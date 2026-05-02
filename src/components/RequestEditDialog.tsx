@@ -47,6 +47,7 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
       await requestsAPI.createRequest({
         type: 'member_edit',
         member: member._id,
+        title: `Edit request for ${member.name}`,
         proposedData,
         reason: `Edit request for ${member.name}`,
       });

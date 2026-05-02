@@ -33,7 +33,7 @@ const BottomNav = () => {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 pb-safe sm:bottom-5 sm:px-4">
       <nav className="glass pointer-events-auto w-full max-w-md rounded-[2rem] border-white/60 px-2 py-2 shadow-[0_28px_70px_-30px_hsl(var(--foreground)/0.35)]">
-        <div className="grid h-[4.6rem] grid-cols-5 items-center gap-1">
+        <div className={`grid h-[4.6rem] items-center gap-1 ${navItems.length <= 4 ? 'grid-cols-4' : navItems.length === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path ||
@@ -42,7 +42,7 @@ const BottomNav = () => {
 
             if (item.path === "/notifications" && item.hasMenu) {
               return (
-                <DropdownMenu key={item.path}>
+                <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
                       className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
@@ -69,7 +69,7 @@ const BottomNav = () => {
 
             if (item.hasMenu && (userRole === "state_admin" || userRole === "district_admin")) {
               return (
-                <DropdownMenu key={item.path}>
+                <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
                       className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"

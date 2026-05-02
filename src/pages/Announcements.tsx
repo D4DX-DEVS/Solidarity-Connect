@@ -105,11 +105,20 @@ const Announcements = () => {
       const result = userType === 'member'
         ? await memberAuthAPI.getNotifications(Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)])))
         : await notificationsAPI.getNotifications(params);
-      setAnnouncements(result.data || []);
-      if (result.pagination) {
-        setTotalPages(result.pagination.totalPages || 1);
-        setHasNextPage(result.pagination.hasNextPage || false);
-        setHasPrevPage(result.pagination.hasPrevPage || false);
+      if (userType === 'member') {
+        setAnnouncements(result.data?.notifications || []);
+        if (result.data?.pagination) {
+          setTotalPages(result.data.pagination.totalPages || 1);
+          setHasNextPage(result.data.pagination.hasNext || false);
+          setHasPrevPage(result.data.pagination.hasPrev || false);
+        }
+      } else {
+        setAnnouncements(result.data || []);
+        if (result.pagination) {
+          setTotalPages(result.pagination.totalPages || 1);
+          setHasNextPage(result.pagination.hasNextPage || false);
+          setHasPrevPage(result.pagination.hasPrevPage || false);
+        }
       }
     } catch {
       // silently fail for list

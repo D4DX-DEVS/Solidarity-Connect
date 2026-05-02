@@ -320,7 +320,7 @@ const Leaders = () => {
         </div>
 
         {/* Role type tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
           {ROLE_TYPES.map((tab) => (
             <Button
               key={tab.value}

@@ -77,6 +77,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       limit = 20,
       sort = '-paymentDate',
       member,
+      district,
       paymentMonth,
       paymentType,
       startDate,
@@ -96,6 +97,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     } else if (req.user.role === 'district_admin') {
       // District admin can only see payments for their district members
       const districtMembers = await Member.find({ district: req.user.district._id }).select('_id');
+      filter.member = { $in: districtMembers.map(m => m._id) };
+    } else if (req.user.role === 'state_admin' && district) {
+      // State admin can filter by district
+      const districtMembers = await Member.find({ district }).select('_id');
       filter.member = { $in: districtMembers.map(m => m._id) };
     }
 

@@ -134,6 +134,7 @@ const UserTargetsSection = () => {
   const [markingKey, setMarkingKey] = useState<string | null>(null);
   const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
   const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
+  const [weeklySelectedMonth, setWeeklySelectedMonth] = useState<number>(new Date().getMonth() + 1);
 
   // ── Attendance dialog state ──────────────────────────────
   const [attendanceOpen, setAttendanceOpen] = useState(false);
@@ -698,29 +699,36 @@ const UserTargetsSection = () => {
       {recurringProgress.length > 0 && (
         <SectionCard
           title="Recurring Targets"
-          description="Mark monthly and weekly progress without losing context."
+          description="Track your weekly and monthly recurring progress at a glance."
           action={<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>}
         >
-            <p className="text-xs text-muted-foreground mb-3">
-              Tick each month/period you completed the target. You can mark or unmark anytime.
-            </p>
-
             {/* Year selector */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-5">
               <button
                 onClick={() => setRecurringYear(y => y - 1)}
-                className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
               >
                 &larr;
               </button>
-              <span className="text-sm font-semibold w-12 text-center">{recurringYear}</span>
+              <span className="text-base font-bold tracking-tight min-w-[3rem] text-center">{recurringYear}</span>
               <button
                 onClick={() => setRecurringYear(y => y + 1)}
-                className="px-2 py-1 rounded border text-xs hover:bg-muted"
+                className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 disabled={recurringYear >= new Date().getFullYear()}
               >
                 &rarr;
               </button>
+              {/* Progress summary */}
+              <div className="ml-auto flex items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                  <span>Done</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <div className="h-2.5 w-2.5 rounded-full bg-gray-200 border border-gray-300" />
+                  <span>Pending</span>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -730,107 +738,181 @@ const UserTargetsSection = () => {
                 const isExpanded = expandedRecurringId === progress._id;
                 const freq = target.recurringFrequency || 'monthly';
 
+                // Calculate progress for this target
+                const today = new Date();
+                const currentMonthIdx = recurringYear === today.getFullYear() ? today.getMonth() : 11;
+                let totalSlots = 0;
+                let completedSlots = 0;
+                if (freq === 'weekly') {
+                  for (let m = 0; m <= currentMonthIdx; m++) {
+                    const weeks = getWeeksInMonth(recurringYear, m);
+                    totalSlots += weeks;
+                    for (let w = 1; w <= weeks; w++) {
+                      if (findMark(target._id, recurringYear, m + 1, w)?.completed) completedSlots++;
+                    }
+                  }
+                } else {
+                  totalSlots = currentMonthIdx + 1;
+                  for (let m = 1; m <= currentMonthIdx + 1; m++) {
+                    if (findMark(target._id, recurringYear, m, 0)?.completed) completedSlots++;
+                  }
+                }
+                const progressPct = totalSlots > 0 ? Math.round((completedSlots / totalSlots) * 100) : 0;
+
                 return (
-                  <Card key={progress._id} className="surface-card border-blue-100/80">
-                    <CardContent className="p-3">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-start gap-2 flex-1">
-                          <span className="text-xl shrink-0">{getCategoryIcon(target.category)}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                              <p className="font-medium text-sm truncate">{target.title}</p>
-                              <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">
-                                <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
-                                {FREQ_LABELS[freq] || freq}
-                              </Badge>
-                              {target.attendanceNeeded && isAreaAdmin && (
-                                <Badge className="text-xs bg-amber-100 text-amber-700 shrink-0">
-                                  <Users className="h-2.5 w-2.5 mr-1 inline" />
-                                  Attendance
-                                </Badge>
-                              )}
-                            </div>
-                            {target.instructions && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">{target.instructions}</p>
-                            )}
-                          </div>
+                  <div key={progress._id} className="rounded-[1.4rem] border border-border/60 bg-background/80 shadow-sm overflow-hidden">
+                    {/* Header */}
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/40 transition-colors"
+                      onClick={() => setExpandedRecurringId(isExpanded ? null : progress._id)}
+                    >
+                      <span className="text-xl shrink-0">{getCategoryIcon(target.category)}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold text-sm truncate">{target.title}</p>
+                          <Badge className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 border-blue-200 shrink-0">
+                            <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
+                            {FREQ_LABELS[freq] || freq}
+                          </Badge>
+                          {target.attendanceNeeded && isAreaAdmin && (
+                            <Badge className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 border-amber-200 shrink-0">
+                              <Users className="h-2.5 w-2.5 mr-1 inline" />
+                              Attendance
+                            </Badge>
+                          )}
                         </div>
-                        <button
-                          className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
-                          onClick={() => setExpandedRecurringId(isExpanded ? null : progress._id)}
-                        >
+                        {target.instructions && !isExpanded && (
+                          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{target.instructions}</p>
+                        )}
+                      </div>
+                      {/* Progress indicator */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="relative h-9 w-9">
+                          <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-100" />
+                            <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-green-500" strokeDasharray={`${progressPct * 0.88} 100`} strokeLinecap="round" />
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-green-700">{progressPct}%</span>
+                        </div>
+                        <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </button>
                       </div>
+                    </div>
 
-                      {/* Grid — always visible */}
-                      <div className="mt-3">
+                    {/* Grid */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-1 border-t border-border/40">
                         {freq === 'weekly' ? (
-                          <>
-                            <p className="text-xs text-muted-foreground mb-2 font-medium">
-                              Mark each week you completed the target:
-                            </p>
-                            <div className="space-y-2">
+                          <div className="mt-3">
+                            {/* Month selector pills */}
+                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mb-4">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
-                                const today = new Date();
                                 const weeksInMonth = getWeeksInMonth(recurringYear, idx);
-                                const monthIsFuture =
-                                  recurringYear > today.getFullYear() ||
-                                  (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+                                const isSelected = weeklySelectedMonth === monthNum;
+                                const isCurrent = recurringYear === today.getFullYear() && monthNum === today.getMonth() + 1;
+                                const monthIsFuture = recurringYear > today.getFullYear() || (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+
+                                // Count completed weeks
+                                let monthCompleted = 0;
+                                for (let w = 1; w <= weeksInMonth; w++) {
+                                  if (findMark(target._id, recurringYear, monthNum, w)?.completed) monthCompleted++;
+                                }
+                                const allDone = monthCompleted === weeksInMonth && !monthIsFuture;
 
                                 return (
-                                  <div key={monthNum} className="flex items-center gap-2">
-                                    <span className="text-xs font-medium w-10 shrink-0 text-muted-foreground">
-                                      {month}
-                                    </span>
-                                    <div className="grid grid-cols-5 gap-1.5 flex-1">
-                                      {WEEKLY_SLOTS.map((weekNum) => {
-                                        const exists = weekNum <= weeksInMonth;
-                                        if (!exists) {
-                                          return <div key={weekNum} className="h-8" aria-hidden />;
-                                        }
-                                        const slotKey = `${target._id}-${recurringYear}-${monthNum}-${weekNum}`;
-                                        const mark = findMark(target._id, recurringYear, monthNum, weekNum);
-                                        const isCompleted = mark?.completed || false;
-                                        const isLoading = markingKey === slotKey;
-                                        const isFuture = monthIsFuture;
-                                        return (
-                                          <button
-                                            key={weekNum}
-                                            onClick={() =>
-                                              !isFuture && handleSlotClick(target, recurringYear, monthNum, weekNum)
-                                            }
-                                            disabled={isLoading || isFuture}
-                                            title={isFuture ? 'Future week' : `${month} ${recurringYear} · W${weekNum}`}
-                                            className={`
-                                              h-8 rounded-md text-[11px] font-medium transition-all border
-                                              ${isCompleted
-                                                ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                                                : isFuture
-                                                  ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                                  : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
-                                              }
-                                              ${isLoading ? 'opacity-60 cursor-wait' : ''}
-                                            `}
-                                          >
-                                            {isCompleted ? '\u2713' : `W${weekNum}`}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
+                                  <button
+                                    key={monthNum}
+                                    onClick={() => setWeeklySelectedMonth(monthNum)}
+                                    className={`
+                                      px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center
+                                      ${isSelected
+                                        ? 'bg-primary text-white shadow-md ring-2 ring-primary/30'
+                                        : allDone
+                                          ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                                          : isCurrent
+                                            ? 'bg-blue-50 text-blue-700 border-2 border-blue-400 hover:bg-blue-100'
+                                            : monthIsFuture
+                                              ? 'bg-gray-50 text-gray-300 border border-gray-100'
+                                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-muted/60 hover:border-gray-300'
+                                      }
+                                    `}
+                                  >
+                                    {month}
+                                    {!isSelected && allDone && (
+                                      <span className="block text-[8px] mt-0.5 text-green-600">✓ done</span>
+                                    )}
+                                  </button>
                                 );
                               })}
                             </div>
-                          </>
+
+                            {/* Week grid for selected month */}
+                            {(() => {
+                              const selIdx = weeklySelectedMonth - 1;
+                              const weeksInMonth = getWeeksInMonth(recurringYear, selIdx);
+                              const monthIsFuture = recurringYear > today.getFullYear() || (recurringYear === today.getFullYear() && weeklySelectedMonth > today.getMonth() + 1);
+                              const isCurrent = recurringYear === today.getFullYear() && weeklySelectedMonth === today.getMonth() + 1;
+                              let monthCompleted = 0;
+                              for (let w = 1; w <= weeksInMonth; w++) {
+                                if (findMark(target._id, recurringYear, weeklySelectedMonth, w)?.completed) monthCompleted++;
+                              }
+
+                              return (
+                                <div className={`rounded-xl border ${isCurrent ? 'border-green-200 bg-green-50/20' : 'border-border/40 bg-muted/10'} p-4`}>
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-bold text-foreground">{MONTHS_FULL[selIdx]}</span>
+                                      {isCurrent && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Current</span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs text-muted-foreground font-medium">
+                                      {monthCompleted}/{weeksInMonth} completed
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-5 gap-2.5">
+                                    {WEEKLY_SLOTS.map((weekNum) => {
+                                      const exists = weekNum <= weeksInMonth;
+                                      if (!exists) return <div key={weekNum} />;
+                                      const slotKey = `${target._id}-${recurringYear}-${weeklySelectedMonth}-${weekNum}`;
+                                      const mark = findMark(target._id, recurringYear, weeklySelectedMonth, weekNum);
+                                      const isCompleted = mark?.completed || false;
+                                      const isLoading = markingKey === slotKey;
+                                      const isFuture = monthIsFuture;
+                                      return (
+                                        <button
+                                          key={weekNum}
+                                          onClick={() => !isFuture && handleSlotClick(target, recurringYear, weeklySelectedMonth, weekNum)}
+                                          disabled={isLoading || isFuture}
+                                          className={`
+                                            h-14 rounded-xl text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1
+                                            ${isCompleted
+                                              ? 'bg-green-500 text-white shadow-md ring-1 ring-green-400/50'
+                                              : isFuture
+                                                ? 'bg-white/60 text-gray-300 border border-gray-100 cursor-not-allowed'
+                                                : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-700 hover:shadow-sm active:scale-95'
+                                            }
+                                            ${isLoading ? 'opacity-50 animate-pulse' : ''}
+                                          `}
+                                        >
+                                          {isCompleted ? (
+                                            <><CheckCircle className="h-4 w-4" /><span className="text-[9px]">Week {weekNum}</span></>
+                                          ) : (
+                                            <><span className="text-base font-bold">W{weekNum}</span><span className="text-[9px] text-muted-foreground">Week</span></>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
                         ) : (
-                          <>
-                            <p className="text-xs text-muted-foreground mb-2 font-medium">
-                              Mark completed months. Use +/- if you completed it more than once in a month.
-                            </p>
-                            <div className="grid grid-cols-6 gap-1.5">
+                          <div className="mt-3">
+                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
                                 const slotKey = `${target._id}-${recurringYear}-${monthNum}-0`;
@@ -839,55 +921,72 @@ const UserTargetsSection = () => {
                                 const isCompleted = mark?.completed || false;
                                 const count = mark?.completionCount || (isCompleted ? 1 : 0);
                                 const isLoading = markingKey === slotKey || markingKey === countKey;
-                                const today = new Date();
                                 const isFuture =
                                   recurringYear > today.getFullYear() ||
                                   (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+                                const isCurrent =
+                                  recurringYear === today.getFullYear() && monthNum === today.getMonth() + 1;
 
                                 return (
-                                  <div key={monthNum} className="relative">
+                                  <div key={monthNum} className={`
+                                    rounded-xl border overflow-hidden transition-all
+                                    ${isCompleted
+                                      ? 'border-green-300 bg-green-50 shadow-sm'
+                                      : isCurrent
+                                        ? 'border-blue-200 bg-blue-50/30'
+                                        : isFuture
+                                          ? 'border-gray-100 bg-gray-50/50'
+                                          : 'border-gray-200 bg-white'
+                                    }
+                                  `}>
                                     <button
                                       onClick={() => !isFuture && handleSlotClick(target, recurringYear, monthNum, 0)}
                                       disabled={isLoading || isFuture}
-                                      title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
                                       className={`
-                                        w-full h-9 rounded-lg text-xs font-medium transition-all border
+                                        w-full px-2 py-3 flex flex-col items-center gap-1.5 transition-all
                                         ${isCompleted
-                                          ? 'bg-green-500 border-green-500 text-white shadow-sm'
+                                          ? 'text-green-700'
                                           : isFuture
-                                            ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                            : 'bg-white border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+                                            ? 'text-gray-300 cursor-not-allowed'
+                                            : 'text-gray-700 hover:bg-green-50 active:scale-95'
                                         }
-                                        ${isLoading ? 'opacity-60 cursor-wait' : ''}
+                                        ${isLoading ? 'opacity-50 animate-pulse' : ''}
                                       `}
                                     >
-                                      {isCompleted ? `\u2713 ${month}` : month}
+                                      {isCompleted ? (
+                                        <div className="h-7 w-7 rounded-full bg-green-500 flex items-center justify-center">
+                                          <CheckCircle className="h-4 w-4 text-white" />
+                                        </div>
+                                      ) : (
+                                        <div className={`h-7 w-7 rounded-full border-2 flex items-center justify-center ${isFuture ? 'border-gray-200' : isCurrent ? 'border-blue-300' : 'border-gray-300'}`}>
+                                          <span className="text-[9px] font-bold">{monthNum}</span>
+                                        </div>
+                                      )}
+                                      <span className={`text-xs font-semibold ${isCompleted ? 'text-green-700' : isFuture ? 'text-gray-300' : ''}`}>
+                                        {month}
+                                      </span>
+                                      {isCurrent && !isCompleted && !isFuture && (
+                                        <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium -mt-0.5">Now</span>
+                                      )}
                                     </button>
-
-                                    {/* Count controls: visible once the month has been marked at least once */}
                                     {isCompleted && !isFuture && (
-                                      <div className="mt-1 flex items-center justify-between gap-1 px-1">
+                                      <div className="flex items-center justify-center gap-1 pb-2 px-2 border-t border-green-200 pt-1.5">
                                         <button
                                           onClick={() => adjustCompletionCount(target._id, recurringYear, monthNum, -1)}
                                           disabled={isLoading || count <= 0}
-                                          className="h-5 w-5 rounded-full bg-muted hover:bg-muted/70 text-muted-foreground disabled:opacity-40 inline-flex items-center justify-center"
-                                          aria-label="Decrease completion count"
+                                          className="h-5 w-5 rounded-full bg-white border border-gray-200 hover:bg-gray-100 text-muted-foreground disabled:opacity-30 inline-flex items-center justify-center transition-colors"
                                         >
-                                          <Minus className="h-3 w-3" />
+                                          <Minus className="h-2.5 w-2.5" />
                                         </button>
-                                        <span
-                                          className="text-[11px] font-semibold tabular-nums min-w-[18px] text-center text-green-700"
-                                          title="Times completed this month"
-                                        >
+                                        <span className="text-[10px] font-bold tabular-nums min-w-[16px] text-center text-green-700">
                                           ×{count}
                                         </span>
                                         <button
                                           onClick={() => adjustCompletionCount(target._id, recurringYear, monthNum, +1)}
                                           disabled={isLoading || count >= 99}
-                                          className="h-5 w-5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary disabled:opacity-40 inline-flex items-center justify-center"
-                                          aria-label="Increase completion count"
+                                          className="h-5 w-5 rounded-full bg-green-100 hover:bg-green-200 text-green-600 disabled:opacity-30 inline-flex items-center justify-center transition-colors"
                                         >
-                                          <Plus className="h-3 w-3" />
+                                          <Plus className="h-2.5 w-2.5" />
                                         </button>
                                       </div>
                                     )}
@@ -895,29 +994,25 @@ const UserTargetsSection = () => {
                                 );
                               })}
                             </div>
-                          </>
+                          </div>
+                        )}
+
+                        {/* Expanded details */}
+                        {target.instructions && (
+                          <div className="mt-4 rounded-xl bg-muted/50 p-3 text-xs">
+                            <p className="font-semibold mb-1 text-muted-foreground">Instructions</p>
+                            <p className="text-foreground/80">{target.instructions}</p>
+                          </div>
+                        )}
+                        {target.rewards && (
+                          <div className="mt-2 rounded-xl bg-amber-50/80 p-3 text-xs">
+                            <p className="font-semibold mb-1 text-amber-700">Rewards</p>
+                            <p className="text-amber-900/80">{target.rewards}</p>
+                          </div>
                         )}
                       </div>
-
-                      {/* Expanded: instructions / rewards */}
-                      {isExpanded && (
-                        <div className="mt-3 space-y-2 border-t pt-3">
-                          {target.instructions && (
-                            <div className="rounded-2xl bg-muted/60 p-3 text-xs">
-                              <p className="font-medium mb-1">Instructions:</p>
-                              <p>{target.instructions}</p>
-                            </div>
-                          )}
-                          {target.rewards && (
-                            <div className="rounded-2xl bg-amber-50 p-3 text-xs text-amber-900">
-                              <p className="font-medium mb-1">Rewards:</p>
-                              <p>{target.rewards}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    )}
+                  </div>
                 );
               })}
             </div>

@@ -86,7 +86,8 @@ router.get('/', authenticate, async (req, res) => {
       category,
       status,
       targetAudience,
-      search
+      search,
+      isRecurring
     } = req.query;
 
     const now = new Date();
@@ -120,6 +121,7 @@ router.get('/', authenticate, async (req, res) => {
     }
 
     // Add additional filters
+    if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
     if (category) filter.category = category;
     // state_admin can filter by status; other roles already have status locked to 'active'
     if (status && req.user.role === 'state_admin') filter.status = status;

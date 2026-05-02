@@ -43,7 +43,17 @@ import Consolidation from "./pages/Consolidation";
 import MyTargets from "./pages/MyTargets";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Never retry on 4xx client errors (401, 403, 404, 429, etc.)
+        if (error?.status >= 400 && error?.status < 500) return false;
+        return failureCount < 3;
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

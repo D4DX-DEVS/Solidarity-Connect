@@ -42,9 +42,9 @@ const Notifications = () => {
       const userType = localStorage.getItem('userType');
       if (userType === 'member') {
         const result = await memberAuthAPI.getNotifications({ page: currentPage.toString(), limit: '10' });
-        setNotifications(result.data || []);
-        if (result.pagination) {
-          setTotalPages(result.pagination.totalPages);
+        setNotifications(result.data?.notifications || []);
+        if (result.data?.pagination) {
+          setTotalPages(result.data.pagination.totalPages);
         }
       } else {
         const result = await notificationService.getNotifications({

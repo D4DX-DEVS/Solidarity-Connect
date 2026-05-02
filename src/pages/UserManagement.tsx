@@ -134,6 +134,10 @@ const UserManagement = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [districtFilter, setDistrictFilter] = useState<string>("all");
+  const [groupFilter, setGroupFilter] = useState<string>("all");
+  const [filterGroups, setFilterGroups] = useState<Group[]>([]);
+  const [loadingFilterGroups, setLoadingFilterGroups] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
@@ -191,7 +195,17 @@ const UserManagement = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, roleFilter, statusFilter]);
+  }, [debouncedSearch, roleFilter, statusFilter, districtFilter, groupFilter]);
+
+  // Fetch groups for the district filter selector
+  const fetchFilterGroupsForDistrict = async (districtId: string) => {
+    if (!districtId || districtId === 'all') { setFilterGroups([]); return; }
+    setLoadingFilterGroups(true);
+    try {
+      const result = await groupsAPI.getGroups({ district: districtId, limit: 200, isActive: true });
+      setFilterGroups(result.data || []);
+    } catch { setFilterGroups([]); } finally { setLoadingFilterGroups(false); }
+  };
 
   // Fetch districts + stats once on mount
   useEffect(() => {
@@ -224,6 +238,8 @@ const UserManagement = () => {
 
         if (isMemberView) {
           if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+          if (districtFilter !== 'all') params.district = districtFilter;
+          if (groupFilter !== 'all') params.group = groupFilter;
           const result = await membersAPI.getMembers(params);
           setMembers(result.data || []);
           if (result.pagination) {
@@ -236,6 +252,8 @@ const UserManagement = () => {
           if (roleFilter !== 'all') params.role = roleFilter;
           if (statusFilter === 'active') params.isActive = true;
           else if (statusFilter === 'inactive') params.isActive = false;
+          if (districtFilter !== 'all') params.district = districtFilter;
+          if (groupFilter !== 'all') params.group = groupFilter;
           const usersResult = await usersAPI.getUsers(params);
           setUsers(usersResult.data || []);
           if (usersResult.pagination) {
@@ -254,7 +272,7 @@ const UserManagement = () => {
       }
     };
     fetchData();
-  }, [currentPage, debouncedSearch, roleFilter, statusFilter, isMemberView]);
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter, districtFilter, groupFilter, isMemberView]);
 
   const fetchData = async () => {
     try {
@@ -264,6 +282,8 @@ const UserManagement = () => {
 
       if (isMemberView) {
         if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+        if (districtFilter !== 'all') params.district = districtFilter;
+        if (groupFilter !== 'all') params.group = groupFilter;
         const result = await membersAPI.getMembers(params);
         setMembers(result.data || []);
         if (result.pagination) {
@@ -276,6 +296,8 @@ const UserManagement = () => {
         if (roleFilter !== 'all') params.role = roleFilter;
         if (statusFilter === 'active') params.isActive = true;
         else if (statusFilter === 'inactive') params.isActive = false;
+        if (districtFilter !== 'all') params.district = districtFilter;
+        if (groupFilter !== 'all') params.group = groupFilter;
         const usersResult = await usersAPI.getUsers(params);
         setUsers(usersResult.data || []);
         if (usersResult.pagination) {
@@ -513,21 +535,21 @@ const UserManagement = () => {
         </div>
       )}
 
-      <SectionCard title="Search & Filters" description="Search by person and narrow by role or status.">
+      <SectionCard title="Search & Filters" description="Search by person and narrow by role, status, district, or group.">
             <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-2 lg:flex-row">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+              {/* Search bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or phone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-              
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+
+              {/* First filter row: Role + Status */}
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
                   <SelectTrigger className="w-full sm:w-44">
                     <SelectValue placeholder="Filter by role" />
@@ -561,6 +583,95 @@ const UserManagement = () => {
                   </DialogTrigger>
                 </Dialog>
               </div>
+
+              {/* Second filter row: District + Group */}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Select
+                  value={districtFilter}
+                  onValueChange={(val) => {
+                    setDistrictFilter(val);
+                    setGroupFilter("all");
+                    fetchFilterGroupsForDistrict(val);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-52">
+                    <SelectValue placeholder="All Districts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districts.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>
+                        {d.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {districtFilter !== "all" && (
+                  <Select
+                    value={groupFilter}
+                    onValueChange={setGroupFilter}
+                    disabled={loadingFilterGroups}
+                  >
+                    <SelectTrigger className="w-full sm:w-52">
+                      <SelectValue placeholder={loadingFilterGroups ? "Loading…" : "All Groups"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Groups</SelectItem>
+                      {filterGroups.map((g) => (
+                        <SelectItem key={g._id} value={g._id}>
+                          {g.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Active filter chips + clear button */}
+                {(roleFilter !== "all" || statusFilter !== "all" || districtFilter !== "all" || groupFilter !== "all" || searchTerm) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="sm:ml-auto text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setRoleFilter("all");
+                      setStatusFilter("all");
+                      setDistrictFilter("all");
+                      setGroupFilter("all");
+                      setFilterGroups([]);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+
+              {/* Active filter summary chips */}
+              {(roleFilter !== "all" || statusFilter !== "all" || districtFilter !== "all" || groupFilter !== "all") && (
+                <div className="flex flex-wrap gap-2">
+                  {roleFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setRoleFilter("all")}>
+                      {roleLabels[roleFilter as keyof typeof roleLabels] ?? roleFilter} ×
+                    </Badge>
+                  )}
+                  {statusFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1 cursor-pointer capitalize" onClick={() => setStatusFilter("all")}>
+                      {statusFilter} ×
+                    </Badge>
+                  )}
+                  {districtFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => { setDistrictFilter("all"); setGroupFilter("all"); setFilterGroups([]); }}>
+                      {districts.find((d) => d._id === districtFilter)?.name ?? "District"} ×
+                    </Badge>
+                  )}
+                  {groupFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setGroupFilter("all")}>
+                      {filterGroups.find((g) => g._id === groupFilter)?.name ?? "Group"} ×
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
       </SectionCard>
 
