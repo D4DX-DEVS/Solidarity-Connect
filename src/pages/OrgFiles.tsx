@@ -68,6 +68,17 @@ const formatFileSize = (bytes: number) => {
   return `${bytes} B`;
 };
 
+// Fix mojibake: re-decode filenames that were stored as Latin-1 instead of UTF-8
+const decodeFilename = (name: string): string => {
+  try {
+    const bytes = new Uint8Array(name.length);
+    for (let i = 0; i < name.length; i++) bytes[i] = name.charCodeAt(i) & 0xff;
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return name;
+  }
+};
+
 const isAreaAdmin = (user: any) =>
   user?.role === "group_admin" && user?.roleTag?.type === "area";
 
@@ -318,7 +329,7 @@ const OrgFiles = () => {
                               {isMembershipForm ? "Membership Form" : categoryLabels[file.category] || file.category}
                             </Badge>
                             <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                            <span className="text-xs text-muted-foreground">{file.originalName}</span>
+                            <span className="text-xs text-muted-foreground malayalam-text">{decodeFilename(file.originalName)}</span>
                           </div>
                         </div>
                       </div>
