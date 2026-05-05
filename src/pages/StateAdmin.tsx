@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X, LogOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,11 +8,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
 
 interface DashboardData {
@@ -64,6 +73,8 @@ interface BaithulMaalStats {
 const StateAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [baithulMaalStats, setBaithulMaalStats] = useState<BaithulMaalStats | null>(null);
@@ -283,10 +294,9 @@ const StateAdmin = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              navigate("/login");
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
           >
+            <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
         }
@@ -558,6 +568,22 @@ const StateAdmin = () => {
       </SectionCard>
 
       <BottomNav />
+
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>Are you sure you want to log out?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 };

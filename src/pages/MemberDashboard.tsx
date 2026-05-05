@@ -3,6 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -231,6 +239,7 @@ const MemberDashboard = () => {
   const { token, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const syncTargetState = (data: PersonalTarget[]) => {
     const feedbackMap: Record<string, string> = {};
@@ -998,7 +1007,10 @@ const MemberDashboard = () => {
   const getWeeksInMonth = (year: number, month: number) => {
     const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
     const daysInMonth = new Date(year, month, 0).getDate();
-    return Math.ceil((firstDayOfWeek + daysInMonth) / 7);
+    const total = firstDayOfWeek + daysInMonth;
+    const weeks = Math.ceil(total / 7);
+    // If the last calendar row has only 1 day (a lone Sunday), don't count it
+    return total % 7 === 1 ? weeks - 1 : weeks;
   };
 
   const prevWeeklyMonth = () => {
@@ -1613,6 +1625,7 @@ const MemberDashboard = () => {
   );
 
   return (
+    <>
     <PageShell contentClassName="pb-40">
       <PageHero
         title={`Welcome, ${profile.profile.name}`}
@@ -1620,7 +1633,7 @@ const MemberDashboard = () => {
         eyebrow="Member Portal"
         icon={<Home className="h-6 w-6" />}
         actions={
-          <Button variant="outline" onClick={logout}>
+          <Button variant="outline" onClick={() => setShowLogoutConfirm(true)}>
             Logout
           </Button>
         }
@@ -1683,6 +1696,22 @@ const MemberDashboard = () => {
         </div>
       </div>
     </PageShell>
+
+    <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+      <DialogContent className="max-w-sm rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Confirm Logout</DialogTitle>
+          <DialogDescription>Are you sure you want to log out?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-row gap-2 justify-end">
+          <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
+            Logout
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

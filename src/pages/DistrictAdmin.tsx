@@ -1,4 +1,4 @@
-import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3 } from "lucide-react";
+import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
@@ -49,12 +50,13 @@ interface DashboardStats {
 
 const DistrictAdmin = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingTransfers, setPendingTransfers] = useState<TransferRequest[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingTransfers, setLoadingTransfers] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Dialog state
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -177,8 +179,8 @@ const DistrictAdmin = () => {
                 <Star className="mr-2 h-4 w-4" />Leaders
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/login")} className="text-destructive">
-                Logout
+              <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -352,6 +354,22 @@ const DistrictAdmin = () => {
       </Dialog>
 
       <BottomNav />
+
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>Are you sure you want to log out?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 };

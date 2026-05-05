@@ -17,7 +17,7 @@ router.get('/', authenticate, async (req, res) => {
     if (role === 'state_admin') {
       audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'];
     } else if (role === 'district_admin') {
-      audienceFilter = ['all_users', 'district_admins'];
+      audienceFilter = ['all_users', 'district_admins', 'area_admins', 'group_admins', 'group_and_area_admins'];
     } else if (role === 'group_admin') {
       audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins'];
     }

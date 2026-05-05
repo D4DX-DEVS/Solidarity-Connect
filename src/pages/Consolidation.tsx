@@ -545,7 +545,8 @@ const Consolidation = () => {
       for (let m = 0; m < 12; m++) {
         const firstDay = new Date(recurringGridYear, m, 1).getDay();
         const daysInMonth = new Date(recurringGridYear, m + 1, 0).getDate();
-        const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+        const total = firstDay + daysInMonth;
+        const weeks = Math.ceil(total / 7) - (total % 7 === 1 ? 1 : 0);
         for (let w = 1; w <= weeks; w++) {
           weekCols.push(`${MONTHS_SHORT[m]}-W${w}`);
         }
@@ -559,7 +560,8 @@ const Consolidation = () => {
           for (let m = 0; m < 12; m++) {
             const firstDay = new Date(recurringGridYear, m, 1).getDay();
             const daysInMonth = new Date(recurringGridYear, m + 1, 0).getDate();
-            const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+            const total = firstDay + daysInMonth;
+            const weeks = Math.ceil(total / 7) - (total % 7 === 1 ? 1 : 0);
             for (let w = 1; w <= weeks; w++) {
               if (col === idx) return u.marks[`${m + 1}-${w}`] ? "✓" : "";
               col++;
@@ -1324,7 +1326,8 @@ const Consolidation = () => {
                                         {MONTHS_SHORT.map((m, mIdx) => {
                                           const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
                                           const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
-                                          const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+                                          const total = firstDay + daysInMonth;
+                                          const weeks = Math.ceil(total / 7) - (total % 7 === 1 ? 1 : 0);
                                           return (
                                             <th key={mIdx} colSpan={weeks} className="p-1 font-semibold text-muted-foreground border-b text-center border-l">
                                               {m}
@@ -1336,7 +1339,8 @@ const Consolidation = () => {
                                         {MONTHS_SHORT.map((_, mIdx) => {
                                           const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
                                           const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
-                                          const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+                                          const total = firstDay + daysInMonth;
+                                          const weeks = Math.ceil(total / 7) - (total % 7 === 1 ? 1 : 0);
                                           return Array.from({ length: weeks }, (__, w) => (
                                             <th key={`${mIdx}-${w}`} className="p-0.5 text-[9px] text-muted-foreground/60 border-b text-center min-w-[24px]">
                                               W{w + 1}
@@ -1356,7 +1360,8 @@ const Consolidation = () => {
                                             const monthNum = mIdx + 1;
                                             const firstDay = new Date(recurringGridYear, mIdx, 1).getDay();
                                             const daysInMonth = new Date(recurringGridYear, mIdx + 1, 0).getDate();
-                                            const weeks = Math.ceil((firstDay + daysInMonth) / 7);
+                                            const total = firstDay + daysInMonth;
+                                            const weeks = Math.ceil(total / 7) - (total % 7 === 1 ? 1 : 0);
                                             const isFutureMonth = recurringGridYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
                                             return Array.from({ length: weeks }, (__, w) => {
                                               const weekNum = w + 1;

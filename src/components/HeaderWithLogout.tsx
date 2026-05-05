@@ -2,12 +2,21 @@ import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface HeaderWithLogoutProps {
   icon: React.ReactNode;
@@ -19,6 +28,7 @@ interface HeaderWithLogoutProps {
 const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogoutProps) => {
   const { logout, userRole } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -39,6 +49,7 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
   };
 
   return (
+    <>
     <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
       <div className="glass mx-auto flex max-w-7xl items-center gap-3 rounded-[1.8rem] px-4 py-3.5 sm:px-5">
         {leftAction && <div>{leftAction}</div>}
@@ -63,7 +74,7 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
               <p className="text-sm font-bold text-foreground mt-0.5">{getRoleLabel()}</p>
             </div>
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 cursor-pointer rounded-xl transition-colors py-2.5 px-3 font-medium mt-1">
+            <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive focus:bg-destructive/10 cursor-pointer rounded-xl transition-colors py-2.5 px-3 font-medium mt-1">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </DropdownMenuItem>
@@ -71,6 +82,23 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
         </DropdownMenu>
       </div>
     </header>
+
+    <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+      <DialogContent className="max-w-sm rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Confirm Logout</DialogTitle>
+          <DialogDescription>Are you sure you want to log out?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex flex-row gap-2 justify-end">
+          <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+          <Button variant="destructive" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 
