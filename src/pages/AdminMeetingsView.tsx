@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, Eye, Filter, Search, ArrowLeft, BarChart3, MapPin, Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Clock, Users, AlertCircle, CheckCircle, Eye, Search, ArrowLeft, BarChart3, MapPin, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { SectionCard } from "@/components/app/AppShell";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { meetingsAPI, districtsAPI } from "@/utils/api";
@@ -108,7 +109,7 @@ interface PaginationInfo {
 
 const AdminMeetingsView = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  useAuth();
   const [meetings, setMeetings] = useState<MeetingData[]>([]);
   const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -239,7 +240,7 @@ const AdminMeetingsView = () => {
   // Detailed view for selected meeting
   if (selectedMeeting) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page pb-20">
         <HeaderWithLogout
           icon={<Eye className="h-6 w-6 text-primary-foreground" />}
           title="Meeting Details"
@@ -255,9 +256,9 @@ const AdminMeetingsView = () => {
           }
         />
 
-        <main className="p-4 space-y-4">
+        <main className="app-main space-y-4">
           {/* Meeting Header */}
-          <Card>
+          <Card className="surface-card">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
@@ -292,7 +293,7 @@ const AdminMeetingsView = () => {
           </Card>
 
           {/* Overall Progress */}
-          <Card>
+          <Card className="surface-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
@@ -302,19 +303,19 @@ const AdminMeetingsView = () => {
             <CardContent>
               {/* Group Statistics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="data-strip text-center p-3 border-blue-200 bg-blue-50">
                   <p className="text-2xl font-bold text-blue-600">{selectedMeeting.overallProgress.totalGroups}</p>
                   <p className="text-sm text-muted-foreground">Total Groups</p>
                 </div>
-                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="data-strip text-center p-3 border-green-200 bg-green-50">
                   <p className="text-2xl font-bold text-green-600">{selectedMeeting.overallProgress.programsConducted}</p>
                   <p className="text-sm text-muted-foreground">Programs Conducted</p>
                 </div>
-                <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div className="data-strip text-center p-3 border-red-200 bg-red-50">
                   <p className="text-2xl font-bold text-red-600">{selectedMeeting.overallProgress.programsNotConducted}</p>
                   <p className="text-sm text-muted-foreground">Not Conducted</p>
                 </div>
-                <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <div className="data-strip text-center p-3">
                   <p className="text-2xl font-bold text-purple-600">{selectedMeeting.overallProgress.completedGroups}</p>
                   <p className="text-sm text-muted-foreground">Fully Completed</p>
                 </div>
@@ -327,14 +328,7 @@ const AdminMeetingsView = () => {
           </Card>
 
           {/* Group Progress Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Group Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <SectionCard title="Group Filters" description="Narrow the meeting progress table by status, district, and page size.">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Select value={detailFilters.groupStatus || "all"} onValueChange={(value) => handleDetailFilterChange('groupStatus', value === "all" ? "" : value)}>
                   <SelectTrigger>
@@ -379,11 +373,10 @@ const AdminMeetingsView = () => {
                   Clear Filters
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+          </SectionCard>
 
           {/* Group Progress Details Table */}
-          <Card>
+          <Card className="surface-card">
             <CardHeader>
               <CardTitle>Group Progress ({(() => {
                 const filteredGroups = selectedMeeting.groupProgress.filter(group => {
@@ -485,7 +478,7 @@ const AdminMeetingsView = () => {
               </div>
               
               {/* Group Pagination */}
-              <div className="p-4 border-t">
+              <div className="border-t p-4">
                 {(() => {
                   const filteredGroups = selectedMeeting.groupProgress.filter(group => {
                     if (detailFilters.groupStatus && group.status !== detailFilters.groupStatus) return false;
@@ -498,7 +491,7 @@ const AdminMeetingsView = () => {
                   if (totalPages <= 1) return null;
                   
                   return (
-                    <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="data-strip flex items-center justify-between pt-4 border-0">
                       <div className="text-sm text-muted-foreground">
                         Showing {((groupPagination.currentPage - 1) * groupPagination.itemsPerPage) + 1} to {Math.min(groupPagination.currentPage * groupPagination.itemsPerPage, filteredGroups.length)} of {filteredGroups.length} groups
                       </div>
@@ -553,50 +546,35 @@ const AdminMeetingsView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="app-page pb-20">
       <HeaderWithLogout
         icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
         title="Admin Meetings View"
       />
 
-      <main className="p-4 space-y-4">
+      <main className="app-main space-y-4">
         {/* Summary Statistics */}
         {summaryStats && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <SectionCard title="Overview" description="Track meeting completion and program conduction across all groups.">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="text-center">
+                <div className="data-strip text-center p-3">
                   <p className="text-2xl font-bold text-primary">{summaryStats.totalMeetings}</p>
                   <p className="text-sm text-muted-foreground">Total Meetings</p>
                 </div>
-                <div className="text-center">
+                <div className="data-strip border-green-200 bg-green-50 text-center p-3">
                   <p className="text-2xl font-bold text-green-600">{summaryStats.completedMeetings}</p>
                   <p className="text-sm text-muted-foreground">Completed</p>
                 </div>
-                <div className="text-center">
+                <div className="data-strip border-red-200 bg-red-50 text-center p-3">
                   <p className="text-2xl font-bold text-red-600">{summaryStats.pendingMeetings}</p>
                   <p className="text-sm text-muted-foreground">Pending</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </SectionCard>
         )}
 
         {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <SectionCard title="Filters" description="Search meetings and narrow the overview by meeting and completion status.">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -635,11 +613,10 @@ const AdminMeetingsView = () => {
                 Clear Filters
               </Button>
             </div>
-          </CardContent>
-        </Card>
+        </SectionCard>
 
         {/* Meetings Table */}
-        <Card>
+        <Card className="surface-card">
           <CardContent className="p-0">
             {loading ? (
               <div className="p-8 space-y-4">
@@ -722,9 +699,9 @@ const AdminMeetingsView = () => {
 
         {/* Pagination */}
         {!loading && meetings.length > 0 && pagination.totalPages > 1 && (
-          <Card>
+          <Card className="surface-card">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="data-strip flex items-center justify-between border-0">
                 <div className="text-sm text-muted-foreground">
                   Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of {pagination.totalDocs} meetings
                 </div>

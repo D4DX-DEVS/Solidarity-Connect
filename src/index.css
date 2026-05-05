@@ -17,47 +17,47 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 210 50% 98%; /* Softer background */
-    --foreground: 222.2 84% 4.9%;
+    --background: 28 33% 97%;
+    --foreground: 222 32% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 32% 13%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 32% 13%;
 
-    --primary: 0 84% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 6 84% 59%;
+    --primary-foreground: 28 100% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 30 25% 93%;
+    --secondary-foreground: 222 32% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 30 22% 94%;
+    --muted-foreground: 220 14% 42%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 16 56% 94%;
+    --accent-foreground: 222 32% 18%;
 
-    --success: 142 71% 45%;
+    --success: 148 66% 42%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 78% 58%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 0 84% 60%;
+    --border: 24 25% 87%;
+    --input: 24 25% 87%;
+    --ring: 6 84% 59%;
 
-    --radius: 1rem; /* More rounded, less boxy */
+    --radius: 1.5rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 0 84% 60%;
+    --sidebar-background: 28 33% 97%;
+    --sidebar-foreground: 222 32% 13%;
+    --sidebar-primary: 6 84% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 84% 60%;
+    --sidebar-accent: 30 22% 94%;
+    --sidebar-accent-foreground: 222 32% 18%;
+    --sidebar-border: 24 25% 87%;
+    --sidebar-ring: 6 84% 59%;
   }
 
   .dark {
@@ -109,7 +109,18 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Malayalam", sans-serif;
+    font-family: "Segoe UI Variable Text", "Aptos", "Segoe UI", "Noto Sans Malayalam", sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 28%),
+      radial-gradient(circle at top right, hsl(148 66% 42% / 0.08), transparent 24%),
+      linear-gradient(180deg, hsl(28 38% 99%), hsl(var(--background)) 28%, hsl(0 0% 100%));
+    background-attachment: fixed;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 }
 
@@ -124,6 +135,81 @@ All colors MUST be HSL.
   font-family: "Noto Sans Malayalam", ui-sans-serif, system-ui, sans-serif;
 }
 
+@layer components {
+  .app-page {
+    @apply relative min-h-screen overflow-x-hidden pb-28;
+  }
+
+  .app-main {
+    @apply relative mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:px-8;
+  }
+
+  .app-page-orb {
+    @apply pointer-events-none fixed inset-auto -z-10 h-72 w-72 rounded-full blur-3xl;
+  }
+
+  .app-page-orb-primary {
+    @apply left-[-5rem] top-20 bg-primary/10;
+  }
+
+  .app-page-orb-secondary {
+    @apply bottom-20 right-[-5rem] bg-emerald-400/10;
+  }
+
+  .hero-card {
+    @apply relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-[0_28px_80px_-44px_hsl(var(--foreground)/0.35)] backdrop-blur-xl sm:p-6;
+  }
+
+  .hero-card::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  }
+
+  .hero-icon {
+    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_18px_38px_-20px_hsl(var(--primary)/0.85)];
+  }
+
+  .hero-eyebrow {
+    @apply text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-primary/80;
+  }
+
+  .hero-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+
+  .hero-subtitle {
+    @apply max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base;
+  }
+
+  .hero-details {
+    @apply mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
+  }
+
+  .surface-card {
+    @apply border-white/70 bg-white/80 shadow-[0_24px_60px_-36px_hsl(var(--foreground)/0.35)] backdrop-blur-xl;
+  }
+
+  .metric-card {
+    @apply border-white/70 bg-white/90 shadow-[0_20px_48px_-34px_hsl(var(--foreground)/0.26)] backdrop-blur-xl;
+  }
+
+  .metric-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-2xl ring-8;
+  }
+
+  .action-tile {
+    @apply flex h-full min-h-28 flex-col items-start justify-between rounded-[1.6rem] border border-border/60 bg-white/90 p-4 text-left shadow-[0_20px_40px_-34px_hsl(var(--foreground)/0.25)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_26px_56px_-34px_hsl(var(--primary)/0.35)] sm:p-5;
+  }
+
+  .action-tile-icon {
+    @apply flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-foreground;
+  }
+
+  .data-strip {
+    @apply rounded-[1.6rem] border border-border/60 bg-background/75 p-4 backdrop-blur-sm;
+  }
+}
+
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -133,5 +219,5 @@ All colors MUST be HSL.
   }
 }
 
-.glass { @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl; }
-.dark .glass { @apply bg-black/60 backdrop-blur-lg border border-white/10 shadow-xl; }
+.glass { @apply border border-white/50 bg-white/70 shadow-[0_24px_60px_-36px_hsl(var(--foreground)/0.3)] backdrop-blur-xl; }
+.dark .glass { @apply border border-white/10 bg-black/60 shadow-[0_24px_60px_-36px_black]; }

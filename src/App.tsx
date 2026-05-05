@@ -43,7 +43,17 @@ import Consolidation from "./pages/Consolidation";
 import MyTargets from "./pages/MyTargets";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Never retry on 4xx client errors (401, 403, 404, 429, etc.)
+        if (error?.status >= 400 && error?.status < 500) return false;
+        return failureCount < 3;
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -58,16 +68,16 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute requiredRoles={['group_admin']}><Dashboard /></ProtectedRoute>} />
             <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
             <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
-            <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageGroups /></ProtectedRoute>} />
+            <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><ManageGroups /></ProtectedRoute>} />
             <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
-            <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingAgenda /></ProtectedRoute>} />
-            <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
-            <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><MeetingDetail /></ProtectedRoute>} />
+            <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingAgenda /></ProtectedRoute>} />
+            <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
+            <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute>} />
             <Route path="/state-admin/send-notification" element={<ProtectedRoute requiredRoles={['state_admin']}><SendNotification /></ProtectedRoute>} />
             <Route path="/state-admin/edit-notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><EditNotification /></ProtectedRoute>} />
             <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
-            <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin']}><BaithulDataView /></ProtectedRoute>} />
-            <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin']}><MembersGroupReport /></ProtectedRoute>} />
+            <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><BaithulDataView /></ProtectedRoute>} />
+            <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><MembersGroupReport /></ProtectedRoute>} />
 
             <Route path="/admin/meetings-view" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute>} />
             <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />

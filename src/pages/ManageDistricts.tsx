@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
@@ -28,6 +29,8 @@ const ManageDistricts = () => {
   const deleteDistrictMutation = useDeleteDistrict();
 
   const districts = districtsResponse?.data || [];
+  const totalGroups = districts.reduce((sum, district) => sum + (district.statistics?.totalGroups || 0), 0);
+  const totalMembers = districts.reduce((sum, district) => sum + (district.statistics?.totalMembers || 0), 0);
 
   const handleAdd = () => {
     setDialogMode("add");
@@ -67,103 +70,120 @@ const ManageDistricts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-5 w-5" />
+    <PageShell>
+      <PageHero
+        title="Manage Districts"
+        subtitle="Create, update, and retire district records without leaving the admin workspace."
+        eyebrow="Organization"
+        icon={<Building2 className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to State Admin
           </Button>
-          <h1 className="text-xl font-bold">Manage Districts</h1>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="p-4 space-y-4">
-        <Button className="w-full bg-primary hover:bg-primary/90" onClick={handleAdd}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add New District
-        </Button>
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Active Districts" value={String(districts.length)} icon={Building2} tone="primary" />
+        <MetricCard title="Mapped Groups" value={String(totalGroups)} icon={Users} tone="warning" />
+        <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
+      </div>
 
-        {/* Search */}
+      <SectionCard
+        title="District Controls"
+        description="Search district records or add a new district without leaving this page."
+        action={
+          <Button className="bg-primary hover:bg-primary/90" onClick={handleAdd}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add New District
+          </Button>
+        }
+      >
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search districts…"
+            placeholder="Search districts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
           />
         </div>
+      </SectionCard>
 
+      <SectionCard title="District Directory" description="Review district coverage, totals, and management actions.">
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading districts...</span>
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Loading districts...
           </div>
         ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-destructive">Failed to load districts</p>
-            <Button variant="outline" onClick={() => window.location.reload()} className="mt-2">
+          <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
+            <p className="font-medium text-destructive">Failed to load districts</p>
+            <Button variant="outline" onClick={() => window.location.reload()} className="mt-3">
               Retry
             </Button>
           </div>
         ) : districts.length === 0 ? (
-          <div className="text-center py-8">
-            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No districts found</p>
-            <p className="text-sm text-muted-foreground">Add your first district to get started</p>
+          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="font-medium text-foreground">No districts found</p>
+            <p className="mt-1 text-sm text-muted-foreground">Add your first district to get started.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {districts.map((district) => (
-              <Card key={district._id} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-lg">
+              <Card key={district._id} className="surface-card border-border/70">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="action-tile-icon">
                         <Building2 className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{district.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-1">Code: {district.code}</p>
-                        <div className="flex gap-4 mt-1">
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            <span>{district.statistics?.totalGroups || 0} Groups</span>
+                      <div className="space-y-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground">{district.name}</h3>
+                          <p className="text-sm text-muted-foreground">Code: {district.code}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            {district.statistics?.totalGroups || 0} Groups
                           </div>
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            <span>{district.statistics?.totalMembers || 0} Members</span>
+                          <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            {district.statistics?.totalMembers || 0} Members
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(district)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-destructive" 
-                      onClick={() => handleDeleteClick(district)}
-                      disabled={deleteDistrictMutation.isPending}
-                    >
-                      {deleteDistrictMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 mr-1" />
-                      )}
-                      Delete
-                    </Button>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[260px]">
+                      <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(district)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-destructive"
+                        onClick={() => handleDeleteClick(district)}
+                        disabled={deleteDistrictMutation.isPending}
+                      >
+                        {deleteDistrictMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+      </SectionCard>
 
         <DistrictDialog
           open={showDialog}
@@ -179,8 +199,7 @@ const ManageDistricts = () => {
           title="Delete District"
           description={`Are you sure you want to delete ${districtToDelete?.name}? This will also delete all groups and members under this district. This action cannot be undone.`}
         />
-      </main>
-    </div>
+    </PageShell>
   );
 };
 

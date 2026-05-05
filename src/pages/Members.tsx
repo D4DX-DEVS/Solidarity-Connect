@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MetricCard, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
@@ -12,6 +13,13 @@ import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Member {
   _id: string;
@@ -251,136 +259,104 @@ const Members = () => {
 
   // Removed early loading return to prevent search focus loss
 
+  const metricCards = [
+    { title: "Total", value: String(statistics.total), icon: Users, tone: "primary" as const },
+    { title: "Active", value: String(statistics.active), icon: ShieldCheck, tone: "success" as const },
+    { title: "Applicant", value: String(statistics.applicant), icon: Clock, tone: "warning" as const },
+    { title: "Inactive", value: String(statistics.inactive), icon: Users, tone: "neutral" as const },
+    { title: "Abroad", value: String(statistics.abroad), icon: MapPin, tone: "neutral" as const },
+    { title: "Dismissed", value: String(statistics.dismissed), icon: Users, tone: "danger" as const },
+  ];
+
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title="Members"
       />
 
-      <div className="p-4 pb-0 bg-card border-b">
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search name, phone, email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+      <main className="app-main pt-4">
+        <SectionCard title="Search & Filters" description="Find members by person, district, group, or status.">
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name, phone, email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-        <div className="space-y-2 mb-3">
-          {userRole === "state_admin" && (
-            <select
-              className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-              value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
-            >
-              <option value="">All Districts</option>
-              {districts.map((district) => (
-                <option key={district._id} value={district._id}>
-                  {district.name} ({district.code})
-                </option>
-              ))}
-            </select>
-          )}
-
-          <div className="grid grid-cols-2 gap-2">
-            {(userRole === "state_admin" || userRole === "district_admin") ? (
-              <select
-                className="px-3 py-2 border rounded-md text-sm bg-background"
-                value={selectedGroup}
-                onChange={(e) => setSelectedGroup(e.target.value)}
-              >
-                <option value="">All Groups</option>
-                {groups.map((group) => (
-                  <option key={group._id} value={group._id}>
-                    {group.name} ({group.code})
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <div></div>
-            )}
-            <select
-              className="px-3 py-2 border rounded-md text-sm bg-background"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-            >
-              <option value="">All Statuses</option>
-              {userRole === 'state_admin' && (
-                <option value="pending_approval">Pending Approval</option>
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {userRole === "state_admin" && (
+                <Select value={selectedDistrict || "all"} onValueChange={(value) => setSelectedDistrict(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Districts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districts.map((district) => (
+                      <SelectItem key={district._id} value={district._id}>
+                        {district.name} ({district.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Abroad">Abroad</option>
-              <option value="Applicant">Applicant</option>
-              <option value="Age over">Age over</option>
-              <option value="Dismissed">Dismissed</option>
-            </select>
+
+              {(userRole === "state_admin" || userRole === "district_admin") && (
+                <Select value={selectedGroup || "all"} onValueChange={(value) => setSelectedGroup(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Groups" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Groups</SelectItem>
+                    {groups.map((group) => (
+                      <SelectItem key={group._id} value={group._id}>
+                        {group.name} ({group.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value === "all" ? "" : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {userRole === 'state_admin' && (
+                    <SelectItem value="pending_approval">Pending Approval</SelectItem>
+                  )}
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                  <SelectItem value="Abroad">Abroad</SelectItem>
+                  <SelectItem value="Applicant">Applicant</SelectItem>
+                  <SelectItem value="Age over">Age over</SelectItem>
+                  <SelectItem value="Dismissed">Dismissed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
-      </div>
+        </SectionCard>
 
-      {/* Status Count Cards */}
-      <div className="p-4 pb-0">
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <Card className="shadow-sm">
-            <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-primary">{statistics.total}</p>
-              <p className="text-xs text-muted-foreground">Total</p>
-            </div>
-          </Card>
-          <Card className="shadow-sm">
-            <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-success">{statistics.active}</p>
-              <p className="text-xs text-muted-foreground">Active</p>
-            </div>
-          </Card>
-          <Card className="shadow-sm">
-            <div className="p-3 text-center">
-              <p className="text-2xl font-bold text-orange-500">{statistics.applicant}</p>
-              <p className="text-xs text-muted-foreground">Applicant</p>
-            </div>
-          </Card>
-        </div>
-        <div className="grid grid-cols-4 gap-2 mb-4">
-          <Card className="shadow-sm">
-            <div className="p-2 text-center">
-              <p className="text-lg font-bold text-muted-foreground">{statistics.inactive}</p>
-              <p className="text-xs text-muted-foreground">Inactive</p>
-            </div>
-          </Card>
-          <Card className="shadow-sm">
-            <div className="p-2 text-center">
-              <p className="text-lg font-bold text-blue-500">{statistics.abroad}</p>
-              <p className="text-xs text-muted-foreground">Abroad</p>
-            </div>
-          </Card>
-          <Card className="shadow-sm">
-            <div className="p-2 text-center">
-              <p className="text-lg font-bold text-muted-foreground">{statistics.ageOver}</p>
-              <p className="text-xs text-muted-foreground">Age over</p>
-            </div>
-          </Card>
-          <Card className="shadow-sm">
-            <div className="p-2 text-center">
-              <p className="text-lg font-bold text-destructive">{statistics.dismissed}</p>
-              <p className="text-xs text-muted-foreground">Dismissed</p>
-            </div>
-          </Card>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {metricCards.map((item) => (
+            <MetricCard key={item.title} title={item.title} value={item.value} icon={item.icon} tone={item.tone} />
+          ))}
         </div>
 
-        {/* Pagination Info */}
-        <div className="text-center text-sm text-muted-foreground mb-4">
+        <div className="data-strip text-center text-sm text-muted-foreground">
           Showing {members.length} of {totalDocs} members
           {totalPages > 1 && (
             <span> • Page {currentPage} of {totalPages}</span>
           )}
         </div>
-      </div>
 
-      <main className="p-4 space-y-3 relative">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
@@ -402,8 +378,9 @@ const Members = () => {
             )}
           </div>
         ) : (
-          members.map((member) => (
-            <Card key={member._id} className="shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+          <div className="space-y-3 relative">
+          {members.map((member) => (
+            <Card key={member._id} className="surface-card cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.32)]">
               <div
                 className="p-4"
                 onClick={() => navigate(`/member/${member._id}`)}
@@ -431,32 +408,49 @@ const Members = () => {
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-1">
-                  {member.email || "No email"}
-                </p>
-                <a
-                  href={`tel:${member.phone}`}
-                  className="text-sm text-primary flex items-center gap-1 mb-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {member.phone}
-                </a>
+                <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
+                    <Mail className="h-4 w-4" />
+                    <span className="truncate">{member.email || "No email"}</span>
+                  </div>
+                  <a
+                    href={`tel:${member.phone}`}
+                    className="flex items-center gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-primary"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Phone className="h-4 w-4" />
+                    <span className="truncate">{member.phone}</span>
+                  </a>
+                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
+                    <Users className="h-4 w-4" />
+                    <span className="truncate">{member.group.name} ({member.group.code})</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
+                    <MapPin className="h-4 w-4" />
+                    <span className="truncate">{member.district.name} ({member.district.code})</span>
+                  </div>
+                </div>
 
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge
-                    variant={member.status === "Active" ? "default" : "secondary"}
-                    className={
-                      member.status === "Active"
-                        ? "bg-success"
-                        : member.status === "Applicant"
+                <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+                  {member.status === "Active" ? (
+                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                      <span>{member.status}</span>
+                    </div>
+                  ) : (
+                    <Badge
+                      variant="secondary"
+                      className={
+                        member.status === "Applicant"
                           ? "bg-orange-100 text-orange-800"
                           : member.status === "Abroad"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-gray-100 text-gray-800"
-                    }
-                  >
-                    {member.status}
-                  </Badge>
+                      }
+                    >
+                      {member.status}
+                    </Badge>
+                  )}
                   {member.transferRequest && (
                     <Badge
                       variant="outline"
@@ -472,16 +466,11 @@ const Members = () => {
                   )}
                 </div>
 
-                <div className="text-sm text-muted-foreground mb-3">
-                  <p>{member.group.name} ({member.group.code})</p>
-                  <p>{member.district.name} ({member.district.code})</p>
-                </div>
-
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/member/${member._id}/edit`);
@@ -491,9 +480,9 @@ const Members = () => {
                     <span className="text-xs text-center leading-tight">Edit</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
                     disabled={!!member.transferRequest}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -505,9 +494,9 @@ const Members = () => {
                     <span className="text-xs text-center leading-tight">Transfer</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedMember(member);
@@ -518,9 +507,9 @@ const Members = () => {
                     <span className="text-xs text-center leading-tight">Baithul</span>
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="flex flex-col items-center gap-1 h-auto py-2 px-1"
+                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/member/${member._id}`);
@@ -532,12 +521,13 @@ const Members = () => {
                 </div>
               </div>
             </Card>
-          ))
+          ))}
+          </div>
         )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center py-4 px-2">
+          <div className="data-strip flex justify-between items-center py-4 px-4">
             <Button
               onClick={goToPrevPage}
               disabled={!hasPrevPage}

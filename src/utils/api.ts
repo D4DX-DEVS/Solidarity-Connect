@@ -34,7 +34,16 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Handle non-JSON responses (e.g. 429 rate limit plain text)
+    const contentType = response.headers.get('content-type');
+    let data: any;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || `HTTP ${response.status}` };
+    }
 
     if (!response.ok) {
       console.error(`❌ API Error: ${response.status}`, data);
@@ -265,8 +274,9 @@ export const meetingsAPI = {
   },
 
   initializeAttendance: (meetingId: string) =>
-    apiCall(`/meetings/${meetingId}/initialize-attendance`, {
+    apiCall(`/meetings/${meetingId}/bulk-session-actions`, {
       method: 'POST',
+      body: JSON.stringify({ action: 'initialize_attendance' }),
     }),
 
   markSessionComplete: (meetingId: string, sessionId: string) =>
@@ -275,7 +285,7 @@ export const meetingsAPI = {
     }),
 
   addGuest: (meetingId: string, guestData: any) =>
-    apiCall(`/meetings/${meetingId}/guests`, {
+    apiCall(`/meetings/${meetingId}/add-guest`, {
       method: 'POST',
       body: JSON.stringify(guestData),
     }),
@@ -325,6 +335,39 @@ export const transferRequestsAPI = {
     apiCall('/transfer-requests', {
       method: 'POST',
       body: JSON.stringify(requestData),
+    }),
+};
+
+// Requests API calls (edit/approval workflow)
+export const requestsAPI = {
+  getRequests: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/requests${queryString}`);
+  },
+
+  getRequest: (id: string) => apiCall(`/requests/${id}`),
+
+  createRequest: (requestData: any) =>
+    apiCall('/requests', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    }),
+
+  approveRequest: (id: string) =>
+    apiCall(`/requests/${id}/approve`, {
+      method: 'POST',
+    }),
+
+  rejectRequest: (id: string, reason: string) =>
+    apiCall(`/requests/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+
+  addComment: (id: string, comment: string) =>
+    apiCall(`/requests/${id}/comment`, {
+      method: 'POST',
+      body: JSON.stringify({ comment }),
     }),
 };
 
@@ -400,6 +443,7 @@ export default {
   meetingsAPI,
   baithulMaalAPI,
   transferRequestsAPI,
+  requestsAPI,
   reportsAPI,
   leadersAPI,
   uploadsAPI,

@@ -22,6 +22,7 @@ router.get('/', authenticate, requireRole('state_admin'), paginationValidation, 
       sort = '-createdAt',
       role,
       district,
+      group,
       isActive,
       search
     } = req.query;
@@ -29,6 +30,7 @@ router.get('/', authenticate, requireRole('state_admin'), paginationValidation, 
     let filter = {};
     if (role) filter.role = role;
     if (district) filter.district = district;
+    if (group) filter.group = group;
     if (isActive !== undefined) filter.isActive = isActive === 'true';
     if (search && search.trim()) {
       const searchRegex = { $regex: search.trim(), $options: 'i' };

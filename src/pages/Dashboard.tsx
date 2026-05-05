@@ -1,8 +1,8 @@
 import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText, BarChart3 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { MetricCard, PageHero, SectionCard } from "@/components/app/AppShell";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
@@ -77,100 +77,127 @@ const Dashboard = () => {
       label: "Total Members",
       value: dashboardData.memberStatistics.totalMembers.toString(),
       icon: Users,
-      color: "text-primary"
+      tone: "primary" as const,
     },
     {
       label: "Active Members",
       value: dashboardData.memberStatistics.activeMembers.toString(),
       icon: CheckCircle,
-      color: "text-success"
+      tone: "success" as const,
     },
     {
       label: "Pending Requests",
       value: dashboardData.pendingRequestsCount.toString(),
       icon: Clock,
-      color: "text-destructive"
+      tone: "danger" as const,
     },
     {
       label: "Upcoming Meetings",
       value: dashboardData.upcomingMeetings.length.toString(),
       icon: Calendar,
-      color: "text-foreground"
+      tone: "neutral" as const,
     },
   ] : [
-    { label: "Total Members", value: "0", icon: Users, color: "text-primary" },
-    { label: "Active Members", value: "0", icon: CheckCircle, color: "text-success" },
-    { label: "Pending Requests", value: "0", icon: Clock, color: "text-destructive" },
-    { label: "Upcoming Meetings", value: "0", icon: Calendar, color: "text-foreground" },
+    { label: "Total Members", value: "0", icon: Users, tone: "primary" as const },
+    { label: "Active Members", value: "0", icon: CheckCircle, tone: "success" as const },
+    { label: "Pending Requests", value: "0", icon: Clock, tone: "danger" as const },
+    { label: "Upcoming Meetings", value: "0", icon: Calendar, tone: "neutral" as const },
   ];
 
+  const firstName = user?.name?.trim().split(" ")[0] || "Admin";
+
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title="Area Admin Panel"
         subtitle={userGroup ? `${userGroup} - ${userDistrict}` : "Applicant - Thrissur"}
       />
 
-      <main className="p-4 space-y-4">
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
+      <main className="app-main pt-5">
+        <PageHero
+          eyebrow="Daily Overview"
+          title={`Welcome back, ${firstName}`}
+          subtitle="Your tools, recurring targets, meetings, and member status are all surfaced here with a cleaner mobile-first layout."
+          icon={<BarChart3 className="h-6 w-6" />}
+          details={
+            <>
+              <div className="data-strip">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Area</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{userGroup || "Applicant"}</p>
+              </div>
+              <div className="data-strip">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{userDistrict || "Thrissur"}</p>
+              </div>
+              <div className="data-strip">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Requests</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.pendingRequestsCount ?? 0}</p>
+              </div>
+              <div className="data-strip">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Upcoming Meetings</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.upcomingMeetings?.length ?? 0}</p>
+              </div>
+            </>
+          }
+        />
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((stat, index) => (
-            <Card key={index} className="shadow-sm">
-              <CardContent className="p-3">
-                <p className="text-xs text-muted-foreground mb-1">{stat.label}</p>
-                <p className={`text-2xl font-bold ${stat.color}`}>
-                  {loading ? "..." : stat.value}
-                </p>
-              </CardContent>
-            </Card>
+            <MetricCard
+              key={index}
+              title={stat.label}
+              value={loading ? "..." : stat.value}
+              icon={stat.icon}
+              tone={stat.tone}
+            />
           ))}
         </div>
 
-        {/* My Targets */}
         <UserTargetsSection />
 
-        {/* Upcoming Meetings */}
         {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
-          <Card className="shadow-sm">
-            <CardContent className="p-4">
-              <h2 className="font-semibold mb-3">Upcoming Meetings</h2>
+          <SectionCard title="Upcoming Meetings" description="Next scheduled meetings at a glance.">
               <div className="space-y-2">
                 {dashboardData.upcomingMeetings.slice(0, 3).map((meeting) => (
-                  <div key={meeting._id} className="flex justify-between items-center p-2 rounded-lg bg-muted/50 border border-border/50">
-                    <span className="font-medium text-sm">{meeting.title}</span>
-                    <span className="text-xs font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  <div key={meeting._id} className="data-strip flex items-center justify-between gap-3">
+                    <span className="font-medium text-sm text-foreground">{meeting.title}</span>
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                       {new Date(meeting.scheduledDate).toLocaleDateString()}
                     </span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+          </SectionCard>
         )}
 
-        {/* Area Admin Tools */}
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-3">Area Admin Tools</h2>
-            <div className="grid grid-cols-2 gap-2">
+        <SectionCard title="Area Admin Tools" description="Common actions optimized for touch and fast navigation.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 { label: "Members", path: "/members", Icon: Users },
                 { label: "Meetings", path: "/meetings", Icon: Calendar },
                 { label: "Role Management", path: "/role-management", Icon: Shield },
                 { label: "Leaders", path: "/leaders", Icon: Star },
                 { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
+                { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
+                { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
                 { label: "Bulk Import", path: "/bulk-import", Icon: Upload },
                 { label: "Membership Form & Files", path: "/org-files", Icon: FileText },
               ].map(({ label, path, Icon }) => (
-                <Button key={label} variant="outline" className="h-14 flex-col gap-1 text-xs" onClick={() => navigate(path)}>
-                  <Icon className="h-4 w-4" />
-                  {label}
+                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
+                  <div className="action-tile-icon">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
+                  </div>
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
+        </SectionCard>
       </main>
 
       <BottomNav />

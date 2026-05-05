@@ -212,26 +212,89 @@ router.post('/', authenticate, async (req, res) => {
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    // Sync UserTargetProgress: target is "completed" if ANY mark for this target is completed.
-    const anyCompleted = await RecurringMark.exists({
-      user: req.user._id,
-      userType: 'User',
-      personalTarget: targetId,
-      completed: true
-    });
-    await UserTargetProgress.findOneAndUpdate(
-      { user: req.user._id, personalTarget: targetId },
-      {
-        $set: {
-          status: anyCompleted ? 'completed' : 'not_started',
-          targetValue: target.targetValue,
-          currentProgress: anyCompleted ? target.targetValue : 0,
-          progressPercentage: anyCompleted ? 100 : 0,
-          ...(anyCompleted ? { completedAt: new Date() } : { completedAt: null })
-        }
-      },
-      { new: true, upsert: true }
-    );
+    // Sync UserTargetProgress for the current user.
+    const syncUserTargetProgress = async (userId) => {
+      const anyCompleted = await RecurringMark.exists({
+        user: userId,
+        userType: 'User',
+        personalTarget: targetId,
+        completed: true
+      });
+      await UserTargetProgress.findOneAndUpdate(
+        { user: userId, personalTarget: targetId },
+        {
+          $set: {
+            status: anyCompleted ? 'completed' : 'not_started',
+            targetValue: target.targetValue,
+            currentProgress: anyCompleted ? target.targetValue : 0,
+            progressPercentage: anyCompleted ? 100 : 0,
+            ...(anyCompleted ? { completedAt: new Date() } : { completedAt: null })
+          }
+        },
+        { new: true, upsert: true }
+      );
+    };
+
+    await syncUserTargetProgress(req.user._id);
+
+    // If the acting user is a district_admin, propagate the same mark to all
+    // co-admins in the same district so that shared district targets stay in sync.
+    if (req.user.role === 'district_admin' && req.user.district) {
+      const coAdmins = await User.find({
+        _id: { $ne: req.user._id },
+        role: 'district_admin',
+        district: req.user.district,
+        isActive: true
+      }).select('_id').lean();
+
+      await Promise.all(coAdmins.map(async (coAdmin) => {
+        await RecurringMark.findOneAndUpdate(
+          {
+            user: coAdmin._id,
+            userType: 'User',
+            personalTarget: targetId,
+            year: Number(year),
+            month: Number(month),
+            week
+          },
+          { $set: updatePayload },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+        await syncUserTargetProgress(coAdmin._id);
+      }));
+    }
+
+    // If the acting user is an area admin (group_admin with roleTag.type === 'area'),
+    // propagate the same mark to all co-admins in the same area+district.
+    if (isAreaAdmin(req.user) && req.user.district && req.user.roleTag?.roleDescription) {
+      const areaName = req.user.roleTag.roleDescription;
+      const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+      const coAreaAdmins = await User.find({
+        _id: { $ne: req.user._id },
+        role: 'group_admin',
+        'roleTag.type': 'area',
+        'roleTag.roleDescription': areaRegex,
+        district: req.user.district,
+        isActive: true
+      }).select('_id').lean();
+
+      await Promise.all(coAreaAdmins.map(async (coAdmin) => {
+        await RecurringMark.findOneAndUpdate(
+          {
+            user: coAdmin._id,
+            userType: 'User',
+            personalTarget: targetId,
+            year: Number(year),
+            month: Number(month),
+            week
+          },
+          { $set: updatePayload },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+        await syncUserTargetProgress(coAdmin._id);
+      }));
+    }
 
     res.status(200).json({
       success: true,

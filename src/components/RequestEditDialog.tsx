@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { requestsAPI } from "@/utils/api";
 
 interface RequestEditDialogProps {
   open: boolean;
@@ -10,6 +12,8 @@ interface RequestEditDialogProps {
 }
 
 const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProps) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: member?.name || "",
     phone: member?.phone || "",
@@ -21,9 +25,40 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
     district: "Thrissur",
   });
 
-  const handleSubmit = () => {
-    console.log("Edit request submitted:", formData);
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    if (!member?._id) return;
+
+    try {
+      setLoading(true);
+      const proposedData: Record<string, any> = {};
+
+      if (formData.name && formData.name !== member.name) proposedData.name = formData.name;
+      if (formData.email && formData.email !== member.email) proposedData.email = formData.email;
+      if (formData.phone && formData.phone !== member.phone) proposedData.phone = formData.phone;
+      if (formData.bloodGroup) proposedData.bloodGroup = formData.bloodGroup;
+      if (formData.dateOfBirth) proposedData.dateOfBirth = formData.dateOfBirth;
+      if (formData.status !== member.status) proposedData.status = formData.status;
+
+      if (Object.keys(proposedData).length === 0) {
+        toast({ title: "No Changes", description: "Please modify at least one field.", variant: "destructive" });
+        return;
+      }
+
+      await requestsAPI.createRequest({
+        type: 'member_edit',
+        member: member._id,
+        title: `Edit request for ${member.name}`,
+        proposedData,
+        reason: `Edit request for ${member.name}`,
+      });
+
+      toast({ title: "Request Submitted", description: "Your edit request has been submitted for approval." });
+      onOpenChange(false);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to submit request", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,11 +156,11 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleSubmit}>
-              Submit Request
+            <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleSubmit} disabled={loading}>
+              {loading ? "Submitting..." : "Submit Request"}
             </Button>
           </div>
         </div>

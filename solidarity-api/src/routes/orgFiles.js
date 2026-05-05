@@ -9,6 +9,19 @@ import crypto from 'crypto';
 
 const router = express.Router();
 
+// Fix multer/busboy reading non-ASCII filenames as Latin-1 instead of UTF-8
+const decodeOriginalName = (filename) => {
+  try {
+    const bytes = Buffer.from(filename, 'latin1');
+    const decoded = bytes.toString('utf8');
+    // Only use the decoded version if it looks like valid non-ASCII Unicode
+    // (i.e. if any byte was >= 0x80, the Latin-1 round-trip will differ)
+    return Buffer.from(decoded, 'utf8').compare(bytes) !== 0 ? decoded : filename;
+  } catch {
+    return filename;
+  }
+};
+
 // Multer in-memory storage (same as uploads.js)
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -97,7 +110,7 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
       fileType: req.body.fileType || 'general',
       url: fileUrl,
       filename: key,
-      originalName: req.file.originalname,
+      originalName: decodeOriginalName(req.file.originalname),
       mimetype: req.file.mimetype,
       size: req.file.size,
       uploadedBy: req.user._id

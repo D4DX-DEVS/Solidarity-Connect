@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, Send, Edit, Trash2, Eye, AlertCircle, FileText, Image, Film, Paperclip } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { notificationService, type Notification } from "@/services/notificationService";
+import { memberAuthAPI } from "@/utils/api";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -37,12 +39,21 @@ const Notifications = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const result = await notificationService.getNotifications({
-        page: currentPage,
-        limit: 10
-      });
-      setNotifications(result.data);
-      setTotalPages(result.pagination.totalPages);
+      const userType = localStorage.getItem('userType');
+      if (userType === 'member') {
+        const result = await memberAuthAPI.getNotifications({ page: currentPage.toString(), limit: '10' });
+        setNotifications(result.data?.notifications || []);
+        if (result.data?.pagination) {
+          setTotalPages(result.data.pagination.totalPages);
+        }
+      } else {
+        const result = await notificationService.getNotifications({
+          page: currentPage,
+          limit: 10
+        });
+        setNotifications(result.data);
+        setTotalPages(result.pagination.totalPages);
+      }
       setError(null);
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -117,12 +128,12 @@ const Notifications = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page">
         <HeaderWithLogout
           icon={<Bell className="h-6 w-6 text-primary-foreground" />}
           title="Notifications"
         />
-        <main className="p-4">
+        <main className="app-main pt-4">
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
@@ -137,12 +148,12 @@ const Notifications = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="app-page">
         <HeaderWithLogout
           icon={<Bell className="h-6 w-6 text-primary-foreground" />}
           title="Notifications"
         />
-        <main className="p-4">
+        <main className="app-main pt-4">
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
@@ -159,26 +170,28 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
       <HeaderWithLogout
         icon={<Bell className="h-6 w-6 text-primary-foreground" />}
         title="Notifications"
       />
 
-      <main className="p-4 space-y-4">
-        {userRole === "state_admin" && (
-          <Button
-            onClick={() => navigate("/state-admin/send-notification")}
-            className="w-full bg-primary hover:bg-primary/90"
-          >
-            <Send className="h-4 w-4 mr-2" />
-            Send New Notification
-          </Button>
-        )}
-
+      <main className="app-main pt-4 space-y-4">
+        <SectionCard
+          title="Notifications"
+          description="Draft, review, and send notification messages without leaving the main workflow."
+          action={userRole === "state_admin" ? (
+            <Button onClick={() => navigate("/state-admin/send-notification")}>
+              <Send className="h-4 w-4 mr-2" />
+              Send New Notification
+            </Button>
+          ) : undefined}
+        >
         <div className="space-y-3">
           {notifications.length === 0 ? (
-            <Card className="shadow-sm">
+            <Card className="surface-card">
               <CardContent className="p-8 text-center">
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No notifications found</p>
@@ -186,7 +199,7 @@ const Notifications = () => {
             </Card>
           ) : (
             notifications.map((notification) => (
-              <Card key={notification._id} className="shadow-sm">
+              <Card key={notification._id} className="surface-card transition-all hover:-translate-y-0.5">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold">{notification.title}</h3>
@@ -288,9 +301,10 @@ const Notifications = () => {
             ))
           )}
         </div>
+        </SectionCard>
 
         {totalPages > 1 && (
-          <div className="flex justify-center gap-2 pt-4">
+          <div className="data-strip flex justify-center gap-2 pt-4">
             <Button
               variant="outline"
               size="sm"

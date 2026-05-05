@@ -1,8 +1,9 @@
-import { ArrowLeft, Plus, Calendar, Clock, Users, MapPin, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Clock, Users, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
 import { useMeetings, useDeleteMeeting } from "@/hooks/useMeetings";
 import { format } from "date-fns";
@@ -60,19 +61,23 @@ const MeetingAgenda = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-card border-b px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-              <ArrowLeft className="h-5 w-5" />
+      <PageShell>
+        <PageHero
+          title="Meeting Agenda"
+          subtitle="Create, review, and update monthly meeting plans."
+          eyebrow="Meetings"
+          icon={<Calendar className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <h1 className="text-xl font-bold">Meeting Agenda</h1>
-          </div>
-        </header>
-        <main className="p-4">
-          <div className="text-center py-8">Loading meetings...</div>
-        </main>
-      </div>
+          }
+        />
+        <SectionCard title="Loading" description="Fetching the current meeting agenda list.">
+          <div className="py-8 text-center">Loading meetings...</div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
@@ -85,21 +90,27 @@ const MeetingAgenda = () => {
     );
 
     return (
-      <div className="min-h-screen bg-background">
-        <header className="bg-card border-b px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-bold">Meeting Agenda</h1>
-          </div>
-        </header>
-        <main className="p-4 space-y-4">
-          <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => navigate("/state-admin/create-meeting")}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Meeting Agenda
-          </Button>
-          <Card className="p-8 text-center shadow-sm">
+      <PageShell>
+        <PageHero
+          title="Meeting Agenda"
+          subtitle="Create, review, and update monthly meeting plans."
+          eyebrow="Meetings"
+          icon={<Calendar className="h-6 w-6" />}
+          actions={
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              <Button size="sm" onClick={() => navigate("/state-admin/create-meeting")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Meeting Agenda
+              </Button>
+            </div>
+          }
+        />
+        <SectionCard title={isAuthError ? "Authentication Required" : "Error Loading Meetings"} description="Resolve the issue below and retry loading the meeting agenda.">
+          <Card className="surface-card p-8 text-center shadow-sm">
             <h2 className="font-semibold text-lg mb-2 text-red-600">
               {isAuthError ? "Authentication Required" : "Error Loading Meetings"}
             </h2>
@@ -121,30 +132,35 @@ const MeetingAgenda = () => {
               )}
             </div>
           </Card>
-        </main>
-      </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">Meeting Agenda</h1>
-        </div>
-      </header>
+    <PageShell>
+      <PageHero
+        title="Meeting Agenda"
+        subtitle="Create, review, and update monthly meeting plans."
+        eyebrow="Meetings"
+        icon={<Calendar className="h-6 w-6" />}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+            <Button size="sm" onClick={() => navigate("/state-admin/create-meeting")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Meeting Agenda
+            </Button>
+          </div>
+        }
+      />
 
-      <main className="p-4 space-y-4">
-        <Button className="w-full bg-primary hover:bg-primary/90" onClick={() => navigate("/state-admin/create-meeting")}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Meeting Agenda
-        </Button>
-
+      <SectionCard title="Scheduled Meetings" description="Review upcoming and active meeting plans, then edit or remove them as needed.">
         {meetings.length === 0 ? (
-          <Card className="p-8 text-center shadow-sm">
+          <Card className="surface-card p-8 text-center shadow-sm">
             <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Meetings Scheduled</h2>
             <p className="text-sm text-muted-foreground">
@@ -154,7 +170,7 @@ const MeetingAgenda = () => {
         ) : (
           <div className="space-y-4">
             {meetings.map((meeting) => (
-              <Card key={meeting._id} className="shadow-sm">
+              <Card key={meeting._id} className="surface-card shadow-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -219,8 +235,8 @@ const MeetingAgenda = () => {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 };
 

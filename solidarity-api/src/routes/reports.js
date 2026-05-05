@@ -1285,7 +1285,7 @@ const getRoleScope = (user) => {
 
 const getAllowedTargetAudiences = (user) => {
   if (user.role === 'state_admin') return null;
-  if (user.role === 'district_admin') return ['all_users', 'members_only', 'district_admins'];
+  if (user.role === 'district_admin') return ['all_users', 'members_only', 'district_admins', 'area_admins', 'group_and_area_admins', 'group_admins'];
   if (user.role === 'group_admin') {
     const roleAudience = user.roleTag?.type === 'area' ? 'area_admins' : 'group_admins';
     return ['all_users', 'members_only', roleAudience, 'group_and_area_admins'];
@@ -1314,7 +1314,9 @@ router.get('/consolidation', authenticate, authorize(['view_reports']), async (r
     }
 
     const effectiveDistrictId = req.user.role === 'state_admin' ? districtId : roleScope.districtId;
-    const effectiveGroupId = req.user.role === 'state_admin' ? groupId : roleScope.groupId;
+    const effectiveGroupId = req.user.role === 'state_admin' ? groupId
+      : req.user.role === 'district_admin' ? (groupId || null)
+      : roleScope.groupId;
 
     // Build user filter
     const userFilter = { isActive: true };
@@ -1962,7 +1964,9 @@ router.get('/recurring-marks-filter', authenticate, authorize(['view_reports']),
 
     // Scope filter (respect role-based scope or provided districtId for state_admin)
     const effectiveDistrictId = req.user.role === 'state_admin' ? (districtId || null) : roleScope.districtId;
-    const effectiveGroupId = req.user.role === 'state_admin' ? null : roleScope.groupId;
+    const effectiveGroupId = req.user.role === 'state_admin' ? null
+      : req.user.role === 'district_admin' ? null
+      : roleScope.groupId;
 
     const scopeFilter = {};
     if (effectiveDistrictId) scopeFilter.district = effectiveDistrictId;

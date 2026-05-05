@@ -86,7 +86,8 @@ router.get('/', authenticate, async (req, res) => {
       category,
       status,
       targetAudience,
-      search
+      search,
+      isRecurring
     } = req.query;
 
     const now = new Date();
@@ -95,7 +96,7 @@ router.get('/', authenticate, async (req, res) => {
     // Apply filters based on user role
     if (req.user.role === 'district_admin') {
       filter.$and = [
-        { $or: [{ targetAudience: 'all_users' }, { targetAudience: 'district_admins' }] },
+        { $or: [{ targetAudience: 'all_users' }, { targetAudience: 'district_admins' }, { targetAudience: 'area_admins' }, { targetAudience: 'group_admins' }, { targetAudience: 'group_and_area_admins' }] },
         // Only show active targets within date range (or those without dates set)
         { $or: [
           { startDate: { $lte: now }, endDate: { $gte: now } },
@@ -120,6 +121,7 @@ router.get('/', authenticate, async (req, res) => {
     }
 
     // Add additional filters
+    if (isRecurring !== undefined) filter.isRecurring = isRecurring === 'true';
     if (category) filter.category = category;
     // state_admin can filter by status; other roles already have status locked to 'active'
     if (status && req.user.role === 'state_admin') filter.status = status;

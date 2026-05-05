@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import GroupDialog from "@/components/GroupDialog";
@@ -10,6 +11,8 @@ import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
 import { useDistricts } from "@/hooks/useDistricts";
 import { Group } from "@/lib/groups";
+
+const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const ManageGroups = () => {
   const navigate = useNavigate();
@@ -27,11 +30,14 @@ const ManageGroups = () => {
     isActive: true 
   });
   const districts = districtsResponse?.data || [];
+  const selectedDistrict = districts.find((district) => district._id === selectedDistrictId) || null;
 
   // Set default district if not selected and districts are loaded
-  if (!selectedDistrictId && districts.length > 0) {
-    setSelectedDistrictId(districts[0]._id);
-  }
+  useEffect(() => {
+    if (!selectedDistrictId && districts.length > 0) {
+      setSelectedDistrictId(districts[0]._id);
+    }
+  }, [districts, selectedDistrictId]);
 
   // Fetch groups for selected district
   const { data: groupsResponse, isLoading: groupsLoading, error } = useGroups({ 
@@ -43,6 +49,7 @@ const ManageGroups = () => {
   const deleteGroupMutation = useDeleteGroup();
 
   const groups = groupsResponse?.data || [];
+  const totalMembers = groups.reduce((sum, group) => sum + (group.statistics?.totalMembers || 0), 0);
 
   const handleAdd = () => {
     setDialogMode("add");
@@ -82,132 +89,157 @@ const ManageGroups = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3 mb-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-5 w-5" />
+    <PageShell>
+      <PageHero
+        title="Manage Groups"
+        subtitle="Switch districts, review active groups, and manage area-level structure from one place."
+        eyebrow="Organization"
+        icon={<Users className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to State Admin
           </Button>
-          <h1 className="text-xl font-bold">Manage Groups</h1>
-        </div>
+        }
+      />
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">Select District</label>
-          {districtsLoading ? (
-            <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-background">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Loading districts...</span>
+      <div className="grid gap-3 md:grid-cols-3">
+        <MetricCard title="Selected District" value={selectedDistrict?.code || "None"} icon={Users} tone="primary" />
+        <MetricCard title="Active Groups" value={String(groups.length)} icon={Users} tone="warning" />
+        <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
+      </div>
+
+      <SectionCard
+        title="Group Controls"
+        description="Choose a district, search within its groups, and open group management dialogs."
+        action={
+          <Button
+            className="bg-primary hover:bg-primary/90"
+            onClick={handleAdd}
+            disabled={!selectedDistrictId}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Group
+          </Button>
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+          <div className="space-y-2">
+            <label htmlFor="selected-district" className="text-sm font-medium text-foreground">Select District</label>
+            {districtsLoading ? (
+              <div className="flex items-center gap-2 rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-muted-foreground shadow-sm">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading districts...
+              </div>
+            ) : (
+              <select
+                id="selected-district"
+                className={formSelectClassName}
+                value={selectedDistrictId}
+                onChange={(e) => setSelectedDistrictId(e.target.value)}
+                disabled={districts.length === 0}
+              >
+                {districts.length === 0 ? (
+                  <option value="">No districts available</option>
+                ) : (
+                  districts.map((district) => (
+                    <option key={district._id} value={district._id}>
+                      {district.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="group-search" className="text-sm font-medium text-foreground">Search Groups</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="group-search"
+                placeholder="Search groups..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          ) : (
-            <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
-              value={selectedDistrictId}
-              onChange={(e) => setSelectedDistrictId(e.target.value)}
-              disabled={districts.length === 0}
-            >
-              {districts.length === 0 ? (
-                <option value="">No districts available</option>
-              ) : (
-                districts.map((district) => (
-                  <option key={district._id} value={district._id}>
-                    {district.name}
-                  </option>
-                ))
-              )}
-            </select>
-          )}
+          </div>
         </div>
+      </SectionCard>
 
-        {/* Search */}
-        <div className="relative mt-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search groups…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </header>
-
-      <main className="p-4 space-y-4">
-        <Button 
-          className="w-full bg-primary hover:bg-primary/90" 
-          onClick={handleAdd}
-          disabled={!selectedDistrictId}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Group
-        </Button>
-
+      <SectionCard title="Group Directory" description="Review groups for the selected district and manage their details.">
         {groupsLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="ml-2">Loading groups...</span>
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            Loading groups...
           </div>
         ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-destructive">Failed to load groups</p>
-            <Button variant="outline" onClick={() => window.location.reload()} className="mt-2">
+          <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
+            <p className="font-medium text-destructive">Failed to load groups</p>
+            <Button variant="outline" onClick={() => window.location.reload()} className="mt-3">
               Retry
             </Button>
           </div>
         ) : !selectedDistrictId ? (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Select a district to view groups</p>
+          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="font-medium text-foreground">Select a district to view groups</p>
           </div>
         ) : groups.length === 0 ? (
-          <div className="text-center py-8">
-            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No groups found in this district</p>
-            <p className="text-sm text-muted-foreground">Add your first group to get started</p>
+          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+            <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <p className="font-medium text-foreground">No groups found in this district</p>
+            <p className="mt-1 text-sm text-muted-foreground">Add your first group to get started.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {groups.map((group) => (
-              <Card key={group._id} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-lg">
+              <Card key={group._id} className="surface-card border-border/70">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="action-tile-icon">
                         <Users className="h-5 w-5 text-primary" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{group.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-1">Code: {group.code}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="space-y-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground">{group.name}</h3>
+                          <p className="text-sm text-muted-foreground">Code: {group.code}</p>
+                        </div>
+                        <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
                           {group.statistics?.totalMembers || 0} Members
-                        </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1" onClick={() => handleEdit(group)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-destructive" 
-                      onClick={() => handleDeleteClick(group)}
-                      disabled={deleteGroupMutation.isPending}
-                    >
-                      {deleteGroupMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4 mr-1" />
-                      )}
-                      Delete
-                    </Button>
+                    <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[260px]">
+                      <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(group)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-destructive"
+                        onClick={() => handleDeleteClick(group)}
+                        disabled={deleteGroupMutation.isPending}
+                      >
+                        {deleteGroupMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+      </SectionCard>
 
         <GroupDialog
           open={showDialog}
@@ -225,8 +257,7 @@ const ManageGroups = () => {
           title="Delete Group"
           description={`Are you sure you want to delete ${groupToDelete?.name}? This will also delete all members in this group. This action cannot be undone.`}
         />
-      </main>
-    </div>
+    </PageShell>
   );
 };
 

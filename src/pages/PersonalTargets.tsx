@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
-import { Target, Plus, Edit, Trash2, Calendar, ArrowLeft, Clock, Search, RefreshCw } from "lucide-react";
+import { Target, Plus, Edit, Trash2, ArrowLeft, Search, RefreshCw } from "lucide-react";
+import { PiBookOpenTextFill, PiBooksFill, PiHandsPrayingFill, PiHeartFill, PiGraduationCapFill, PiHandshakeFill, PiTargetFill } from "react-icons/pi";
 
 interface PersonalTarget {
   _id: string;
@@ -338,17 +338,17 @@ const PersonalTargets = () => {
     return target.status === 'active' && new Date(target.startDate) <= now && new Date(target.endDate) >= now;
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'quran': return '📖';
-      case 'hadith': return '📚';
-      case 'prayer': return '🤲';
-      case 'charity': return '💝';
-      case 'knowledge': return '🎓';
-      case 'community': return '🤝';
-      default: return '🎯';
-    }
+  const CATEGORY_META: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
+    quran:     { icon: PiBookOpenTextFill,  color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    hadith:    { icon: PiBooksFill,         color: 'text-teal-600',    bg: 'bg-teal-100' },
+    prayer:    { icon: PiHandsPrayingFill,  color: 'text-indigo-600',  bg: 'bg-indigo-100' },
+    charity:   { icon: PiHeartFill,         color: 'text-rose-600',    bg: 'bg-rose-100' },
+    knowledge: { icon: PiGraduationCapFill, color: 'text-violet-600',  bg: 'bg-violet-100' },
+    community: { icon: PiHandshakeFill,     color: 'text-sky-600',     bg: 'bg-sky-100' },
   };
+
+  const getCategoryMeta = (category: string) =>
+    CATEGORY_META[category] ?? { icon: PiTargetFill, color: 'text-orange-600', bg: 'bg-orange-100' };
 
   const AUDIENCE_LABELS: Record<string, string> = {
     all_users: 'All Users',
@@ -369,45 +369,63 @@ const PersonalTargets = () => {
   // ── Loading state ───────────────────────────────────────────
   if (loading && activeTab === 'regular') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading targets...</p>
-        </div>
-      </div>
+      <PageShell>
+        <PageHero
+          title="Personal Targets"
+          subtitle="Loading the current target catalogue and recurring schedules."
+          eyebrow="Targets"
+          icon={<Target className="h-6 w-6" />}
+          actions={
+            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          }
+        />
+        <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center space-y-3">
+              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-[3px] border-primary/20 border-t-primary" />
+              <p className="text-sm font-medium text-muted-foreground">Loading targets…</p>
+            </div>
+          </div>
+        </SectionCard>
+      </PageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-5 w-5" />
+    <PageShell>
+      <PageHero
+        title="Personal Targets"
+        subtitle="Create, search, and manage regular or recurring targets without changing the existing workflows."
+        eyebrow="Targets"
+        icon={<Target className="h-6 w-6" />}
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">Personal Targets</h1>
-            <p className="text-sm text-muted-foreground">Create and manage targets for users</p>
-          </div>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
+      <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
+      <div className="container mx-auto max-w-7xl space-y-6 px-0 py-0">
 
         {/* ── Tab Toggle ── */}
-        <div className="flex gap-2 bg-muted p-1 rounded-xl w-fit">
+        <div className="flex gap-1 bg-muted/60 p-1.5 rounded-2xl w-fit border border-border/40 backdrop-blur-sm">
           <button
             onClick={() => setActiveTab('regular')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'regular' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'regular' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            <Target className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            <Target className="h-3.5 w-3.5" />
             Regular Targets
           </button>
           <button
             onClick={() => setActiveTab('recurring')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'recurring' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'recurring' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            <RefreshCw className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            <RefreshCw className="h-3.5 w-3.5" />
             Recurring Targets
           </button>
         </div>
@@ -415,111 +433,104 @@ const PersonalTargets = () => {
         {/* ══════════════ REGULAR TARGETS TAB ══════════════ */}
         {activeTab === 'regular' && (
           <>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div>
-                {!canManageTargets && (
-                  <p className="text-xs sm:text-sm text-amber-600 mt-1">
-                    ⚠️ You have read-only access. Only State Admins can create/edit targets.
-                  </p>
-                )}
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {!canManageTargets && (
+                <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
+                  ⚠️ Read-only access. Only State Admins can create/edit targets.
+                </div>
+              )}
               {canManageTargets && (
+                <div className="sm:ml-auto">
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => { resetForm(); setEditingTarget(null); }} className="w-full sm:w-auto">
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button onClick={() => { resetForm(); setEditingTarget(null); }} className="gap-2 rounded-xl">
+                      <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">Create Target</span>
                       <span className="sm:hidden">Create</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-6 sm:p-8 rounded-[2rem] border-none shadow-2xl glass font-sans">
-                    <div className="flex bg-primary/10 p-3 rounded-full w-14 h-14 items-center justify-center mb-2 ring-8 ring-primary/5 mx-auto shrink-0">
-                      <Target className="h-6 w-6 text-primary" />
+                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
+                    {/* Header */}
+                    <div className="px-6 pt-6 pb-4 border-b border-border/40">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold">{editingTarget ? 'Edit Target' : 'Create New Target'}</DialogTitle>
+                        <p className="text-sm text-muted-foreground mt-1">Fill in the details below to {editingTarget ? 'update' : 'create'} a target.</p>
+                      </DialogHeader>
                     </div>
-                    <DialogHeader className="shrink-0 text-center mb-6">
-                      <DialogTitle className="text-2xl font-bold tracking-tight">{editingTarget ? 'Edit Target' : 'Create New Target'}</DialogTitle>
-                    </DialogHeader>
-                    <div className="overflow-y-auto flex-1 pr-2 -mr-2 custom-scrollbar">
-                      <form onSubmit={handleSubmit} className="space-y-5 px-1 pb-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="title" className="font-semibold">Title *</Label>
+
+                    {/* Scrollable body */}
+                    <div className="overflow-y-auto flex-1 px-6 py-5 custom-scrollbar">
+                      <form onSubmit={handleSubmit} id="regular-target-form" className="space-y-5">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
                           <Input
                             id="title"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             placeholder="Enter target title"
-                            className="rounded-xl border-input/50 focus:border-primary transition-colors bg-background/50 h-11"
+                            className="h-10 rounded-lg"
                             required
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="category" className="font-semibold">Category *</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-medium">Category *</Label>
                           <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select category" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="quran">📖 Quran</SelectItem>
-                              <SelectItem value="hadith">📚 Hadith</SelectItem>
-                              <SelectItem value="prayer">🤲 Prayer</SelectItem>
-                              <SelectItem value="charity">💝 Charity</SelectItem>
-                              <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
-                              <SelectItem value="community">🤝 Community</SelectItem>
-                              <SelectItem value="other">🎯 Other</SelectItem>
+                              <SelectItem value="quran">Quran</SelectItem>
+                              <SelectItem value="hadith">Hadith</SelectItem>
+                              <SelectItem value="prayer">Prayer</SelectItem>
+                              <SelectItem value="charity">Charity</SelectItem>
+                              <SelectItem value="knowledge">Knowledge</SelectItem>
+                              <SelectItem value="community">Community</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        <div>
-                          <Label htmlFor="description">Description *</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="description" className="text-sm font-medium">Description *</Label>
                           <Textarea
                             id="description"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Describe the target in detail"
                             rows={3}
+                            className="rounded-lg resize-none"
                             required
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 gap-3">
-                          <div>
-                            <Label htmlFor="startDate">Start Date & Time *</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="startDate" className="text-sm font-medium">Start *</Label>
                             <Input
                               id="startDate"
                               type="datetime-local"
                               value={formData.startDate}
                               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                              className="h-10 rounded-lg text-sm"
                               required
                             />
                           </div>
-                          <div>
-                            <Label htmlFor="endDate">End Date & Time *</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="endDate" className="text-sm font-medium">End *</Label>
                             <Input
                               id="endDate"
                               type="datetime-local"
                               value={formData.endDate}
                               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                              className="h-10 rounded-lg text-sm"
                               required
                             />
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label htmlFor="active" className="text-sm font-medium">Active Status</Label>
-                            <p className="text-xs text-muted-foreground">Target is visible only when active and within the date range</p>
-                          </div>
-                          <Switch
-                            id="active"
-                            checked={formData.active}
-                            onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
-                          />
-                        </div>
-
-                        <div>
-                          <Label>Target Audience *</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-medium">Target Audience *</Label>
                           <Select value={formData.targetAudience} onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}>
-                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all_users">All Users</SelectItem>
                               <SelectItem value="members_only">Members Only</SelectItem>
@@ -530,56 +541,72 @@ const PersonalTargets = () => {
                           </Select>
                         </div>
 
-                        <div>
-                          <Label htmlFor="instructions">Instructions (Optional)</Label>
+                        <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
+                          <div>
+                            <p className="text-sm font-medium">Active</p>
+                            <p className="text-xs text-muted-foreground">Visible only when active and within date range</p>
+                          </div>
+                          <Switch
+                            id="active"
+                            checked={formData.active}
+                            onCheckedChange={(checked) => setFormData({ ...formData, active: checked })}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="instructions" className="text-sm font-medium">Instructions <span className="text-muted-foreground font-normal">(optional)</span></Label>
                           <Textarea
                             id="instructions"
                             value={formData.instructions}
                             onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
                             placeholder="How to complete this target..."
                             rows={2}
+                            className="rounded-lg resize-none"
                           />
                         </div>
 
-                        <div>
-                          <Label htmlFor="rewards">Rewards (Optional)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="rewards" className="text-sm font-medium">Rewards <span className="text-muted-foreground font-normal">(optional)</span></Label>
                           <Input
                             id="rewards"
                             value={formData.rewards}
                             onChange={(e) => setFormData({ ...formData, rewards: e.target.value })}
                             placeholder="Reward for completing this target..."
+                            className="h-10 rounded-lg"
                           />
-                        </div>
-
-                        <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border/50">
-                          <Button type="button" variant="outline" className="rounded-xl h-11 font-medium border-border/50 hover:bg-background/80" onClick={() => setIsCreateDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" className="rounded-xl h-11 font-medium shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">
-                            {editingTarget ? 'Update Target' : 'Create Target'}
-                          </Button>
                         </div>
                       </form>
                     </div>
+
+                    {/* Footer */}
+                    <div className="flex justify-end gap-3 px-6 py-4 border-t border-border/40 bg-muted/20">
+                      <Button type="button" variant="ghost" className="h-9 rounded-lg" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" form="regular-target-form" className="h-9 rounded-lg px-5">
+                        {editingTarget ? 'Update' : 'Create Target'}
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               )}
             </div>
 
             {/* Search and User Type Filter */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <Input
                   placeholder="Search targets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-10 h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm focus:bg-white transition-colors"
                 />
               </div>
               <Select value={audienceFilter || "all"} onValueChange={(v) => { setAudienceFilter(v === "all" ? "" : v); setCurrentPage(1); }}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="User type" />
+                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm">
+                  <SelectValue placeholder="All User Types" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All User Types</SelectItem>
@@ -591,74 +618,68 @@ const PersonalTargets = () => {
               </Select>
             </div>
 
-            {/* Regular Targets Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Regular Targets List */}
+            <div className="space-y-2">
               {targets.length === 0 ? (
-                <div className="col-span-full">
-                  <Card>
-                    <CardContent className="text-center py-8">
-                      <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No regular targets created yet</p>
-                      {canManageTargets ? (
-                        <p className="text-sm text-muted-foreground">Create your first target to get started</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Contact your State Admin to create targets</p>
-                      )}
-                    </CardContent>
-                  </Card>
+                <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-dashed border-border/50 bg-muted/20">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted mb-3">
+                    <Target className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground/70">No regular targets created yet</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {canManageTargets ? 'Create your first target to get started' : 'Contact your State Admin to create targets'}
+                  </p>
                 </div>
               ) : (
                 targets.map((target) => {
                   const active = isCurrentlyActive(target);
                   const { start, end } = formatDateRange(target.startDate, target.endDate);
+                  const isScheduled = target.status === 'active' && new Date(target.startDate) > new Date();
+                  const isExpired = target.status === 'active' && new Date(target.endDate) < new Date();
+                  const { icon: CatIcon, color: catColor, bg: catBg } = getCategoryMeta(target.category);
                   return (
-                    <Card key={target._id} className="relative overflow-hidden hover:shadow-md transition-shadow">
-                      <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <span className="text-2xl flex-shrink-0">{getCategoryIcon(target.category)}</span>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm leading-tight truncate">{target.title}</h3>
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{target.description}</p>
-                          </div>
+                    <div
+                      key={target._id}
+                      className="group flex items-center gap-4 rounded-xl border border-border/40 bg-background px-4 py-3 transition-colors hover:bg-muted/30"
+                    >
+                      {/* Left: category icon */}
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${catBg}`}>
+                        <CatIcon className={`h-5 w-5 ${catColor}`} />
+                      </div>
+
+                      {/* Middle: title + meta */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-sm truncate">{target.title}</h3>
+                          <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md ${
+                            active ? 'bg-emerald-100 text-emerald-700' :
+                            isScheduled ? 'bg-amber-100 text-amber-700' :
+                            isExpired ? 'bg-red-50 text-red-600' :
+                            'bg-gray-100 text-gray-500'
+                          }`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-emerald-500 animate-pulse' : isScheduled ? 'bg-amber-500' : 'bg-gray-400'}`} />
+                            {active ? 'Active' : isScheduled ? 'Scheduled' : isExpired ? 'Expired' : 'Inactive'}
+                          </span>
                         </div>
-                        <div className="space-y-1 mb-3">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <span className="text-xs text-muted-foreground"><span className="font-medium">From:</span> {start}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <span className="text-xs text-muted-foreground"><span className="font-medium">To:</span> {end}</span>
-                          </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          <span>{start} → {end}</span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">{AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}</span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge
-                              variant={active ? 'default' : 'secondary'}
-                              className={`text-xs px-2 py-0.5 ${active ? 'bg-green-600' :
-                                target.status === 'active' && new Date(target.startDate) > new Date() ? 'bg-amber-500 text-white' :
-                                  target.status === 'active' && new Date(target.endDate) < new Date() ? 'bg-gray-400 text-white' : ''}`}
-                            >
-                              {active ? 'Active' :
-                                target.status === 'active' && new Date(target.startDate) > new Date() ? 'Scheduled' :
-                                  target.status === 'active' && new Date(target.endDate) < new Date() ? 'Expired' : 'Inactive'}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}</span>
-                          </div>
-                          {canManageTargets && (
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEditDialog(target)}>
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => handleDelete(target._id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
+                      </div>
+
+                      {/* Right: actions */}
+                      {canManageTargets && (
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => openEditDialog(target)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(target._id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
+                      )}
+                    </div>
                   );
                 })
               )}
@@ -666,12 +687,12 @@ const PersonalTargets = () => {
 
             {/* Regular Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 pt-2 pb-4">
-                <Button variant="outline" size="sm" disabled={currentPage === 1 || loading} onClick={() => fetchData(currentPage - 1)}>
+              <div className="flex items-center justify-center gap-2 pt-2 pb-4">
+                <Button variant="outline" size="sm" disabled={currentPage === 1 || loading} onClick={() => fetchData(currentPage - 1)} className="h-9 px-4 rounded-xl border-border/50 hover:bg-muted/50">
                   ← Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</span>
-                <Button variant="outline" size="sm" disabled={currentPage === totalPages || loading} onClick={() => fetchData(currentPage + 1)}>
+                <span className="text-xs font-medium text-muted-foreground px-3 py-2 rounded-xl bg-muted/50">Page {currentPage} of {totalPages}</span>
+                <Button variant="outline" size="sm" disabled={currentPage === totalPages || loading} onClick={() => fetchData(currentPage + 1)} className="h-9 px-4 rounded-xl border-border/50 hover:bg-muted/50">
                   Next →
                 </Button>
               </div>
@@ -682,88 +703,93 @@ const PersonalTargets = () => {
         {/* ══════════════ RECURRING TARGETS TAB ══════════════ */}
         {activeTab === 'recurring' && (
           <>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Recurring targets are perpetual — users mark their completion for each period (month/week/quarter).
-                  No submission window, no file attachment required.
-                </p>
-                {!canManageTargets && (
-                  <p className="text-xs sm:text-sm text-amber-600 mt-1">
-                    ⚠️ You have read-only access. Only State Admins can create/edit targets.
-                  </p>
-                )}
-              </div>
+            {/* Info banner */}
+            <div className="flex items-start gap-3 rounded-2xl bg-blue-50/80 border border-blue-200/50 px-4 py-3">
+              <RefreshCw className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-700/90 leading-relaxed">
+                Recurring targets are perpetual — users mark their completion for each period (month/week/quarter). No submission window, no file attachment required.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {!canManageTargets && (
+                <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
+                  ⚠️ Read-only access. Only State Admins can create/edit targets.
+                </div>
+              )}
               {canManageTargets && (
+                <div className="sm:ml-auto">
                 <Dialog open={isRecurringDialogOpen} onOpenChange={setIsRecurringDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => { resetRecurringForm(); setEditingRecurring(null); }} className="w-full sm:w-auto">
-                      <Plus className="h-4 w-4 mr-2" />
+                    <Button onClick={() => { resetRecurringForm(); setEditingRecurring(null); }} className="gap-2 rounded-xl bg-primary">
+                      <Plus className="h-4 w-4" />
                       <span className="hidden sm:inline">Create Recurring Target</span>
                       <span className="sm:hidden">Create</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-6 sm:p-8 rounded-[2rem] border-none shadow-2xl glass font-sans">
-                    <div className="flex bg-blue-500/10 p-3 rounded-full w-14 h-14 items-center justify-center mb-2 ring-8 ring-blue-500/5 mx-auto shrink-0">
-                      <RefreshCw className="h-6 w-6 text-blue-500" />
+                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
+                    {/* Header */}
+                    <div className="px-6 pt-6 pb-4 border-b border-border/40">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold">
+                          {editingRecurring ? 'Edit Recurring Target' : 'Create Recurring Target'}
+                        </DialogTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Users mark completion each period. No submission window or file upload needed.
+                        </p>
+                      </DialogHeader>
                     </div>
-                    <DialogHeader className="shrink-0 text-center mb-6">
-                      <DialogTitle className="text-2xl font-bold tracking-tight">
-                        {editingRecurring ? 'Edit Recurring Target' : 'Create Recurring Target'}
-                      </DialogTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Users will mark completion for each period. No submission window or file upload needed.
-                      </p>
-                    </DialogHeader>
-                    <div className="overflow-y-auto flex-1 pr-2 -mr-2 custom-scrollbar">
-                      <form onSubmit={handleRecurringSubmit} className="space-y-5 px-1 pb-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="r-title" className="font-semibold">Title *</Label>
+
+                    {/* Scrollable body */}
+                    <div className="overflow-y-auto flex-1 px-6 py-5 custom-scrollbar">
+                      <form onSubmit={handleRecurringSubmit} id="recurring-target-form" className="space-y-5">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="r-title" className="text-sm font-medium">Title *</Label>
                           <Input
                             id="r-title"
                             value={recurringForm.title}
                             onChange={(e) => setRecurringForm({ ...recurringForm, title: e.target.value })}
                             placeholder="Enter recurring target title"
-                            className="rounded-xl border-input/50 focus:border-primary transition-colors bg-background/50 h-11"
+                            className="h-10 rounded-lg"
                             required
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label className="font-semibold">Category *</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-medium">Category *</Label>
                           <Select value={recurringForm.category} onValueChange={(value) => setRecurringForm({ ...recurringForm, category: value })}>
-                            <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Select category" /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="quran">📖 Quran</SelectItem>
-                              <SelectItem value="hadith">📚 Hadith</SelectItem>
-                              <SelectItem value="prayer">🤲 Prayer</SelectItem>
-                              <SelectItem value="charity">💝 Charity</SelectItem>
-                              <SelectItem value="knowledge">🎓 Knowledge</SelectItem>
-                              <SelectItem value="community">🤝 Community</SelectItem>
-                              <SelectItem value="other">🎯 Other</SelectItem>
+                              <SelectItem value="quran">Quran</SelectItem>
+                              <SelectItem value="hadith">Hadith</SelectItem>
+                              <SelectItem value="prayer">Prayer</SelectItem>
+                              <SelectItem value="charity">Charity</SelectItem>
+                              <SelectItem value="knowledge">Knowledge</SelectItem>
+                              <SelectItem value="community">Community</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        <div>
-                          <Label>Frequency *</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-medium">Frequency *</Label>
                           <Select value={recurringForm.recurringFrequency} onValueChange={(v) => setRecurringForm({ ...recurringForm, recurringFrequency: v })}>
-                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="weekly">Weekly</SelectItem>
                               <SelectItem value="monthly">Monthly</SelectItem>
                               <SelectItem value="quarterly">Quarterly</SelectItem>
                             </SelectContent>
                           </Select>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Users will see a checkbox for each {recurringForm.recurringFrequency === 'weekly' ? 'week' : recurringForm.recurringFrequency === 'quarterly' ? 'quarter' : 'month'} to mark completion.
+                          <p className="text-xs text-muted-foreground">
+                            Users will see a checkbox for each {recurringForm.recurringFrequency === 'weekly' ? 'week' : recurringForm.recurringFrequency === 'quarterly' ? 'quarter' : 'month'}.
                           </p>
                         </div>
 
-                        <div>
-                          <Label>Target Audience *</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-sm font-medium">Target Audience *</Label>
                           <Select value={recurringForm.targetAudience} onValueChange={(value) => setRecurringForm({ ...recurringForm, targetAudience: value })}>
-                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="h-10 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="all_users">All Users</SelectItem>
                               <SelectItem value="members_only">Members Only</SelectItem>
@@ -774,78 +800,84 @@ const PersonalTargets = () => {
                           </Select>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label className="text-sm font-medium">Active Status</Label>
-                            <p className="text-xs text-muted-foreground">Users can only see and mark active recurring targets</p>
+                        {/* Toggle group */}
+                        <div className="space-y-2 rounded-lg bg-muted/40 p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Active</p>
+                              <p className="text-xs text-muted-foreground">Only active targets are visible to users</p>
+                            </div>
+                            <Switch
+                              checked={recurringForm.active}
+                              onCheckedChange={(checked) => setRecurringForm({ ...recurringForm, active: checked })}
+                            />
                           </div>
-                          <Switch
-                            checked={recurringForm.active}
-                            onCheckedChange={(checked) => setRecurringForm({ ...recurringForm, active: checked })}
-                          />
+                          <div className="border-t border-border/40 pt-2 flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Attendance Needed</p>
+                              <p className="text-xs text-muted-foreground">Area admins mark member attendance</p>
+                            </div>
+                            <Switch
+                              checked={recurringForm.attendanceNeeded}
+                              onCheckedChange={(checked) => setRecurringForm({ ...recurringForm, attendanceNeeded: checked })}
+                            />
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-0.5">
-                            <Label className="text-sm font-medium">Attendance Needed</Label>
-                            <p className="text-xs text-muted-foreground">Area admins must mark member attendance when completing this target</p>
-                          </div>
-                          <Switch
-                            checked={recurringForm.attendanceNeeded}
-                            onCheckedChange={(checked) => setRecurringForm({ ...recurringForm, attendanceNeeded: checked })}
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="r-instructions">Instructions (Optional)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="r-instructions" className="text-sm font-medium">Instructions <span className="text-muted-foreground font-normal">(optional)</span></Label>
                           <Textarea
                             id="r-instructions"
                             value={recurringForm.instructions}
                             onChange={(e) => setRecurringForm({ ...recurringForm, instructions: e.target.value })}
                             placeholder="What users need to do each period..."
                             rows={2}
+                            className="rounded-lg resize-none"
                           />
                         </div>
 
-                        <div>
-                          <Label htmlFor="r-rewards">Rewards (Optional)</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="r-rewards" className="text-sm font-medium">Rewards <span className="text-muted-foreground font-normal">(optional)</span></Label>
                           <Input
                             id="r-rewards"
                             value={recurringForm.rewards}
                             onChange={(e) => setRecurringForm({ ...recurringForm, rewards: e.target.value })}
                             placeholder="Reward for completing this target..."
+                            className="h-10 rounded-lg"
                           />
-                        </div>
-
-                        <div className="flex justify-end gap-3 pt-6 mt-4 border-t border-border/50">
-                          <Button type="button" variant="outline" className="rounded-xl h-11 font-medium" onClick={() => setIsRecurringDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" className="rounded-xl h-11 font-medium">
-                            {editingRecurring ? 'Update Recurring Target' : 'Create Recurring Target'}
-                          </Button>
                         </div>
                       </form>
                     </div>
+
+                    {/* Footer */}
+                    <div className="flex justify-end gap-3 px-6 py-4 border-t border-border/40 bg-muted/20">
+                      <Button type="button" variant="ghost" className="h-9 rounded-lg" onClick={() => setIsRecurringDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" form="recurring-target-form" className="h-9 rounded-lg px-5">
+                        {editingRecurring ? 'Update' : 'Create Target'}
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
+                </div>
               )}
             </div>
 
             {/* Recurring Search and User Type Filter */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <Input
                   placeholder="Search recurring targets..."
                   value={recurringSearch}
                   onChange={(e) => setRecurringSearch(e.target.value)}
-                  className="pl-9"
+                  className="pl-10 h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm focus:bg-white transition-colors"
                 />
               </div>
               <Select value={recurringAudienceFilter || "all"} onValueChange={(v) => { setRecurringAudienceFilter(v === "all" ? "" : v); setRecurringPage(1); }}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="User type" />
+                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm">
+                  <SelectValue placeholder="All User Types" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All User Types</SelectItem>
@@ -857,84 +889,89 @@ const PersonalTargets = () => {
               </Select>
             </div>
 
-            {/* Recurring Targets Grid */}
+            {/* Recurring Targets List */}
             {recurringLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Loading recurring targets...</p>
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center space-y-3">
+                  <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-blue-500/20 border-t-blue-500" />
+                  <p className="text-sm font-medium text-muted-foreground">Loading recurring targets…</p>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
                 {recurringTargets.length === 0 ? (
-                  <div className="col-span-full">
-                    <Card>
-                      <CardContent className="text-center py-8">
-                        <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <p className="text-muted-foreground">No recurring targets created yet</p>
-                        {canManageTargets && (
-                          <p className="text-sm text-muted-foreground">Create a recurring target to get started</p>
-                        )}
-                      </CardContent>
-                    </Card>
+                  <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-dashed border-border/50 bg-muted/20">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 mb-3">
+                      <RefreshCw className="h-6 w-6 text-blue-400/70" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground/70">No recurring targets created yet</p>
+                    {canManageTargets && (
+                      <p className="text-xs text-muted-foreground mt-1">Create a recurring target to get started</p>
+                    )}
                   </div>
                 ) : (
-                  recurringTargets.map((target) => (
-                    <Card key={target._id} className="relative overflow-hidden hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
-                      <div className={`absolute top-0 right-0 w-3 h-3 rounded-bl-lg ${target.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3 mb-3">
-                          <span className="text-2xl flex-shrink-0">{getCategoryIcon(target.category)}</span>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm leading-tight truncate">{target.title}</h3>
-                            {target.instructions && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{target.instructions}</p>
+                  recurringTargets.map((target) => {
+                    const { icon: CatIcon, color: catColor, bg: catBg } = getCategoryMeta(target.category);
+                    return (
+                      <div
+                        key={target._id}
+                        className="group flex items-center gap-4 rounded-xl border border-border/40 bg-background px-4 py-3 transition-colors hover:bg-muted/30"
+                      >
+                        {/* Left: category icon */}
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${catBg}`}>
+                          <CatIcon className={`h-5 w-5 ${catColor}`} />
+                        </div>
+
+                        {/* Middle: title + meta */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-semibold text-sm truncate">{target.title}</h3>
+                            <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-md ${
+                              target.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${target.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                              {target.status === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+                            <span className="inline-flex items-center gap-1 font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                              <RefreshCw className="h-2.5 w-2.5" />
+                              {FREQ_LABELS[target.recurringFrequency || 'monthly'] || target.recurringFrequency}
+                            </span>
+                            {target.attendanceNeeded && (
+                              <span className="font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">Attendance</span>
                             )}
+                            <span className="hidden sm:inline">•</span>
+                            <span className="hidden sm:inline">{AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 flex-wrap mb-3">
-                          <Badge className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800">
-                            <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
-                            {FREQ_LABELS[target.recurringFrequency || 'monthly'] || target.recurringFrequency}
-                          </Badge>
-                          <Badge variant={target.status === 'active' ? 'default' : 'secondary'} className={`text-xs px-2 py-0.5 ${target.status === 'active' ? 'bg-green-600' : ''}`}>
-                            {target.status === 'active' ? 'Active' : 'Inactive'}
-                          </Badge>
-                          {target.attendanceNeeded && (
-                            <Badge className="text-xs px-2 py-0.5 bg-amber-100 text-amber-800">
-                              Attendance
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">{AUDIENCE_LABELS[target.targetAudience] || target.targetAudience}</span>
-                          {canManageTargets && (
-                            <div className="flex gap-1">
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEditRecurringDialog(target)}>
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500 hover:text-red-700" onClick={() => handleDeleteRecurring(target._id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                        {/* Right: actions */}
+                        {canManageTargets && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600" onClick={() => openEditRecurringDialog(target)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => handleDeleteRecurring(target._id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
             )}
 
             {/* Recurring Pagination */}
             {recurringTotalPages > 1 && (
-              <div className="flex items-center justify-center gap-3 pt-2 pb-4">
-                <Button variant="outline" size="sm" disabled={recurringPage === 1 || recurringLoading} onClick={() => fetchRecurringData(recurringPage - 1)}>
+              <div className="flex items-center justify-center gap-2 pt-2 pb-4">
+                <Button variant="outline" size="sm" disabled={recurringPage === 1 || recurringLoading} onClick={() => fetchRecurringData(recurringPage - 1)} className="h-9 px-4 rounded-xl border-border/50 hover:bg-muted/50">
                   ← Previous
                 </Button>
-                <span className="text-sm text-muted-foreground">Page {recurringPage} of {recurringTotalPages}</span>
-                <Button variant="outline" size="sm" disabled={recurringPage === recurringTotalPages || recurringLoading} onClick={() => fetchRecurringData(recurringPage + 1)}>
+                <span className="text-xs font-medium text-muted-foreground px-3 py-2 rounded-xl bg-muted/50">Page {recurringPage} of {recurringTotalPages}</span>
+                <Button variant="outline" size="sm" disabled={recurringPage === recurringTotalPages || recurringLoading} onClick={() => fetchRecurringData(recurringPage + 1)} className="h-9 px-4 rounded-xl border-border/50 hover:bg-muted/50">
                   Next →
                 </Button>
               </div>
@@ -943,7 +980,8 @@ const PersonalTargets = () => {
         )}
 
       </div>
-    </div>
+      </SectionCard>
+    </PageShell>
   );
 };
 

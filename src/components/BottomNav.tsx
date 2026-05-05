@@ -31,9 +31,9 @@ const BottomNav = () => {
   );
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 px-4 z-50 flex justify-center pb-safe pointer-events-none">
-      <nav className="glass border-t-0 border shadow-2xl rounded-[2rem] w-full max-w-sm mx-auto pointer-events-auto">
-        <div className="flex justify-around items-center h-[4.5rem] px-2">
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 pb-safe sm:bottom-5 sm:px-4">
+      <nav className="glass pointer-events-auto w-full max-w-md rounded-[2rem] border-white/60 px-2 py-2 shadow-[0_28px_70px_-30px_hsl(var(--foreground)/0.35)]">
+        <div className={`grid h-[4.6rem] items-center gap-1 ${navItems.length <= 4 ? 'grid-cols-4' : navItems.length === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path ||
@@ -42,17 +42,17 @@ const BottomNav = () => {
 
             if (item.path === "/notifications" && item.hasMenu) {
               return (
-                <DropdownMenu key={item.path}>
+                <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ease-spring ${isActive ? "text-primary scale-110 translate-y-[-2px]" : "text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95"
+                      className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                         }`}
                     >
-                      <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "drop-shadow-sm text-primary" : ""}`} />
-                      <span className="text-[10px] mt-1.5 font-semibold tracking-wide">{item.label}</span>
+                      <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />
+                      <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" side="top" className="mb-4 glass border-border/50 rounded-2xl p-1 shadow-2xl w-48">
+                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
                     <DropdownMenuItem onClick={() => navigate("/notifications")} className="rounded-xl py-3 px-3 cursor-pointer mb-1 focus:bg-primary/10 transition-colors">
                       <Bell className="h-4 w-4 mr-2.5 text-primary" />
                       <span className="font-medium">Notifications</span>
@@ -69,17 +69,17 @@ const BottomNav = () => {
 
             if (item.hasMenu && (userRole === "state_admin" || userRole === "district_admin")) {
               return (
-                <DropdownMenu key={item.path}>
+                <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ease-spring ${isActive ? "text-primary scale-110 translate-y-[-2px]" : "text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95"
+                      className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                         }`}
                     >
-                      <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "drop-shadow-sm text-primary" : ""}`} />
-                      <span className="text-[10px] mt-1.5 font-semibold tracking-wide">{item.label}</span>
+                      <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />
+                      <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" side="top" className="mb-4 glass border-border/50 rounded-2xl p-1 shadow-2xl w-48">
+                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
                     <DropdownMenuItem onClick={() => navigate("/meetings")} className="rounded-xl py-2.5 px-3 cursor-pointer focus:bg-primary/10 transition-colors font-medium">
                       <Calendar className="h-4 w-4 mr-2.5 text-primary" />
                       View Meetings
@@ -101,14 +101,6 @@ const BottomNav = () => {
                         </DropdownMenuItem>
                       </>
                     )}
-                    {userRole === "district_admin" && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")} className="rounded-xl py-2.5 px-3 cursor-pointer focus:bg-primary/10 transition-colors font-medium mt-1">
-                          <Menu className="h-4 w-4 mr-2.5 text-primary" />
-                          View Meeting Agendas
-                        </DropdownMenuItem>
-                      </>
-                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               );
@@ -118,11 +110,11 @@ const BottomNav = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 ease-spring ${isActive ? "text-primary scale-110 translate-y-[-2px]" : "text-muted-foreground hover:text-foreground hover:scale-105 active:scale-95"
+                className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                   }`}
               >
-                <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "drop-shadow-sm text-primary" : ""}`} />
-                <span className="text-[10px] mt-1.5 font-semibold tracking-wide">{item.label}</span>
+                <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />
+                <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
               </button>
             );
           })}

@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X, LogOut } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,10 +8,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
 
 interface DashboardData {
@@ -53,16 +63,18 @@ interface BaithulMaalStats {
     totalMembers: number;
     contributingMembers: number;
     totalMonthlyAmount: number;
+    totalPaidAmount: number;
     averageMonthlyAmount: number;
-    totalCollected: number;
-    totalPaid: number;
-    totalBalance: number;
+    minAmount: number;
+    maxAmount: number;
   };
 }
 
 const StateAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logout } = useAuth();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [baithulMaalStats, setBaithulMaalStats] = useState<BaithulMaalStats | null>(null);
@@ -74,6 +86,7 @@ const StateAdmin = () => {
   const [markingLoading, setMarkingLoading] = useState<string | null>(null);
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
+  const [selectedRecurringMonth, setSelectedRecurringMonth] = useState(currentMonth);
   const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const WEEKLY_SLOTS = [1, 2, 3, 4, 5];
 
@@ -184,6 +197,32 @@ const StateAdmin = () => {
     }
   };
 
+  const getCompletedRecurringCount = (targetId: string, isWeekly: boolean) => {
+    if (isWeekly) {
+      let total = 0;
+      for (let month = 1; month <= currentMonth; month += 1) {
+        const weeksInMonth = getWeeksInMonth(currentYear, month - 1);
+        for (const week of WEEKLY_SLOTS) {
+          if (week > weeksInMonth) {
+            continue;
+          }
+          if (myMarks[targetId]?.[`${currentYear}-${month}-${week}`]) {
+            total += 1;
+          }
+        }
+      }
+      return total;
+    }
+
+    let total = 0;
+    for (let month = 1; month <= currentMonth; month += 1) {
+      if (myMarks[targetId]?.[`${currentYear}-${month}-0`]) {
+        total += 1;
+      }
+    }
+    return total;
+  };
+
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(1)}L`;
@@ -192,6 +231,46 @@ const StateAdmin = () => {
     }
     return `₹${amount}`;
   };
+
+  const analysisCards = [
+    {
+      title: "Total Members",
+      value: dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || "0",
+      detail: `${dashboardData?.memberStatistics?.activeMembers || 0} active members`,
+      icon: Users,
+      tone: "primary" as const,
+    },
+    {
+      title: "Active Members",
+      value: dashboardData?.memberStatistics?.activeMembers?.toLocaleString() || "0",
+      detail: `${dashboardData?.memberStatistics?.totalMembers ? Math.round((dashboardData.memberStatistics.activeMembers / dashboardData.memberStatistics.totalMembers) * 100) : 0}% of total members`,
+      icon: CheckCircle,
+      tone: "success" as const,
+    },
+    {
+      title: "Baithul Maal",
+      value: baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0",
+      detail: `${baithulMaalStats?.overallStatistics?.contributingMembers || 0} contributing members`,
+      icon: Wallet,
+      tone: "warning" as const,
+    },
+    {
+      title: "Pending Actions",
+      value: String(dashboardData?.pendingRequestsCount || 0),
+      detail: dashboardData?.pendingRequestsCount ? "Needs attention" : "All clear",
+      icon: FileCheck,
+      tone: dashboardData?.pendingRequestsCount ? "danger" : "neutral",
+    },
+  ];
+
+  const quickStats = [
+    { label: "Total Districts", value: dashboardData?.districtStatistics?.totalDistricts || 0 },
+    { label: "Total Groups", value: dashboardData?.groupStatistics?.totalGroups || 0 },
+    { label: "Total Members", value: dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || "0" },
+    { label: "Total Users", value: userStats?.totalUsers?.toLocaleString() || "0" },
+    { label: "Pending Approvals", value: dashboardData?.pendingRequestsCount || 0 },
+    { label: "Contributing Members", value: baithulMaalStats?.overallStatistics?.contributingMembers || 0 },
+  ];
 
   if (loading) {
     return (
@@ -205,85 +284,63 @@ const StateAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-lg">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold">State Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">Full System Control</p>
-          </div>
-          <Button 
-            variant="outline" 
+    <PageShell>
+      <PageHero
+        eyebrow="State Overview"
+        title="State Admin Panel"
+        subtitle="A modern control center for people, approvals, reports, and recurring progress across the entire system."
+        icon={<Shield className="h-6 w-6" />}
+        actions={
+          <Button
+            variant="outline"
             size="sm"
-            onClick={() => {
-              navigate("/login");
-            }}
+            onClick={() => setShowLogoutConfirm(true)}
           >
+            <LogOut className="h-4 w-4 mr-2" />
             Logout
           </Button>
-        </div>
-      </header>
-
-      <main className="p-4 space-y-4">
-        {/* Quick Analysis Section */}
-        <Card className="shadow-sm bg-gradient-to-br from-primary/10 to-primary/5">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-3 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Quick Analysis
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
-                <p className="text-2xl font-bold text-primary">
-                  {dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || '0'}
-                </p>
-                <p className="text-xs text-muted-foreground">Total Members</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {dashboardData?.memberStatistics?.activeMembers || 0} active
-                </p>
-              </div>
-              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
-                <p className="text-2xl font-bold text-success">
-                  {dashboardData?.memberStatistics?.activeMembers?.toLocaleString() || '0'}
-                </p>
-                <p className="text-xs text-muted-foreground">Active Members</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {dashboardData?.memberStatistics?.totalMembers 
-                    ? Math.round((dashboardData.memberStatistics.activeMembers / dashboardData.memberStatistics.totalMembers) * 100)
-                    : 0}% of total
-                </p>
-              </div>
-              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
-                <p className="text-2xl font-bold text-orange-500">
-                  {baithulMaalStats?.overallStatistics?.totalBalance 
-                    ? formatCurrency(baithulMaalStats.overallStatistics.totalBalance)
-                    : '₹0'}
-                </p>
-                <p className="text-xs text-muted-foreground">Baithul Maal Balance</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatCurrency(baithulMaalStats?.overallStatistics?.totalMonthlyAmount || 0)} monthly
-                </p>
-              </div>
-              <div className="bg-background/80 backdrop-blur rounded-lg p-3">
-                <p className="text-2xl font-bold text-destructive">
-                  {dashboardData?.pendingRequestsCount || 0}
-                </p>
-                <p className="text-xs text-muted-foreground">Pending Actions</p>
-                <p className="text-xs text-orange-500 mt-1">
-                  {dashboardData?.pendingRequestsCount ? 'Needs attention' : 'All clear'}
-                </p>
-              </div>
+        }
+        details={
+          <>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Total Members</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || "0"}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active Members</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.memberStatistics?.activeMembers?.toLocaleString() || "0"}</p>
+            </div>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Monthly Collection</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0"}</p>
+            </div>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Actions</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.pendingRequestsCount || 0}</p>
+            </div>
+          </>
+        }
+      />
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold">Administrative Controls</h2>
+      <SectionCard title="Quick Analysis" description="Key state-level signals arranged for mobile and desktop scanning.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {analysisCards.map((card) => (
+                <MetricCard
+                  key={card.title}
+                  title={card.title}
+                  value={card.value}
+                  detail={card.detail}
+                  icon={card.icon}
+                  tone={card.tone}
+                />
+              ))}
+            </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Administrative Controls"
+        description="High-traffic admin workflows with cleaner grouping and larger touch targets."
+        action={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -329,126 +386,165 @@ const StateAdmin = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        }
+      >
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {adminActions.map((action, index) => (
                 <Button
                   key={index}
                   variant="outline"
-                  className="h-auto py-4 flex flex-col items-center gap-2"
+                  className="action-tile h-auto"
                   onClick={() => navigate(action.path)}
                 >
-                  <action.icon className={`h-6 w-6 ${action.color}`} />
-                  <span className="text-xs text-center">{action.label}</span>
+                  <div className="action-tile-icon">
+                    <action.icon className={`h-5 w-5 ${action.color}`} />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                    <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
+                  </div>
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
+      </SectionCard>
 
-        {/* State Admin Recurring Targets */}
         {myRecurringTargets.length > 0 && (
-          <Card className="shadow-sm border-blue-100">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <RefreshCw className="h-4 w-4 text-blue-600" />
-                <h2 className="font-semibold text-sm">My Recurring Targets</h2>
+          <SectionCard title="My Recurring Targets" description="Mark monthly and weekly progress without losing context.">
+              <div className="mb-4 rounded-[1.6rem] border border-border/70 bg-background/75 p-3 backdrop-blur-sm">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Focused Month</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{MONTHS_SHORT[selectedRecurringMonth - 1]} {currentYear}</p>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1 sm:justify-end">
+                    {MONTHS_SHORT.map((month, index) => {
+                      const monthNum = index + 1;
+                      const isActive = monthNum === selectedRecurringMonth;
+                      const isFuture = monthNum > currentMonth;
+                      return (
+                        <button
+                          key={month}
+                          type="button"
+                          onClick={() => setSelectedRecurringMonth(monthNum)}
+                          disabled={isFuture}
+                          aria-pressed={isActive}
+                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : isFuture
+                                ? 'bg-muted text-muted-foreground/60'
+                                : 'bg-white text-muted-foreground hover:text-foreground'
+                          } ${isFuture ? 'cursor-not-allowed' : ''}`}
+                        >
+                          {month}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
+
               <div className="space-y-4">
                 {myRecurringTargets.map((target: any) => {
                   const freq = target.recurringFrequency || 'monthly';
                   const isWeekly = freq === 'weekly';
+                  const selectedMonthLabel = MONTHS_SHORT[selectedRecurringMonth - 1];
+                  const selectedMonthIsFuture = selectedRecurringMonth > currentMonth;
+                  const completedCount = getCompletedRecurringCount(target._id, isWeekly);
                   return (
-                    <div key={target._id} className="border rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="font-medium text-sm">{target.title}</p>
-                        {isWeekly && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">Weekly</span>
-                        )}
+                    <div key={target._id} className="data-strip rounded-[1.6rem] p-4">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{target.title}</p>
+                          {isWeekly && (
+                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">Weekly</span>
+                          )}
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm">
+                          {completedCount} {isWeekly ? 'weeks done' : 'months done'}
+                        </span>
                       </div>
 
                       {isWeekly ? (
-                        /* ── Weekly grid: month rows × week columns ── */
-                        <div className="space-y-1.5">
-                          {MONTHS_SHORT.map((month, idx) => {
-                            const monthNum = idx + 1;
-                            const weeksInMonth = getWeeksInMonth(currentYear, idx);
-                            const monthIsFuture = monthNum > currentMonth;
-                            return (
-                              <div key={monthNum} className="flex items-center gap-2">
-                                <span className="text-xs font-medium w-8 shrink-0 text-muted-foreground">{month}</span>
-                                <div className="grid grid-cols-5 gap-1 flex-1">
-                                  {WEEKLY_SLOTS.map((weekNum) => {
-                                    const exists = weekNum <= weeksInMonth;
-                                    if (!exists) return <div key={weekNum} className="h-7" aria-hidden />;
-                                    const key = `${currentYear}-${monthNum}-${weekNum}`;
-                                    const completed = myMarks[target._id]?.[key] || false;
-                                    const loadingKey = `${target._id}-${key}`;
-                                    const isFuture = monthIsFuture;
-                                    return (
-                                      <button
-                                        key={weekNum}
-                                        onClick={() => !isFuture && toggleMark(target._id, currentYear, monthNum, weekNum)}
-                                        disabled={markingLoading === loadingKey || isFuture}
-                                        title={isFuture ? 'Future week' : `${month} W${weekNum}`}
-                                        className={`h-7 rounded text-[10px] font-medium transition-all border ${
-                                          completed
-                                            ? 'bg-green-500 border-green-500 text-white'
-                                            : isFuture
-                                              ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                              : 'bg-white border-gray-200 text-gray-500 hover:border-primary hover:text-primary'
-                                        } ${markingLoading === loadingKey ? 'opacity-60 cursor-wait' : ''}`}
-                                      >
-                                        {completed ? '✓' : `W${weekNum}`}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                          <div className="space-y-2">
+                            <div>
+                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
+                              <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
+                            </div>
+                            <div className="grid grid-cols-5 gap-2">
+                              {WEEKLY_SLOTS.map((weekNum) => {
+                                const weeksInMonth = getWeeksInMonth(currentYear, selectedRecurringMonth - 1);
+                                const exists = weekNum <= weeksInMonth;
+                                if (!exists) {
+                                  return <div key={weekNum} className="h-10" aria-hidden />;
+                                }
+                                const key = `${currentYear}-${selectedRecurringMonth}-${weekNum}`;
+                                const completed = myMarks[target._id]?.[key] || false;
+                                const loadingKey = `${target._id}-${key}`;
+                                return (
+                                  <button
+                                    key={weekNum}
+                                    type="button"
+                                    onClick={() => !selectedMonthIsFuture && toggleMark(target._id, currentYear, selectedRecurringMonth, weekNum)}
+                                    disabled={markingLoading === loadingKey || selectedMonthIsFuture}
+                                    title={selectedMonthIsFuture ? 'Future week' : `${selectedMonthLabel} W${weekNum}`}
+                                    className={`h-10 rounded-2xl border text-xs font-semibold transition-all ${
+                                      completed
+                                        ? 'border-green-500 bg-green-500 text-white'
+                                        : selectedMonthIsFuture
+                                          ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
+                                          : 'border-gray-200 bg-white text-gray-500 hover:border-primary hover:text-primary'
+                                    } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
+                                  >
+                                    {completed ? '✓' : `W${weekNum}`}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm lg:min-w-[148px]">
+                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+                            <p className="mt-1 font-semibold text-foreground">
+                              {selectedMonthIsFuture ? 'Locked until month starts' : 'Tap a week to update'}
+                            </p>
+                          </div>
                         </div>
                       ) : (
-                        /* ── Monthly grid (existing) ── */
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs border-collapse">
-                            <thead>
-                              <tr>
-                                {MONTHS_SHORT.map((m, i) => (
-                                  <th key={i} className="p-1 text-center text-muted-foreground font-medium min-w-[36px]">{m}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                {Array.from({ length: 12 }, (_, i) => {
-                                  const monthNum = i + 1;
-                                  const isFuture = monthNum > currentMonth;
-                                  const key = `${currentYear}-${monthNum}-0`;
-                                  const completed = myMarks[target._id]?.[key] || false;
-                                  const loadingKey = `${target._id}-${key}`;
-                                  return (
-                                    <td key={monthNum} className="p-1 text-center">
-                                      {isFuture ? (
-                                        <span className="text-gray-200 text-base">–</span>
-                                      ) : (
-                                        <button
-                                          onClick={() => toggleMark(target._id, currentYear, monthNum, 0)}
-                                          disabled={markingLoading === loadingKey}
-                                          className="mx-auto flex items-center justify-center w-7 h-7 rounded-full hover:bg-muted transition-colors"
-                                        >
-                                          {completed
-                                            ? <CheckCircle className="h-5 w-5 text-green-500" />
-                                            : <X className="h-4 w-4 text-gray-300" />
-                                          }
-                                        </button>
-                                      )}
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            </tbody>
-                          </table>
+                        <div className="flex flex-col gap-3 rounded-[1.4rem] border border-white/70 bg-white/80 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {selectedMonthIsFuture ? 'Available when the month begins.' : 'Use the toggle to mark this month complete.'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-2">
+                            {selectedMonthIsFuture ? (
+                              <span className="text-xs font-semibold text-muted-foreground">Locked</span>
+                            ) : (
+                              (() => {
+                                const key = `${currentYear}-${selectedRecurringMonth}-0`;
+                                const completed = myMarks[target._id]?.[key] || false;
+                                const loadingKey = `${target._id}-${key}`;
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleMark(target._id, currentYear, selectedRecurringMonth, 0)}
+                                    disabled={markingLoading === loadingKey}
+                                    className={`flex min-w-[144px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                      completed
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-white text-muted-foreground hover:text-foreground'
+                                    } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
+                                  >
+                                    {completed ? <CheckCircle className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                                    {completed ? 'Completed' : 'Mark Month'}
+                                  </button>
+                                );
+                              })()
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -457,57 +553,38 @@ const StateAdmin = () => {
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+          </SectionCard>
         )}
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <h2 className="font-semibold mb-2">Quick Stats</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Districts:</span>
-                <span className="font-semibold">
-                  {dashboardData?.districtStatistics?.totalDistricts || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Groups:</span>
-                <span className="font-semibold">
-                  {dashboardData?.groupStatistics?.totalGroups || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Members:</span>
-                <span className="font-semibold">
-                  {dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || '0'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Users:</span>
-                <span className="font-semibold">
-                  {userStats?.totalUsers?.toLocaleString() || '0'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Pending Approvals:</span>
-                <span className={`font-semibold ${dashboardData?.pendingRequestsCount ? 'text-orange-500' : 'text-success'}`}>
-                  {dashboardData?.pendingRequestsCount || 0}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Contributing Members:</span>
-                <span className="font-semibold text-primary">
-                  {baithulMaalStats?.overallStatistics?.contributingMembers || 0}
-                </span>
-              </div>
+      <SectionCard title="Quick Stats" description="Supporting totals for districts, groups, users, and contribution health.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {quickStats.map((item) => (
+                <div key={item.label} className="data-strip flex items-center justify-between gap-4">
+                  <span className="text-sm text-muted-foreground">{item.label}</span>
+                  <span className="text-sm font-semibold text-foreground">{item.value}</span>
+                </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
-      </main>
+      </SectionCard>
 
       <BottomNav />
-    </div>
+
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>Are you sure you want to log out?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row gap-2 justify-end">
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </PageShell>
   );
 };
 
