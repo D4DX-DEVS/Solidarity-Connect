@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, MapPin, ShieldCheck, UserPlus, Users } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
@@ -55,8 +56,6 @@ const ROLE_LABELS: Record<string, string> = {
   district_admin: "District Admin",
   group_admin: "Area Admin",
 };
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const AddMember = () => {
   const navigate = useNavigate();
@@ -321,23 +320,25 @@ const AddMember = () => {
                 <div className="space-y-2">
                   <label htmlFor="member-district" className="text-sm font-medium text-foreground">District *</label>
                   {userContext.canSelectDistrict ? (
-                    <select
-                      id="member-district"
-                      required
-                      className={formSelectClassName}
-                      value={formData.district}
-                      onChange={(e) => {
-                        setFormData({ ...formData, district: e.target.value, group: "" });
+                    <Select
+                      value={formData.district || "placeholder"}
+                      onValueChange={(val) => {
+                        const v = val === "placeholder" ? "" : val;
+                        setFormData({ ...formData, district: v, group: "" });
                         setGroups([]);
                       }}
                     >
-                      <option value="">Select district</option>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select district" />
+                      </SelectTrigger>
+                      <SelectContent>
                         {districts.map((district) => (
-                          <option key={district._id} value={district._id}>
+                          <SelectItem key={district._id} value={district._id}>
                             {district.name} ({district.code})
-                          </option>
+                          </SelectItem>
                         ))}
-                    </select>
+                      </SelectContent>
+                    </Select>
                   ) : (
                     <div className="data-strip flex items-center gap-2 text-sm text-foreground">
                       <MapPin className="h-4 w-4 text-primary" />
@@ -351,21 +352,22 @@ const AddMember = () => {
                 <div className="space-y-2">
                   <label htmlFor="member-group" className="text-sm font-medium text-foreground">Group *</label>
                   {userContext.canSelectGroup ? (
-                    <select
-                      id="member-group"
-                      required
-                      className={formSelectClassName}
-                      value={formData.group}
-                      onChange={(e) => setFormData({ ...formData, group: e.target.value })}
+                    <Select
+                      value={formData.group || "placeholder"}
+                      onValueChange={(val) => setFormData({ ...formData, group: val === "placeholder" ? "" : val })}
                       disabled={!formData.district}
                     >
-                      <option value="">{formData.district ? "Select group" : "Select district first"}</option>
+                      <SelectTrigger>
+                        <SelectValue placeholder={formData.district ? "Select group" : "Select district first"} />
+                      </SelectTrigger>
+                      <SelectContent>
                         {groups.map((group) => (
-                          <option key={group._id} value={group._id}>
+                          <SelectItem key={group._id} value={group._id}>
                             {group.name} ({group.code})
-                          </option>
+                          </SelectItem>
                         ))}
-                    </select>
+                      </SelectContent>
+                    </Select>
                   ) : (
                     <div className="data-strip flex items-center gap-2 text-sm text-foreground">
                       <Building2 className="h-4 w-4 text-primary" />
@@ -387,19 +389,22 @@ const AddMember = () => {
 
               <div className="space-y-2">
                 <label htmlFor="member-blood-group" className="text-sm font-medium text-foreground">Blood Group (Optional)</label>
-                <select
-                  id="member-blood-group"
-                  className={formSelectClassName}
-                  value={formData.bloodGroup}
-                  onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                <Select
+                  value={formData.bloodGroup || "none"}
+                  onValueChange={(val) => setFormData({ ...formData, bloodGroup: val === "none" ? "" : val })}
                 >
-                  <option value="">Select blood group</option>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select blood group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select blood group</SelectItem>
                     {BLOOD_GROUPS.map((bloodGroup) => (
-                      <option key={bloodGroup} value={bloodGroup}>
+                      <SelectItem key={bloodGroup} value={bloodGroup}>
                         {bloodGroup}
-                      </option>
+                      </SelectItem>
                     ))}
-                </select>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { requestsAPI } from "@/utils/api";
 
@@ -108,21 +109,25 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
 
           <div>
             <label className="text-sm font-medium mb-2 block">Blood Group</label>
-            <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
-              value={formData.bloodGroup}
-              onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+            <Select
+              value={formData.bloodGroup || "none"}
+              onValueChange={(val) => setFormData({ ...formData, bloodGroup: val === "none" ? "" : val })}
             >
-              <option value="">Select Blood Group</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Blood Group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Select Blood Group</SelectItem>
+                <SelectItem value="A+">A+</SelectItem>
+                <SelectItem value="A-">A-</SelectItem>
+                <SelectItem value="B+">B+</SelectItem>
+                <SelectItem value="B-">B-</SelectItem>
+                <SelectItem value="O+">O+</SelectItem>
+                <SelectItem value="O-">O-</SelectItem>
+                <SelectItem value="AB+">AB+</SelectItem>
+                <SelectItem value="AB-">AB-</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -138,16 +143,20 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
 
           <div>
             <label className="text-sm font-medium mb-2 block">Status</label>
-            <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
+            <Select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              onValueChange={(val) => setFormData({ ...formData, status: val })}
             >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Abroad">Abroad</option>
-              <option value="Age over">Age over</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+                <SelectItem value="Abroad">Abroad</SelectItem>
+                <SelectItem value="Age over">Age over</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="bg-muted p-3 rounded-md">

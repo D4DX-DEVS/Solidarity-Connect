@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useCreateGroup, useUpdateGroup } from "@/hooks/useGroups";
 import { Group } from "@/lib/groups";
@@ -89,20 +90,22 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">District</label>
-            <select
-              required
-              className="w-full px-3 py-2 border rounded-md bg-background"
+            <Select
               value={districtId}
-              onChange={(e) => setDistrictId(e.target.value)}
+              onValueChange={(val) => setDistrictId(val)}
               disabled={isLoading}
             >
-              <option value="">Select District</option>
-              {districts.map((district) => (
-                <option key={district._id} value={district._id}>
-                  {district.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map((district) => (
+                  <SelectItem key={district._id} value={district._id}>
+                    {district.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

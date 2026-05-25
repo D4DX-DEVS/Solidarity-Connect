@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiCall, districtsAPI, groupsAPI } from "@/utils/api";
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const BulkImport = () => {
   const navigate = useNavigate();
@@ -183,50 +182,57 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
             {(userRole === "state_admin" || userRole === "district_admin") && (
               <div className="space-y-2">
                 <label htmlFor="bulk-district" className="text-sm font-medium text-foreground">District</label>
-                <select
-                  id="bulk-district"
-                  className={formSelectClassName}
-                  value={district}
-                  onChange={(e) => { setDistrict(e.target.value); setGroup(""); }}
+                <Select
+                  value={district || "placeholder"}
+                  onValueChange={(val) => { setDistrict(val === "placeholder" ? "" : val); setGroup(""); }}
                   disabled={userRole === "district_admin"}
                 >
-                  <option value="">Select District</option>
-                  {districts.map((d) => (
-                    <option key={d._id} value={d._id}>{d.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select District" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {districts.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
             {userRole !== "group_admin" && (
               <div className="space-y-2">
                 <label htmlFor="bulk-group" className="text-sm font-medium text-foreground">Target Group</label>
-                <select
-                  id="bulk-group"
-                  className={formSelectClassName}
-                  value={group}
-                  onChange={(e) => setGroup(e.target.value)}
+                <Select
+                  value={group || "placeholder"}
+                  onValueChange={(val) => setGroup(val === "placeholder" ? "" : val)}
                   disabled={!district}
                 >
-                  <option value="">Select Group</option>
-                  {groups.map((g) => (
-                    <option key={g._id} value={g._id}>{g.name}</option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {groups.map((g) => (
+                      <SelectItem key={g._id} value={g._id}>{g.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
             {userRole === "group_admin" && (
               <div className="space-y-2">
                 <label htmlFor="bulk-group" className="text-sm font-medium text-foreground">Your Group</label>
-                <select
-                  id="bulk-group"
-                  className={formSelectClassName}
-                  value={group}
+                <Select
+                  value={group || user?.group?._id || ""}
                   disabled
                 >
-                  <option value={user?.group?._id || ""}>{user?.group?.name || "Your Group"}</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder={user?.group?.name || "Your Group"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={user?.group?._id || "group"}>{user?.group?.name || "Your Group"}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>

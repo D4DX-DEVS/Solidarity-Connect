@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, MapPin, Users, Plus, Edit, Trash2, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Users, Plus, Edit, Trash2, Loader2, Search, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
@@ -14,8 +16,6 @@ import { useDistricts, useDeleteDistrict } from "@/hooks/useDistricts";
 import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
 import { District } from "@/lib/districts";
 import { Group } from "@/lib/groups";
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const MasterData = () => {
   const navigate = useNavigate();
@@ -32,6 +32,7 @@ const MasterData = () => {
   // Area (Group) state
   const [areaSearch, setAreaSearch] = useState("");
   const [selectedDistrictFilter, setSelectedDistrictFilter] = useState<string>("");
+  const [districtFilterOpen, setDistrictFilterOpen] = useState(false);
   const [showGroupDialog, setShowGroupDialog] = useState(false);
   const [groupDialogMode, setGroupDialogMode] = useState<"add" | "edit">("add");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -245,16 +246,54 @@ const MasterData = () => {
             }
           >
             <div className="space-y-3">
-              <select
-                value={selectedDistrictFilter}
-                onChange={(e) => setSelectedDistrictFilter(e.target.value)}
-                className={formSelectClassName}
-              >
-                <option value="">All Districts</option>
-                {allDistricts.map((d) => (
-                  <option key={d._id} value={d._id}>{d.name}</option>
-                ))}
-              </select>
+              <Popover open={districtFilterOpen} onOpenChange={setDistrictFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={districtFilterOpen}
+                    className="w-full justify-between rounded-2xl border-border/70 bg-white/80 h-11 px-4 font-normal shadow-sm"
+                  >
+                    {selectedDistrictFilter
+                      ? allDistricts.find(d => d._id === selectedDistrictFilter)?.name || "All Districts"
+                      : "All Districts"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search district..." />
+                    <CommandList>
+                      <CommandEmpty>No district found.</CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="all"
+                          onSelect={() => {
+                            setSelectedDistrictFilter("");
+                            setDistrictFilterOpen(false);
+                          }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${!selectedDistrictFilter ? "opacity-100" : "opacity-0"}`} />
+                          All Districts
+                        </CommandItem>
+                        {allDistricts.map((d) => (
+                          <CommandItem
+                            key={d._id}
+                            value={d.name}
+                            onSelect={() => {
+                              setSelectedDistrictFilter(d._id);
+                              setDistrictFilterOpen(false);
+                            }}
+                          >
+                            <Check className={`mr-2 h-4 w-4 ${selectedDistrictFilter === d._id ? "opacity-100" : "opacity-0"}`} />
+                            {d.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input

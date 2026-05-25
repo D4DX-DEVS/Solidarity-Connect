@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -884,17 +885,20 @@ const MemberDashboard = () => {
               </div>
               <div>
                 <label htmlFor="member-profile-blood-group" className="text-sm font-medium">Blood Group</label>
-                <select
-                  id="member-profile-blood-group"
-                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm bg-background"
-                  value={editProfileForm.bloodGroup}
-                  onChange={e => setEditProfileForm(p => ({ ...p, bloodGroup: e.target.value }))}
+                <Select
+                  value={editProfileForm.bloodGroup || "none"}
+                  onValueChange={(val) => setEditProfileForm(p => ({ ...p, bloodGroup: val === "none" ? "" : val }))}
                 >
-                  <option value="">Select blood group</option>
-                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
-                    <option key={bg} value={bg}>{bg}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select blood group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select blood group</SelectItem>
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
+                      <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label htmlFor="member-profile-profession" className="text-sm font-medium">Profession</label>
