@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X, LogOut } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X, LogOut, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +97,7 @@ const StateAdmin = () => {
   };
 
   const adminActions = [
+    { icon: Database, label: "Master Data", path: "/state-admin/master-data", color: "text-emerald-600" },
     { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
     { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },

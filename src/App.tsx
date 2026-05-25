@@ -13,6 +13,7 @@ import StateAdmin from "./pages/StateAdmin";
 import DistrictAdmin from "./pages/DistrictAdmin";
 import ManageDistricts from "./pages/ManageDistricts";
 import ManageGroups from "./pages/ManageGroups";
+import MasterData from "./pages/MasterData";
 import TransferApprovals from "./pages/TransferApprovals";
 import MeetingAgenda from "./pages/MeetingAgenda";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
             <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
             <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><ManageGroups /></ProtectedRoute>} />
+            <Route path="/state-admin/master-data" element={<ProtectedRoute requiredRoles={['state_admin']}><MasterData /></ProtectedRoute>} />
             <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
             <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingAgenda /></ProtectedRoute>} />
             <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
