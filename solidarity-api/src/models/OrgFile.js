@@ -14,7 +14,7 @@ const orgFileSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['constitution', 'guidelines', 'video', 'audio', 'document', 'other'],
+    enum: ['constitution', 'guidelines', 'video', 'audio', 'document', 'link', 'other'],
     default: 'document'
   },
   // 'general' = visible to all authenticated users
@@ -24,25 +24,25 @@ const orgFileSchema = new mongoose.Schema({
     enum: ['general', 'membership_form'],
     default: 'general'
   },
-  url: {
+  link: {
     type: String,
-    required: [true, 'File URL is required']
+    trim: true,
+    maxlength: [500, 'Link cannot exceed 500 characters']
+  },
+  url: {
+    type: String
   },
   filename: {
-    type: String,
-    required: [true, 'Filename is required']
+    type: String
   },
   originalName: {
-    type: String,
-    required: true
+    type: String
   },
   mimetype: {
-    type: String,
-    required: true
+    type: String
   },
   size: {
-    type: Number,
-    required: true
+    type: Number
   },
   isActive: {
     type: Boolean,

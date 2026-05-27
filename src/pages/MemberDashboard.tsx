@@ -53,7 +53,8 @@ import {
   File,
   Eye,
   Download,
-  Search
+  Search,
+  Link2
 } from "lucide-react";
 
 interface MemberProfile {
@@ -174,6 +175,7 @@ const orgCategoryLabels: Record<string, string> = {
   video: "Video",
   audio: "Audio",
   document: "Document",
+  link: "Link",
   other: "Other"
 };
 
@@ -183,10 +185,12 @@ const orgCategoryIcons: Record<string, React.ElementType> = {
   video: Film,
   audio: Music,
   document: FileText,
+  link: Link2,
   other: File
 };
 
-const formatOrgFileSize = (bytes: number) => {
+const formatOrgFileSize = (bytes: number | undefined) => {
+  if (!bytes) return "";
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${bytes} B`;
@@ -1387,7 +1391,7 @@ const MemberDashboard = () => {
   };
 
   const renderOrgFilesContent = () => {
-    const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other"];
+    const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other"];
     return (
       <div className="space-y-3 org-files-malayalam">
         <Card>
@@ -1459,21 +1463,36 @@ const MemberDashboard = () => {
                         </Badge>
                         <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
                       </div>
+                      {file.link && (
+                        <a href={file.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                          <Link2 className="h-3 w-3" />{file.link.length > 50 ? file.link.slice(0, 50) + "..." : file.link}
+                        </a>
+                      )}
                       <div className="flex gap-2 mt-2">
-                        <a href={file.url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="outline" className="text-xs h-7">
-                            {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
-                              <><Eye className="h-3 w-3 mr-1" />Open</>
-                            ) : (
-                              <><Eye className="h-3 w-3 mr-1" />View</>
-                            )}
-                          </Button>
-                        </a>
-                        <a href={file.url} download>
-                          <Button size="sm" variant="ghost" className="text-xs h-7">
-                            <Download className="h-3 w-3 mr-1" />Download
-                          </Button>
-                        </a>
+                        {file.category === "link" && file.link ? (
+                          <a href={file.link} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="text-xs h-7">
+                              <Link2 className="h-3 w-3 mr-1" />Open Link
+                            </Button>
+                          </a>
+                        ) : file.url ? (
+                          <>
+                            <a href={file.url} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="text-xs h-7">
+                                {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
+                                  <><Eye className="h-3 w-3 mr-1" />Open</>
+                                ) : (
+                                  <><Eye className="h-3 w-3 mr-1" />View</>
+                                )}
+                              </Button>
+                            </a>
+                            <a href={file.url} download>
+                              <Button size="sm" variant="ghost" className="text-xs h-7">
+                                <Download className="h-3 w-3 mr-1" />Download
+                              </Button>
+                            </a>
+                          </>
+                        ) : null}
                       </div>
                     </div>
                   </div>

@@ -1149,7 +1149,7 @@ router.get('/org-files', authenticateMember, async (req, res) => {
     }
 
     const files = await OrgFile.find(filter)
-      .select('title description category url originalName mimetype size createdAt')
+      .select('title description category url link originalName mimetype size createdAt')
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, data: files });
