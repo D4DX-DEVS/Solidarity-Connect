@@ -1686,7 +1686,7 @@ const MemberDashboard = () => {
 
       <SectionCard
         title={`${activeViewLabel} Workspace`}
-        description="Use the bottom tabs to move between member sections while keeping the existing dashboard actions unchanged."
+        description="Use the bottom menu to switch between your targets, meetings, leaders, and alerts."
       >
         <div className="space-y-4">
           {renderContent()}

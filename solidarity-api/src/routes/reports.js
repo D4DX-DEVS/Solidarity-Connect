@@ -90,11 +90,25 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
       .populate('group', 'name')
       .select('name phone status createdAt isApproved');
 
-    // Upcoming meetings
-    const upcomingMeetings = await Meeting.find({
+    // Upcoming meetings — filtered by role
+    let meetingFilter = {
       scheduledDate: { $gte: new Date() },
       status: 'scheduled'
-    })
+    };
+    if (req.user.role === 'group_admin') {
+      meetingFilter.$or = [
+        { targetAudience: 'all' },
+        { targetAudience: 'group_admins' },
+        { targetAudience: 'specific_groups', targetGroups: req.user.group._id }
+      ];
+    } else if (req.user.role === 'district_admin') {
+      meetingFilter.$or = [
+        { targetAudience: 'all' },
+        { targetAudience: 'district_admins' },
+        { targetAudience: 'specific_groups', targetDistricts: req.user.district._id }
+      ];
+    }
+    const upcomingMeetings = await Meeting.find(meetingFilter)
     .sort({ scheduledDate: 1 })
     .limit(3)
     .select('title scheduledDate meetingType');

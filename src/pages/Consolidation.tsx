@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BarChart3, Users, CheckCircle2, Clock, Download, Filter, CalendarDays, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageHero, MetricCard, SectionCard } from '@/components/app/AppShell';
@@ -45,6 +45,7 @@ export default function Consolidation() {
   const [dateMode, setDateMode] = useState<'all' | 'custom'>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [selectedMonthKey, setSelectedMonthKey] = useState<string | null>(null);
 
   // Data state
   const [targets, setTargets] = useState<ConsolidationTarget[]>([]);
@@ -193,6 +194,29 @@ export default function Consolidation() {
     XLSX.writeFile(wb, `consolidation-report-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast({ title: 'Exported', description: 'Report exported as Excel file' });
   }, [report]);
+
+  // Reset month selection when a new report is generated
+  useEffect(() => {
+    setSelectedMonthKey(null);
+  }, [report]);
+
+  // For recurring targets, filter detailed view by the selected month
+  const detailedUsers = useMemo(() => {
+    if (!report) return { completed: [], pending: [] };
+    if (report.target.isRecurring && selectedMonthKey) {
+      const allUsers = [...report.users.completed, ...report.users.pending];
+      return {
+        completed: allUsers.filter(u => u.completedMonths?.includes(selectedMonthKey)),
+        pending: allUsers.filter(u => !u.completedMonths?.includes(selectedMonthKey)),
+      };
+    }
+    return report.users;
+  }, [report, selectedMonthKey]);
+
+  const selectedMonthLabel = useMemo(() => {
+    if (!selectedMonthKey || !report?.monthlyBreakdown) return null;
+    return report.monthlyBreakdown.find(m => `${m.year}-${m.month}` === selectedMonthKey)?.label ?? null;
+  }, [selectedMonthKey, report]);
 
   const showDistrictFilter = selectedUserType && NEEDS_DISTRICT_FILTER.includes(selectedUserType);
   const showGroupFilter = selectedUserType && NEEDS_GROUP_FILTER.includes(selectedUserType);
@@ -409,25 +433,32 @@ export default function Consolidation() {
 
             {/* Monthly Breakdown (if available) */}
             {report.monthlyBreakdown.length > 0 && (
-              <MonthlyBreakdownSection breakdown={report.monthlyBreakdown} isRecurring={report.target.isRecurring} />
+              <MonthlyBreakdownSection
+                breakdown={report.monthlyBreakdown}
+                isRecurring={report.target.isRecurring}
+                onMonthSelect={setSelectedMonthKey}
+              />
             )}
 
             {/* Detailed User Lists */}
-            <SectionCard title="Detailed View" description="View completed and pending users">
+            <SectionCard
+              title="Detailed View"
+              description={selectedMonthLabel ? `Showing completions for ${selectedMonthLabel}` : 'View completed and pending users'}
+            >
               <Tabs defaultValue="completed" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="completed">
-                    Completed ({report.users.completed.length})
+                    Completed ({detailedUsers.completed.length})
                   </TabsTrigger>
                   <TabsTrigger value="pending">
-                    Pending ({report.users.pending.length})
+                    Pending ({detailedUsers.pending.length})
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="completed" className="mt-4">
-                  <UserTable users={report.users.completed} type="completed" isRecurring={report.target.isRecurring} />
+                  <UserTable users={detailedUsers.completed} type="completed" isRecurring={report.target.isRecurring} />
                 </TabsContent>
                 <TabsContent value="pending" className="mt-4">
-                  <UserTable users={report.users.pending} type="pending" isRecurring={report.target.isRecurring} />
+                  <UserTable users={detailedUsers.pending} type="pending" isRecurring={report.target.isRecurring} />
                 </TabsContent>
               </Tabs>
             </SectionCard>
@@ -453,10 +484,29 @@ export default function Consolidation() {
 }
 
 // Monthly Breakdown Component
-function MonthlyBreakdownSection({ breakdown, isRecurring }: { breakdown: MonthlyBreakdown[]; isRecurring: boolean }) {
+function MonthlyBreakdownSection({
+  breakdown,
+  isRecurring,
+  onMonthSelect,
+}: {
+  breakdown: MonthlyBreakdown[];
+  isRecurring: boolean;
+  onMonthSelect?: (key: string | null) => void;
+}) {
+  const handleValueChange = (value: string) => {
+    if (!isRecurring || !onMonthSelect) return;
+    if (value) {
+      const idx = parseInt(value.replace('month-', ''), 10);
+      const month = breakdown[idx];
+      if (month) onMonthSelect(`${month.year}-${month.month}`);
+    } else {
+      onMonthSelect(null);
+    }
+  };
+
   return (
-    <SectionCard title="Monthly Breakdown" description="Completion status per month">
-      <Accordion type="multiple" className="space-y-2">
+    <SectionCard title="Monthly Breakdown" description={isRecurring ? 'Click a month to filter the detailed view below' : 'Completion status per month'}>
+      <Accordion type="single" collapsible className="space-y-2" onValueChange={handleValueChange}>
         {breakdown.map((month, idx) => (
           <AccordionItem key={`${month.year}-${month.month}`} value={`month-${idx}`} className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline py-3">

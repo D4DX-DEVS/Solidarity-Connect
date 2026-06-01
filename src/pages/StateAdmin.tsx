@@ -1,13 +1,6 @@
-import { Shield, Users, Building2, FileCheck, Settings, Bell, Upload, Wallet, BarChart3, Menu, Calendar, Target, UserCog, Star, Megaphone, FolderOpen, RefreshCw, CheckCircle, X, LogOut, Database } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, X, LogOut, Database, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -100,6 +93,9 @@ const StateAdmin = () => {
     { icon: Database, label: "Master Data", path: "/state-admin/master-data", color: "text-emerald-600" },
     { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
     { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
+    { icon: Building2, label: "Manage Districts", path: "/state-admin/districts", color: "text-sky-600" },
+    { icon: Users, label: "Manage Groups", path: "/state-admin/groups", color: "text-cyan-600" },
+    { icon: Calendar, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-amber-600" },
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
@@ -110,6 +106,12 @@ const StateAdmin = () => {
     { icon: FolderOpen, label: "Org Files", path: "/org-files", color: "text-teal-500" },
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
+
+  const primaryActions = adminActions.filter(({ label }) =>
+    ["Master Data", "User Management", "Transfer Approvals", "Send Notifications", "Announcements", "Org Files"].includes(label)
+  );
+
+  const secondaryActions = adminActions.filter(({ label }) => !primaryActions.some((action) => action.label === label));
 
   const fetchDashboardData = async () => {
     try {
@@ -262,15 +264,20 @@ const StateAdmin = () => {
       icon: FileCheck,
       tone: dashboardData?.pendingRequestsCount ? "danger" : "neutral",
     },
-  ];
-
-  const quickStats = [
-    { label: "Total Districts", value: dashboardData?.districtStatistics?.totalDistricts || 0 },
-    { label: "Total Groups", value: dashboardData?.groupStatistics?.totalGroups || 0 },
-    { label: "Total Members", value: dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || "0" },
-    { label: "Total Users", value: userStats?.totalUsers?.toLocaleString() || "0" },
-    { label: "Pending Approvals", value: dashboardData?.pendingRequestsCount || 0 },
-    { label: "Contributing Members", value: baithulMaalStats?.overallStatistics?.contributingMembers || 0 },
+    {
+      title: "Districts",
+      value: String(dashboardData?.districtStatistics?.totalDistricts || 0),
+      detail: `${dashboardData?.groupStatistics?.totalGroups || 0} total groups`,
+      icon: Building2,
+      tone: "neutral" as const,
+    },
+    {
+      title: "System Users",
+      value: userStats?.totalUsers?.toLocaleString() || "0",
+      detail: `${userStats?.activeUsers?.toLocaleString() || "0"} active users`,
+      icon: UserCog,
+      tone: "neutral" as const,
+    },
   ];
 
   if (loading) {
@@ -289,7 +296,7 @@ const StateAdmin = () => {
       <PageHero
         eyebrow="State Overview"
         title="State Admin Panel"
-        subtitle="A modern control center for people, approvals, reports, and recurring progress across the entire system."
+        subtitle="Use this page to review people, approvals, reports, and your recurring work in one place."
         icon={<Shield className="h-6 w-6" />}
         actions={
           <Button
@@ -304,14 +311,6 @@ const StateAdmin = () => {
         details={
           <>
             <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Total Members</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.memberStatistics?.totalMembers?.toLocaleString() || "0"}</p>
-            </div>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Active Members</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.memberStatistics?.activeMembers?.toLocaleString() || "0"}</p>
-            </div>
-            <div className="data-strip">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Monthly Collection</p>
               <p className="mt-2 text-sm font-semibold text-foreground">{baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0"}</p>
             </div>
@@ -319,12 +318,20 @@ const StateAdmin = () => {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Actions</p>
               <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.pendingRequestsCount || 0}</p>
             </div>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District Coverage</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.districtStatistics?.totalDistricts || 0} districts</p>
+            </div>
+            <div className="data-strip">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">System Users</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{userStats?.totalUsers?.toLocaleString() || "0"}</p>
+            </div>
           </>
         }
       />
 
-      <SectionCard title="Quick Analysis" description="Key state-level signals arranged for mobile and desktop scanning.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <SectionCard title="Quick Analysis" description="A simple snapshot of the numbers that need attention today.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {analysisCards.map((card) => (
                 <MetricCard
                   key={card.title}
@@ -340,84 +347,89 @@ const StateAdmin = () => {
 
       <SectionCard
         title="Administrative Controls"
-        description="High-traffic admin workflows with cleaner grouping and larger touch targets."
-        action={
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Menu className="h-4 w-4 mr-2" />
-                    Manage
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/users")}>
-                    <UserCog className="h-4 w-4 mr-2" />
-                    User Management
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/personal-targets")}>
-                    <Target className="h-4 w-4 mr-2" />
-                    Personal Targets
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/districts")}>
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Manage Districts
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/groups")}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Groups
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/state-admin/meeting-agenda")}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Meeting Agenda
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/role-management")}>
-                    <Shield className="h-4 w-4 mr-2" />
-                    Role Management
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/leaders")}>
-                    <Star className="h-4 w-4 mr-2" />
-                    Leaders
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/announcements")}>
-                    <Megaphone className="h-4 w-4 mr-2" />
-                    Announcements
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-        }
+        description="Tools are grouped by the kind of work you do, so they are easier to find."
       >
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {adminActions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="action-tile h-auto"
-                  onClick={() => navigate(action.path)}
-                >
-                  <div className="action-tile-icon">
-                    <action.icon className={`h-5 w-5 ${action.color}`} />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                    <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
-                  </div>
-                </Button>
-              ))}
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <div id="daily-workflows-heading">
+                  <p className="text-sm font-semibold text-foreground">Daily Workflows</p>
+                  <p className="text-xs text-muted-foreground">Approval, communication, and file tasks used most often.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="daily-workflows-heading">
+                  {primaryActions.map((action) => (
+                    <Button
+                      key={action.label}
+                      variant="outline"
+                      className="action-tile h-auto"
+                      onClick={() => navigate(action.path)}
+                    >
+                      <div className="action-tile-icon">
+                        <action.icon className={`h-5 w-5 ${action.color}`} />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div id="management-reports-heading">
+                  <p className="text-sm font-semibold text-foreground">Management And Reports</p>
+                  <p className="text-xs text-muted-foreground">Configuration, oversight, and reporting tasks that are used less frequently.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="management-reports-heading">
+                  {secondaryActions.map((action) => (
+                    <Button
+                      key={action.label}
+                      variant="outline"
+                      className="action-tile h-auto"
+                      onClick={() => navigate(action.path)}
+                    >
+                      <div className="action-tile-icon">
+                        <action.icon className={`h-5 w-5 ${action.color}`} />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
       </SectionCard>
 
         {myRecurringTargets.length > 0 && (
-          <SectionCard title="My Recurring Targets" description="Mark monthly and weekly progress without losing context.">
+          <SectionCard title="My Recurring Targets" description="These are repeating targets. Choose a month, then tap the week or month you completed.">
+              <div className="mb-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-[1.25rem] border border-blue-100 bg-blue-50/80 p-4">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-blue-700">Step 1</p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">Choose a month</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Start by selecting the month you want to update.</p>
+                </div>
+                <div className="rounded-[1.25rem] border border-amber-100 bg-amber-50/80 p-4">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-amber-700">Step 2</p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">Pick the target</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Each card tells you whether the target is monthly or weekly.</p>
+                </div>
+                <div className="rounded-[1.25rem] border border-green-100 bg-green-50/80 p-4">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-green-700">Step 3</p>
+                  <p className="mt-2 text-sm font-semibold text-foreground">Mark the work you finished</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Green means already marked. Future months stay locked.</p>
+                </div>
+              </div>
+
               <div className="mb-4 rounded-[1.6rem] border border-border/70 bg-background/75 p-3 backdrop-blur-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Focused Month</p>
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
                     <p className="mt-1 text-sm font-semibold text-foreground">{MONTHS_SHORT[selectedRecurringMonth - 1]} {currentYear}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Pick a month first. Future months stay locked.</p>
                   </div>
-                  <div className="flex gap-2 overflow-x-auto pb-1 sm:justify-end">
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 xl:grid-cols-12">
                     {MONTHS_SHORT.map((month, index) => {
                       const monthNum = index + 1;
                       const isActive = monthNum === selectedRecurringMonth;
@@ -429,7 +441,7 @@ const StateAdmin = () => {
                           onClick={() => setSelectedRecurringMonth(monthNum)}
                           disabled={isFuture}
                           aria-pressed={isActive}
-                          className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                          className={`rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
                             isActive
                               ? 'bg-primary text-primary-foreground shadow-sm'
                               : isFuture
@@ -437,7 +449,10 @@ const StateAdmin = () => {
                                 : 'bg-white text-muted-foreground hover:text-foreground'
                           } ${isFuture ? 'cursor-not-allowed' : ''}`}
                         >
-                          {month}
+                          <span className="block">{month}</span>
+                          <span className="mt-0.5 block text-[8px] opacity-80">
+                            {isActive ? 'Selected' : isFuture ? 'Locked' : 'Open'}
+                          </span>
                         </button>
                       );
                     })}
@@ -452,8 +467,9 @@ const StateAdmin = () => {
                   const selectedMonthLabel = MONTHS_SHORT[selectedRecurringMonth - 1];
                   const selectedMonthIsFuture = selectedRecurringMonth > currentMonth;
                   const completedCount = getCompletedRecurringCount(target._id, isWeekly);
+                  const totalDoneLabel = `${completedCount} ${isWeekly ? (completedCount === 1 ? 'week' : 'weeks') : (completedCount === 1 ? 'month' : 'months')} marked so far`;
                   return (
-                    <div key={target._id} className="data-strip rounded-[1.6rem] p-4">
+                    <div key={target._id} className="rounded-[1.6rem] border border-border/60 bg-background/80 p-4 shadow-sm">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-sm">{target.title}</p>
@@ -462,23 +478,28 @@ const StateAdmin = () => {
                           )}
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm">
-                          {completedCount} {isWeekly ? 'weeks done' : 'months done'}
+                          {totalDoneLabel}
                         </span>
                       </div>
+                      <p className="mb-3 text-xs text-muted-foreground">
+                        {isWeekly
+                          ? 'Choose a month below, then tap each week after you finish it.'
+                          : 'Choose a month below, then tap the button when that month is complete.'}
+                      </p>
 
                       {isWeekly ? (
-                        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                          <div className="space-y-2">
+                        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
+                          <div className="space-y-3 rounded-[1.2rem] border border-border/60 bg-muted/20 p-4">
                             <div>
-                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
+                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Month You Are Updating</p>
                               <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
                             </div>
-                            <div className="grid grid-cols-5 gap-2">
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
                               {WEEKLY_SLOTS.map((weekNum) => {
                                 const weeksInMonth = getWeeksInMonth(currentYear, selectedRecurringMonth - 1);
                                 const exists = weekNum <= weeksInMonth;
                                 if (!exists) {
-                                  return <div key={weekNum} className="h-10" aria-hidden />;
+                                  return <div key={weekNum} className="h-16" aria-hidden />;
                                 }
                                 const key = `${currentYear}-${selectedRecurringMonth}-${weekNum}`;
                                 const completed = myMarks[target._id]?.[key] || false;
@@ -490,7 +511,7 @@ const StateAdmin = () => {
                                     onClick={() => !selectedMonthIsFuture && toggleMark(target._id, currentYear, selectedRecurringMonth, weekNum)}
                                     disabled={markingLoading === loadingKey || selectedMonthIsFuture}
                                     title={selectedMonthIsFuture ? 'Future week' : `${selectedMonthLabel} W${weekNum}`}
-                                    className={`h-10 rounded-2xl border text-xs font-semibold transition-all ${
+                                    className={`flex h-16 flex-col items-center justify-center rounded-2xl border text-xs font-semibold transition-all ${
                                       completed
                                         ? 'border-green-500 bg-green-500 text-white'
                                         : selectedMonthIsFuture
@@ -498,31 +519,44 @@ const StateAdmin = () => {
                                           : 'border-gray-200 bg-white text-gray-500 hover:border-primary hover:text-primary'
                                     } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
                                   >
-                                    {completed ? '✓' : `W${weekNum}`}
+                                    <span>Week {weekNum}</span>
+                                    <span className={`mt-1 text-[9px] ${completed ? 'text-white/90' : 'opacity-80'}`}>
+                                      {completed ? 'Marked' : selectedMonthIsFuture ? 'Locked' : 'Tap to mark'}
+                                    </span>
                                   </button>
                                 );
                               })}
                             </div>
                           </div>
-                          <div className="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm lg:min-w-[148px]">
-                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
-                            <p className="mt-1 font-semibold text-foreground">
-                              {selectedMonthIsFuture ? 'Locked until month starts' : 'Tap a week to update'}
+                          <div className="rounded-[1.2rem] border border-border/60 bg-white px-4 py-4 text-sm shadow-sm">
+                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What To Do</p>
+                            <p className="mt-2 font-semibold text-foreground">
+                              {selectedMonthIsFuture ? 'Locked until this month starts' : 'Tap a week to mark or unmark it'}
                             </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {selectedMonthIsFuture ? 'You can update this later.' : 'Green means the week is already marked.'}
+                            </p>
+                            <div className="mt-3 rounded-xl bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                              {completedCount > 0 ? totalDoneLabel : 'No weeks marked yet for this target.'}
+                            </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-3 rounded-[1.4rem] border border-white/70 bg-white/80 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
+                        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
+                          <div className="rounded-[1.2rem] border border-border/60 bg-muted/20 p-4">
+                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Month You Are Updating</p>
                             <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {selectedMonthIsFuture ? 'Available when the month begins.' : 'Use the toggle to mark this month complete.'}
+                              {selectedMonthIsFuture ? 'This month will open when it begins.' : 'Use the button to mark this month complete.'}
                             </p>
+                            <div className="mt-3 rounded-xl bg-white px-3 py-3 text-xs text-muted-foreground shadow-sm">
+                              {completedCount > 0 ? totalDoneLabel : 'No month marked yet for this target.'}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 rounded-2xl bg-background/80 px-3 py-2">
+                          <div className="rounded-[1.2rem] border border-border/60 bg-white p-4 shadow-sm">
+                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Action</p>
                             {selectedMonthIsFuture ? (
-                              <span className="text-xs font-semibold text-muted-foreground">Locked</span>
+                              <div className="mt-3 rounded-xl bg-muted/30 px-3 py-6 text-center text-xs font-semibold text-muted-foreground">Locked</div>
                             ) : (
                               (() => {
                                 const key = `${currentYear}-${selectedRecurringMonth}-0`;
@@ -533,14 +567,14 @@ const StateAdmin = () => {
                                     type="button"
                                     onClick={() => toggleMark(target._id, currentYear, selectedRecurringMonth, 0)}
                                     disabled={markingLoading === loadingKey}
-                                    className={`flex min-w-[144px] items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors ${
+                                    className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-semibold transition-colors ${
                                       completed
                                         ? 'bg-green-500 text-white'
                                         : 'bg-white text-muted-foreground hover:text-foreground'
                                     } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
                                   >
                                     {completed ? <CheckCircle className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                                    {completed ? 'Completed' : 'Mark Month'}
+                                    {completed ? 'Month Marked' : 'Mark This Month'}
                                   </button>
                                 );
                               })()
@@ -556,17 +590,6 @@ const StateAdmin = () => {
               </div>
           </SectionCard>
         )}
-
-      <SectionCard title="Quick Stats" description="Supporting totals for districts, groups, users, and contribution health.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {quickStats.map((item) => (
-                <div key={item.label} className="data-strip flex items-center justify-between gap-4">
-                  <span className="text-sm text-muted-foreground">{item.label}</span>
-                  <span className="text-sm font-semibold text-foreground">{item.value}</span>
-                </div>
-              ))}
-            </div>
-      </SectionCard>
 
       <BottomNav />
 

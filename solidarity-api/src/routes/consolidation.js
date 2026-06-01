@@ -9,6 +9,54 @@ import Group from '../models/Group.js';
 import District from '../models/District.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
+// Cache all district names (id -> name) for fallback when populate fails due to stale refs
+let districtNameCache = null;
+let districtNameCacheExpiry = 0;
+async function getDistrictNameMap() {
+  const now = Date.now();
+  if (districtNameCache && now < districtNameCacheExpiry) return districtNameCache;
+
+  districtNameCache = {};
+
+  // Primary: live district documents
+  const districts = await District.find({}).select('name').lean();
+  for (const d of districts) {
+    districtNameCache[d._id.toString()] = d.name;
+  }
+
+  // Secondary: resolve stale/orphan IDs by finding users named "X District Admin"
+  // whose district field references an ID not in the live districts collection
+  const daUsers = await User.find({
+    role: 'district_admin',
+    name: /District Admin$/i
+  }).select('name district').lean();
+
+  for (const u of daUsers) {
+    if (u.district) {
+      const id = u.district.toString();
+      if (!districtNameCache[id]) {
+        const match = u.name.match(/^(.+?)\s+District Admin$/i);
+        if (match) districtNameCache[id] = match[1];
+      }
+    }
+  }
+
+  districtNameCacheExpiry = now + 5 * 60 * 1000; // 5 min cache
+  return districtNameCache;
+}
+
+// Resolve district name from populated object, group's district, or cached fallback
+function resolveDistrictName(entity, districtMap) {
+  // If district was populated (has .name), use it
+  if (entity.district?.name) return entity.district.name;
+  // If group has populated district
+  if (entity.group?.district?.name) return entity.group.district.name;
+  // Fallback: resolve raw ObjectId via cached map (handles stale refs)
+  const rawId = entity.district?.toString?.();
+  if (rawId && districtMap[rawId]) return districtMap[rawId];
+  return '';
+}
+
 const router = express.Router();
 
 // Map frontend userType to targetAudience values
@@ -150,14 +198,14 @@ async function getRegularAdminConsolidation(target, userType, accessFilter, date
   const userQuery = buildUserQuery(userType, accessFilter);
   const users = await User.find(userQuery)
     .select('name phone role roleTag district group')
-    .populate('district', 'name')
-    .populate('group', 'name')
+    .populate({ path: 'group', select: 'name district', populate: { path: 'district', select: 'name' } })
     .lean();
 
   if (users.length === 0) {
     return { summary: { totalUsers: 0, completed: 0, pending: 0, completionRate: 0 }, monthlyBreakdown: [], users: { completed: [], pending: [] } };
   }
 
+  const districtMap = await getDistrictNameMap();
   const userIds = users.map(u => u._id);
 
   // Fetch progress records
@@ -186,7 +234,7 @@ async function getRegularAdminConsolidation(target, userType, accessFilter, date
       phone: user.phone,
       role: user.role,
       roleTag: user.roleTag?.type,
-      district: user.district?.name || '',
+      district: resolveDistrictName(user, districtMap),
       group: user.group?.name || ''
     };
 
@@ -328,8 +376,7 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
     const userQuery = buildUserQuery(userType, accessFilter);
     entities = await User.find(userQuery)
       .select('name phone role roleTag district group')
-      .populate('district', 'name')
-      .populate('group', 'name')
+      .populate({ path: 'group', select: 'name district', populate: { path: 'district', select: 'name' } })
       .lean();
   }
 
@@ -337,6 +384,7 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
     return { summary: { totalUsers: 0, completed: 0, pending: 0, completionRate: 0 }, monthlyBreakdown: [], users: { completed: [], pending: [] } };
   }
 
+  const districtMap = await getDistrictNameMap();
   const entityIds = entities.map(e => e._id);
 
   // Fetch recurring marks within date range
@@ -395,7 +443,7 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
       phone: entity.phone,
       role: entity.role || 'member',
       roleTag: entity.roleTag?.type,
-      district: entity.district?.name || '',
+      district: resolveDistrictName(entity, districtMap),
       group: entity.group?.name || '',
       completedMonths,
       completedCount: completedMonths.length,

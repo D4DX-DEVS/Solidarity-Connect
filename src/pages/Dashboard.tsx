@@ -112,7 +112,7 @@ const Dashboard = () => {
       <div className="app-page-orb app-page-orb-secondary" aria-hidden />
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
-        title="Area Admin Panel"
+        title="Area Admin Dashboard"
         subtitle={userGroup ? `${userGroup} - ${userDistrict}` : "Applicant - Thrissur"}
       />
 
@@ -120,7 +120,7 @@ const Dashboard = () => {
         <PageHero
           eyebrow="Daily Overview"
           title={`Welcome back, ${firstName}`}
-          subtitle="Your tools, recurring targets, meetings, and member status are all surfaced here with a cleaner mobile-first layout."
+          subtitle="Your members, meetings, recurring targets, and pending work are all shown here in one simple view."
           icon={<BarChart3 className="h-6 w-6" />}
           details={
             <>
@@ -159,7 +159,7 @@ const Dashboard = () => {
         <UserTargetsSection />
 
         {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
-          <SectionCard title="Upcoming Meetings" description="Next scheduled meetings at a glance.">
+          <SectionCard title="Upcoming Meetings" description="These are the next meetings planned for your area.">
               <div className="space-y-2">
                 {dashboardData.upcomingMeetings.slice(0, 3).map((meeting) => (
                   <div key={meeting._id} className="data-strip flex items-center justify-between gap-3">
@@ -173,7 +173,7 @@ const Dashboard = () => {
           </SectionCard>
         )}
 
-        <SectionCard title="Area Admin Tools" description="Common actions optimized for touch and fast navigation.">
+        <SectionCard title="Area Admin Tools" description="Quick links to the tools you use most often.">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {[
                 { label: "Members", path: "/members", Icon: Users },
