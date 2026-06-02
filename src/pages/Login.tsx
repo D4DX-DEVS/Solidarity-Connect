@@ -69,6 +69,23 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
+function getAvailableRoles(error: unknown): string[] | undefined {
+  if (typeof error === "object" && error !== null && "availableRoles" in error) {
+    const roles = (error as { availableRoles?: unknown }).availableRoles;
+    if (Array.isArray(roles)) {
+      return roles as string[];
+    }
+  }
+  return undefined;
+}
+
+const roleLabelMap: Record<string, string> = {
+  state_admin: "State Admin",
+  district_admin: "District Admin",
+  group_admin: "Area Admin",
+  member: "Member",
+};
+
 const Login = () => {
   const [userType, setUserType] = useState<UserType>("");
   const [phone, setPhone] = useState("");
@@ -145,11 +162,28 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Send OTP error:", error);
-      toast({
-        title: "Error",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
+
+      const availableRoles = getAvailableRoles(
+        typeof error === "object" && error !== null && "data" in error
+          ? (error as { data?: unknown }).data
+          : error
+      );
+
+      if (availableRoles && availableRoles.length > 0) {
+        const selectedLabel = roleLabelMap[userType] || userType;
+        toast({
+          title: "Invalid role",
+          description: `${selectedLabel} is not your role. Please select the correct role to continue.`,
+          variant: "destructive",
+          duration: 8000,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: getErrorMessage(error),
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }

@@ -135,9 +135,21 @@ router.post('/send-otp', memberLoginValidation, formatPhoneNumber, async (req, r
       .populate('group', 'name');
 
     if (!member) {
+      // Check if this phone has admin roles instead
+      // Normalize phone to check both formats (Users stored without +91, Members with +91)
+      const phoneWithPrefix = phone.startsWith('+91') ? phone : `+91${phone}`;
+      const phoneWithoutPrefix = phone.startsWith('+91') ? phone.slice(3) : phone;
+
+      const adminUsers = await User.find({
+        phone: { $in: [phone, phoneWithPrefix, phoneWithoutPrefix] },
+        isActive: true
+      }).select('role').lean();
+      const availableRoles = adminUsers.map(u => u.role);
+
       return res.status(404).json({
         success: false,
-        message: 'Member not found or not approved. Please contact your group admin.'
+        message: 'Member not found or not approved. Please contact your group admin.',
+        availableRoles: availableRoles.length > 0 ? availableRoles : undefined
       });
     }
 

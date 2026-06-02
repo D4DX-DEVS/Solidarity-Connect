@@ -47,7 +47,9 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
     if (!response.ok) {
       console.error(`❌ API Error: ${response.status}`, data);
-      throw new Error(data.message || `HTTP ${response.status}`);
+      const error = new Error(data.message || `HTTP ${response.status}`) as Error & { data?: any };
+      error.data = data;
+      throw error;
     }
 
     console.log(`✅ API Success: ${config.method || 'GET'} ${url}`);
@@ -90,6 +92,12 @@ export const authAPI = {
     apiCall('/auth/resend-otp', {
       method: 'POST',
       body: JSON.stringify({ phone, userType }),
+    }),
+
+  checkRoles: (phone: string) =>
+    apiCall('/auth/check-roles', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
     }),
 
   getProfile: () => apiCall('/auth/me'),

@@ -1,10 +1,41 @@
 import User from '../models/User.js';
+import Member from '../models/Member.js';
 import dxingService from './dxingService.js';
 
 class OTPService {
   // Generate 4-digit OTP
   generateOTP() {
     return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  // Get all available roles for a phone number
+  async getAvailableRoles(phone) {
+    const roles = [];
+
+    // Normalize phone to check both formats (with and without +91)
+    const phoneWithPrefix = phone.startsWith('+91') ? phone : `+91${phone}`;
+    const phoneWithoutPrefix = phone.startsWith('+91') ? phone.slice(3) : phone;
+
+    // Check User collection for admin roles (stored without +91)
+    const users = await User.find({
+      phone: { $in: [phone, phoneWithPrefix, phoneWithoutPrefix] },
+      isActive: true
+    }).select('role').lean();
+    for (const u of users) {
+      roles.push(u.role);
+    }
+
+    // Check Member collection (stored with +91)
+    const member = await Member.findOne({
+      phone: { $in: [phone, phoneWithPrefix, phoneWithoutPrefix] },
+      status: 'Active',
+      isApproved: true
+    }).lean();
+    if (member) {
+      roles.push('member');
+    }
+
+    return roles;
   }
 
   // Send OTP to user
@@ -14,9 +45,13 @@ class OTPService {
       let user = await User.findOne({ phone, role: userType });
       
       if (!user) {
+        // Check what roles this phone actually has
+        const availableRoles = await this.getAvailableRoles(phone);
+
         return {
           success: false,
-          message: `No ${userType.replace('_', ' ')} found with this phone number. Please contact administrator.`
+          message: `No ${userType.replace('_', ' ')} found with this phone number. Please contact administrator.`,
+          availableRoles: availableRoles.length > 0 ? availableRoles : undefined
         };
       }
 

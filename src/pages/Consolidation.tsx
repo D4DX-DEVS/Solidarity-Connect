@@ -126,10 +126,38 @@ export default function Consolidation() {
     }
   }, [selectedUserType, selectedTargetId, selectedDistrictId, selectedGroupId, dateMode, dateFrom, dateTo]);
 
+  // Reset month selection when a new report is generated
+  useEffect(() => {
+    setSelectedMonthKey(null);
+  }, [report]);
+
+  // For recurring targets, filter detailed view by the selected month
+  const detailedUsers = useMemo(() => {
+    if (!report) return { completed: [], pending: [] };
+    if (report.target.isRecurring && selectedMonthKey) {
+      const allUsers = [...report.users.completed, ...report.users.pending];
+      return {
+        completed: allUsers.filter(u => u.completedMonths?.includes(selectedMonthKey)),
+        pending: allUsers.filter(u => !u.completedMonths?.includes(selectedMonthKey)),
+      };
+    }
+    return report.users;
+  }, [report, selectedMonthKey]);
+
+  const selectedMonthLabel = useMemo(() => {
+    if (!selectedMonthKey || !report?.monthlyBreakdown) return null;
+    return report.monthlyBreakdown.find(m => `${m.year}-${m.month}` === selectedMonthKey)?.label ?? null;
+  }, [selectedMonthKey, report]);
+
   const handleExportExcel = useCallback(() => {
     if (!report) return;
 
     const wb = XLSX.utils.book_new();
+
+    // Use month-filtered data if a month is selected, otherwise overall
+    const exportCompleted = detailedUsers.completed;
+    const exportPending = detailedUsers.pending;
+    const isMonthFiltered = report.target.isRecurring && !!selectedMonthKey;
 
     // Summary sheet
     const summaryData = [
@@ -137,33 +165,39 @@ export default function Consolidation() {
       ['Target', report.target.title],
       ['Category', report.target.category],
       ['Type', report.target.isRecurring ? `Recurring (${report.target.recurringFrequency})` : 'Regular'],
+      ...(isMonthFiltered ? [['Filtered Month', selectedMonthLabel || '']] : []),
       [],
       ['Summary'],
       ['Total Users', report.summary.totalUsers],
-      ['Completed', report.summary.completed],
-      ['Pending', report.summary.pending],
-      ['Completion Rate', `${report.summary.completionRate}%`],
+      ['Completed', exportCompleted.length],
+      ['Pending', exportPending.length],
+      ['Completion Rate', `${report.summary.totalUsers > 0 ? Math.round((exportCompleted.length / report.summary.totalUsers) * 1000) / 10 : 0}%`],
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
     // Completed users sheet
-    if (report.users.completed.length > 0) {
-      const completedData = report.users.completed.map(u => ({
+    if (exportCompleted.length > 0) {
+      const completedData = exportCompleted.map(u => ({
         Name: u.name,
         Phone: u.phone,
         District: u.district,
         Group: u.group,
-        'Completed At': u.completedAt ? new Date(u.completedAt).toLocaleDateString() : 'N/A',
-        ...(report.target.isRecurring ? { 'Completed Months': u.completedMonths?.join(', ') || '' } : {})
+        ...(report.target.isRecurring ? {
+          'Completed Count': u.completedCount || 0,
+          'Total Periods': u.totalPeriods || 0,
+          'Completed Months': u.completedMonths?.join(', ') || ''
+        } : {
+          'Completed At': u.completedAt ? new Date(u.completedAt).toLocaleDateString() : 'N/A',
+        })
       }));
       const completedSheet = XLSX.utils.json_to_sheet(completedData);
       XLSX.utils.book_append_sheet(wb, completedSheet, 'Completed');
     }
 
     // Pending users sheet
-    if (report.users.pending.length > 0) {
-      const pendingData = report.users.pending.map(u => ({
+    if (exportPending.length > 0) {
+      const pendingData = exportPending.map(u => ({
         Name: u.name,
         Phone: u.phone,
         District: u.district,
@@ -193,30 +227,7 @@ export default function Consolidation() {
 
     XLSX.writeFile(wb, `consolidation-report-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast({ title: 'Exported', description: 'Report exported as Excel file' });
-  }, [report]);
-
-  // Reset month selection when a new report is generated
-  useEffect(() => {
-    setSelectedMonthKey(null);
-  }, [report]);
-
-  // For recurring targets, filter detailed view by the selected month
-  const detailedUsers = useMemo(() => {
-    if (!report) return { completed: [], pending: [] };
-    if (report.target.isRecurring && selectedMonthKey) {
-      const allUsers = [...report.users.completed, ...report.users.pending];
-      return {
-        completed: allUsers.filter(u => u.completedMonths?.includes(selectedMonthKey)),
-        pending: allUsers.filter(u => !u.completedMonths?.includes(selectedMonthKey)),
-      };
-    }
-    return report.users;
-  }, [report, selectedMonthKey]);
-
-  const selectedMonthLabel = useMemo(() => {
-    if (!selectedMonthKey || !report?.monthlyBreakdown) return null;
-    return report.monthlyBreakdown.find(m => `${m.year}-${m.month}` === selectedMonthKey)?.label ?? null;
-  }, [selectedMonthKey, report]);
+  }, [report, detailedUsers, selectedMonthKey, selectedMonthLabel]);
 
   const showDistrictFilter = selectedUserType && NEEDS_DISTRICT_FILTER.includes(selectedUserType);
   const showGroupFilter = selectedUserType && NEEDS_GROUP_FILTER.includes(selectedUserType);
