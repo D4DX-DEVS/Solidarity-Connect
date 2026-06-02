@@ -2,14 +2,13 @@ import { Users, ArrowLeft, Download, TrendingUp, Loader2, ChevronLeft, ChevronRi
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 interface GroupStats {
   _id: string;
@@ -298,40 +297,46 @@ const MembersGroupReport = () => {
           <SectionCard title="Report Filters" description="Limit the report to a district, group, or different page size.">
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                <select
-                  className={formSelectClassName}
-                  value={selectedDistrict}
-                  onChange={(e) => handleDistrictChange(e.target.value)}
+                <Select
+                  value={selectedDistrict || "all"}
+                  onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
                 >
-                  <option value="">All Districts</option>
-                  {districts.map((district) => (
-                    <option key={district._id} value={district._id}>
-                      {district.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  className={formSelectClassName}
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Districts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districts.map((district) => (
+                      <SelectItem key={district._id} value={district._id}>
+                        {district.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={selectedGroup || "all"}
+                  onValueChange={(val) => setSelectedGroup(val === "all" ? "" : val)}
                 >
-                  <option value="">All Groups</option>
-                  {selectedDistrict ? (
-                    // Show groups from selected district
-                    districtGroups.map((group) => (
-                      <option key={group._id} value={group._id}>
-                        {group.name} ({group.code})
-                      </option>
-                    ))
-                  ) : (
-                    // Show all groups from reports data
-                    groups.map((group) => (
-                      <option key={group._id} value={group._id}>
-                        {group.groupName} ({group.groupCode})
-                      </option>
-                    ))
-                  )}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Groups" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Groups</SelectItem>
+                    {selectedDistrict ? (
+                      districtGroups.map((group) => (
+                        <SelectItem key={group._id} value={group._id}>
+                          {group.name} ({group.code})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      groups.map((group) => (
+                        <SelectItem key={group._id} value={group._id}>
+                          {group.groupName} ({group.groupCode})
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               {(selectedDistrict || selectedGroup) && (
                 <Button
@@ -372,16 +377,20 @@ const MembersGroupReport = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <select
-                    className="rounded-md border border-border/70 bg-background px-2 py-1 text-sm"
-                    value={pageSize}
-                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(val) => handlePageSizeChange(Number(val))}
                   >
-                    <option value={5}>5 per page</option>
-                    <option value={10}>10 per page</option>
-                    <option value={20}>20 per page</option>
-                    <option value={50}>50 per page</option>
-                  </select>
+                    <SelectTrigger className="w-[130px] h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 per page</SelectItem>
+                      <SelectItem value="10">10 per page</SelectItem>
+                      <SelectItem value="20">20 per page</SelectItem>
+                      <SelectItem value="50">50 per page</SelectItem>
+                    </SelectContent>
+                  </Select>
                   
                   <div className="flex items-center gap-1">
                     <Button

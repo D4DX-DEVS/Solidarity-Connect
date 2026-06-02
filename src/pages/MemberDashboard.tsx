@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,8 @@ import {
   File,
   Eye,
   Download,
-  Search
+  Search,
+  Link2
 } from "lucide-react";
 
 interface MemberProfile {
@@ -173,6 +175,7 @@ const orgCategoryLabels: Record<string, string> = {
   video: "Video",
   audio: "Audio",
   document: "Document",
+  link: "Link",
   other: "Other"
 };
 
@@ -182,10 +185,12 @@ const orgCategoryIcons: Record<string, React.ElementType> = {
   video: Film,
   audio: Music,
   document: FileText,
+  link: Link2,
   other: File
 };
 
-const formatOrgFileSize = (bytes: number) => {
+const formatOrgFileSize = (bytes: number | undefined) => {
+  if (!bytes) return "";
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${bytes} B`;
@@ -884,17 +889,20 @@ const MemberDashboard = () => {
               </div>
               <div>
                 <label htmlFor="member-profile-blood-group" className="text-sm font-medium">Blood Group</label>
-                <select
-                  id="member-profile-blood-group"
-                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm bg-background"
-                  value={editProfileForm.bloodGroup}
-                  onChange={e => setEditProfileForm(p => ({ ...p, bloodGroup: e.target.value }))}
+                <Select
+                  value={editProfileForm.bloodGroup || "none"}
+                  onValueChange={(val) => setEditProfileForm(p => ({ ...p, bloodGroup: val === "none" ? "" : val }))}
                 >
-                  <option value="">Select blood group</option>
-                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
-                    <option key={bg} value={bg}>{bg}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select blood group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Select blood group</SelectItem>
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
+                      <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label htmlFor="member-profile-profession" className="text-sm font-medium">Profession</label>
@@ -1383,7 +1391,7 @@ const MemberDashboard = () => {
   };
 
   const renderOrgFilesContent = () => {
-    const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other"];
+    const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other"];
     return (
       <div className="space-y-3 org-files-malayalam">
         <Card>
@@ -1455,21 +1463,36 @@ const MemberDashboard = () => {
                         </Badge>
                         <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
                       </div>
+                      {file.link && (
+                        <a href={file.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                          <Link2 className="h-3 w-3" />{file.link.length > 50 ? file.link.slice(0, 50) + "..." : file.link}
+                        </a>
+                      )}
                       <div className="flex gap-2 mt-2">
-                        <a href={file.url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="outline" className="text-xs h-7">
-                            {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
-                              <><Eye className="h-3 w-3 mr-1" />Open</>
-                            ) : (
-                              <><Eye className="h-3 w-3 mr-1" />View</>
-                            )}
-                          </Button>
-                        </a>
-                        <a href={file.url} download>
-                          <Button size="sm" variant="ghost" className="text-xs h-7">
-                            <Download className="h-3 w-3 mr-1" />Download
-                          </Button>
-                        </a>
+                        {file.category === "link" && file.link ? (
+                          <a href={file.link} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="text-xs h-7">
+                              <Link2 className="h-3 w-3 mr-1" />Open Link
+                            </Button>
+                          </a>
+                        ) : file.url ? (
+                          <>
+                            <a href={file.url} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="text-xs h-7">
+                                {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
+                                  <><Eye className="h-3 w-3 mr-1" />Open</>
+                                ) : (
+                                  <><Eye className="h-3 w-3 mr-1" />View</>
+                                )}
+                              </Button>
+                            </a>
+                            <a href={file.url} download>
+                              <Button size="sm" variant="ghost" className="text-xs h-7">
+                                <Download className="h-3 w-3 mr-1" />Download
+                              </Button>
+                            </a>
+                          </>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -1663,7 +1686,7 @@ const MemberDashboard = () => {
 
       <SectionCard
         title={`${activeViewLabel} Workspace`}
-        description="Use the bottom tabs to move between member sections while keeping the existing dashboard actions unchanged."
+        description="Use the bottom menu to switch between your targets, meetings, leaders, and alerts."
       >
         <div className="space-y-4">
           {renderContent()}

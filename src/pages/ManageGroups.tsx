@@ -3,6 +3,7 @@ import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -11,8 +12,6 @@ import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
 import { useDistricts } from "@/hooks/useDistricts";
 import { Group } from "@/lib/groups";
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const ManageGroups = () => {
   const navigate = useNavigate();
@@ -132,23 +131,22 @@ const ManageGroups = () => {
                 Loading districts...
               </div>
             ) : (
-              <select
-                id="selected-district"
-                className={formSelectClassName}
+              <Select
                 value={selectedDistrictId}
-                onChange={(e) => setSelectedDistrictId(e.target.value)}
+                onValueChange={(val) => setSelectedDistrictId(val)}
                 disabled={districts.length === 0}
               >
-                {districts.length === 0 ? (
-                  <option value="">No districts available</option>
-                ) : (
-                  districts.map((district) => (
-                    <option key={district._id} value={district._id}>
+                <SelectTrigger>
+                  <SelectValue placeholder={districts.length === 0 ? "No districts available" : "Select district"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((district) => (
+                    <SelectItem key={district._id} value={district._id}>
                       {district.name}
-                    </option>
-                  ))
-                )}
-              </select>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FileText, Film, Music, Upload, Trash2, Edit, ArrowLeft,
-  Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff, Search
+  Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff, Search, Link2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ interface OrgFile {
   category: string;
   fileType: "general" | "membership_form";
   url: string;
+  link?: string;
   originalName: string;
   mimetype: string;
   size: number;
@@ -50,6 +51,7 @@ const categoryLabels: Record<string, string> = {
   video: "Video",
   audio: "Audio",
   document: "Document",
+  link: "Link",
   other: "Other"
 };
 
@@ -59,10 +61,12 @@ const categoryIcons: Record<string, React.ElementType> = {
   video: Film,
   audio: Music,
   document: FileText,
+  link: Link2,
   other: File
 };
 
-const formatFileSize = (bytes: number) => {
+const formatFileSize = (bytes: number | undefined) => {
+  if (!bytes) return "";
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${bytes} B`;
@@ -106,7 +110,8 @@ const OrgFiles = () => {
     title: "",
     description: "",
     category: "document",
-    fileType: "general" as "general" | "membership_form"
+    fileType: "general" as "general" | "membership_form",
+    link: ""
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -116,7 +121,8 @@ const OrgFiles = () => {
     description: "",
     category: "document",
     fileType: "general" as "general" | "membership_form",
-    isActive: true
+    isActive: true,
+    link: ""
   });
 
   useEffect(() => {
@@ -151,24 +157,34 @@ const OrgFiles = () => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !uploadForm.title) {
-      toast({ title: "Error", description: "Please provide a title and select a file", variant: "destructive" });
+    const isLinkCategory = uploadForm.category === "link";
+    if (!uploadForm.title) {
+      toast({ title: "Error", description: "Please provide a title", variant: "destructive" });
+      return;
+    }
+    if (isLinkCategory && !uploadForm.link) {
+      toast({ title: "Error", description: "Please provide a link URL", variant: "destructive" });
+      return;
+    }
+    if (!isLinkCategory && !selectedFile) {
+      toast({ title: "Error", description: "Please select a file", variant: "destructive" });
       return;
     }
     try {
       setUploading(true);
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      if (selectedFile) formData.append("file", selectedFile);
       formData.append("title", uploadForm.title);
       formData.append("description", uploadForm.description);
       formData.append("category", uploadForm.category);
       formData.append("fileType", uploadForm.fileType);
+      if (uploadForm.link) formData.append("link", uploadForm.link);
 
       await multipartApiCall("/org-files", formData);
       toast({ title: "File Uploaded", description: "File has been uploaded successfully." });
       setShowUploadDialog(false);
       setSelectedFile(null);
-      setUploadForm({ title: "", description: "", category: "document", fileType: "general" });
+      setUploadForm({ title: "", description: "", category: "document", fileType: "general", link: "" });
       await fetchFiles();
     } catch (error: any) {
       toast({ title: "Upload Failed", description: error.message || "Failed to upload file", variant: "destructive" });
@@ -214,7 +230,8 @@ const OrgFiles = () => {
       description: file.description || "",
       category: file.category,
       fileType: file.fileType,
-      isActive: file.isActive
+      isActive: file.isActive,
+      link: file.link || ""
     });
     setShowEditDialog(true);
   };
@@ -224,7 +241,7 @@ const OrgFiles = () => {
     return true;
   });
 
-  const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "other", ...(canSeeMembershipForm ? ["membership_form"] : [])];
+  const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other", ...(canSeeMembershipForm ? ["membership_form"] : [])];
   const hiddenFiles = files.filter((file) => !file.isActive).length;
   const membershipFiles = files.filter((file) => file.fileType === "membership_form").length;
 
@@ -328,29 +345,44 @@ const OrgFiles = () => {
                             <Badge variant="outline" className="text-xs capitalize">
                               {isMembershipForm ? "Membership Form" : categoryLabels[file.category] || file.category}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">{formatFileSize(file.size)}</span>
-                            <span className="text-xs text-muted-foreground malayalam-text">{decodeFilename(file.originalName)}</span>
+                            <span className="text-xs text-muted-foreground">{file.size ? formatFileSize(file.size) : ""}</span>
+                            {file.originalName && <span className="text-xs text-muted-foreground malayalam-text">{decodeFilename(file.originalName)}</span>}
                           </div>
+                          {file.link && (
+                            <a href={file.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
+                              <Link2 className="h-3 w-3" />{file.link.length > 50 ? file.link.slice(0, 50) + "..." : file.link}
+                            </a>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex gap-2 mt-3 flex-wrap">
-                        <a href={file.url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" variant="outline" className="text-xs h-7">
-                            {isMembershipForm ? (
-                              <><Download className="h-3 w-3 mr-1" />Download</>
-                            ) : (
-                              <><Eye className="h-3 w-3 mr-1" />View</>
-                            )}
-                          </Button>
-                        </a>
-                        {isMembershipForm && (
-                          <a href={file.url} download>
-                            <Button size="sm" variant="default" className="text-xs h-7">
-                              <Download className="h-3 w-3 mr-1" />Download PDF
+                        {file.category === "link" && file.link ? (
+                          <a href={file.link} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="outline" className="text-xs h-7">
+                              <Link2 className="h-3 w-3 mr-1" />Open Link
                             </Button>
                           </a>
-                        )}
+                        ) : file.url ? (
+                          <>
+                            <a href={file.url} target="_blank" rel="noopener noreferrer">
+                              <Button size="sm" variant="outline" className="text-xs h-7">
+                                {isMembershipForm ? (
+                                  <><Download className="h-3 w-3 mr-1" />Download</>
+                                ) : (
+                                  <><Eye className="h-3 w-3 mr-1" />View</>
+                                )}
+                              </Button>
+                            </a>
+                            {isMembershipForm && (
+                              <a href={file.url} download>
+                                <Button size="sm" variant="default" className="text-xs h-7">
+                                  <Download className="h-3 w-3 mr-1" />Download PDF
+                                </Button>
+                              </a>
+                            )}
+                          </>
+                        ) : null}
                         {isStateAdmin && (
                           <>
                             <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => openEditDialog(file)}>
@@ -414,6 +446,7 @@ const OrgFiles = () => {
                     <SelectItem value="video">Video</SelectItem>
                     <SelectItem value="audio">Audio</SelectItem>
                     <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="link">Link</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -431,6 +464,18 @@ const OrgFiles = () => {
                 </Select>
               </div>
             </div>
+            <div>
+              <label className="text-sm font-medium">Link {uploadForm.category === "link" ? "*" : "(optional)"}</label>
+              <Input
+                placeholder="https://youtube.com/... or any URL"
+                value={uploadForm.link}
+                onChange={e => setUploadForm(p => ({ ...p, link: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {uploadForm.category === "link" ? "Paste the link URL (file upload not needed)" : "Add a YouTube, social media, or any external link"}
+              </p>
+            </div>
+            {uploadForm.category !== "link" && (
             <div>
               <label className="text-sm font-medium">File *</label>
               <div
@@ -460,11 +505,12 @@ const OrgFiles = () => {
                 onChange={e => setSelectedFile(e.target.files?.[0] || null)}
               />
             </div>
+            )}
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowUploadDialog(false)} disabled={uploading}>Cancel</Button>
-            <Button onClick={handleUpload} disabled={uploading || !selectedFile || !uploadForm.title}>
-              {uploading ? "Uploading..." : <><Upload className="h-4 w-4 mr-1" />Upload</>}
+            <Button onClick={handleUpload} disabled={uploading || !uploadForm.title || (uploadForm.category === "link" ? !uploadForm.link : !selectedFile)}>
+              {uploading ? "Uploading..." : <><Upload className="h-4 w-4 mr-1" />{uploadForm.category === "link" ? "Add Link" : "Upload"}</>}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -496,6 +542,7 @@ const OrgFiles = () => {
                     <SelectItem value="video">Video</SelectItem>
                     <SelectItem value="audio">Audio</SelectItem>
                     <SelectItem value="document">Document</SelectItem>
+                    <SelectItem value="link">Link</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -510,6 +557,14 @@ const OrgFiles = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Link (optional)</label>
+              <Input
+                placeholder="https://youtube.com/... or any URL"
+                value={editForm.link}
+                onChange={e => setEditForm(p => ({ ...p, link: e.target.value }))}
+              />
             </div>
             <div className="flex items-center gap-2">
               <Button

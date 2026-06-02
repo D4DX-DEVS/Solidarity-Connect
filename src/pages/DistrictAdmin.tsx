@@ -158,7 +158,7 @@ const DistrictAdmin = () => {
     <PageShell>
       <PageHero
         eyebrow="District Control"
-        title="District Admin Panel"
+        title="District Admin Dashboard"
         subtitle={user?.district?.name || "District"}
         icon={<Building2 className="h-6 w-6" />}
         actions={
@@ -209,7 +209,7 @@ const DistrictAdmin = () => {
 
       <SectionCard
         title="Transfer Approvals"
-        description="Requests that need district review before state-level approval."
+        description="These transfer requests need district review before they move forward."
         action={
           <div className="flex items-center gap-2">
             {pendingTransfers.length > 0 && <Badge variant="destructive">{pendingTransfers.length}</Badge>}
@@ -283,7 +283,7 @@ const DistrictAdmin = () => {
             )}
       </SectionCard>
 
-      <SectionCard title="District Tools" description="Fast access to the most used district workflows.">
+      <SectionCard title="District Tools" description="Quick links to the district tasks used most often.">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {districtTools.map(({ label, path, Icon }) => (
                 <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>

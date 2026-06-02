@@ -67,8 +67,9 @@ const isAreaAdmin = (user) => {
 // @access  State Admin only
 router.post('/', authenticate, requireRole('state_admin'), upload.single('file'), [
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title is required'),
-  body('category').isIn(['constitution', 'guidelines', 'video', 'audio', 'document', 'other']).withMessage('Invalid category'),
-  body('fileType').optional().isIn(['general', 'membership_form']).withMessage('Invalid file type')
+  body('category').isIn(['constitution', 'guidelines', 'video', 'audio', 'document', 'link', 'other']).withMessage('Invalid category'),
+  body('fileType').optional().isIn(['general', 'membership_form']).withMessage('Invalid file type'),
+  body('link').optional({ values: 'falsy' }).isURL().withMessage('Invalid URL format')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -76,6 +77,30 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
       return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
     }
 
+    const isLinkCategory = req.body.category === 'link';
+
+    // Link category requires a link, not a file
+    if (isLinkCategory) {
+      if (!req.body.link) {
+        return res.status(400).json({ success: false, message: 'Link URL is required for link category' });
+      }
+
+      const orgFile = new OrgFile({
+        title: req.body.title,
+        description: req.body.description,
+        category: req.body.category,
+        fileType: req.body.fileType || 'general',
+        link: req.body.link,
+        uploadedBy: req.user._id
+      });
+
+      await orgFile.save();
+      await orgFile.populate('uploadedBy', 'name role');
+
+      return res.status(201).json({ success: true, message: 'Link added successfully', data: orgFile });
+    }
+
+    // Non-link categories require a file
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
@@ -108,6 +133,7 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
       description: req.body.description,
       category: req.body.category,
       fileType: req.body.fileType || 'general',
+      link: req.body.link || undefined,
       url: fileUrl,
       filename: key,
       originalName: decodeOriginalName(req.file.originalname),
@@ -133,7 +159,12 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const { category, fileType, search } = req.query;
 
-    let filter = { isActive: true };
+    let filter = {};
+
+    // State admin sees all files (including hidden); others see only active
+    if (req.user.role !== 'state_admin') {
+      filter.isActive = true;
+    }
 
     // Restrict membership_form visibility
     // Visible to state_admin and all group_admin users (area admins and local group admins)
@@ -172,8 +203,9 @@ router.get('/', authenticate, async (req, res) => {
 // @access  State Admin only
 router.put('/:id', authenticate, requireRole('state_admin'), [
   body('title').optional().trim().isLength({ min: 1, max: 200 }).withMessage('Title must be between 1 and 200 characters'),
-  body('category').optional().isIn(['constitution', 'guidelines', 'video', 'audio', 'document', 'other']).withMessage('Invalid category'),
-  body('fileType').optional().isIn(['general', 'membership_form']).withMessage('Invalid file type')
+  body('category').optional().isIn(['constitution', 'guidelines', 'video', 'audio', 'document', 'link', 'other']).withMessage('Invalid category'),
+  body('fileType').optional().isIn(['general', 'membership_form']).withMessage('Invalid file type'),
+  body('link').optional({ values: 'falsy' }).isURL().withMessage('Invalid URL format')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -186,12 +218,13 @@ router.put('/:id', authenticate, requireRole('state_admin'), [
       return res.status(404).json({ success: false, message: 'File not found' });
     }
 
-    const { title, description, category, fileType, isActive } = req.body;
+    const { title, description, category, fileType, isActive, link } = req.body;
     if (title !== undefined) orgFile.title = title;
     if (description !== undefined) orgFile.description = description;
     if (category !== undefined) orgFile.category = category;
     if (fileType !== undefined) orgFile.fileType = fileType;
     if (isActive !== undefined) orgFile.isActive = isActive;
+    if (link !== undefined) orgFile.link = link;
     orgFile.updatedBy = req.user._id;
 
     await orgFile.save();

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { districtsAPI, transferRequestsAPI } from "@/utils/api";
 
@@ -143,38 +144,42 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Target District *</label>
-            <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
+            <Select
               value={formData.targetDistrict}
-              onChange={(e) => setFormData({ ...formData, targetDistrict: e.target.value })}
-              required
+              onValueChange={(val) => setFormData({ ...formData, targetDistrict: val })}
               disabled={loading}
             >
-              <option value="">Select District</option>
-              {districts.map((district) => (
-                <option key={district._id} value={district._id}>
-                  {district.name} ({district.code})
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map((district) => (
+                  <SelectItem key={district._id} value={district._id}>
+                    {district.name} ({district.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <label className="text-sm font-medium mb-2 block">Target Group *</label>
-            <select
-              className="w-full px-3 py-2 border rounded-md bg-background"
+            <Select
               value={formData.targetGroup}
-              onChange={(e) => setFormData({ ...formData, targetGroup: e.target.value })}
-              required
+              onValueChange={(val) => setFormData({ ...formData, targetGroup: val })}
               disabled={loading || !formData.targetDistrict}
             >
-              <option value="">Select Group</option>
-              {groups.map((group) => (
-                <option key={group._id} value={group._id}>
-                  {group.name} ({group.code})
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder={formData.targetDistrict ? "Select Group" : "Select district first"} />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map((group) => (
+                  <SelectItem key={group._id} value={group._id}>
+                    {group.name} ({group.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

@@ -699,34 +699,64 @@ const UserTargetsSection = () => {
       {recurringProgress.length > 0 && (
         <SectionCard
           title="Recurring Targets"
-          description="Track your weekly and monthly recurring progress at a glance."
+          description="These targets repeat every week or month. Open a card, choose the time period, and tap when you finish it."
           action={<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>}
         >
+            <div className="mb-5 grid gap-3 md:grid-cols-3">
+              <div className="rounded-[1.25rem] border border-blue-100 bg-blue-50/80 p-4">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-blue-700">Step 1</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">Choose the year</p>
+                <p className="mt-1 text-xs text-muted-foreground">Use the arrows to move between years before you mark anything.</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-amber-100 bg-amber-50/80 p-4">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-amber-700">Step 2</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">Open one target</p>
+                <p className="mt-1 text-xs text-muted-foreground">Each target shows whether it repeats every month or every week.</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-green-100 bg-green-50/80 p-4">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-green-700">Step 3</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">Tap to mark finished work</p>
+                <p className="mt-1 text-xs text-muted-foreground">Green means done. Grey means not marked yet. Future periods stay locked.</p>
+              </div>
+            </div>
+
             {/* Year selector */}
-            <div className="flex items-center gap-3 mb-5">
-              <button
-                onClick={() => setRecurringYear(y => y - 1)}
-                className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-              >
-                &larr;
-              </button>
-              <span className="text-base font-bold tracking-tight min-w-[3rem] text-center">{recurringYear}</span>
-              <button
-                onClick={() => setRecurringYear(y => y + 1)}
-                className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                disabled={recurringYear >= new Date().getFullYear()}
-              >
-                &rarr;
-              </button>
-              {/* Progress summary */}
-              <div className="ml-auto flex items-center gap-2">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                  <span>Done</span>
+            <div className="mb-5 rounded-[1.3rem] border border-border/60 bg-muted/20 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setRecurringYear(y => y - 1)}
+                    className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    aria-label="View previous year"
+                  >
+                    &larr;
+                  </button>
+                  <div>
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Viewing Year</p>
+                    <p className="text-base font-bold tracking-tight text-foreground">{recurringYear}</p>
+                  </div>
+                  <button
+                    onClick={() => setRecurringYear(y => y + 1)}
+                    className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    disabled={recurringYear >= new Date().getFullYear()}
+                    aria-label="View next year"
+                  >
+                    &rarr;
+                  </button>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <div className="h-2.5 w-2.5 rounded-full bg-gray-200 border border-gray-300" />
-                  <span>Pending</span>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                    <span>Done</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-gray-200 border border-gray-300" />
+                    <span>Not done yet</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-blue-200 border border-blue-300" />
+                    <span>Current time period</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -737,6 +767,7 @@ const UserTargetsSection = () => {
                 if (!target) return null;
                 const isExpanded = expandedRecurringId === progress._id;
                 const freq = target.recurringFrequency || 'monthly';
+                const isWeekly = freq === 'weekly';
 
                 // Calculate progress for this target
                 const today = new Date();
@@ -758,12 +789,19 @@ const UserTargetsSection = () => {
                   }
                 }
                 const progressPct = totalSlots > 0 ? Math.round((completedSlots / totalSlots) * 100) : 0;
+                const summaryLabel = `${completedSlots} of ${totalSlots} ${isWeekly ? 'weeks' : 'months'} marked`;
+                const actionLabel = isWeekly
+                  ? 'Open to choose a month and tap each finished week.'
+                  : target.attendanceNeeded && isAreaAdmin
+                    ? 'Open to mark the month and record attendance.'
+                    : 'Open to mark each finished month.';
+                const expandedButtonLabel = isExpanded ? 'Hide details' : 'Show details';
 
                 return (
                   <div key={progress._id} className="rounded-[1.4rem] border border-border/60 bg-background/80 shadow-sm overflow-hidden">
                     {/* Header */}
                     <div
-                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => setExpandedRecurringId(isExpanded ? null : progress._id)}
                     >
                       <span className="text-xl shrink-0">{getCategoryIcon(target.category)}</span>
@@ -772,21 +810,22 @@ const UserTargetsSection = () => {
                           <p className="font-semibold text-sm truncate">{target.title}</p>
                           <Badge className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 border-blue-200 shrink-0">
                             <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
-                            {FREQ_LABELS[freq] || freq}
+                            Repeats {FREQ_LABELS[freq] || freq}
                           </Badge>
                           {target.attendanceNeeded && isAreaAdmin && (
                             <Badge className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 border-amber-200 shrink-0">
                               <Users className="h-2.5 w-2.5 mr-1 inline" />
-                              Attendance
+                              Attendance needed
                             </Badge>
                           )}
                         </div>
-                        {target.instructions && !isExpanded && (
-                          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{target.instructions}</p>
-                        )}
+                        <p className="mt-1 text-xs font-medium text-foreground/80">{summaryLabel}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                          {isExpanded && target.instructions ? target.instructions : actionLabel}
+                        </p>
                       </div>
                       {/* Progress indicator */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-3 shrink-0">
                         <div className="relative h-9 w-9">
                           <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-100" />
@@ -794,7 +833,8 @@ const UserTargetsSection = () => {
                           </svg>
                           <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-green-700">{progressPct}%</span>
                         </div>
-                        <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                        <button className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                          <span>{expandedButtonLabel}</span>
                           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </button>
                       </div>
@@ -805,6 +845,11 @@ const UserTargetsSection = () => {
                       <div className="px-4 pb-4 pt-1 border-t border-border/40">
                         {freq === 'weekly' ? (
                           <div className="mt-3">
+                            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+                              <p className="font-semibold">How to update this target</p>
+                              <p className="mt-1">1. Choose a month. 2. Tap each week you completed. Future months stay locked until that month begins.</p>
+                            </div>
+
                             {/* Month selector pills */}
                             <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mb-4">
                               {MONTHS_SHORT.map((month, idx) => {
@@ -839,9 +884,12 @@ const UserTargetsSection = () => {
                                       }
                                     `}
                                   >
-                                    {month}
+                                    <span className="block">{month}</span>
+                                    <span className="mt-0.5 block text-[8px] opacity-80">
+                                      {isSelected ? 'Selected' : allDone ? 'Done' : isCurrent ? 'Current' : monthIsFuture ? 'Locked' : 'Open'}
+                                    </span>
                                     {!isSelected && allDone && (
-                                      <span className="block text-[8px] mt-0.5 text-green-600">✓ done</span>
+                                      <span className="sr-only">Done</span>
                                     )}
                                   </button>
                                 );
@@ -861,16 +909,17 @@ const UserTargetsSection = () => {
 
                               return (
                                 <div className={`rounded-xl border ${isCurrent ? 'border-green-200 bg-green-50/20' : 'border-border/40 bg-muted/10'} p-4`}>
-                                  <div className="flex items-center justify-between mb-3">
+                                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex items-center gap-2">
                                       <span className="text-sm font-bold text-foreground">{MONTHS_FULL[selIdx]}</span>
                                       {isCurrent && (
                                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Current</span>
                                       )}
                                     </div>
-                                    <span className="text-xs text-muted-foreground font-medium">
-                                      {monthCompleted}/{weeksInMonth} completed
-                                    </span>
+                                    <div className="rounded-xl bg-background/80 px-3 py-2 text-xs text-muted-foreground">
+                                      <p className="font-semibold text-foreground">{monthCompleted} of {weeksInMonth} weeks marked</p>
+                                      <p className="mt-0.5">{monthIsFuture ? 'This month is locked for now.' : 'Tap a week card to mark or unmark it.'}</p>
+                                    </div>
                                   </div>
                                   <div className="grid grid-cols-5 gap-2.5">
                                     {WEEKLY_SLOTS.map((weekNum) => {
@@ -887,7 +936,7 @@ const UserTargetsSection = () => {
                                           onClick={() => !isFuture && handleSlotClick(target, recurringYear, weeklySelectedMonth, weekNum)}
                                           disabled={isLoading || isFuture}
                                           className={`
-                                            h-14 rounded-xl text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1
+                                            h-16 rounded-xl text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1
                                             ${isCompleted
                                               ? 'bg-green-500 text-white shadow-md ring-1 ring-green-400/50'
                                               : isFuture
@@ -898,9 +947,18 @@ const UserTargetsSection = () => {
                                           `}
                                         >
                                           {isCompleted ? (
-                                            <><CheckCircle className="h-4 w-4" /><span className="text-[9px]">Week {weekNum}</span></>
+                                            <>
+                                              <CheckCircle className="h-4 w-4" />
+                                              <span className="text-[10px] font-semibold">Week {weekNum}</span>
+                                              <span className="text-[9px] text-white/90">Done</span>
+                                            </>
                                           ) : (
-                                            <><span className="text-base font-bold">W{weekNum}</span><span className="text-[9px] text-muted-foreground">Week</span></>
+                                            <>
+                                              <span className="text-[10px] font-semibold">Week {weekNum}</span>
+                                              <span className={`text-[9px] ${isFuture ? 'text-gray-300' : 'text-muted-foreground'}`}>
+                                                {isFuture ? 'Locked' : 'Tap to mark'}
+                                              </span>
+                                            </>
                                           )}
                                         </button>
                                       );
@@ -912,6 +970,20 @@ const UserTargetsSection = () => {
                           </div>
                         ) : (
                           <div className="mt-3">
+                            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
+                              <p className="font-semibold">How to update this target</p>
+                              <p className="mt-1">Tap a month after you finish it. Tap again to remove the mark. If you do the same target more than once in a month, use + or - to adjust the count.</p>
+                            </div>
+
+                            <div className="mb-4 rounded-[1.1rem] border border-border/60 bg-muted/20 p-3">
+                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick meaning</p>
+                              <div className="mt-2 grid gap-2 sm:grid-cols-3 text-xs text-muted-foreground">
+                                <div className="rounded-xl bg-white px-3 py-2">Green month: already finished</div>
+                                <div className="rounded-xl bg-white px-3 py-2">Blue month: this is the current month</div>
+                                <div className="rounded-xl bg-white px-3 py-2">Grey month: not available yet</div>
+                              </div>
+                            </div>
+
                             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
@@ -965,6 +1037,9 @@ const UserTargetsSection = () => {
                                       <span className={`text-xs font-semibold ${isCompleted ? 'text-green-700' : isFuture ? 'text-gray-300' : ''}`}>
                                         {month}
                                       </span>
+                                      <span className={`text-[9px] ${isCompleted ? 'text-green-700' : isFuture ? 'text-gray-300' : 'text-muted-foreground'}`}>
+                                        {isCompleted ? 'Done' : isFuture ? 'Locked' : 'Tap to mark'}
+                                      </span>
                                       {isCurrent && !isCompleted && !isFuture && (
                                         <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium -mt-0.5">Now</span>
                                       )}
@@ -989,6 +1064,11 @@ const UserTargetsSection = () => {
                                           <Plus className="h-2.5 w-2.5" />
                                         </button>
                                       </div>
+                                    )}
+                                    {isCompleted && !isFuture && (
+                                      <p className="px-2 pb-2 text-center text-[10px] font-medium text-green-700">
+                                        Done {count} {count === 1 ? 'time' : 'times'}
+                                      </p>
                                     )}
                                   </div>
                                 );

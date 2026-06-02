@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI } from "@/utils/api";
@@ -39,8 +40,6 @@ interface Member {
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
 const MEMBER_STATUSES = ["Active", "Inactive", "Abroad", "Applicant", "Age over", "Dismissed"];
-
-const formSelectClassName = "w-full rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
 
 const EditMemberDetails = () => {
   const navigate = useNavigate();
@@ -318,19 +317,22 @@ const EditMemberDetails = () => {
 
             <div className="space-y-2">
               <Label htmlFor="bloodGroup">Blood Group (Optional)</Label>
-              <select
-                id="bloodGroup"
-                className={formSelectClassName}
-                value={formData.bloodGroup}
-                onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+              <Select
+                value={formData.bloodGroup || "none"}
+                onValueChange={(val) => setFormData({ ...formData, bloodGroup: val === "none" ? "" : val })}
               >
-                <option value="">Select Blood Group</option>
-                {BLOOD_GROUPS.map((bloodGroup) => (
-                  <option key={bloodGroup} value={bloodGroup}>
-                    {bloodGroup}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Blood Group" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Select Blood Group</SelectItem>
+                  {BLOOD_GROUPS.map((bloodGroup) => (
+                    <SelectItem key={bloodGroup} value={bloodGroup}>
+                      {bloodGroup}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -389,18 +391,21 @@ const EditMemberDetails = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                className={formSelectClassName}
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                onValueChange={(val) => setFormData({ ...formData, status: val })}
               >
-                {MEMBER_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEMBER_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
