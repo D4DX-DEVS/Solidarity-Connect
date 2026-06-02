@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Group from '../models/Group.js';
+import District from '../models/District.js';
 
 // Verify JWT token
 export const authenticate = async (req, res, next) => {
@@ -23,6 +25,25 @@ export const authenticate = async (req, res, next) => {
         success: false,
         message: 'Invalid token or user not active.'
       });
+    }
+
+    // Handle orphan references: if group_admin's district/group populate failed,
+    // try to resolve from roleTag.roleDescription (area name matching a group)
+    if (user.role === 'group_admin' && !user.group) {
+      const roleDesc = user.roleTag?.roleDescription;
+      if (roleDesc) {
+        const regex = new RegExp(`^${roleDesc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+        const matchedGroup = await Group.findOne({ name: regex })
+          .select('name code district')
+          .populate('district', 'name code')
+          .lean();
+        if (matchedGroup) {
+          user.group = { _id: matchedGroup._id, name: matchedGroup.name, code: matchedGroup.code };
+          if (!user.district && matchedGroup.district) {
+            user.district = matchedGroup.district;
+          }
+        }
+      }
     }
 
     req.user = user;

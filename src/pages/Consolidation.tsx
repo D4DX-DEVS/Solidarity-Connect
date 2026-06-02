@@ -158,76 +158,321 @@ export default function Consolidation() {
     const exportCompleted = detailedUsers.completed;
     const exportPending = detailedUsers.pending;
     const isMonthFiltered = report.target.isRecurring && !!selectedMonthKey;
+    const allUsers = [...exportCompleted, ...exportPending];
+    const isRecurring = report.target.isRecurring;
+    const months = report.monthlyBreakdown || [];
 
-    // Summary sheet
-    const summaryData = [
-      ['Consolidation Report'],
-      ['Target', report.target.title],
+    // Helper to format month key to readable label
+    const formatMonth = (mk: string) => {
+      const [y, m] = mk.split('-');
+      const date = new Date(Number(y), Number(m) - 1);
+      return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+    };
+
+    // --- District-wise grouping ---
+    type DistrictEntry = {
+      total: number; completed: number; pending: number;
+      completedUsers: typeof allUsers; pendingUsers: typeof allUsers;
+    };
+    const districtMap = new Map<string, DistrictEntry>();
+    allUsers.forEach(u => {
+      const dist = u.district || 'Not Assigned';
+      if (!districtMap.has(dist)) {
+        districtMap.set(dist, { total: 0, completed: 0, pending: 0, completedUsers: [], pendingUsers: [] });
+      }
+      districtMap.get(dist)!.total++;
+    });
+    exportCompleted.forEach(u => {
+      const dist = u.district || 'Not Assigned';
+      const entry = districtMap.get(dist)!;
+      entry.completed++;
+      entry.completedUsers.push(u);
+    });
+    exportPending.forEach(u => {
+      const dist = u.district || 'Not Assigned';
+      const entry = districtMap.get(dist)!;
+      entry.pending++;
+      entry.pendingUsers.push(u);
+    });
+
+    const sortedDistricts = [...districtMap.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const hasRealDistricts = sortedDistricts.some(([dist]) => dist !== 'Not Assigned');
+
+    // ========== SHEET 1: Summary ==========
+    const summaryData: any[][] = [
+      ['CONSOLIDATION REPORT'],
+      [],
+      ['Report Details'],
+      ['Generated On', new Date().toLocaleString()],
+      ['Target Name', report.target.title],
       ['Category', report.target.category],
-      ['Type', report.target.isRecurring ? `Recurring (${report.target.recurringFrequency})` : 'Regular'],
+      ['Type', isRecurring ? `Recurring (${report.target.recurringFrequency})` : 'One-time'],
+      ['User Type', selectedUserType || 'All'],
       ...(isMonthFiltered ? [['Filtered Month', selectedMonthLabel || '']] : []),
       [],
-      ['Summary'],
-      ['Total Users', report.summary.totalUsers],
-      ['Completed', exportCompleted.length],
-      ['Pending', exportPending.length],
+      ['OVERALL SUMMARY'],
+      ['Total Members', report.summary.totalUsers],
+      ['Submitted (Completed)', exportCompleted.length],
+      ['Not Yet Submitted', exportPending.length],
       ['Completion Rate', `${report.summary.totalUsers > 0 ? Math.round((exportCompleted.length / report.summary.totalUsers) * 1000) / 10 : 0}%`],
+      [],
+      [],
+      ...(hasRealDistricts ? [
+        ['DISTRICT-WISE SUMMARY'],
+        ['District', 'Total Members', 'Submitted', 'Not Submitted', 'Completion Rate', 'Status'],
+        ...sortedDistricts.filter(([dist]) => dist !== 'Not Assigned').map(([dist, data]) => {
+          const rate = data.total > 0 ? Math.round((data.completed / data.total) * 1000) / 10 : 0;
+          return [
+            dist, data.total, data.completed, data.pending, `${rate}%`,
+            data.pending === 0 ? '✅ All Submitted' : data.completed === 0 ? '❌ None Submitted' : '⚠️ Partial'
+          ];
+        }),
+        [],
+        [],
+      ] : [
+        ['NOTE: State Admins are state-level users and are not assigned to any specific district.'],
+        ['To see district-wise data, select District Admin, Area Admin, Unit Admin, or Members.'],
+        [],
+        [],
+      ]),
+      ...(isRecurring ? [
+        ['MONTHLY SUMMARY'],
+        ['Month', 'Total', 'Submitted', 'Not Submitted', 'Completion Rate'],
+        ...months.map(m => [m.label, m.total, m.completed, m.pending, `${m.completionRate}%`]),
+      ] : []),
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    summarySheet['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 12 }, { wch: 15 }, { wch: 16 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-    // Completed users sheet
-    if (exportCompleted.length > 0) {
-      const completedData = exportCompleted.map(u => ({
-        Name: u.name,
-        Phone: u.phone,
-        District: u.district,
-        Group: u.group,
-        ...(report.target.isRecurring ? {
-          'Completed Count': u.completedCount || 0,
-          'Total Periods': u.totalPeriods || 0,
-          'Completed Months': u.completedMonths?.join(', ') || ''
-        } : {
-          'Completed At': u.completedAt ? new Date(u.completedAt).toLocaleDateString() : 'N/A',
-        })
-      }));
-      const completedSheet = XLSX.utils.json_to_sheet(completedData);
-      XLSX.utils.book_append_sheet(wb, completedSheet, 'Completed');
+    // ========== SHEET 2: All Members (Full Matrix) ==========
+    if (isRecurring && months.length > 0) {
+      // Create a matrix: each row is a user, columns are months with ✅/❌
+      const monthKeys = months.map(m => `${m.year}-${m.month}`);
+      const headerRow = ['S.No', 'Name', 'Phone', 'District', 'Group', 'Role', 'Overall Status',
+        ...months.map(m => m.label), 'Total Submitted', 'Total Missed'];
+
+      const dataRows = allUsers.map((u, idx) => {
+        const userMonths = u.completedMonths || [];
+        const submitted = monthKeys.filter(mk => userMonths.includes(mk)).length;
+        const missed = monthKeys.length - submitted;
+        const isOverallCompleted = exportCompleted.includes(u);
+        return [
+          idx + 1,
+          u.name,
+          u.phone,
+          u.district || 'Not Assigned',
+          u.group || 'Not Assigned',
+          u.roleTag || u.role || '-',
+          isOverallCompleted ? 'Submitted' : 'Not Submitted',
+          ...monthKeys.map(mk => userMonths.includes(mk) ? '✅ Yes' : '❌ No'),
+          submitted,
+          missed,
+        ];
+      });
+
+      const allMembersSheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+      allMembersSheet['!cols'] = [
+        { wch: 5 }, { wch: 22 }, { wch: 13 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 15 },
+        ...months.map(() => ({ wch: 14 })),
+        { wch: 15 }, { wch: 13 }
+      ];
+      XLSX.utils.book_append_sheet(wb, allMembersSheet, 'All Members');
+    } else {
+      // Non-recurring: simple list
+      const headerRow = ['S.No', 'Name', 'Phone', 'District', 'Group', 'Role', 'Status', 'Submitted At'];
+      const dataRows = allUsers.map((u, idx) => {
+        const isCompleted = exportCompleted.includes(u);
+        return [
+          idx + 1, u.name, u.phone, u.district || 'Not Assigned', u.group || 'Not Assigned',
+          u.roleTag || u.role || '-',
+          isCompleted ? '✅ Submitted' : '❌ Not Submitted',
+          isCompleted && u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-',
+        ];
+      });
+      const allMembersSheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+      allMembersSheet['!cols'] = [{ wch: 5 }, { wch: 22 }, { wch: 13 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 14 }];
+      XLSX.utils.book_append_sheet(wb, allMembersSheet, 'All Members');
     }
 
-    // Pending users sheet
-    if (exportPending.length > 0) {
-      const pendingData = exportPending.map(u => ({
-        Name: u.name,
-        Phone: u.phone,
-        District: u.district,
-        Group: u.group,
-        Status: u.status || 'not_started',
-        ...(report.target.isRecurring ? {
-          'Completed Count': u.completedCount || 0,
-          'Total Periods': u.totalPeriods || 0
-        } : {})
-      }));
-      const pendingSheet = XLSX.utils.json_to_sheet(pendingData);
-      XLSX.utils.book_append_sheet(wb, pendingSheet, 'Pending');
+    // ========== SHEET 3: District Wise Detailed ==========
+    const distDetailData: any[][] = [
+      ['DISTRICT-WISE DETAILED REPORT'],
+      ['Shows which district submitted, who submitted, and who did not'],
+      [],
+    ];
+
+    if (!hasRealDistricts) {
+      distDetailData.push(
+        ['NOTE: The selected user type (State Admin) is not assigned to districts.'],
+        ['District-wise breakdown is available for: District Admin, Area Admin, Unit Admin, Members'],
+        [],
+        ['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'],
+        ['ALL MEMBERS (State Level):'],
+        [`Total: ${allUsers.length}`, `Submitted: ${exportCompleted.length}`, `Not Submitted: ${exportPending.length}`],
+        [],
+      );
+      if (exportCompleted.length > 0) {
+        distDetailData.push(['  ✅ SUBMITTED MEMBERS:']);
+        distDetailData.push(['', 'S.No', 'Name', 'Phone', ...(isRecurring ? ['Months Done'] : ['Submitted At'])]);
+        exportCompleted.forEach((u, idx) => {
+          distDetailData.push([
+            '', idx + 1, u.name, u.phone,
+            ...(isRecurring ? [`${u.completedCount || 0} of ${months.length}`] : [u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-']),
+          ]);
+        });
+        distDetailData.push([]);
+      }
+      if (exportPending.length > 0) {
+        distDetailData.push(['  ❌ NOT YET SUBMITTED:']);
+        distDetailData.push(['', 'S.No', 'Name', 'Phone', ...(isRecurring ? ['Months Missed'] : ['Status'])]);
+        exportPending.forEach((u, idx) => {
+          if (isRecurring) {
+            const userMonths = u.completedMonths || [];
+            const monthKeys = months.map(m => `${m.year}-${m.month}`);
+            const missed = monthKeys.filter(mk => !userMonths.includes(mk));
+            distDetailData.push(['', idx + 1, u.name, u.phone, missed.map(formatMonth).join(', ') || 'All months']);
+          } else {
+            distDetailData.push(['', idx + 1, u.name, u.phone, 'Not Started']);
+          }
+        });
+      }
+    } else {
+      sortedDistricts.forEach(([dist, data]) => {
+        const rate = data.total > 0 ? Math.round((data.completed / data.total) * 1000) / 10 : 0;
+        const status = data.pending === 0 ? '✅ ALL SUBMITTED' : data.completed === 0 ? '❌ NONE SUBMITTED' : '⚠️ PARTIALLY SUBMITTED';
+
+        distDetailData.push(
+          ['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'],
+          [`DISTRICT: ${dist}`, '', '', status],
+          [`Members: ${data.total}`, `Submitted: ${data.completed}`, `Not Submitted: ${data.pending}`, `Rate: ${rate}%`],
+          [],
+        );
+
+        // Submitted members in this district
+        if (data.completedUsers.length > 0) {
+          distDetailData.push(['  ✅ SUBMITTED MEMBERS:']);
+          distDetailData.push(['', 'S.No', 'Name', 'Phone', 'Group', ...(isRecurring ? ['Months Done'] : ['Submitted At'])]);
+          data.completedUsers.forEach((u, idx) => {
+            distDetailData.push([
+              '', idx + 1, u.name, u.phone, u.group || '-',
+              ...(isRecurring
+                ? [`${u.completedCount || 0} of ${months.length}`]
+                : [u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-']
+              ),
+            ]);
+          });
+          distDetailData.push([]);
+        }
+
+        // Not submitted members in this district
+        if (data.pendingUsers.length > 0) {
+          distDetailData.push(['  ❌ NOT YET SUBMITTED:']);
+          distDetailData.push(['', 'S.No', 'Name', 'Phone', 'Group', ...(isRecurring ? ['Months Missed'] : ['Status'])]);
+          data.pendingUsers.forEach((u, idx) => {
+            if (isRecurring) {
+              const userMonths = u.completedMonths || [];
+              const monthKeys = months.map(m => `${m.year}-${m.month}`);
+              const missed = monthKeys.filter(mk => !userMonths.includes(mk));
+              const missedLabels = missed.map(formatMonth).join(', ');
+              distDetailData.push(['', idx + 1, u.name, u.phone, u.group || '-', missedLabels || 'All months']);
+            } else {
+              distDetailData.push(['', idx + 1, u.name, u.phone, u.group || '-', 'Not Started']);
+            }
+          });
+          distDetailData.push([]);
+        }
+        distDetailData.push([]);
+      });
     }
 
-    // Monthly breakdown sheet
-    if (report.monthlyBreakdown.length > 0) {
-      const monthlyData = report.monthlyBreakdown.map(m => ({
-        Month: m.label,
-        Total: m.total,
-        Completed: m.completed,
-        Pending: m.pending,
-        'Completion Rate': `${m.completionRate}%`
-      }));
-      const monthlySheet = XLSX.utils.json_to_sheet(monthlyData);
-      XLSX.utils.book_append_sheet(wb, monthlySheet, 'Monthly Breakdown');
+    const distDetailSheet = XLSX.utils.aoa_to_sheet(distDetailData);
+    distDetailSheet['!cols'] = [{ wch: 28 }, { wch: 6 }, { wch: 22 }, { wch: 14 }, { wch: 18 }, { wch: 45 }];
+    XLSX.utils.book_append_sheet(wb, distDetailSheet, 'District Details');
+
+    // ========== SHEET 4: Monthly Detailed (for recurring) ==========
+    if (isRecurring && months.length > 0) {
+      const monthlyDetailData: any[][] = [
+        ['MONTH-WISE DETAILED REPORT'],
+        ['Shows who submitted and who did not submit for each month'],
+        [],
+      ];
+
+      months.forEach(m => {
+        const monthKey = `${m.year}-${m.month}`;
+        const monthSubmitted = allUsers.filter(u => u.completedMonths?.includes(monthKey));
+        const monthNotSubmitted = allUsers.filter(u => !u.completedMonths?.includes(monthKey));
+        const status = monthNotSubmitted.length === 0 ? '✅ ALL DONE' : monthSubmitted.length === 0 ? '❌ NONE DONE' : '⚠️ PARTIAL';
+
+        monthlyDetailData.push(
+          ['━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'],
+          [`MONTH: ${m.label}`, '', '', status],
+          [`Total: ${allUsers.length}`, `Submitted: ${monthSubmitted.length}`, `Not Submitted: ${monthNotSubmitted.length}`, `Rate: ${allUsers.length > 0 ? Math.round((monthSubmitted.length / allUsers.length) * 1000) / 10 : 0}%`],
+          [],
+        );
+
+        // Who submitted this month
+        if (monthSubmitted.length > 0) {
+          monthlyDetailData.push(['  ✅ SUBMITTED THIS MONTH:']);
+          monthlyDetailData.push(['', 'S.No', 'Name', 'Phone', 'District', 'Group']);
+          monthSubmitted.forEach((u, idx) => {
+            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', u.group || '-']);
+          });
+        } else {
+          monthlyDetailData.push(['  ✅ SUBMITTED THIS MONTH: Nobody']);
+        }
+        monthlyDetailData.push([]);
+
+        // Who did NOT submit this month
+        if (monthNotSubmitted.length > 0) {
+          monthlyDetailData.push(['  ❌ NOT SUBMITTED THIS MONTH:']);
+          monthlyDetailData.push(['', 'S.No', 'Name', 'Phone', 'District', 'Group']);
+          monthNotSubmitted.forEach((u, idx) => {
+            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', u.group || '-']);
+          });
+        } else {
+          monthlyDetailData.push(['  ❌ NOT SUBMITTED: Everyone has submitted!']);
+        }
+        monthlyDetailData.push([], []);
+      });
+
+      const monthlySheet = XLSX.utils.aoa_to_sheet(monthlyDetailData);
+      monthlySheet['!cols'] = [{ wch: 28 }, { wch: 6 }, { wch: 22 }, { wch: 14 }, { wch: 18 }, { wch: 18 }];
+      XLSX.utils.book_append_sheet(wb, monthlySheet, 'Monthly Details');
     }
+
+    // ========== SHEET 5: Quick Status (easy to read) ==========
+    const quickData: any[][] = [
+      ['QUICK STATUS REPORT'],
+      ['A simple overview of who completed and who needs follow-up'],
+      [],
+      ['✅ MEMBERS WHO SUBMITTED (Completed)'],
+      ['S.No', 'Name', 'Phone', 'District', 'Group', ...(isRecurring ? ['Times Submitted'] : ['Date'])],
+      ...exportCompleted.map((u, idx) => [
+        idx + 1, u.name, u.phone, u.district || '-', u.group || '-',
+        ...(isRecurring ? [`${u.completedCount || 0}/${months.length}`] : [u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-']),
+      ]),
+      [],
+      [],
+      ['❌ MEMBERS WHO HAVE NOT SUBMITTED (Need Follow-up)'],
+      ['S.No', 'Name', 'Phone', 'District', 'Group', ...(isRecurring ? ['Months Missed'] : ['Status'])],
+      ...exportPending.map((u, idx) => {
+        if (isRecurring) {
+          const userMonths = u.completedMonths || [];
+          const monthKeys = months.map(m => `${m.year}-${m.month}`);
+          const missed = monthKeys.filter(mk => !userMonths.includes(mk));
+          return [idx + 1, u.name, u.phone, u.district || '-', u.group || '-', missed.map(formatMonth).join(', ') || 'All'];
+        }
+        return [idx + 1, u.name, u.phone, u.district || '-', u.group || '-', 'Not Started'];
+      }),
+    ];
+    const quickSheet = XLSX.utils.aoa_to_sheet(quickData);
+    quickSheet['!cols'] = [{ wch: 5 }, { wch: 22 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 45 }];
+    XLSX.utils.book_append_sheet(wb, quickSheet, 'Quick Status');
 
     XLSX.writeFile(wb, `consolidation-report-${new Date().toISOString().split('T')[0]}.xlsx`);
     toast({ title: 'Exported', description: 'Report exported as Excel file' });
-  }, [report, detailedUsers, selectedMonthKey, selectedMonthLabel]);
+  }, [report, detailedUsers, selectedMonthKey, selectedMonthLabel, selectedUserType]);
 
   const showDistrictFilter = selectedUserType && NEEDS_DISTRICT_FILTER.includes(selectedUserType);
   const showGroupFilter = selectedUserType && NEEDS_GROUP_FILTER.includes(selectedUserType);

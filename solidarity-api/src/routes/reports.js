@@ -25,8 +25,34 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
-      memberFilter.group = req.user.group._id;
-      groupFilter._id = req.user.group._id;
+      // Area admins (roleTag.type === 'area') manage multiple groups in their area
+      const isArea = req.user.roleTag?.type === 'area';
+      const areaName = req.user.roleTag?.roleDescription;
+
+      if (isArea && areaName && req.user.district) {
+        // Find all groups in this district matching the area name
+        const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        const areaGroups = await Group.find({
+          district: req.user.district._id,
+          name: areaRegex
+        }).select('_id').lean();
+        const groupIds = areaGroups.map(g => g._id);
+
+        if (groupIds.length > 0) {
+          memberFilter.group = { $in: groupIds };
+          groupFilter._id = { $in: groupIds };
+        } else {
+          // Fallback to single group
+          memberFilter.group = req.user.group?._id || null;
+          groupFilter._id = req.user.group?._id || null;
+        }
+      } else if (req.user.group) {
+        memberFilter.group = req.user.group._id;
+        groupFilter._id = req.user.group._id;
+      } else {
+        // Safety: group_admin with no resolvable group/district — return empty, not all data
+        memberFilter._id = null;
+      }
     } else if (req.user.role === 'district_admin') {
       memberFilter.district = req.user.district._id;
       groupFilter.district = req.user.district._id;
@@ -96,10 +122,14 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
       status: 'scheduled'
     };
     if (req.user.role === 'group_admin') {
+      const groupId = req.user.group?._id;
+      const groupIdsForMeeting = memberFilter.group?.$in || (groupId ? [groupId] : []);
       meetingFilter.$or = [
         { targetAudience: 'all' },
         { targetAudience: 'group_admins' },
-        { targetAudience: 'specific_groups', targetGroups: req.user.group._id }
+        ...(groupIdsForMeeting.length > 0
+          ? [{ targetAudience: 'specific_groups', targetGroups: { $in: groupIdsForMeeting } }]
+          : [])
       ];
     } else if (req.user.role === 'district_admin') {
       meetingFilter.$or = [
@@ -123,10 +153,13 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
         approvalLevel: 'district_admin'
       });
     } else if (req.user.role === 'group_admin') {
-      pendingRequestsCount = await Request.countDocuments({ 
-        status: 'pending',
-        approvalLevel: 'group_admin'
-      });
+      const groupId = req.user.group?._id;
+      const scopeGroupIds = memberFilter.group?.$in || (groupId ? [groupId] : []);
+      const requestFilter = { status: 'pending', approvalLevel: 'group_admin' };
+      if (scopeGroupIds.length > 0) {
+        requestFilter.group = { $in: scopeGroupIds };
+      }
+      pendingRequestsCount = await Request.countDocuments(requestFilter);
     }
 
     res.status(200).json({
