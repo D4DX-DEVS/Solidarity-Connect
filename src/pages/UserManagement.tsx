@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
-import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI } from "@/utils/api";
+import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI, authAPI } from "@/utils/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -159,6 +159,7 @@ const UserManagement = () => {
     district: "",
     group: ""
   });
+  const [existingRoles, setExistingRoles] = useState<string[]>([]);
 
   const roleLabels = {
     state_admin: "State Admin", 
@@ -324,6 +325,7 @@ const UserManagement = () => {
       });
       setShowCreateDialog(false);
       setFormData({ name: "", phone: "", email: "", role: "", district: "", group: "" });
+      setExistingRoles([]);
       fetchData();
     } catch (error) {
       toast({
@@ -331,6 +333,20 @@ const UserManagement = () => {
         description: "Failed to create user",
         variant: "destructive",
       });
+    }
+  };
+
+  const handlePhoneBlur = async () => {
+    const phone = formData.phone.replace(/\D/g, '').replace(/^\+91/, '');
+    if (phone.length === 10 && /^[6-9]/.test(phone)) {
+      try {
+        const result = await authAPI.checkRoles(phone);
+        setExistingRoles(result.data?.roles || []);
+      } catch {
+        setExistingRoles([]);
+      }
+    } else {
+      setExistingRoles([]);
     }
   };
 
@@ -897,6 +913,7 @@ const UserManagement = () => {
           setShowCreateDialog(false);
           setEditingUser(null);
           setFormData({ name: "", phone: "", email: "", role: "", district: "", group: "" });
+          setExistingRoles([]);
           setGroups([]); // Clear groups when dialog is closed
         }
       }}>
@@ -924,8 +941,14 @@ const UserManagement = () => {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onBlur={handlePhoneBlur}
                 placeholder="+91XXXXXXXXXX"
               />
+              {existingRoles.length > 0 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  This phone already has roles: {existingRoles.map(r => roleLabels[r as keyof typeof roleLabels] || r).join(', ')}. A new role will be added.
+                </p>
+              )}
             </div>
 
             <div>

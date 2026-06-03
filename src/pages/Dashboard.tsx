@@ -42,8 +42,16 @@ const Dashboard = () => {
   }, [userRole, navigate]);
 
   useEffect(() => {
+    if (!userRole) return; // Still loading auth, wait
+
+    if (userRole !== 'group_admin') {
+      setLoading(false);
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
+        setLoading(true);
         const result = await reportsAPI.getDashboard();
 
         if (result && result.data) {
@@ -67,10 +75,8 @@ const Dashboard = () => {
       }
     };
 
-    if (userRole === 'group_admin') {
-      fetchDashboardData();
-    }
-  }, [userRole, toast]);
+    fetchDashboardData();
+  }, [userRole]);
 
   const stats = dashboardData ? [
     {

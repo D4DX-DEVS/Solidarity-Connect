@@ -27,8 +27,7 @@ async function getDistrictNameMap() {
   // Secondary: resolve stale/orphan IDs by finding users named "X District Admin"
   // whose district field references an ID not in the live districts collection
   const daUsers = await User.find({
-    role: 'district_admin',
-    name: /District Admin$/i
+    role: 'district_admin'
   }).select('name district').lean();
 
   for (const u of daUsers) {
@@ -37,6 +36,42 @@ async function getDistrictNameMap() {
       if (!districtNameCache[id]) {
         const match = u.name.match(/^(.+?)\s+District Admin$/i);
         if (match) districtNameCache[id] = match[1];
+      }
+    }
+  }
+
+  // Tertiary: for any remaining unresolved IDs, try to find the district name
+  // by looking at groups that reference this district, or other lookup methods
+  const unresolvedIds = [];
+  for (const u of daUsers) {
+    if (u.district) {
+      const id = u.district.toString();
+      if (!districtNameCache[id]) unresolvedIds.push(id);
+    }
+  }
+  if (unresolvedIds.length > 0) {
+    const uniqueUnresolved = [...new Set(unresolvedIds)];
+    // Try groups collection
+    const groups = await Group.find({ district: { $in: uniqueUnresolved } })
+      .select('district')
+      .populate('district', 'name')
+      .limit(50)
+      .lean();
+    for (const g of groups) {
+      if (g.district?.name) {
+        const id = g.district._id.toString();
+        if (!districtNameCache[id]) districtNameCache[id] = g.district.name;
+      }
+    }
+    // If still unresolved, try matching by finding group_admins with same district who have a populated group
+    for (const uid of uniqueUnresolved) {
+      if (districtNameCache[uid]) continue;
+      const groupAdmin = await User.findOne({ district: uid, role: 'group_admin' })
+        .select('group')
+        .populate({ path: 'group', select: 'name district', populate: { path: 'district', select: 'name' } })
+        .lean();
+      if (groupAdmin?.group?.district?.name) {
+        districtNameCache[uid] = groupAdmin.group.district.name;
       }
     }
   }
@@ -54,6 +89,13 @@ function resolveDistrictName(entity, districtMap) {
   // Fallback: resolve raw ObjectId via cached map (handles stale refs)
   const rawId = entity.district?.toString?.();
   if (rawId && districtMap[rawId]) return districtMap[rawId];
+  // Last resort: for district_admin users, extract from their name pattern
+  if (entity.role === 'district_admin' && entity.name) {
+    const match = entity.name.match(/^(.+?)\s+District Admin$/i);
+    if (match) return match[1];
+  }
+  // If user has a district ID but it can't be resolved, label it
+  if (rawId) return 'Unknown District';
   return '';
 }
 

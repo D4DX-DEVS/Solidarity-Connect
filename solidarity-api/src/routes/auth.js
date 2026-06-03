@@ -1,5 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { body, validationResult } from 'express-validator';
 import otpService from '../services/otpService.js';
 import { loginValidation, verifyOTPValidation } from '../middleware/validation.js';
 import { authenticate } from '../middleware/auth.js';
@@ -23,6 +24,14 @@ router.post('/send-otp', loginValidation, async (req, res) => {
     console.log('Received send-otp request:', { phone, userType });
 
     const result = await otpService.sendOTP(phone, userType);
+
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: result.message,
+        availableRoles: result.availableRoles
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -230,6 +239,43 @@ router.post('/refresh-token', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to refresh token'
+    });
+  }
+});
+
+// @route   POST /api/auth/check-roles
+// @desc    Check available roles for a phone number
+// @access  Public (rate-limited)
+router.post('/check-roles', [
+  body('phone').matches(/^(\+91)?[6-9]\d{9}$/).withMessage('Please enter a valid Indian phone number')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    let { phone } = req.body;
+
+    const roles = await otpService.getAvailableRoles(phone);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        roles,
+        hasMultipleRoles: roles.length > 1
+      }
+    });
+
+  } catch (error) {
+    console.error('Check roles error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to check roles'
     });
   }
 });
