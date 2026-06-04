@@ -1,4 +1,4 @@
-import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut } from "lucide-react";
+import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut, FolderOpen, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,32 +143,47 @@ const DistrictAdmin = () => {
   const activeMembers = stats?.memberStatistics?.activeMembers ?? "—";
 
   const districtTools = [
-    { label: "Members", path: "/members", Icon: Users },
-    { label: "Meetings", path: "/meetings", Icon: FileCheck },
-    { label: "Meeting Agenda", path: "/state-admin/meeting-agenda", Icon: FileCheck },
-    { label: "Groups", path: "/state-admin/groups", Icon: Users },
-    { label: "Role Management", path: "/role-management", Icon: Shield },
-    { label: "Leaders", path: "/leaders", Icon: Star },
-    { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
-    { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
-    { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
+    { label: "Members", path: "/members", icon: Users, color: "text-cyan-600" },
+    { label: "Meetings", path: "/meetings", icon: Calendar, color: "text-amber-600" },
+    { label: "Meeting Agenda", path: "/state-admin/meeting-agenda", icon: FileCheck, color: "text-orange-500" },
+    { label: "Groups", path: "/state-admin/groups", icon: Building2, color: "text-sky-600" },
+    { label: "Role Management", path: "/role-management", icon: Shield, color: "text-blue-500" },
+    { label: "Leaders", path: "/leaders", icon: Star, color: "text-yellow-500" },
+    { label: "Org Files", path: "/org-files", icon: FolderOpen, color: "text-teal-500" },
+    { label: "Consolidation", path: "/consolidation", icon: BarChart3, color: "text-indigo-500" },
+    { label: "Baithul Maal", path: "/state-admin/baithul-data", icon: BarChart3, color: "text-primary" },
+    { label: "Group Reports", path: "/state-admin/group-reports", icon: BarChart3, color: "text-primary" },
   ];
+
+  const primaryTools = districtTools.filter(({ label }) =>
+    ["Members", "Meetings", "Meeting Agenda", "Org Files", "Role Management"].includes(label)
+  );
+  const secondaryTools = districtTools.filter(({ label }) => !primaryTools.some(t => t.label === label));
 
   return (
     <PageShell>
       <PageHero
         eyebrow="District Control"
-        title="District Admin Dashboard"
-        subtitle={user?.district?.name || "District"}
+        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
+        subtitle="District Admin Dashboard"
         icon={<Building2 className="h-6 w-6" />}
         actions={
+          <>
+            <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
+              {user?.district?.name || "District"}
+            </Badge>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-56 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+            <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+              <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'District Admin'}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
+              </div>
               <DropdownMenuItem onClick={() => navigate("/members")}>Members</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/meetings")}>Meeting Agendas</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -184,6 +199,7 @@ const DistrictAdmin = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </>
         }
         details={
           <>
@@ -204,6 +220,50 @@ const DistrictAdmin = () => {
         <MetricCard title="Total Members" value={loadingStats ? "..." : String(totalMembers)} icon={Users} tone="warning" />
         <MetricCard title="Active Members" value={loadingStats ? "..." : String(activeMembers)} icon={CheckCircle} tone="success" />
       </div>
+
+      <SectionCard title="District Tools" description="Tools are grouped by the kind of work you do, so they are easier to find.">
+            <div className="space-y-5">
+              <div className="space-y-3">
+                <div id="daily-workflows-heading">
+                  <p className="text-sm font-semibold text-foreground">Daily Workflows</p>
+                  <p className="text-xs text-muted-foreground">Member management, meetings, and file tasks used most often.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="daily-workflows-heading">
+                  {primaryTools.map((action) => (
+                    <Button key={action.label} variant="outline" className="action-tile h-auto" onClick={() => navigate(action.path)}>
+                      <div className="action-tile-icon">
+                        <action.icon className={`h-5 w-5 ${action.color}`} />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div id="management-reports-heading">
+                  <p className="text-sm font-semibold text-foreground">Management And Reports</p>
+                  <p className="text-xs text-muted-foreground">Configuration, oversight, and reporting tasks.</p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="management-reports-heading">
+                  {secondaryTools.map((action) => (
+                    <Button key={action.label} variant="outline" className="action-tile h-auto" onClick={() => navigate(action.path)}>
+                      <div className="action-tile-icon">
+                        <action.icon className={`h-5 w-5 ${action.color}`} />
+                      </div>
+                      <div className="space-y-1 text-left">
+                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+      </SectionCard>
 
         <UserTargetsSection />
 
@@ -281,22 +341,6 @@ const DistrictAdmin = () => {
                 ))}
               </div>
             )}
-      </SectionCard>
-
-      <SectionCard title="District Tools" description="Quick links to the district tasks used most often.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {districtTools.map(({ label, path, Icon }) => (
-                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
-                  <div className="action-tile-icon">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
-                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
-                  </div>
-                </Button>
-              ))}
-            </div>
       </SectionCard>
 
       {/* Approve Dialog */}

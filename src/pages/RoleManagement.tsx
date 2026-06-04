@@ -143,6 +143,7 @@ const RoleManagement = () => {
 
       let result;
       if (isMemberView) {
+        params.forLeaderAssignment = 'true';
         result = await membersAPI.getMembers(params);
       } else {
         if (roleFilter !== "all") params.role = roleFilter;

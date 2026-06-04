@@ -142,9 +142,7 @@ const Members = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(currentPage === 1); // Only show loading on first page
-
-        // Build query parameters for filtering and pagination
+        setLoading(true);
         const params = new URLSearchParams();
         if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
         if (selectedDistrict) params.append('district', selectedDistrict);

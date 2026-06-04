@@ -119,7 +119,7 @@ const Dashboard = () => {
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title="Area Admin Dashboard"
-        subtitle={userGroup ? `${userGroup} - ${userDistrict}` : "Applicant - Thrissur"}
+        subtitle={`${userGroup || user?.group?.name || "Loading..."} - ${userDistrict || user?.district?.name || ""}`}
       />
 
       <main className="app-main pt-5">
@@ -132,11 +132,11 @@ const Dashboard = () => {
             <>
               <div className="data-strip">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Area</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{userGroup || "Applicant"}</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{userGroup || user?.group?.name || "—"}</p>
               </div>
               <div className="data-strip">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{userDistrict || "Thrissur"}</p>
+                <p className="mt-2 text-sm font-semibold text-foreground">{userDistrict || user?.district?.name || "—"}</p>
               </div>
               <div className="data-strip">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Requests</p>
@@ -162,6 +162,32 @@ const Dashboard = () => {
           ))}
         </div>
 
+        <SectionCard title="Area Admin Tools" description="Quick links to the tools you use most often.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {[
+                { label: "Members", path: "/members", Icon: Users },
+                { label: "Meetings", path: "/meetings", Icon: Calendar },
+                { label: "Role Management", path: "/role-management", Icon: Shield },
+                { label: "Leaders", path: "/leaders", Icon: Star },
+                { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
+                { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
+                { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
+                { label: "Bulk Import", path: "/bulk-import", Icon: Upload },
+                { label: "Org Files", path: "/org-files", Icon: FileText },
+              ].map(({ label, path, Icon }) => (
+                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
+                  <div className="action-tile-icon">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <p className="text-sm font-semibold text-foreground">{label}</p>
+                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
+                  </div>
+                </Button>
+              ))}
+            </div>
+        </SectionCard>
+
         <UserTargetsSection />
 
         {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
@@ -178,32 +204,6 @@ const Dashboard = () => {
               </div>
           </SectionCard>
         )}
-
-        <SectionCard title="Area Admin Tools" description="Quick links to the tools you use most often.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {[
-                { label: "Members", path: "/members", Icon: Users },
-                { label: "Meetings", path: "/meetings", Icon: Calendar },
-                { label: "Role Management", path: "/role-management", Icon: Shield },
-                { label: "Leaders", path: "/leaders", Icon: Star },
-                { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
-                { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
-                { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
-                { label: "Bulk Import", path: "/bulk-import", Icon: Upload },
-                { label: "Membership Form & Files", path: "/org-files", Icon: FileText },
-              ].map(({ label, path, Icon }) => (
-                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
-                  <div className="action-tile-icon">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-1 text-left">
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
-                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
-                  </div>
-                </Button>
-              ))}
-            </div>
-        </SectionCard>
       </main>
 
       <BottomNav />

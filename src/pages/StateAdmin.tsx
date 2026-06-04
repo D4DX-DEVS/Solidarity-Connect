@@ -1,6 +1,14 @@
-import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, X, LogOut, Database, Calendar } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, X, LogOut, Database, Calendar, Menu } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -66,7 +74,7 @@ interface BaithulMaalStats {
 const StateAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -295,18 +303,42 @@ const StateAdmin = () => {
     <PageShell>
       <PageHero
         eyebrow="State Overview"
-        title="State Admin Panel"
+        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
         subtitle="Use this page to review people, approvals, reports, and your recurring work in one place."
         icon={<Shield className="h-6 w-6" />}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowLogoutConfirm(true)}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <>
+            <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
+              State Admin
+            </Badge>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+                <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
+                  <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
+                </div>
+                <DropdownMenuItem onClick={() => navigate("/members")}>Members</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/meetings")}>Meeting Agendas</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/role-management")}>
+                  <Shield className="mr-2 h-4 w-4" />Role Management
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/leaders")}>
+                  <Star className="mr-2 h-4 w-4" />Leaders
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         }
         details={
           <>

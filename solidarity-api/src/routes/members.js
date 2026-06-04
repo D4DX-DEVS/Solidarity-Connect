@@ -30,7 +30,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       group,
       search,
       isApproved,
-      includeStats = 'true'
+      includeStats = 'true',
+      forLeaderAssignment
     } = req.query;
 
     // Validate pagination parameters
@@ -38,16 +39,45 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     const limitNum = Math.min(Math.max(1, parseInt(limit) || 20), 100); // Between 1 and 100
 
     // Build base filter based on user role
+    // When forLeaderAssignment=true, skip scope restriction so any member can be found
     let baseFilter = {};
+    const skipScope = forLeaderAssignment === 'true' && ['state_admin', 'district_admin', 'group_admin'].includes(req.user.role);
     
-    if (req.user.role === 'group_admin') {
-      // Group admin can only see their group members
-      baseFilter.group = req.user.group._id;
-    } else if (req.user.role === 'district_admin') {
-      // District admin can only see their district members
-      baseFilter.district = req.user.district._id;
+    if (!skipScope) {
+      if (req.user.role === 'group_admin') {
+        // Area admins (roleTag.type === 'area') manage multiple groups in their area
+        const isArea = req.user.roleTag?.type === 'area';
+        const areaName = req.user.roleTag?.roleDescription;
+
+        if (isArea && areaName && req.user.district) {
+          const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          const areaGroups = await Group.find({
+            district: req.user.district._id,
+            name: areaRegex
+          }).select('_id').lean();
+          const groupIds = areaGroups.map(g => g._id);
+
+          if (groupIds.length > 0) {
+            baseFilter.group = { $in: groupIds };
+          } else if (req.user.group) {
+            baseFilter.group = req.user.group._id;
+          } else {
+            return res.status(500).json({ success: false, message: 'User account misconfigured: no group assigned' });
+          }
+        } else if (req.user.group) {
+          baseFilter.group = req.user.group._id;
+        } else {
+          return res.status(500).json({ success: false, message: 'User account misconfigured: no group assigned' });
+        }
+      } else if (req.user.role === 'district_admin') {
+        // District admin can only see their district members
+        if (!req.user.district) {
+          return res.status(500).json({ success: false, message: 'User account misconfigured: no district assigned' });
+        }
+        baseFilter.district = req.user.district._id;
+      }
+      // State admin can see all members (no additional filter)
     }
-    // State admin can see all members (no additional filter)
 
     // Build query filter (includes all filters for member list)
     let filter = { ...baseFilter };
