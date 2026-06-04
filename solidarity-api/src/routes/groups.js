@@ -37,8 +37,33 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       ];
     }
 
-    // Apply district filter if provided
-    if (district) {
+    // Apply role-based filtering
+    if (req.user.role === 'group_admin') {
+      // Area admins only see their own group(s)
+      if (req.user.roleTag?.type === 'area' && req.user.district) {
+        const areaName = req.user.roleTag.roleDescription;
+        if (areaName) {
+          const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          const areaGroups = await Group.find({ district: req.user.district._id, name: areaRegex }).select('_id').lean();
+          const groupIds = areaGroups.map(g => g._id);
+          filter._id = groupIds.length > 0 ? { $in: groupIds } : (req.user.group?._id || null);
+        } else {
+          filter._id = req.user.group?._id || null;
+        }
+      } else if (req.user.group) {
+        filter._id = req.user.group._id;
+      } else {
+        filter._id = null;
+      }
+    } else if (req.user.role === 'district_admin') {
+      // District admins see groups in their district
+      if (req.user.district) {
+        filter.district = req.user.district._id;
+      }
+    }
+
+    // Apply additional district filter if provided (for state_admin selecting a district)
+    if (district && req.user.role === 'state_admin') {
       filter.district = district;
     }
 

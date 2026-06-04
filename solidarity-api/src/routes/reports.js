@@ -54,6 +54,9 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
         memberFilter._id = null;
       }
     } else if (req.user.role === 'district_admin') {
+      if (!req.user.district) {
+        return res.status(500).json({ success: false, message: 'User account misconfigured: no district assigned' });
+      }
       memberFilter.district = req.user.district._id;
       groupFilter.district = req.user.district._id;
       districtFilter._id = req.user.district._id;

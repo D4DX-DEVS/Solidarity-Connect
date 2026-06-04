@@ -53,9 +53,15 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 
     if (req.user.role === 'group_admin') {
       // Group admins see requests created from their group
+      if (!req.user.group) {
+        return res.status(500).json({ success: false, message: 'User account misconfigured: no group assigned' });
+      }
       filter.currentGroup = req.user.group._id;
     } else if (req.user.role === 'district_admin') {
       // District admins see requests pending their approval
+      if (!req.user.district) {
+        return res.status(500).json({ success: false, message: 'User account misconfigured: no district assigned' });
+      }
       const distId = req.user.district._id;
       filter.status = 'pending';
       filter.$or = [

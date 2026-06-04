@@ -77,7 +77,7 @@ class OTPService {
         attempts: 0
       };
 
-      await user.save();
+      await user.save({ validateModifiedOnly: true });
 
       // Send OTP via WhatsApp
       const result = await dxingService.sendOTP(phone, otp);
@@ -135,7 +135,7 @@ class OTPService {
       // Check if OTP is expired
       if (user.isOTPExpired()) {
         user.clearOTP();
-        await user.save();
+        await user.save({ validateModifiedOnly: true });
         return {
           success: false,
           message: 'OTP has expired. Please request a new OTP.'
@@ -145,7 +145,7 @@ class OTPService {
       // Check attempt limit
       if (user.otp.attempts >= 3) {
         user.clearOTP();
-        await user.save();
+        await user.save({ validateModifiedOnly: true });
         return {
           success: false,
           message: 'Too many failed attempts. Please request a new OTP.'
@@ -165,7 +165,7 @@ class OTPService {
       
       if (!isValidOTP) {
         user.otp.attempts += 1;
-        await user.save();
+        await user.save({ validateModifiedOnly: true });
         
         return {
           success: false,
@@ -176,7 +176,7 @@ class OTPService {
       // OTP is valid - clear it and update last login
       user.clearOTP();
       user.lastLogin = new Date();
-      await user.save();
+      await user.save({ validateModifiedOnly: true });
 
       return {
         success: true,
@@ -214,7 +214,7 @@ class OTPService {
 
       // Clear existing OTP
       user.clearOTP();
-      await user.save();
+      await user.save({ validateModifiedOnly: true });
 
       // Send new OTP
       return await this.sendOTP(phone, userType);

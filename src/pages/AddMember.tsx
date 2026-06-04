@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
@@ -77,6 +78,7 @@ const AddMember = () => {
     education: "",
     address: "",
     monthlyBaithulMaal: "",
+    isActive: true,
   });
 
   // Fetch user context and initial data
@@ -177,7 +179,7 @@ const AddMember = () => {
 
     try {
       // Clean the form data - remove empty optional fields
-      const cleanedData = { ...formData };
+      const cleanedData: Record<string, unknown> = { ...formData };
       if (!cleanedData.email) delete cleanedData.email;
       if (!cleanedData.dateOfBirth) delete cleanedData.dateOfBirth;
       if (!cleanedData.bloodGroup) delete cleanedData.bloodGroup;
@@ -450,6 +452,22 @@ const AddMember = () => {
                   rows={4}
                   className="min-h-[110px] resize-y"
                 />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Member Status</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formData.isActive ? "Active — member is visible and included in reports" : "Inactive — member is hidden from active lists"}
+                    </p>
+                  </div>
+                  <Switch
+                    id="member-active"
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  />
+                </div>
               </div>
             </div>
 

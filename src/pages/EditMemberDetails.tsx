@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
-import { membersAPI } from "@/utils/api";
+import { membersAPI, districtsAPI } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Member {
   _id: string;
@@ -45,10 +46,16 @@ const EditMemberDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { userRole } = useAuth();
 
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [districts, setDistricts] = useState<{ _id: string; name: string }[]>([]);
+  const [groups, setGroups] = useState<{ _id: string; name: string }[]>([]);
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [loadingGroups, setLoadingGroups] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,6 +69,37 @@ const EditMemberDetails = () => {
     monthlyBaithulMaal: "",
   });
 
+  // Fetch districts for state_admin
+  useEffect(() => {
+    if (userRole !== 'state_admin') return;
+    const fetchDistricts = async () => {
+      try {
+        const result = await districtsAPI.getDistricts();
+        if (result?.data) setDistricts(result.data);
+      } catch (error) {
+        console.error('Failed to fetch districts:', error);
+      }
+    };
+    fetchDistricts();
+  }, [userRole]);
+
+  // Fetch groups when district changes
+  useEffect(() => {
+    if (!selectedDistrict) { setGroups([]); return; }
+    const fetchGroups = async () => {
+      setLoadingGroups(true);
+      try {
+        const result = await districtsAPI.getDistrictGroups(selectedDistrict);
+        if (result?.data) setGroups(result.data);
+      } catch (error) {
+        console.error('Failed to fetch groups:', error);
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+    fetchGroups();
+  }, [selectedDistrict]);
+
   // Fetch member data
   useEffect(() => {
     const fetchMember = async () => {
@@ -71,6 +109,8 @@ const EditMemberDetails = () => {
         if (result && result.data) {
           const memberData = result.data;
           setMember(memberData);
+          setSelectedDistrict(memberData.district?._id || "");
+          setSelectedGroup(memberData.group?._id || "");
           
           // Populate form with existing data
           setFormData({
@@ -136,7 +176,7 @@ const EditMemberDetails = () => {
 
     try {
       // Clean the form data - remove empty optional fields
-      const cleanedData = { ...formData };
+      const cleanedData: any = { ...formData };
       if (!cleanedData.email) delete cleanedData.email;
       if (!cleanedData.dateOfBirth) delete cleanedData.dateOfBirth;
       if (!cleanedData.bloodGroup) delete cleanedData.bloodGroup;
@@ -144,6 +184,16 @@ const EditMemberDetails = () => {
       if (!cleanedData.education) delete cleanedData.education;
       if (!cleanedData.address) delete cleanedData.address;
       if (!cleanedData.monthlyBaithulMaal) delete cleanedData.monthlyBaithulMaal;
+
+      // Add district/group if state_admin changed them
+      if (userRole === 'state_admin') {
+        if (selectedDistrict && selectedDistrict !== member?.district?._id) {
+          cleanedData.district = selectedDistrict;
+        }
+        if (selectedGroup && selectedGroup !== member?.group?._id) {
+          cleanedData.group = selectedGroup;
+        }
+      }
 
       const result = await membersAPI.updateMember(id!, cleanedData);
       
@@ -380,6 +430,53 @@ const EditMemberDetails = () => {
               />
             </div>
           </div>
+
+          {userRole === 'state_admin' && (
+            <div className="rounded-[1.5rem] border border-border/60 bg-background/70 p-4 sm:p-5">
+              <div className="mb-4">
+                <h3 className="text-base font-semibold text-foreground">Location (District & Group)</h3>
+                <p className="text-sm text-muted-foreground">Change the member's district and group directly. Only state admins can do this.</p>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>District</Label>
+                  <Select
+                    value={selectedDistrict}
+                    onValueChange={(val) => {
+                      setSelectedDistrict(val);
+                      setSelectedGroup("");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select District" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districts.map((d) => (
+                        <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Group</Label>
+                  <Select
+                    value={selectedGroup}
+                    onValueChange={setSelectedGroup}
+                    disabled={!selectedDistrict || loadingGroups}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingGroups ? "Loading..." : "Select Group"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groups.map((g) => (
+                        <SelectItem key={g._id} value={g._id}>{g.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="rounded-[1.5rem] border border-border/60 bg-background/70 p-4 sm:p-5">
             <div className="mb-4 flex items-center justify-between gap-3">

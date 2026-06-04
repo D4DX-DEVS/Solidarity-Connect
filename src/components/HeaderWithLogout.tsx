@@ -1,5 +1,6 @@
 import { LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -26,7 +27,7 @@ interface HeaderWithLogoutProps {
 }
 
 const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogoutProps) => {
-  const { logout, userRole } = useAuth();
+  const { logout, userRole, user } = useAuth();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -63,16 +64,22 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
           </div>
           {subtitle && <p className="truncate text-xs font-medium text-muted-foreground sm:text-sm">{subtitle}</p>}
         </div>
+        {user?.group?.name && (
+          <Badge className="hidden sm:inline-flex rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
+            {user.group.name}
+          </Badge>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="shrink-0 border-white/60 bg-white/60">
               <Menu className="h-6 w-6" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass w-56 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+          <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
             <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
-              <p className="text-sm font-bold text-foreground mt-0.5">{getRoleLabel()}</p>
+              <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || getRoleLabel()}</p>
+              {user?.phone && <p className="text-xs text-muted-foreground mt-0.5">{user.phone}</p>}
             </div>
             <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive focus:bg-destructive/10 cursor-pointer rounded-xl transition-colors py-2.5 px-3 font-medium mt-1">
               <LogOut className="h-4 w-4 mr-2" />
