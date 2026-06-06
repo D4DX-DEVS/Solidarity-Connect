@@ -894,16 +894,22 @@ router.get('/leaders', authenticateMember, async (req, res) => {
     }));
 
     // Deduplicate by phone number — prefer User record over Member record
+    const normalizePhone = (raw) => {
+      const digits = (raw || '').replace(/\D/g, '');
+      // Strip leading 91 country code for Indian numbers (result should be 10 digits)
+      if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+      return digits;
+    };
     const seenPhones = new Set();
     const deduped = [];
     for (const u of users) {
-      const phone = (u.phone || '').replace(/\D/g, '');
+      const phone = normalizePhone(u.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);
       deduped.push(u);
     }
     for (const m of normalizedMembers) {
-      const phone = (m.phone || '').replace(/\D/g, '');
+      const phone = normalizePhone(m.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);
       deduped.push(m);
