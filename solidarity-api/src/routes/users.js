@@ -135,11 +135,29 @@ router.get('/leaders', authenticate, async (req, res) => {
       role: 'member',
     }));
 
+    // Deduplicate by phone number — prefer User record over Member record
+    const seenPhones = new Set();
+    const deduped = [];
+    // Add users first (higher priority)
+    for (const u of users) {
+      const phone = (u.phone || '').replace(/\D/g, '');
+      if (phone && seenPhones.has(phone)) continue;
+      if (phone) seenPhones.add(phone);
+      deduped.push(u);
+    }
+    // Then add members only if their phone hasn't been seen
+    for (const m of normalizedMembers) {
+      const phone = (m.phone || '').replace(/\D/g, '');
+      if (phone && seenPhones.has(phone)) continue;
+      if (phone) seenPhones.add(phone);
+      deduped.push(m);
+    }
+
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
     // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
     const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
-    const combined = [...users, ...normalizedMembers].sort((a, b) => {
+    const combined = deduped.sort((a, b) => {
       const orderA = normalizeOrder(a.roleTag?.listingOrder);
       const orderB = normalizeOrder(b.roleTag?.listingOrder);
       if (orderA !== orderB) return orderA - orderB;
@@ -151,7 +169,7 @@ router.get('/leaders', authenticate, async (req, res) => {
       return (a.name || '').localeCompare(b.name || '');
     });
 
-    const total = userCount + memberCount;
+    const total = combined.length;
     const start = (pageNum - 1) * limitNum;
     const paginated = combined.slice(start, start + limitNum);
 
