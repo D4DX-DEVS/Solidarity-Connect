@@ -13,8 +13,8 @@ const router = express.Router();
 
 // @route   GET /api/users
 // @desc    Get all users
-// @access  Private (State Admin only)
-router.get('/', authenticate, requireRole('state_admin'), paginationValidation, async (req, res) => {
+// @access  Private (State Admin, District Admin)
+router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), paginationValidation, async (req, res) => {
   try {
     const {
       page = 1,
@@ -39,6 +39,11 @@ router.get('/', authenticate, requireRole('state_admin'), paginationValidation, 
         { phone: searchRegex },
         { email: searchRegex }
       ];
+    }
+
+    // District admins can only see users in their own district
+    if (req.user.role === 'district_admin' && req.user.district) {
+      filter.district = req.user.district._id || req.user.district;
     }
 
     const options = {

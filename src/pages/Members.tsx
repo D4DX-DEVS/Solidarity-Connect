@@ -378,7 +378,7 @@ const Members = () => {
         ) : (
           <div className="space-y-3 relative">
           {members.map((member) => (
-            <Card key={member._id} className="surface-card cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.32)]">
+            <Card key={member._id} className="surface-card cursor-pointer transition-shadow duration-200 md:hover:-translate-y-0.5 md:hover:shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.32)] md:transition-all md:duration-200">
               <div
                 className="p-4"
                 onClick={() => navigate(`/member/${member._id}`)}
