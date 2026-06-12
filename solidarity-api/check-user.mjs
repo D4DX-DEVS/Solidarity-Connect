@@ -1,0 +1,10 @@
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '.env') });
+await mongoose.connect(process.env.MONGODB_URI);
+const users = await mongoose.connection.collection('users').find({ phone: { $in: ['9037434496', '+919037434496'] } }).toArray();
+console.log(JSON.stringify(users, null, 2));
+await mongoose.disconnect();
