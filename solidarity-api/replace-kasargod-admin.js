@@ -27,7 +27,7 @@ if (!member) {
 console.log(`✅ Member found: ${member.name} (${member.phone})`);
 
 // ── 2. Find Kasargod district ─────────────────────────────────────────────────
-const district = await District.findOne({ name: /kasaragod/i });
+const district = await District.findOne({ name: /kasargod/i });
 
 if (!district) {
   console.error('❌ Kasargod district not found');
