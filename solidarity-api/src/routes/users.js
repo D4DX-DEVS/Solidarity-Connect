@@ -13,8 +13,8 @@ const router = express.Router();
 
 // @route   GET /api/users
 // @desc    Get all users
-// @access  Private (State Admin only)
-router.get('/', authenticate, requireRole('state_admin'), paginationValidation, async (req, res) => {
+// @access  Private (State Admin, District Admin)
+router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), paginationValidation, async (req, res) => {
   try {
     const {
       page = 1,
@@ -39,6 +39,11 @@ router.get('/', authenticate, requireRole('state_admin'), paginationValidation, 
         { phone: searchRegex },
         { email: searchRegex }
       ];
+    }
+
+    // District admins can only see users in their own district
+    if (req.user.role === 'district_admin' && req.user.district) {
+      filter.district = req.user.district._id || req.user.district;
     }
 
     const options = {
@@ -130,11 +135,35 @@ router.get('/leaders', authenticate, async (req, res) => {
       role: 'member',
     }));
 
+    // Deduplicate by phone number — prefer User record over Member record
+    const normalizePhone = (raw) => {
+      const digits = (raw || '').replace(/\D/g, '');
+      // Strip leading 91 country code for Indian numbers (result should be 10 digits)
+      if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+      return digits;
+    };
+    const seenPhones = new Set();
+    const deduped = [];
+    // Add users first (higher priority)
+    for (const u of users) {
+      const phone = normalizePhone(u.phone);
+      if (phone && seenPhones.has(phone)) continue;
+      if (phone) seenPhones.add(phone);
+      deduped.push(u);
+    }
+    // Then add members only if their phone hasn't been seen
+    for (const m of normalizedMembers) {
+      const phone = normalizePhone(m.phone);
+      if (phone && seenPhones.has(phone)) continue;
+      if (phone) seenPhones.add(phone);
+      deduped.push(m);
+    }
+
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
     // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
     const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
-    const combined = [...users, ...normalizedMembers].sort((a, b) => {
+    const combined = deduped.sort((a, b) => {
       const orderA = normalizeOrder(a.roleTag?.listingOrder);
       const orderB = normalizeOrder(b.roleTag?.listingOrder);
       if (orderA !== orderB) return orderA - orderB;
@@ -146,7 +175,7 @@ router.get('/leaders', authenticate, async (req, res) => {
       return (a.name || '').localeCompare(b.name || '');
     });
 
-    const total = userCount + memberCount;
+    const total = combined.length;
     const start = (pageNum - 1) * limitNum;
     const paginated = combined.slice(start, start + limitNum);
 

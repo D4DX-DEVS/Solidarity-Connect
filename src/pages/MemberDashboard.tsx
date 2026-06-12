@@ -13,6 +13,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI, apiCall } from "@/utils/api";
@@ -54,7 +61,9 @@ import {
   Eye,
   Download,
   Search,
-  Link2
+  Link2,
+  LogOut,
+  Menu
 } from "lucide-react";
 
 interface MemberProfile {
@@ -1652,13 +1661,37 @@ const MemberDashboard = () => {
     <PageShell contentClassName="pb-40">
       <PageHero
         title={`Welcome, ${profile.profile.name}`}
-        subtitle={`${profile.profile.group.name} • ${profile.profile.district.name}`}
+        subtitle={
+          profile.profile.group.name === profile.profile.district.name
+            ? profile.profile.district.name
+            : `${profile.profile.group.name} • ${profile.profile.district.name}`
+        }
         eyebrow="Member Portal"
         icon={<Home className="h-6 w-6" />}
         actions={
-          <Button variant="outline" onClick={() => setShowLogoutConfirm(true)}>
-            Logout
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+              <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
+                <p className="text-sm font-bold text-foreground mt-0.5">{profile.profile.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{profile.profile.phone}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {profile.profile.group.name === profile.profile.district.name
+                    ? profile.profile.district.name
+                    : `${profile.profile.group.name} · ${profile.profile.district.name}`}
+                </p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
         details={
           <>

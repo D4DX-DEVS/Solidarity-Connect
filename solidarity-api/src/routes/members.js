@@ -39,9 +39,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     const limitNum = Math.min(Math.max(1, parseInt(limit) || 20), 100); // Between 1 and 100
 
     // Build base filter based on user role
-    // When forLeaderAssignment=true, skip scope restriction so any member can be found
+    // When forLeaderAssignment=true, only state_admin skips scope restriction
     let baseFilter = {};
-    const skipScope = forLeaderAssignment === 'true' && ['state_admin', 'district_admin', 'group_admin'].includes(req.user.role);
+    const skipScope = forLeaderAssignment === 'true' && req.user.role === 'state_admin';
     
     if (!skipScope) {
       if (req.user.role === 'group_admin') {
