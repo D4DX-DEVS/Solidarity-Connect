@@ -38,11 +38,18 @@ class OTPService {
     return roles;
   }
 
+  // Build all stored phone variants (admins stored as 10-digit, others may have +91)
+  getPhoneVariants(phone) {
+    const phoneWithPrefix = phone.startsWith('+91') ? phone : `+91${phone}`;
+    const phoneWithoutPrefix = phone.startsWith('+91') ? phone.slice(3) : phone;
+    return [...new Set([phone, phoneWithPrefix, phoneWithoutPrefix])];
+  }
+
   // Send OTP to user
   async sendOTP(phone, userType) {
     try {
-      // Check if user exists with this phone and role
-      let user = await User.findOne({ phone, role: userType });
+      // Check if user exists with this phone and role (match all stored phone formats)
+      let user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType });
       
       if (!user) {
         // Check what roles this phone actually has
@@ -113,7 +120,7 @@ class OTPService {
   // Verify OTP
   async verifyOTP(phone, otp, userType) {
     try {
-      const user = await User.findOne({ phone, role: userType })
+      const user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType })
         .populate('district', 'name code')
         .populate('group', 'name code district');
 
@@ -203,7 +210,7 @@ class OTPService {
   // Resend OTP
   async resendOTP(phone, userType) {
     try {
-      const user = await User.findOne({ phone, role: userType });
+      const user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType });
       
       if (!user) {
         return {
