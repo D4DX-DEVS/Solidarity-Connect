@@ -47,8 +47,9 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
     if (!response.ok) {
       console.error(`❌ API Error: ${response.status}`, data);
-      const error = new Error(data.message || `HTTP ${response.status}`) as Error & { data?: any };
+      const error = new Error(data.message || `HTTP ${response.status}`) as Error & { data?: any; status?: number };
       error.data = data;
+      error.status = response.status;
       throw error;
     }
 
