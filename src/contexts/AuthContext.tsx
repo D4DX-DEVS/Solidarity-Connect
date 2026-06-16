@@ -64,6 +64,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setToken(storedToken);
 
+    // Restore cached user data immediately so the app loads without waiting for network
+    const cachedUser = localStorage.getItem('userData');
+    if (cachedUser) {
+      try {
+        const parsed = JSON.parse(cachedUser) as User;
+        setIsAuthenticated(true);
+        setUser(parsed);
+        setUserRole(parsed.role);
+        setUserDistrict(parsed.district?.name || null);
+        setUserGroup(parsed.group?.name || null);
+      } catch {
+        // ignore parse errors, will be overwritten by server response
+      }
+    }
+
     try {
       // Use different API based on user type
       const result = userType === 'member' ?
@@ -71,7 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await authAPI.getProfile();
 
       if (result && result.data) {
-        let userData;
+        let userData: User;
 
         if (userType === 'member') {
           // For members, the profile data structure is different
@@ -95,19 +110,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserRole(userData.role);
         setUserDistrict(userData.district?.name || null);
         setUserGroup(userData.group?.name || null);
+        // Refresh cached user data
+        localStorage.setItem('userData', JSON.stringify(userData));
 
         return true;
       } else {
-        // Token is invalid, remove it
+        // Token explicitly rejected by server — clear everything
         localStorage.removeItem('token');
         localStorage.removeItem('userType');
+        localStorage.removeItem('userData');
+        setIsAuthenticated(false);
+        setUser(null);
+        setUserRole(null);
+        setUserDistrict(null);
+        setUserGroup(null);
         return false;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('userType');
-      return false;
+      // On network errors, keep the cached session alive so PWA works offline/on reopen
+      const isAuthError =
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        ((error as { status: number }).status === 401 ||
+          (error as { status: number }).status === 403);
+
+      if (isAuthError) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userData');
+        setIsAuthenticated(false);
+        setUser(null);
+        setUserRole(null);
+        setUserDistrict(null);
+        setUserGroup(null);
+        return false;
+      }
+
+      // Network/server error — keep the cached session if we had one
+      return cachedUser !== null;
     }
   };
 
@@ -120,6 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       : userData;
 
     localStorage.setItem('token', tokenValue);
+    localStorage.setItem('userData', JSON.stringify(normalizedUserData));
     if (userType) {
       localStorage.setItem('userType', userType);
     }
@@ -134,6 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userType');
+    localStorage.removeItem('userData');
     setToken(null);
     setIsAuthenticated(false);
     setUser(null);
