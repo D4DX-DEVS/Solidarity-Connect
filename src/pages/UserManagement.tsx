@@ -130,6 +130,7 @@ const UserManagement = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -233,7 +234,7 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setSearching(true);
         const params: Record<string, any> = { page: currentPage, limit: 20 };
         if (debouncedSearch) params.search = debouncedSearch;
 
@@ -269,6 +270,7 @@ const UserManagement = () => {
         console.error('Error fetching data:', error);
         toast({ title: "Error", description: "Failed to load data", variant: "destructive" });
       } finally {
+        setSearching(false);
         setLoading(false);
       }
     };
@@ -277,7 +279,7 @@ const UserManagement = () => {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
+      setSearching(true);
       const params: Record<string, any> = { page: currentPage, limit: 20 };
       if (debouncedSearch) params.search = debouncedSearch;
 
@@ -311,7 +313,7 @@ const UserManagement = () => {
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
@@ -695,6 +697,12 @@ const UserManagement = () => {
         title={isMemberView ? "Members" : "Users"}
         description={isMemberView ? "Member records surfaced through the same search and filter controls." : "Admin accounts and their current access status."}
       >
+        {searching && (
+          <div className="flex items-center justify-center py-4">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+            <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+          </div>
+        )}
         {isMemberView && (
           <div className="space-y-3">
             {members.map((member) => {
@@ -765,7 +773,7 @@ const UserManagement = () => {
                 </Card>
               );
             })}
-            {members.length === 0 && !loading && (
+            {members.length === 0 && !searching && (
               <Card className="surface-card">
                 <CardContent className="p-8 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -865,7 +873,7 @@ const UserManagement = () => {
           ))}
         </div>}
 
-        {!isMemberView && users.length === 0 && !loading && (
+        {!isMemberView && users.length === 0 && !searching && (
           <Card className="surface-card">
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -891,7 +899,7 @@ const UserManagement = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(p => p - 1)}
-                disabled={!hasPrevPage || loading}
+                disabled={!hasPrevPage || searching}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" /> Previous
               </Button>
@@ -899,7 +907,7 @@ const UserManagement = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(p => p + 1)}
-                disabled={!hasNextPage || loading}
+                disabled={!hasNextPage || searching}
               >
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>

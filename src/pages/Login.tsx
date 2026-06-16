@@ -207,6 +207,10 @@ const Login = () => {
       const prevInput = document.getElementById(`otp-${index - 1}`);
       prevInput?.focus();
     }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleVerifyOtp();
+    }
   };
 
   const handleVerifyOtp = async () => {
@@ -480,6 +484,12 @@ const Login = () => {
                     placeholder="Enter your number"
                     value={phone}
                     onChange={(e) => handlePhoneChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && phone.length === 10 && userType && !loading) {
+                        e.preventDefault();
+                        handleSendOtp();
+                      }
+                    }}
                     maxLength={10}
                     disabled={showOtp || !userType}
                     className="h-[52px] rounded-2xl border-slate-200/80 bg-slate-50/60 pl-[7rem] text-[15px] font-medium tracking-wide shadow-sm transition-all duration-200 placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400 focus-visible:border-primary/30 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/10 disabled:opacity-50"
