@@ -314,7 +314,7 @@ router.post('/verify-otp', memberVerifyOTPValidation, formatPhoneNumber, async (
         userType: 'member'
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '365d' }
     );
 
     res.status(200).json({

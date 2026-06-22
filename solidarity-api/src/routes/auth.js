@@ -75,7 +75,7 @@ router.post('/verify-otp', formatPhoneNumber, verifyOTPValidation, async (req, r
         role: result.user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '365d' }
     );
 
     res.status(200).json({
@@ -223,7 +223,7 @@ router.post('/refresh-token', authenticate, async (req, res) => {
         role: user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '365d' }
     );
 
     res.status(200).json({
