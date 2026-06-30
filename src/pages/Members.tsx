@@ -481,15 +481,20 @@ const Members = () => {
                     variant="outline"
                     size="sm"
                     className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
-                    disabled={!!member.transferRequest}
+                    // State admins can move a member directly (no TransferRequest), so the
+                    // transfer button stays enabled even if a pending request exists.
+                    // Group admins create a TransferRequest and are blocked while one is pending.
+                    disabled={!!member.transferRequest && userRole !== 'state_admin'}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedMember(member);
                       setShowTransfer(true);
                     }}
                   >
-                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest ? 'text-muted-foreground' : 'text-success'}`} />
-                    <span className="text-xs text-center leading-tight">Transfer</span>
+                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest && userRole !== 'state_admin' ? 'text-muted-foreground' : 'text-success'}`} />
+                    <span className="text-xs text-center leading-tight">
+                      {userRole === 'state_admin' ? 'Move' : 'Transfer'}
+                    </span>
                   </Button>
                   <Button
                     variant="outline"
@@ -559,6 +564,7 @@ const Members = () => {
         open={showTransfer}
         onOpenChange={setShowTransfer}
         member={selectedMember}
+        onTransferred={() => setRefreshKey((prev) => prev + 1)}
       />
       <BaithulMaalDialog
         open={showBaithul}

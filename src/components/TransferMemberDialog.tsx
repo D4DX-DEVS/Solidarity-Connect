@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { districtsAPI, transferRequestsAPI } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { districtsAPI, transferRequestsAPI, membersAPI } from "@/utils/api";
 
 interface District {
   _id: string;
@@ -38,10 +39,16 @@ interface TransferMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member: Member | null;
+  // Called after a successful transfer/move so the parent can refresh its list.
+  onTransferred?: () => void;
 }
 
-const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDialogProps) => {
+const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: TransferMemberDialogProps) => {
   const { toast } = useToast();
+  const { userRole } = useAuth();
+  // State admins move the member directly (no approval workflow); other roles
+  // create a TransferRequest that goes through the approval pipeline.
+  const isDirectMove = userRole === 'state_admin';
   const [loading, setLoading] = useState(false);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -98,26 +105,55 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
     e.preventDefault();
     if (!member) return;
 
+    // For state admins doing a direct move, the "reason" note is informational only.
+    if (isDirectMove && (!formData.targetDistrict || !formData.targetGroup)) {
+      toast({
+        title: "Missing Target Location",
+        description: "Please select both a target district and group.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await transferRequestsAPI.createTransferRequest({
-        member: member._id,
-        targetDistrict: formData.targetDistrict,
-        targetGroup: formData.targetGroup,
-        reason: formData.reason
-      });
+      if (isDirectMove) {
+        // ── State admin path: move the member directly via PUT /api/members/:id ──
+        // No TransferRequest / approval workflow — state admins are the highest
+        // authority and can relocate a member anywhere immediately.
+        await membersAPI.updateMember(member._id, {
+          district: formData.targetDistrict,
+          group: formData.targetGroup,
+        });
 
-      toast({
-        title: "Success",
-        description: "Transfer request submitted successfully. It will be reviewed by the appropriate admin.",
-      });
+        toast({
+          title: "Member Moved",
+          description: `${member.name} has been transferred to the new district/group.`,
+        });
+      } else {
+        // ── Group admin path: create a TransferRequest for approval ──
+        await transferRequestsAPI.createTransferRequest({
+          member: member._id,
+          targetDistrict: formData.targetDistrict,
+          targetGroup: formData.targetGroup,
+          reason: formData.reason
+        });
+
+        toast({
+          title: "Transfer Request Submitted",
+          description: "The transfer request has been submitted and will be reviewed by the appropriate admin.",
+        });
+      }
+
+      onTransferred?.();
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to submit transfer request:', error);
       toast({
         title: "Error",
-        description: "Failed to submit transfer request",
+        description: isDirectMove
+          ? "Failed to transfer member. Please try again."
+          : "Failed to submit transfer request",
         variant: "destructive"
       });
     } finally {
@@ -131,7 +167,9 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Transfer {member.name}</DialogTitle>
+          <DialogTitle>
+            {isDirectMove ? `Move ${member.name}` : `Transfer ${member.name}`}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="mb-4 p-3 bg-muted rounded-md">
@@ -183,48 +221,65 @@ const TransferMemberDialog = ({ open, onOpenChange, member }: TransferMemberDial
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Reason for Transfer *</label>
+            <label className="text-sm font-medium mb-2 block">
+              Reason for Transfer {isDirectMove ? '(Optional)' : '*'}
+            </label>
             <Textarea
-              placeholder="Please provide a detailed reason for this transfer request..."
+              placeholder={isDirectMove
+                ? "Optional note about this move (for your records)…"
+                : "Please provide a detailed reason for this transfer request..."
+              }
               value={formData.reason}
               onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              required
+              required={!isDirectMove}
               disabled={loading}
               rows={3}
-              minLength={10}
+              minLength={isDirectMove ? undefined : 10}
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {formData.reason.length}/500 characters (minimum 10)
+              {formData.reason.length}/500 characters{isDirectMove ? '' : ' (minimum 10)'}
             </p>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> This transfer request will be sent for approval to the appropriate admin. 
-              {formData.targetDistrict && member.district._id !== formData.targetDistrict 
-                ? " Cross-district transfers require State Admin approval."
-                : " Within-district transfers require District Admin approval."
-              }
+          <div className={isDirectMove
+            ? "bg-amber-50 border border-amber-200 rounded-md p-3"
+            : "bg-blue-50 border border-blue-200 rounded-md p-3"}>
+            <p className={`text-sm ${isDirectMove ? 'text-amber-800' : 'text-blue-800'}`}>
+              {isDirectMove ? (
+                <>
+                  <strong>Note:</strong> As a state admin, the member will be moved to the
+                  target district/group <strong>immediately</strong> — no approval required.
+                </>
+              ) : (
+                <>
+                  <strong>Note:</strong> This transfer request will be sent for approval to the appropriate admin.
+                  {formData.targetDistrict && member.district._id !== formData.targetDistrict
+                    ? " Cross-district transfers require State Admin approval."
+                    : " Within-district transfers require District Admin approval."}
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="flex-1" 
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 bg-success hover:bg-success/90"
               disabled={loading}
             >
-              {loading ? "Submitting..." : "Submit Transfer Request"}
+              {loading
+                ? (isDirectMove ? "Moving..." : "Submitting...")
+                : (isDirectMove ? "Move Member" : "Submit Transfer Request")}
             </Button>
           </div>
         </form>
