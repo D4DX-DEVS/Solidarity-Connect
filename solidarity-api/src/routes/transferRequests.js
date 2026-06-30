@@ -3,6 +3,7 @@ import TransferRequest from '../models/TransferRequest.js';
 import Member from '../models/Member.js';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
+import Notification from '../models/Notification.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import {
   paginationValidation,
@@ -26,6 +27,56 @@ const POPULATE_OPTS = [
   { path: 'completedBy', select: 'name' },
   { path: 'rejectedBy', select: 'name' }
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Transfer notification helper
+//
+// Creates a system Notification for transfer lifecycle events so participants
+// can discover pending actions without manually polling the TransferApprovals
+// page. Uses role-based audience targeting (state_admins / district_admins /
+// group_admins) because the GET /api/notifications route filters by audience
+// for non-state-admin users; specific-user targeting wouldn't pass the list
+// filter today.
+//
+// The notifications are created with status='sent' (non-state-admin users only
+// see notifications whose status is 'sent').
+//
+// All errors are swallowed — a notification failure must NEVER block a transfer
+// operation that has already succeeded.
+// ─────────────────────────────────────────────────────────────────────────────
+async function notifyTransferEvent({ transferRequest, audience, title, message, triggeredBy, priority = 'medium' }) {
+  try {
+    if (!transferRequest || !audience || !title || !message) return;
+
+    // Build a short description of the transfer for use in the message.
+    const memberName = transferRequest.member?.name ?? 'a member';
+    const fromLoc = transferRequest.currentGroup?.name
+      ? `${transferRequest.currentGroup.name} (${transferRequest.currentDistrict?.code ?? '?'})`
+      : 'current group';
+    const toLoc = transferRequest.targetGroup?.name
+      ? `${transferRequest.targetGroup.name} (${transferRequest.targetDistrict?.code ?? '?'})`
+      : 'new group';
+
+    await Notification.create({
+      title,
+      message: message
+        .replace('{member}', memberName)
+        .replace('{from}', fromLoc)
+        .replace('{to}', toLoc),
+      type: 'system',
+      priority,
+      targetAudience: audience,   // 'state_admins' | 'district_admins' | 'group_admins'
+      channels: ['in_app'],
+      status: 'sent',             // must be 'sent' for non-state-admin users to see it
+      scheduledFor: new Date(),
+      sentAt: new Date(),
+      createdBy: triggeredBy,
+    });
+  } catch (err) {
+    // Non-fatal: log and continue. Don't break the transfer flow.
+    console.error('notifyTransferEvent failed (non-fatal):', err?.message || err);
+  }
+}
 
 // Validation for creation
 const createTransferValidation = [
@@ -111,6 +162,55 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
   }
 });
 
+// @route   GET /api/transfer-requests/pending-count
+// @desc    Get count of transfer requests pending the current user's action
+//          (used for badge counts on the StateAdmin / DistrictAdmin dashboards).
+//          - group_admin: requests they submitted that are still in-flight
+//          - district_admin: requests pending their district-level approval
+//          - state_admin:   requests that are district_approved and waiting
+//                           for their final approval + execution
+// @access  Private
+// NOTE: must be defined BEFORE router.get('/:id') so '/pending-count' isn't
+// captured by the :id param route.
+router.get('/pending-count', authenticate, async (req, res) => {
+  try {
+    let count = 0;
+
+    if (req.user.role === 'district_admin') {
+      if (!req.user.district) {
+        return res.status(200).json({ success: true, data: { count: 0 } });
+      }
+      const distId = req.user.district._id;
+      count = await TransferRequest.countDocuments({
+        status: 'pending',
+        $or: [
+          { currentDistrict: distId, 'sourceDistrictApproval.status': 'pending' },
+          { targetDistrict: distId, 'targetDistrictApproval.status': 'pending' }
+        ]
+      });
+    } else if (req.user.role === 'state_admin') {
+      count = await TransferRequest.countDocuments({
+        status: 'district_approved',
+        'stateApproval.status': 'pending'
+      });
+    } else if (req.user.role === 'group_admin') {
+      if (!req.user.group) {
+        return res.status(200).json({ success: true, data: { count: 0 } });
+      }
+      count = await TransferRequest.countDocuments({
+        currentGroup: req.user.group._id,
+        status: { $in: ['pending', 'district_approved'] }
+      });
+    }
+    // Other roles (members, etc.): count stays 0
+
+    res.status(200).json({ success: true, data: { count } });
+  } catch (error) {
+    console.error('Get pending transfer count error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch pending transfer count' });
+  }
+});
+
 // @route   POST /api/transfer-requests
 // @desc    Create new transfer request (group_admin only)
 // @access  Private
@@ -173,6 +273,29 @@ router.post('/', authenticate, authorize(['manage_members']), createTransferVali
     await transferRequest.save();
     await transferRequest.populate(POPULATE_OPTS);
 
+    // Notify the district admins who need to act next: the source district
+    // admin (and, for cross-district transfers, the target district admin).
+    // State admin only gets involved after both district sides approve, so they
+    // are notified later (in the approve handler) when status advances to
+    // 'district_approved'.
+    const isCrossDistrict = transferRequest.currentDistrict?._id?.toString()
+      !== transferRequest.targetDistrict?._id?.toString();
+
+    // We do NOT await these — the HTTP response should not be delayed by
+    // notification writes, and a notification failure must not break creation.
+    notifyTransferEvent({
+      transferRequest,
+      audience: 'district_admins',
+      title: isCrossDistrict
+        ? 'Cross-district transfer request needs approval'
+        : 'New transfer request needs your approval',
+      message: isCrossDistrict
+        ? `A cross-district transfer for {member} ({from} → {to}) was submitted and needs approval from the source AND target district admins.`
+        : `A transfer for {member} ({from} → {to}) was submitted and needs your district approval.`,
+      triggeredBy: req.user._id,
+      priority: 'high'
+    });
+
     res.status(201).json({
       success: true,
       message: 'Transfer request submitted successfully',
@@ -208,6 +331,45 @@ router.post('/:id/approve', authenticate, authorize(['manage_members']), approva
     const msg = req.user.role === 'state_admin'
       ? 'Transfer completed — member has been moved'
       : 'Transfer approved — forwarded to next approval stage';
+
+    // ─── Transfer notifications ────────────────────────────────────────────
+    // Decide what to notify based on the new status of the request.
+    const newStatus = transferRequest.status;
+
+    if (newStatus === 'completed') {
+      // State admin just performed the final approval + member move.
+      // Notify the original requesting group admin that their transfer is done.
+      notifyTransferEvent({
+        transferRequest,
+        audience: 'group_admins',
+        title: 'Transfer completed',
+        message: `Your transfer request for {member} ({from} → {to}) has been approved and the member has been moved.`,
+        triggeredBy: req.user._id,
+        priority: 'medium'
+      });
+    } else if (newStatus === 'district_approved') {
+      // Both district sides are approved → status advanced to district_approved.
+      // State admin is now the next actor.
+      notifyTransferEvent({
+        transferRequest,
+        audience: 'state_admins',
+        title: 'Transfer request ready for final approval',
+        message: `Transfer for {member} ({from} → {to}) has been approved by the district admin(s) and is awaiting your final approval.`,
+        triggeredBy: req.user._id,
+        priority: 'high'
+      });
+    } else if (newStatus === 'pending') {
+      // A district admin approved but the other district side is still pending
+      // (cross-district case). Notify the other district admin that it's their turn.
+      notifyTransferEvent({
+        transferRequest,
+        audience: 'district_admins',
+        title: 'Transfer request awaiting your approval',
+        message: `A cross-district transfer for {member} ({from} → {to}) is waiting for the second district admin to approve.`,
+        triggeredBy: req.user._id,
+        priority: 'medium'
+      });
+    }
 
     res.status(200).json({ success: true, message: msg, data: transferRequest });
 
@@ -246,6 +408,17 @@ router.post('/:id/reject', authenticate, authorize(['manage_members']), [
     }
 
     await transferRequest.reject(req.user, reason);
+
+    // Notify the requesting group admin that their transfer was rejected,
+    // including the rejection reason so they understand why.
+    notifyTransferEvent({
+      transferRequest,
+      audience: 'group_admins',
+      title: 'Transfer request rejected',
+      message: `Your transfer request for {member} ({from} → {to}) was rejected. Reason: ${reason}`,
+      triggeredBy: req.user._id,
+      priority: 'high'
+    });
 
     res.status(200).json({ success: true, message: 'Transfer request rejected', data: transferRequest });
 

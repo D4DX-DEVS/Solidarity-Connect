@@ -48,6 +48,10 @@ interface DashboardData {
   recentMembers: any[];
   upcomingMeetings: any[];
   pendingRequestsCount: number;
+  // Count of TransferRequest documents pending the current user's action
+  // (role-aware: state_admin sees district_approved; district_admin sees
+  // pending+their-district; group_admin sees their own in-flight requests).
+  pendingTransfersCount: number;
 }
 
 interface UserStats {
@@ -270,7 +274,7 @@ const StateAdmin = () => {
       value: String(dashboardData?.pendingRequestsCount || 0),
       detail: dashboardData?.pendingRequestsCount ? "Needs attention" : "All clear",
       icon: FileCheck,
-      tone: dashboardData?.pendingRequestsCount ? "danger" : "neutral",
+      tone: (dashboardData?.pendingRequestsCount ? "danger" : "neutral") as "danger" | "neutral",
     },
     {
       title: "Districts",
@@ -388,7 +392,13 @@ const StateAdmin = () => {
                   <p className="text-xs text-muted-foreground">Approval, communication, and file tasks used most often.</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="daily-workflows-heading">
-                  {primaryActions.map((action) => (
+                  {primaryActions.map((action) => {
+                    // Show a count badge on the Transfer Approvals tile when
+                    // there are transfer requests pending the state admin's action.
+                    const badgeCount = action.label === 'Transfer Approvals'
+                      ? dashboardData?.pendingTransfersCount
+                      : undefined;
+                    return (
                     <Button
                       key={action.label}
                       variant="outline"
@@ -399,11 +409,19 @@ const StateAdmin = () => {
                         <action.icon className={`h-5 w-5 ${action.color}`} />
                       </div>
                       <div className="space-y-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-foreground">{action.label}</p>
+                          {badgeCount ? (
+                            <Badge variant="destructive" className="h-5 min-w-[1.25rem] justify-center px-1.5 text-[0.65rem]">
+                              {badgeCount > 99 ? '99+' : badgeCount}
+                            </Badge>
+                          ) : null}
+                        </div>
                         <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
                       </div>
                     </Button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

@@ -146,7 +146,7 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
     .limit(3)
     .select('title scheduledDate meetingType');
 
-    // Pending requests count
+    // Pending requests count (membership-edit / affiliation requests — NOT transfers)
     let pendingRequestsCount = 0;
     if (req.user.role === 'state_admin') {
       pendingRequestsCount = await Request.countDocuments({ status: 'pending' });
@@ -163,6 +163,33 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
         requestFilter.group = { $in: scopeGroupIds };
       }
       pendingRequestsCount = await Request.countDocuments(requestFilter);
+    }
+
+    // Pending TRANSFER requests count — separate from the membership Requests above.
+    // Mirrors the role-aware filter used by GET /api/transfer-requests/pending-count.
+    let pendingTransfersCount = 0;
+    if (req.user.role === 'state_admin') {
+      // State admin is the final approver + executor: sees transfers that have
+      // already been approved by both district admins.
+      pendingTransfersCount = await TransferRequest.countDocuments({
+        status: 'district_approved',
+        'stateApproval.status': 'pending'
+      });
+    } else if (req.user.role === 'district_admin' && req.user.district) {
+      const distId = req.user.district._id;
+      pendingTransfersCount = await TransferRequest.countDocuments({
+        status: 'pending',
+        $or: [
+          { currentDistrict: distId, 'sourceDistrictApproval.status': 'pending' },
+          { targetDistrict: distId, 'targetDistrictApproval.status': 'pending' }
+        ]
+      });
+    } else if (req.user.role === 'group_admin' && req.user.group) {
+      // Group admin sees their own in-flight requests (pending OR district_approved).
+      pendingTransfersCount = await TransferRequest.countDocuments({
+        currentGroup: req.user.group._id,
+        status: { $in: ['pending', 'district_approved'] }
+      });
     }
 
     res.status(200).json({
@@ -183,7 +210,8 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
         districtStatistics: districtStats?.[0] || null,
         recentMembers,
         upcomingMeetings,
-        pendingRequestsCount
+        pendingRequestsCount,
+        pendingTransfersCount
       }
     });
 

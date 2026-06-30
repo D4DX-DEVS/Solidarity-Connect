@@ -481,19 +481,19 @@ const Members = () => {
                     variant="outline"
                     size="sm"
                     className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
-                    // State admins can move a member directly (no TransferRequest), so the
-                    // transfer button stays enabled even if a pending request exists.
+                    // State + district admins move a member directly (no TransferRequest),
+                    // so the button stays enabled even if a pending request exists.
                     // Group admins create a TransferRequest and are blocked while one is pending.
-                    disabled={!!member.transferRequest && userRole !== 'state_admin'}
+                    disabled={!!member.transferRequest && userRole === 'group_admin'}
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedMember(member);
                       setShowTransfer(true);
                     }}
                   >
-                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest && userRole !== 'state_admin' ? 'text-muted-foreground' : 'text-success'}`} />
+                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest && userRole === 'group_admin' ? 'text-muted-foreground' : 'text-success'}`} />
                     <span className="text-xs text-center leading-tight">
-                      {userRole === 'state_admin' ? 'Move' : 'Transfer'}
+                      {userRole === 'state_admin' || userRole === 'district_admin' ? 'Move' : 'Transfer'}
                     </span>
                   </Button>
                   <Button
