@@ -111,7 +111,18 @@ const EditMemberDetails = () => {
           setMember(memberData);
           setSelectedDistrict(memberData.district?._id || "");
           setSelectedGroup(memberData.group?._id || "");
-          
+
+          // Format date for the <input type="date"> field. Stored values that fall outside
+          // the 0000-9999 year range (a known data-corruption artifact from old migrations)
+          // serialise to extended ISO like "+031227-12-31T18:30:00.000Z", which the native
+          // date input cannot render and `isISO8601()` rejects. Strip those to "" so we
+          // never re-send a value that will trip the backend validator on save.
+          const dobRaw = memberData.dateOfBirth
+            ? String(memberData.dateOfBirth).split('T')[0]
+            : "";
+          // Native date input only accepts YYYY-MM-DD with a 4-digit year.
+          const dobForInput = /^\d{4}-\d{2}-\d{2}$/.test(dobRaw) ? dobRaw : "";
+
           // Populate form with existing data
           setFormData({
             name: memberData.name || "",
@@ -119,7 +130,7 @@ const EditMemberDetails = () => {
             phone: memberData.phone ? memberData.phone.replace('+91', '') : "", // Remove +91 for editing
             address: memberData.address || "",
             status: memberData.status || "",
-            dateOfBirth: memberData.dateOfBirth ? memberData.dateOfBirth.split('T')[0] : "", // Format date for input
+            dateOfBirth: dobForInput,
             bloodGroup: memberData.bloodGroup || "",
             profession: memberData.profession || "",
             education: memberData.education || "",
@@ -178,7 +189,12 @@ const EditMemberDetails = () => {
       // Clean the form data - remove empty optional fields
       const cleanedData: any = { ...formData };
       if (!cleanedData.email) delete cleanedData.email;
-      if (!cleanedData.dateOfBirth) delete cleanedData.dateOfBirth;
+      // Only forward a DOB that is a valid YYYY-MM-DD; anything else (including
+      // corrupted stored values the input couldn't render) is dropped so the
+      // backend's isISO8601() validator never trips.
+      if (!cleanedData.dateOfBirth || !/^\d{4}-\d{2}-\d{2}$/.test(cleanedData.dateOfBirth)) {
+        delete cleanedData.dateOfBirth;
+      }
       if (!cleanedData.bloodGroup) delete cleanedData.bloodGroup;
       if (!cleanedData.profession) delete cleanedData.profession;
       if (!cleanedData.education) delete cleanedData.education;

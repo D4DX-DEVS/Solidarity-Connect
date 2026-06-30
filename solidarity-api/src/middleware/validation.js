@@ -77,6 +77,10 @@ export const createMemberValidation = [
     .isMongoId()
     .withMessage('Please select a valid group'),
   body('dateOfBirth')
+    .customSanitizer((value) => {
+      if (value === undefined || value === null) return value;
+      return /^\d{4}-\d{2}-\d{2}/.test(String(value)) ? value : '';
+    })
     .optional({ checkFalsy: true })
     .isISO8601()
     .withMessage('Invalid date of birth'),
@@ -118,6 +122,10 @@ export const updateMemberValidation = [
     .isMongoId()
     .withMessage('Invalid group ID'),
   body('dateOfBirth')
+    .customSanitizer((value) => {
+      if (value === undefined || value === null) return value;
+      return /^\d{4}-\d{2}-\d{2}/.test(String(value)) ? value : '';
+    })
     .optional({ checkFalsy: true })
     .isISO8601()
     .withMessage('Invalid date of birth'),
