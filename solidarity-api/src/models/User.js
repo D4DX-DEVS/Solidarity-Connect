@@ -106,7 +106,24 @@ const userSchema = new mongoose.Schema({
       min: [0, 'Listing order cannot be negative'],
       default: null
     }
-  }
+  },
+  // Additional leader roles beyond the primary roleTag (multi-role support).
+  extraRoleTags: [{
+    type: {
+      type: String,
+      enum: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
+    },
+    name: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Role tag name cannot exceed 100 characters']
+    },
+    listingOrder: {
+      type: Number,
+      min: [0, 'Listing order cannot be negative'],
+      default: null
+    }
+  }]
 }, {
   timestamps: true
 });

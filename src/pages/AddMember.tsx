@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
@@ -254,12 +255,7 @@ const AddMember = () => {
         description="Required details come first, followed by optional identity and contribution information."
       >
         {initialLoading ? (
-          <div className="flex items-center justify-center py-14">
-            <div className="text-center">
-              <div className="mx-auto mb-3 h-9 w-9 animate-spin rounded-full border-b-2 border-primary" />
-              <p className="text-sm text-muted-foreground">Loading member form...</p>
-            </div>
-          </div>
+          <FormSkeleton fields={6} />
         ) : !userContext?.permissions.canCreateMember ? (
           <div className="space-y-4 rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-6 text-center">
             <p className="text-sm font-medium text-foreground">You do not have permission to add members.</p>

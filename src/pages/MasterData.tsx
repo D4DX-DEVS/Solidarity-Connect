@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
@@ -184,10 +185,7 @@ const MasterData = () => {
           </SectionCard>
 
           {districtsLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Loading districts...
-            </div>
+            <ListSkeleton rows={4} />
           ) : districts.length === 0 ? (
             <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
               <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -307,10 +305,7 @@ const MasterData = () => {
           </SectionCard>
 
           {groupsLoading ? (
-            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Loading areas...
-            </div>
+            <ListSkeleton rows={4} />
           ) : groups.length === 0 ? (
             <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
               <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />

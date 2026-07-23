@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import Member from '../models/Member.js';
+import otpService from '../services/otpService.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { 
   paginationValidation,
@@ -100,7 +101,7 @@ router.get('/leaders', authenticate, async (req, res) => {
 
     // Build filter common to both collections
     const filter = { isLeader: true };
-    if (roleType) filter['roleTag.type'] = roleType;
+    // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
     if (districtId) filter.district = districtId;
     if (groupId) filter.group = groupId;
     if (unitName) filter['roleTag.name'] = unitName;
@@ -108,20 +109,21 @@ router.get('/leaders', authenticate, async (req, res) => {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
-        { 'roleTag.name': { $regex: search, $options: 'i' } }
+        { 'roleTag.name': { $regex: search, $options: 'i' } },
+        { 'extraRoleTags.name': { $regex: search, $options: 'i' } }
       ];
     }
 
     // Query both collections in parallel
     const [users, members, userCount, memberCount] = await Promise.all([
       User.find(filter)
-        .select('name phone role roleTag isLeader district group')
+        .select('name phone role roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .populate('roleTag.areaId', 'name code')
         .lean(),
       Member.find(filter)
-        .select('name phone roleTag isLeader district group')
+        .select('name phone roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .lean(),
@@ -159,11 +161,24 @@ router.get('/leaders', authenticate, async (req, res) => {
       deduped.push(m);
     }
 
+    // Multi-role fan-out: one row per role. roleSlot 0 = primary roleTag,
+    // roleSlot N = extraRoleTags[N-1]. Rows carry the full extraRoleTags array
+    // so the client can save slot-level edits back as a full replace.
+    let expanded = [];
+    for (const leader of deduped) {
+      expanded.push({ ...leader, roleSlot: 0 });
+      (leader.extraRoleTags || []).forEach((extra, i) => {
+        if (!extra || (!extra.type && !extra.name)) return;
+        expanded.push({ ...leader, roleTag: extra, roleSlot: i + 1 });
+      });
+    }
+    if (roleType) expanded = expanded.filter((l) => l.roleTag?.type === roleType);
+
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
     // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
     const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
-    const combined = deduped.sort((a, b) => {
+    const combined = expanded.sort((a, b) => {
       const orderA = normalizeOrder(a.roleTag?.listingOrder);
       const orderB = normalizeOrder(b.roleTag?.listingOrder);
       if (orderA !== orderB) return orderA - orderB;
@@ -207,7 +222,7 @@ router.patch('/:id/leader',
   handleValidationErrors,
   async (req, res) => {
     try {
-      const { isLeader, roleTag } = req.body;
+      const { isLeader, roleTag, extraRoles } = req.body;
       const targetUser = await User.findById(req.params.id);
 
       if (!targetUser) {
@@ -220,17 +235,39 @@ router.patch('/:id/leader',
         group_admin: ['area', 'unit', 'murabi', 'coordinator']
       };
 
-      if (roleTag && roleTag.type) {
-        const allowed = allowedRoleTypes[req.user.role] || [];
-        if (!allowed.includes(roleTag.type)) {
-          return res.status(403).json({
-            success: false,
-            message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
-          });
+      const allowed = allowedRoleTypes[req.user.role] || [];
+      if (roleTag && roleTag.type && !allowed.includes(roleTag.type)) {
+        return res.status(403).json({
+          success: false,
+          message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
+        });
+      }
+      if (Array.isArray(extraRoles)) {
+        for (const r of extraRoles) {
+          if (r && r.type && !allowed.includes(r.type)) {
+            return res.status(403).json({
+              success: false,
+              message: `Your role does not have permission to assign roleTag type: ${r.type}`
+            });
+          }
         }
       }
 
       targetUser.isLeader = isLeader !== undefined ? isLeader : targetUser.isLeader;
+
+      const toOrder = (v) => {
+        if (v === null || v === undefined || v === '') return null;
+        const parsed = Number(v);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      if (isLeader === false) {
+        targetUser.extraRoleTags = [];
+      } else if (Array.isArray(extraRoles)) {
+        // Full replace of additional roles (multi-role support).
+        targetUser.extraRoleTags = extraRoles
+          .filter((r) => r && (r.type || r.name))
+          .map((r) => ({ type: r.type || undefined, name: r.name || undefined, listingOrder: toOrder(r.listingOrder) }));
+      }
 
       if (isLeader === false) {
         targetUser.roleTag = undefined;
@@ -423,6 +460,24 @@ router.put('/:id',
         delete updateData.permissions;
       }
 
+      // Multi-role: same phone may hold other role docs. Changing role to one
+      // that already exists for this phone violates the unique (phone, role)
+      // index — catch it here with a friendly error instead of a raw E11000.
+      if (updateData.role && updateData.role !== user.role) {
+        const phoneVariants = otpService.getPhoneVariants(user.phone);
+        const conflict = await User.findOne({
+          phone: { $in: phoneVariants },
+          role: updateData.role,
+          _id: { $ne: user._id }
+        });
+        if (conflict) {
+          return res.status(400).json({
+            success: false,
+            message: `This phone number already has a separate account for role: ${updateData.role}. Edit that account instead.`
+          });
+        }
+      }
+
       // Update user
       Object.assign(user, updateData);
       await user.save();
@@ -471,10 +526,12 @@ router.post('/',
     try {
       const userData = req.body;
 
-      // Check if user with same phone and role already exists
-      const existingUser = await User.findOne({ 
-        phone: userData.phone, 
-        role: userData.role 
+      // Check if user with same phone and role already exists.
+      // Match all stored phone formats (10-digit and +91-prefixed) so the
+      // unique (phone, role) index never throws a raw E11000.
+      const existingUser = await User.findOne({
+        phone: { $in: otpService.getPhoneVariants(userData.phone) },
+        role: userData.role
       });
       if (existingUser) {
         return res.status(400).json({

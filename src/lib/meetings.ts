@@ -1,12 +1,41 @@
 import { api } from './api';
 
+export interface MeetingSession {
+  _id: string;
+  sessionNumber?: number;
+  title: string;
+  description?: string;
+  duration?: number;
+  scheduledDate?: string;
+  sessionStatus?: string;
+  memberAttendance?: unknown[];
+  guestAttendance?: unknown[];
+}
+
 export interface Meeting {
   _id: string;
   title: string;
   description?: string;
   scheduledDate: string;
   duration: number;
-  meetingType: 'general' | 'emergency' | 'training' | 'review';
+  meetingType: 'general' | 'emergency' | 'training' | 'review' | 'monthly_series';
+  venue?: string;
+  monthlyDetails?: {
+    month: number;
+    year: number;
+    totalSessions?: number;
+    synopsis?: string;
+  };
+  sessions?: MeetingSession[];
+  sessionInfo?: {
+    totalSessions?: number;
+    completedSessions?: number;
+    completionRate?: string;
+    totalMembersAcrossSessions?: number;
+    totalGuestsAcrossSessions?: number;
+    overallAttendanceRate?: string;
+    sessions?: MeetingSession[];
+  };
   targetAudience: 'all' | 'group_admins' | 'district_admins' | 'specific_groups' | 'specific_districts';
   targetGroups?: Array<{
     _id: string;
@@ -83,6 +112,26 @@ export interface CreateFormData {
     district?: any;
     group?: any;
   };
+}
+
+export interface GroupMemberSummary {
+  _id: string;
+  name: string;
+  phone: string;
+  status: string;
+  isApproved: boolean;
+}
+
+export interface MeetingAttendanceData {
+  memberAttendance: Array<{
+    member: { _id: string; name?: string };
+    status: string;
+  }>;
+  guestAttendance?: Array<{
+    name: string;
+    phone?: string;
+    organization?: string;
+  }>;
 }
 
 export const meetingsApi = {
@@ -171,7 +220,7 @@ export const meetingsApi = {
 
   // Get attendance
   getAttendance: async (id: string) => {
-    return api.get(`/meetings/${id}/attendance`);
+    return api.get<MeetingAttendanceData>(`/meetings/${id}/attendance`);
   },
 
   // Update meeting minutes
@@ -226,7 +275,7 @@ export const meetingsApi = {
 
   // Get group members for attendance
   getGroupMembers: async (groupId: string) => {
-    return api.get(`/groups/${groupId}/members?limit=100`);
+    return api.get<GroupMemberSummary[]>(`/groups/${groupId}/members?limit=100`);
   },
 
   // Add guest to meeting (meeting-level, not session-level)

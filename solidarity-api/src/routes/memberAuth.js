@@ -858,7 +858,7 @@ router.get('/leaders', authenticateMember, async (req, res) => {
     const limitNum = parseInt(limit);
 
     const filter = { isLeader: true };
-    if (roleType) filter['roleTag.type'] = roleType;
+    // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
     if (districtId) filter.district = districtId;
     if (groupId) filter.group = groupId;
     if (unitName) filter['roleTag.name'] = unitName;
@@ -866,20 +866,21 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
-        { 'roleTag.name': { $regex: search, $options: 'i' } }
+        { 'roleTag.name': { $regex: search, $options: 'i' } },
+        { 'extraRoleTags.name': { $regex: search, $options: 'i' } }
       ];
     }
 
     // Query both collections in parallel
     const [users, members, userCount, memberCount] = await Promise.all([
       User.find(filter)
-        .select('name phone role roleTag isLeader district group')
+        .select('name phone role roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .populate('roleTag.areaId', 'name code')
         .lean(),
       Member.find(filter)
-        .select('name phone roleTag isLeader district group')
+        .select('name phone roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .lean(),
@@ -915,11 +916,23 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       deduped.push(m);
     }
 
+    // Multi-role fan-out: one display row per role. Extra-role rows get a
+    // suffixed _id so client list keys stay unique (display only, no edits here).
+    let expanded = [];
+    for (const leader of deduped) {
+      expanded.push(leader);
+      (leader.extraRoleTags || []).forEach((extra, i) => {
+        if (!extra || (!extra.type && !extra.name)) return;
+        expanded.push({ ...leader, _id: `${leader._id}_r${i + 1}`, roleTag: extra });
+      });
+    }
+    if (roleType) expanded = expanded.filter((l) => l.roleTag?.type === roleType);
+
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
     // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
     const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
-    const combined = deduped.sort((a, b) => {
+    const combined = expanded.sort((a, b) => {
       const orderA = normalizeOrder(a.roleTag?.listingOrder);
       const orderB = normalizeOrder(b.roleTag?.listingOrder);
       if (orderA !== orderB) return orderA - orderB;

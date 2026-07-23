@@ -93,6 +93,7 @@ const Login = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
+  const [knownRoles, setKnownRoles] = useState<string[] | null>(null);
   const roleOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -101,6 +102,22 @@ const Login = () => {
   const handlePhoneChange = (value: string) => {
     const cleaned = value.replace(/\D/g, "").slice(0, 10);
     setPhone(cleaned);
+
+    // Discover this phone's roles so the picker can highlight/auto-select them
+    if (cleaned.length === 10 && /^[6-9]/.test(cleaned)) {
+      authAPI
+        .checkRoles(cleaned)
+        .then((result) => {
+          const roles: string[] = result.data?.roles || [];
+          setKnownRoles(roles);
+          if (roles.length === 1) {
+            setUserType(roles[0] as UserType);
+          }
+        })
+        .catch(() => setKnownRoles(null));
+    } else {
+      setKnownRoles(null);
+    }
   };
 
   const handleRoleSelect = (value: Exclude<UserType, "">) => {
@@ -405,6 +422,7 @@ const Login = () => {
                     const isActive = userType === option.value;
                     const Icon = option.icon;
                     const isTabStop = userType ? isActive : index === 0;
+                    const isKnownRole = knownRoles?.includes(option.value) ?? false;
 
                     return (
                       <button
@@ -444,7 +462,11 @@ const Login = () => {
                             {option.label}
                           </span>
                           <span className="mt-0.5 block text-[11px] text-slate-400">
-                            {option.hint}
+                            {isKnownRole ? (
+                              <span className="font-semibold text-primary">Your role</span>
+                            ) : (
+                              option.hint
+                            )}
                           </span>
                         </div>
 

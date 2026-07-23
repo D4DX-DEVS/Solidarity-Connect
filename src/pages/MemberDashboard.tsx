@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { DashboardSkeleton } from "@/components/ui/loading-skeletons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI, apiCall } from "@/utils/api";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import {
   User,
   CreditCard,
@@ -171,6 +173,7 @@ interface OrgFileItem {
   description?: string;
   category: string;
   fileType: string;
+  link?: string;
   url: string;
   originalName: string;
   mimetype: string;
@@ -250,7 +253,7 @@ const MemberDashboard = () => {
     skills: ""
   });
 
-  const { token, logout } = useAuth();
+  const { token, logout, availableRoles, switchRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -394,12 +397,7 @@ const MemberDashboard = () => {
           icon={<Home className="h-6 w-6" />}
         />
         <SectionCard title="Preparing Dashboard" description="Fetching the latest member workspace data.">
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
-              <p className="text-muted-foreground">Loading dashboard...</p>
-            </div>
-          </div>
+          <DashboardSkeleton />
         </SectionCard>
       </PageShell>
     );
@@ -1686,6 +1684,30 @@ const MemberDashboard = () => {
                     : `${profile.profile.group.name} · ${profile.profile.district.name}`}
                 </p>
               </div>
+              {availableRoles.filter((role) => role !== "member").length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <div className="px-3 pt-1.5 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Switch role
+                  </div>
+                  {availableRoles.filter((role) => role !== "member").map((role) => (
+                    <DropdownMenuItem
+                      key={role}
+                      onClick={async () => {
+                        try {
+                          await switchRole(role);
+                          navigate(getHomeRouteByRole(role));
+                        } catch {
+                          toast({ title: "Switch failed", description: "Could not switch role.", variant: "destructive" });
+                        }
+                      }}
+                    >
+                      <Link2 className="mr-2 h-4 w-4" />
+                      {role === "state_admin" ? "State Admin" : role === "district_admin" ? "District Admin" : "Area Admin"}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />Logout

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
@@ -113,10 +114,7 @@ const ManageDistricts = () => {
 
       <SectionCard title="District Directory" description="Review district coverage, totals, and management actions.">
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Loading districts...
-          </div>
+          <ListSkeleton rows={4} />
         ) : error ? (
           <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
             <p className="font-medium text-destructive">Failed to load districts</p>

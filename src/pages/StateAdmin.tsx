@@ -18,6 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { PageSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -294,12 +295,7 @@ const StateAdmin = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
+      <PageSkeleton />
     );
   }
 

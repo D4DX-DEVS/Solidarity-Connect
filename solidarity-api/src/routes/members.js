@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import otpService from '../services/otpService.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
@@ -401,12 +402,16 @@ router.post('/', authenticate, authorize(['manage_members']), autoAssignDistrict
       }
     }
 
-    // Check if member with same phone already exists
-    const existingMember = await Member.findOne({ phone: memberData.phone });
+    // Check if member with same phone already exists.
+    // Match all stored formats (+91-prefixed and 10-digit) so the same person
+    // can't be added twice with a different phone format.
+    const existingMember = await Member.findOne({
+      phone: { $in: otpService.getPhoneVariants(memberData.phone) }
+    });
     if (existingMember) {
       return res.status(400).json({
         success: false,
-        message: 'Member with this phone number already exists'
+        message: `Member with this phone number already exists (${existingMember.name})`
       });
     }
 
@@ -489,10 +494,10 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
 
     const updateData = req.body;
 
-    // If phone is being updated, check for duplicates
+    // If phone is being updated, check for duplicates (all stored formats)
     if (updateData.phone && updateData.phone !== member.phone) {
-      const existingMember = await Member.findOne({ 
-        phone: updateData.phone,
+      const existingMember = await Member.findOne({
+        phone: { $in: otpService.getPhoneVariants(updateData.phone) },
         _id: { $ne: member._id }
       });
       
@@ -588,7 +593,7 @@ router.patch('/:id/leader',
   handleValidationErrors,
   async (req, res) => {
     try {
-      const { isLeader, roleTag } = req.body;
+      const { isLeader, roleTag, extraRoles } = req.body;
       const member = await Member.findById(req.params.id);
 
       if (!member) {
@@ -601,17 +606,39 @@ router.patch('/:id/leader',
         group_admin: ['area', 'unit', 'murabi', 'coordinator']
       };
 
-      if (roleTag && roleTag.type) {
-        const allowed = allowedRoleTypes[req.user.role] || [];
-        if (!allowed.includes(roleTag.type)) {
-          return res.status(403).json({
-            success: false,
-            message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
-          });
+      const allowed = allowedRoleTypes[req.user.role] || [];
+      if (roleTag && roleTag.type && !allowed.includes(roleTag.type)) {
+        return res.status(403).json({
+          success: false,
+          message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
+        });
+      }
+      if (Array.isArray(extraRoles)) {
+        for (const r of extraRoles) {
+          if (r && r.type && !allowed.includes(r.type)) {
+            return res.status(403).json({
+              success: false,
+              message: `Your role does not have permission to assign roleTag type: ${r.type}`
+            });
+          }
         }
       }
 
       member.isLeader = isLeader !== undefined ? isLeader : member.isLeader;
+
+      const toOrder = (v) => {
+        if (v === null || v === undefined || v === '') return null;
+        const parsed = Number(v);
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      if (isLeader === false) {
+        member.extraRoleTags = [];
+      } else if (Array.isArray(extraRoles)) {
+        // Full replace of additional roles (multi-role support).
+        member.extraRoleTags = extraRoles
+          .filter((r) => r && (r.type || r.name))
+          .map((r) => ({ type: r.type || undefined, name: r.name || undefined, listingOrder: toOrder(r.listingOrder) }));
+      }
 
       if (isLeader === false) {
         member.roleTag = undefined;

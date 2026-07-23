@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import {
   Select,
   SelectContent,
@@ -466,9 +467,7 @@ const Announcements = () => {
             </Select>
           </div>
           {loadingList ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
+            <ListSkeleton rows={4} />
           ) : announcements.length === 0 ? (
             <Card className="surface-card">
               <CardContent className="p-8 text-center">

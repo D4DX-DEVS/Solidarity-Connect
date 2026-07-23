@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useNavigate } from "react-router-dom";
@@ -408,9 +409,7 @@ const Leaders = () => {
 
         {/* Leaders list */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
+          <ListSkeleton rows={5} />
         ) : leaders.length === 0 ? (
           <Card className="surface-card">
             <CardContent className="p-8 text-center">

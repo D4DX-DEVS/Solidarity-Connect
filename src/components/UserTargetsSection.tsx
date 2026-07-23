@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { toast } from "@/hooks/use-toast";
 import { apiCall, uploadsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1131,9 +1132,7 @@ const UserTargetsSection = () => {
               </div>
             </div>
           ) : loadingMembers ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-            </div>
+            <ListSkeleton rows={4} />
           ) : (
             <div className="flex flex-col flex-1 overflow-hidden">
               <div className="flex items-center justify-between mb-3 px-1">

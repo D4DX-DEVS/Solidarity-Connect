@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Shield, Search, ChevronLeft, ChevronRight, Users, Tag, Save, X, ListOrdered, Star, Filter } from "lucide-react";
+import { Shield, Search, ChevronLeft, ChevronRight, Users, Tag, Save, X, ListOrdered, Star, Filter, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import {
   Select,
   SelectContent,
@@ -44,6 +45,12 @@ const ALLOWED_ROLE_TYPES: Record<string, string[]> = {
   group_admin: ["area", "unit", "murabi", "coordinator"],
 };
 
+interface RoleTagLike {
+  type?: string;
+  name?: string;
+  listingOrder?: number | null;
+}
+
 interface UserWithLeader {
   _id: string;
   name: string;
@@ -51,9 +58,17 @@ interface UserWithLeader {
   role?: string;
   status?: string; // for members
   isLeader: boolean;
-  roleTag?: { type?: string; name?: string; listingOrder?: number | null };
+  roleTag?: RoleTagLike;
+  extraRoleTags?: RoleTagLike[];
+  roleSlot?: number; // leaders view fan-out: 0 = primary role, N = extraRoleTags[N-1]
   district?: { name: string };
   group?: { name: string };
+}
+
+interface ExtraRoleEdit {
+  type: string;
+  name: string;
+  listingOrder: string;
 }
 
 interface EditState {
@@ -61,13 +76,26 @@ interface EditState {
   roleTagType: string;
   roleTagName: string;
   listingOrder: string; // kept as string for a controlled input; empty means "no order"
+  extraRoles: ExtraRoleEdit[];
 }
+
+// Leaders view fans a multi-role leader into one row per role sharing the same
+// _id, so edit states are keyed by _id + roleSlot.
+const rowKey = (user: UserWithLeader) => (user.roleSlot ? `${user._id}#${user.roleSlot}` : user._id);
+
+const buildExtraRoleEdits = (user: UserWithLeader): ExtraRoleEdit[] =>
+  (user.extraRoleTags || []).map((r) => ({
+    type: r.type || "",
+    name: r.name || "",
+    listingOrder: typeof r.listingOrder === "number" ? String(r.listingOrder) : "",
+  }));
 
 const buildEditState = (user: UserWithLeader): EditState => ({
   isLeader: user.isLeader || false,
   roleTagType: user.roleTag?.type || "",
   roleTagName: user.roleTag?.name || "",
   listingOrder: typeof user.roleTag?.listingOrder === "number" ? String(user.roleTag.listingOrder) : "",
+  extraRoles: buildExtraRoleEdits(user),
 });
 
 const hasPendingEditState = (state: EditState | undefined, user: UserWithLeader) => {
@@ -77,7 +105,8 @@ const hasPendingEditState = (state: EditState | undefined, user: UserWithLeader)
     state.isLeader !== (user.isLeader || false) ||
     state.roleTagType !== (user.roleTag?.type || "") ||
     state.roleTagName !== (user.roleTag?.name || "") ||
-    state.listingOrder.trim() !== (typeof user.roleTag?.listingOrder === "number" ? String(user.roleTag.listingOrder) : "")
+    state.listingOrder.trim() !== (typeof user.roleTag?.listingOrder === "number" ? String(user.roleTag.listingOrder) : "") ||
+    JSON.stringify(state.extraRoles) !== JSON.stringify(buildExtraRoleEdits(user))
   );
 };
 
@@ -162,8 +191,9 @@ const RoleManagement = () => {
         const next = { ...prev };
 
         data.forEach((user) => {
-          if (!hasPendingEditState(prev[user._id], user)) {
-            next[user._id] = buildEditState(user);
+          const key = rowKey(user);
+          if (!hasPendingEditState(prev[key], user)) {
+            next[key] = buildEditState(user);
           }
         });
 
@@ -210,8 +240,9 @@ const RoleManagement = () => {
         const next = { ...prev };
 
         data.forEach((user) => {
-          if (!hasPendingEditState(prev[user._id], user)) {
-            next[user._id] = buildEditState(user);
+          const key = rowKey(user);
+          if (!hasPendingEditState(prev[key], user)) {
+            next[key] = buildEditState(user);
           }
         });
 
@@ -284,26 +315,53 @@ const RoleManagement = () => {
     }
   }, [isLeadersView, fetchLeaders]);
 
-  const handleSave = async (userId: string) => {
-    const state = editStates[userId];
+  const toOrderValue = (raw: string): number | null => {
+    const trimmed = raw.trim();
+    return trimmed === "" ? null : Number(trimmed);
+  };
+
+  const handleSave = async (user: UserWithLeader) => {
+    const key = rowKey(user);
+    const state = editStates[key];
     if (!state) return;
-    setSaving(userId);
+    setSaving(key);
     try {
       const payload: any = { isLeader: state.isLeader };
-      const trimmedOrder = state.listingOrder.trim();
-      const hasOrder = trimmedOrder !== "";
-      if (state.isLeader && (state.roleTagType || state.roleTagName || hasOrder)) {
-        payload.roleTag = {
+      const slot = user.roleSlot || 0;
+      if (slot > 0) {
+        // Editing an extra-role row in the leaders directory: replace that slot,
+        // keep the rest of the extras untouched.
+        const extras = (user.extraRoleTags || []).map((r) => ({
+          type: r.type,
+          name: r.name,
+          listingOrder: typeof r.listingOrder === "number" ? r.listingOrder : null,
+        }));
+        extras[slot - 1] = {
           type: state.roleTagType || undefined,
           name: state.roleTagName || undefined,
-          // Send null to explicitly clear, number when set, otherwise omit.
-          listingOrder: hasOrder ? Number(trimmedOrder) : null,
+          listingOrder: toOrderValue(state.listingOrder),
         };
+        payload.extraRoles = extras;
+      } else if (state.isLeader) {
+        if (state.roleTagType || state.roleTagName || state.listingOrder.trim() !== "") {
+          payload.roleTag = {
+            type: state.roleTagType || undefined,
+            name: state.roleTagName || undefined,
+            // Send null to explicitly clear, number when set, otherwise omit.
+            listingOrder: toOrderValue(state.listingOrder),
+          };
+        }
+        payload.extraRoles = state.extraRoles.map((r) => ({
+          type: r.type || undefined,
+          name: r.name || undefined,
+          listingOrder: toOrderValue(r.listingOrder),
+        }));
       }
-      if (isMemberView) {
-        await membersAPI.updateMemberLeader(userId, payload);
+      const isMemberRecord = isMemberView || user.role === "member";
+      if (isMemberRecord) {
+        await membersAPI.updateMemberLeader(user._id, payload);
       } else {
-        await leadersAPI.updateLeader(userId, payload);
+        await leadersAPI.updateLeader(user._id, payload);
       }
       toast({ title: "Saved", description: "Leader status updated successfully" });
       if (isLeadersView) {
@@ -335,7 +393,8 @@ const RoleManagement = () => {
       state.isLeader !== origIsLeader ||
       state.roleTagType !== origType ||
       state.roleTagName !== origName ||
-      state.listingOrder.trim() !== origOrder
+      state.listingOrder.trim() !== origOrder ||
+      JSON.stringify(state.extraRoles) !== JSON.stringify(buildExtraRoleEdits(user))
     );
   };
 
@@ -470,9 +529,7 @@ const RoleManagement = () => {
       >
         {isLeadersView ? (
           leadersLoading && leaderGroups.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-            </div>
+            <ListSkeleton rows={5} />
           ) : leaderGroups.length === 0 ? (
             <Card className="shadow-sm">
               <CardContent className="p-8 text-center">
@@ -491,11 +548,12 @@ const RoleManagement = () => {
                   </div>
                   <div className="space-y-2">
                     {group.leaders.map((leader) => {
-                      const state = editStates[leader._id];
+                      const key = rowKey(leader);
+                      const state = editStates[key];
                       if (!state) return null;
                       const changed = hasChanges(leader, state);
                       return (
-                        <Card key={leader._id} className={`shadow-sm ${leadersLoading ? "opacity-60" : ""}`}>
+                        <Card key={key} className={`shadow-sm ${leadersLoading ? "opacity-60" : ""}`}>
                           <CardContent className="space-y-2 p-3">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
@@ -509,6 +567,9 @@ const RoleManagement = () => {
                                   )}
                                   {leader.roleTag?.name && (
                                     <Badge variant="secondary" className="h-5 text-[10px]">{leader.roleTag.name}</Badge>
+                                  )}
+                                  {(leader.roleSlot || 0) > 0 && (
+                                    <Badge variant="outline" className="h-5 text-[10px]">Role {(leader.roleSlot || 0) + 1}</Badge>
                                   )}
                                   {leader.district && (
                                     <Badge variant="outline" className="h-5 text-[10px]">{leader.district.name}</Badge>
@@ -532,18 +593,17 @@ const RoleManagement = () => {
                               <Input
                                 placeholder="Role name"
                                 value={state.roleTagName}
-                                onChange={(e) => updateEditState(leader._id, { roleTagName: e.target.value })}
+                                onChange={(e) => updateEditState(key, { roleTagName: e.target.value })}
                                 className="h-7 flex-1 text-xs"
                               />
                               <ListOrdered className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <Input
-                                type="number"
-                                min={0}
+                                type="text"
                                 inputMode="numeric"
                                 placeholder="Order"
                                 value={state.listingOrder}
                                 onChange={(e) =>
-                                  updateEditState(leader._id, {
+                                  updateEditState(key, {
                                     listingOrder: e.target.value.replace(/[^\d]/g, ""),
                                   })
                                 }
@@ -556,10 +616,10 @@ const RoleManagement = () => {
                                 <Button
                                   size="sm"
                                   className="h-7 flex-1 text-xs"
-                                  onClick={() => handleSave(leader._id)}
-                                  disabled={saving === leader._id}
+                                  onClick={() => handleSave(leader)}
+                                  disabled={saving === key}
                                 >
-                                  {saving === leader._id ? (
+                                  {saving === key ? (
                                     <div className="mr-1 h-3 w-3 animate-spin rounded-full border-b-2 border-white" />
                                   ) : (
                                     <Save className="mr-1 h-3 w-3" />
@@ -571,17 +631,7 @@ const RoleManagement = () => {
                                   variant="outline"
                                   className="h-7"
                                   aria-label={`Discard changes for ${leader.name}`}
-                                  onClick={() =>
-                                    updateEditState(leader._id, {
-                                      isLeader: leader.isLeader || false,
-                                      roleTagType: leader.roleTag?.type || "",
-                                      roleTagName: leader.roleTag?.name || "",
-                                      listingOrder:
-                                        typeof leader.roleTag?.listingOrder === "number"
-                                          ? String(leader.roleTag.listingOrder)
-                                          : "",
-                                    })
-                                  }
+                                  onClick={() => updateEditState(key, buildEditState(leader))}
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
@@ -602,9 +652,7 @@ const RoleManagement = () => {
         ) : (
           <>
             {isInitialLoad ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-              </div>
+              <ListSkeleton rows={5} />
             ) : users.length === 0 && !fetching ? (
               <Card className="shadow-sm">
                 <CardContent className="p-8 text-center">
@@ -648,10 +696,20 @@ const RoleManagement = () => {
                             </div>
                           </div>
                           {user.isLeader && user.roleTag?.type && (
-                            <span className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
-                              {ROLE_TYPE_LABELS[user.roleTag.type]}
-                              {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
-                            </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
+                                {ROLE_TYPE_LABELS[user.roleTag.type]}
+                                {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
+                              </span>
+                              {(user.extraRoleTags || []).map((extra, i) =>
+                                extra?.type ? (
+                                  <span key={i} className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[extra.type] || "bg-gray-100 text-gray-700"}`}>
+                                    {ROLE_TYPE_LABELS[extra.type] || extra.type}
+                                    {extra.name ? ` · ${extra.name}` : ""}
+                                  </span>
+                                ) : null
+                              )}
+                            </div>
                           )}
                         </div>
 
@@ -665,6 +723,7 @@ const RoleManagement = () => {
                                 roleTagType: checked ? state.roleTagType : "",
                                 roleTagName: checked ? state.roleTagName : "",
                                 listingOrder: checked ? state.listingOrder : "",
+                                extraRoles: checked ? state.extraRoles : [],
                               })
                             }
                           />
@@ -702,8 +761,7 @@ const RoleManagement = () => {
                             <div className="flex items-center gap-2">
                               <ListOrdered className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                               <Input
-                                type="number"
-                                min={0}
+                                type="text"
                                 inputMode="numeric"
                                 placeholder="Listing order (e.g. 1, 2, 3...)"
                                 aria-label={`Leader listing order for ${user.name}`}
@@ -719,6 +777,82 @@ const RoleManagement = () => {
                             <p className="text-[11px] text-muted-foreground">
                               Leaders are shown in ascending listing order across every dashboard. Leave blank to appear last.
                             </p>
+
+                            {state.extraRoles.map((extra, i) => (
+                              <div key={i} className="space-y-2 rounded-md border border-dashed border-primary/30 p-2">
+                                <div className="flex items-center justify-between">
+                                  <p className="text-[11px] font-medium text-muted-foreground">Additional role {i + 1}</p>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 text-destructive"
+                                    aria-label={`Remove additional role ${i + 1} for ${user.name}`}
+                                    onClick={() =>
+                                      updateEditState(user._id, {
+                                        extraRoles: state.extraRoles.filter((_, idx) => idx !== i),
+                                      })
+                                    }
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                                <Select
+                                  value={extra.type}
+                                  onValueChange={(val) =>
+                                    updateEditState(user._id, {
+                                      extraRoles: state.extraRoles.map((r, idx) => (idx === i ? { ...r, type: val } : r)),
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="h-8 text-sm" aria-label={`Additional role type ${i + 1} for ${user.name}`}>
+                                    <SelectValue placeholder="Role type" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {allowedRoleTypes.map((rt) => (
+                                      <SelectItem key={rt} value={rt}>
+                                        {ROLE_TYPE_LABELS[rt]}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  placeholder="Role name (e.g. Secretary, President...)"
+                                  value={extra.name}
+                                  onChange={(e) =>
+                                    updateEditState(user._id, {
+                                      extraRoles: state.extraRoles.map((r, idx) => (idx === i ? { ...r, name: e.target.value } : r)),
+                                    })
+                                  }
+                                  className="h-8 text-sm"
+                                />
+                                <Input
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="Listing order"
+                                  value={extra.listingOrder}
+                                  onChange={(e) =>
+                                    updateEditState(user._id, {
+                                      extraRoles: state.extraRoles.map((r, idx) =>
+                                        idx === i ? { ...r, listingOrder: e.target.value.replace(/[^\d]/g, "") } : r
+                                      ),
+                                    })
+                                  }
+                                  className="h-8 text-sm"
+                                />
+                              </div>
+                            ))}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 w-full text-xs"
+                              onClick={() =>
+                                updateEditState(user._id, {
+                                  extraRoles: [...state.extraRoles, { type: "", name: "", listingOrder: "" }],
+                                })
+                              }
+                            >
+                              <Plus className="mr-1 h-3.5 w-3.5" /> Add another role
+                            </Button>
                           </div>
                         )}
 
@@ -727,7 +861,7 @@ const RoleManagement = () => {
                             <Button
                               size="sm"
                               className="flex-1"
-                              onClick={() => handleSave(user._id)}
+                              onClick={() => handleSave(user)}
                               disabled={saving === user._id}
                             >
                               {saving === user._id ? (
@@ -741,17 +875,7 @@ const RoleManagement = () => {
                               size="sm"
                               variant="outline"
                               aria-label={`Discard changes for ${user.name}`}
-                              onClick={() =>
-                                updateEditState(user._id, {
-                                  isLeader: user.isLeader || false,
-                                  roleTagType: user.roleTag?.type || "",
-                                  roleTagName: user.roleTag?.name || "",
-                                  listingOrder:
-                                    typeof user.roleTag?.listingOrder === "number"
-                                      ? String(user.roleTag.listingOrder)
-                                      : "",
-                                })
-                              }
+                              onClick={() => updateEditState(user._id, buildEditState(user))}
                             >
                               <X className="h-4 w-4" />
                             </Button>

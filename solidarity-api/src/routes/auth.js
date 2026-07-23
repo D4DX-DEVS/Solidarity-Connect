@@ -4,6 +4,9 @@ import { body, validationResult } from 'express-validator';
 import otpService from '../services/otpService.js';
 import { loginValidation, verifyOTPValidation } from '../middleware/validation.js';
 import { authenticate } from '../middleware/auth.js';
+import User from '../models/User.js';
+import Member from '../models/Member.js';
+import MemberAuth from '../models/MemberAuth.js';
 
 const router = express.Router();
 
@@ -276,6 +279,190 @@ router.post('/check-roles', [
     res.status(500).json({
       success: false,
       message: 'Failed to check roles'
+    });
+  }
+});
+
+// @route   POST /api/auth/switch-role
+// @desc    Switch active role within an authenticated session (no new OTP).
+//          Works from an admin token or a member token. Identity is re-resolved
+//          from the DB (not trusted from the JWT payload) and the target role
+//          must exist, be active, and belong to the same phone number.
+// @access  Private (admin or member token)
+router.post('/switch-role', [
+  body('targetRole').isIn(['state_admin', 'district_admin', 'group_admin', 'member'])
+    .withMessage('Invalid target role')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. No token provided.'
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid or expired token.'
+      });
+    }
+
+    // Resolve current identity from DB — never trust JWT payload alone
+    let phone;
+    if (decoded.userType === 'member') {
+      const memberAuth = await MemberAuth.findById(decoded.id).populate('member', 'phone status isApproved');
+      if (!memberAuth || !memberAuth.isActive || !memberAuth.member ||
+          memberAuth.member.status !== 'Active' || !memberAuth.member.isApproved) {
+        return res.status(401).json({
+          success: false,
+          message: 'Current session identity is no longer valid.'
+        });
+      }
+      phone = memberAuth.phone || memberAuth.member.phone;
+    } else {
+      const currentUser = await User.findById(decoded.id).select('phone isActive');
+      if (!currentUser || !currentUser.isActive) {
+        return res.status(401).json({
+          success: false,
+          message: 'Current session identity is no longer valid.'
+        });
+      }
+      phone = currentUser.phone;
+    }
+
+    const { targetRole } = req.body;
+    const phoneVariants = otpService.getPhoneVariants(phone);
+
+    if (targetRole === 'member') {
+      const member = await Member.findOne({
+        phone: { $in: phoneVariants },
+        status: 'Active',
+        isApproved: true
+      })
+        .populate('district', 'name')
+        .populate('group', 'name');
+
+      if (!member) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have an active member account.'
+        });
+      }
+
+      let memberAuth = await MemberAuth.findOne({ member: member._id });
+      if (!memberAuth) {
+        memberAuth = await MemberAuth.createForMember(member._id);
+      }
+      if (!memberAuth.isActive) {
+        return res.status(403).json({
+          success: false,
+          message: 'Member account is inactive.'
+        });
+      }
+
+      memberAuth.lastLogin = new Date();
+      await memberAuth.save({ validateModifiedOnly: true });
+
+      const newToken = jwt.sign(
+        {
+          id: memberAuth._id,
+          memberId: member._id,
+          phone: memberAuth.phone,
+          userType: 'member'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '365d' }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Switched to member',
+        data: {
+          token: newToken,
+          userType: 'member',
+          member: {
+            id: member._id,
+            name: member.name,
+            phone: member.phone,
+            email: member.email,
+            district: member.district,
+            group: member.group,
+            status: member.status,
+            joinedDate: member.joinedDate
+          }
+        }
+      });
+    }
+
+    // Admin target role
+    const targetUser = await User.findOne({
+      phone: { $in: phoneVariants },
+      role: targetRole,
+      isActive: true
+    })
+      .populate('district', 'name code')
+      .populate('group', 'name code district');
+
+    if (!targetUser) {
+      return res.status(403).json({
+        success: false,
+        message: `You do not have an active ${targetRole.replace('_', ' ')} role.`
+      });
+    }
+
+    targetUser.lastLogin = new Date();
+    await targetUser.save({ validateModifiedOnly: true });
+
+    const newToken = jwt.sign(
+      {
+        id: targetUser._id,
+        phone: targetUser.phone,
+        role: targetUser.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '365d' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `Switched to ${targetRole.replace('_', ' ')}`,
+      data: {
+        token: newToken,
+        userType: targetRole,
+        user: {
+          id: targetUser._id,
+          name: targetUser.name,
+          phone: targetUser.phone,
+          email: targetUser.email,
+          role: targetUser.role,
+          district: targetUser.district,
+          group: targetUser.group,
+          roleTag: targetUser.roleTag,
+          permissions: targetUser.permissions,
+          lastLogin: targetUser.lastLogin
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Switch role error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to switch role'
     });
   }
 });

@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import GroupDialog from "@/components/GroupDialog";
@@ -126,10 +128,7 @@ const ManageGroups = () => {
           <div className="space-y-2">
             <label htmlFor="selected-district" className="text-sm font-medium text-foreground">Select District</label>
             {districtsLoading ? (
-              <div className="flex items-center gap-2 rounded-[1rem] border border-border/70 bg-background px-4 py-3 text-sm text-muted-foreground shadow-sm">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading districts...
-              </div>
+              <Skeleton className="h-12 w-full rounded-[1rem]" />
             ) : (
               <Select
                 value={selectedDistrictId}
@@ -168,10 +167,7 @@ const ManageGroups = () => {
 
       <SectionCard title="Group Directory" description="Review groups for the selected district and manage their details.">
         {groupsLoading ? (
-          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Loading groups...
-          </div>
+          <ListSkeleton rows={4} />
         ) : error ? (
           <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
             <p className="font-medium text-destructive">Failed to load groups</p>

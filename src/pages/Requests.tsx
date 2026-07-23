@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { FileText, Check, X, MessageSquare, Clock, AlertCircle } from "lucide-react";
 import { PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { Button } from "@/components/ui/button";
@@ -103,9 +104,7 @@ const Requests = () => {
 
       <SectionCard title="Pending Queue" description="Requests awaiting your action.">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
-          </div>
+          <ListSkeleton rows={4} />
         ) : requests.length === 0 ? (
           <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-10 text-center shadow-sm">
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />

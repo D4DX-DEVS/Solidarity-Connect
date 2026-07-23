@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { notificationService, type Notification } from "@/services/notificationService";
@@ -107,12 +108,7 @@ const EditNotification = () => {
           }
         />
         <SectionCard title="Loading" description="Fetching notification details.">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-              <p className="text-muted-foreground">Loading notification...</p>
-            </div>
-          </div>
+          <FormSkeleton fields={3} />
         </SectionCard>
       </PageShell>
     );

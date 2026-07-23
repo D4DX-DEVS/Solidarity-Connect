@@ -380,9 +380,19 @@ async function processMemberCSV(filePath, districtId, groupId, createdBy) {
             });
           }
 
-          // Check for existing members in database
+          // Check for existing members in database.
+          // Compare on normalized 10-digit numbers so +91-prefixed and plain
+          // formats can't slip past the duplicate check.
+          const normalizePhone = (raw) => {
+            const digits = (raw || '').replace(/\D/g, '');
+            return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+          };
+          const allVariants = phoneNumbers.flatMap(p => {
+            const bare = normalizePhone(p);
+            return [bare, `+91${bare}`];
+          });
           const existingMembers = await Member.find({
-            phone: { $in: phoneNumbers }
+            phone: { $in: allVariants }
           }).select('phone name');
 
           existingMembers.forEach(existing => {
@@ -393,9 +403,11 @@ async function processMemberCSV(filePath, districtId, groupId, createdBy) {
             });
           });
 
-          // Filter out duplicates
-          const existingPhones = [...duplicatePhones, ...existingMembers.map(m => m.phone)];
-          const validMembers = members.filter(m => !existingPhones.includes(m.phone));
+          // Filter out duplicates (normalized comparison)
+          const existingPhoneSet = new Set(
+            [...duplicatePhones, ...existingMembers.map(m => m.phone)].map(normalizePhone)
+          );
+          const validMembers = members.filter(m => !existingPhoneSet.has(normalizePhone(m.phone)));
 
           // Create members in batches
           const batchSize = 50;

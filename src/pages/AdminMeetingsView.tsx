@@ -27,6 +27,7 @@ interface GroupProgress {
   groupName: string;
   groupCode: string;
   district: {
+    _id?: string;
     name: string;
     code: string;
   };
@@ -194,7 +195,7 @@ const AdminMeetingsView = () => {
     setFilters(prev => ({ 
       ...prev, 
       [key]: value,
-      page: key !== 'page' ? 1 : value // Reset to page 1 when changing filters except page
+      page: key !== 'page' ? 1 : Number(value) // Reset to page 1 when changing filters except page
     }));
   };
 

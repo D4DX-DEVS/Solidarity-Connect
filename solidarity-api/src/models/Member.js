@@ -122,6 +122,19 @@ const memberSchema = new mongoose.Schema({
       default: null
     }
   },
+  // Additional leader roles beyond the primary roleTag (multi-role support).
+  extraRoleTags: [{
+    type: {
+      type: String,
+      enum: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
+    },
+    name: String,
+    listingOrder: {
+      type: Number,
+      min: [0, 'Listing order cannot be negative'],
+      default: null
+    }
+  }],
   isApproved: {
     type: Boolean,
     default: false

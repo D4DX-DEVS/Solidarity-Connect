@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -383,12 +384,7 @@ const PersonalTargets = () => {
           }
         />
         <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center space-y-3">
-              <div className="mx-auto h-12 w-12 animate-spin rounded-full border-[3px] border-primary/20 border-t-primary" />
-              <p className="text-sm font-medium text-muted-foreground">Loading targets…</p>
-            </div>
-          </div>
+          <ListSkeleton rows={5} />
         </SectionCard>
       </PageShell>
     );
@@ -891,12 +887,7 @@ const PersonalTargets = () => {
 
             {/* Recurring Targets List */}
             {recurringLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="text-center space-y-3">
-                  <div className="mx-auto h-10 w-10 animate-spin rounded-full border-[3px] border-blue-500/20 border-t-blue-500" />
-                  <p className="text-sm font-medium text-muted-foreground">Loading recurring targets…</p>
-                </div>
-              </div>
+              <ListSkeleton rows={4} />
             ) : (
               <div className="space-y-2">
                 {recurringTargets.length === 0 ? (

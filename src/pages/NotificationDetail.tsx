@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { DetailSkeleton } from "@/components/ui/loading-skeletons";
 import { toast } from "@/hooks/use-toast";
 import { notificationService, type Notification } from "@/services/notificationService";
 import {
@@ -123,12 +124,7 @@ const NotificationDetail = () => {
       <PageShell>
         <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} actions={<Button variant="outline" size="sm" onClick={() => navigate("/notifications")}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>} />
         <SectionCard title="Loading" description="Fetching notification details.">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading notification...</p>
-            </div>
-          </div>
+          <DetailSkeleton />
         </SectionCard>
       </PageShell>
     );

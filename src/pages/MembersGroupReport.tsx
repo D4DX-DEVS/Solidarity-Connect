@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -268,10 +269,7 @@ const MembersGroupReport = () => {
         {/* Loading State */}
         {loading && (
           <SectionCard title="Preparing Report" description="Loading group statistics and active filter options.">
-            <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading group reports...</p>
-            </div>
+            <ListSkeleton rows={5} />
           </SectionCard>
         )}
 

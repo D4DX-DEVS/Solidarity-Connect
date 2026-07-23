@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { PageSkeleton } from "@/components/ui/loading-skeletons";
 import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI, authAPI } from "@/utils/api";
 import {
   DropdownMenu,
@@ -522,12 +523,7 @@ const UserManagement = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pb-20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading users...</p>
-        </div>
-      </div>
+      <PageSkeleton />
     );
   }
 

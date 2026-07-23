@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -276,12 +277,7 @@ const EditMemberDetails = () => {
           }
         />
         <SectionCard title="Preparing Edit Form" description="Fetching member details and current organization mapping.">
-          <div className="flex items-center justify-center py-14">
-            <div className="text-center">
-              <div className="mx-auto mb-3 h-9 w-9 animate-spin rounded-full border-b-2 border-primary" />
-              <p className="text-sm text-muted-foreground">Loading member details...</p>
-            </div>
-          </div>
+          <FormSkeleton fields={6} />
         </SectionCard>
       </PageShell>
     );

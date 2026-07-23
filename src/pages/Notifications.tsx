@@ -3,6 +3,7 @@ import { Bell, Send, Edit, Trash2, Eye, AlertCircle, FileText, Image, Film, Pape
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,12 +135,7 @@ const Notifications = () => {
           title="Notifications"
         />
         <main className="app-main pt-4">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-muted-foreground">Loading notifications...</p>
-            </div>
-          </div>
+          <ListSkeleton rows={5} />
         </main>
         <BottomNav />
       </div>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { DetailSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { useMeeting, useUpdateMeeting } from "@/hooks/useMeetings";
 import { format } from "date-fns";
@@ -130,12 +131,7 @@ const MeetingDetail = () => {
           }
         />
         <SectionCard title="Loading" description="Fetching meeting details.">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-              <p>Loading meeting details...</p>
-            </div>
-          </div>
+          <DetailSkeleton />
         </SectionCard>
       </PageShell>
     );

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateMonthlyMeeting } from "@/hooks/useMeetings";
@@ -178,12 +179,7 @@ const CreateMeetingAgenda = () => {
           icon={<Calendar className="h-6 w-6" />}
         />
         <SectionCard title="Checking Access" description="Verifying your authentication and permissions.">
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-              <p>Checking authentication...</p>
-            </div>
-          </div>
+          <FormSkeleton fields={3} />
         </SectionCard>
       </PageShell>
     );

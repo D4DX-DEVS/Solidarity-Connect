@@ -45,9 +45,11 @@ interface AuthContextType {
   userDistrict: string | null;
   userGroup: string | null;
   token: string | null;
+  availableRoles: UserRole[];
   login: (token: string, userData: User, userType?: string) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
+  switchRole: (targetRole: UserRole) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +62,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userDistrict, setUserDistrict] = useState<string | null>(null);
   const [userGroup, setUserGroup] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
+
+  // Discover all roles this phone holds (admin roles + member) for the switcher
+  const refreshAvailableRoles = useCallback(async (phone: string | undefined) => {
+    if (!phone) {
+      setAvailableRoles([]);
+      return;
+    }
+    try {
+      const result = await authAPI.checkRoles(phone.replace(/^\+91/, ''));
+      const roles = (result.data?.roles || []) as UserRole[];
+      setAvailableRoles([...new Set(roles)]);
+    } catch {
+      setAvailableRoles([]);
+    }
+  }, []);
 
   const clearSession = useCallback(() => {
     localStorage.removeItem('token');
@@ -71,6 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRole(null);
     setUserDistrict(null);
     setUserGroup(null);
+    setAvailableRoles([]);
   }, []);
 
   const checkAuth = useCallback(async (): Promise<boolean> => {
@@ -148,6 +167,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
         localStorage.setItem('userData', JSON.stringify(toCache));
 
+        refreshAvailableRoles(userData.phone);
+
         return true;
       } else {
         // Server explicitly says no valid session
@@ -169,7 +190,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [clearSession]);
+  }, [clearSession, refreshAvailableRoles]);
 
   // Check if user is authenticated on app load
   useEffect(() => {
@@ -204,10 +225,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserRole(normalizedUserData.role);
     setUserDistrict(normalizedUserData.district?.name || null);
     setUserGroup(normalizedUserData.group?.name || null);
+    refreshAvailableRoles(normalizedUserData.phone);
   };
 
   const logout = () => {
     clearSession();
+  };
+
+  // Switch active role in-session (no new OTP). Server revalidates identity
+  // from DB and issues a fresh token for the target role.
+  const switchRole = async (targetRole: UserRole) => {
+    const result = await authAPI.switchRole(targetRole);
+    const { token: newToken, member, user: adminUser } = result.data;
+
+    if (targetRole === 'member') {
+      const memberUser: User = {
+        id: member.id,
+        name: member.name,
+        phone: member.phone,
+        email: member.email,
+        role: 'member',
+        district: member.district,
+        group: member.group,
+        permissions: [],
+        isActive: member.status === 'Active',
+      };
+      login(newToken, memberUser, 'member');
+    } else {
+      login(newToken, adminUser, targetRole);
+    }
   };
 
   return (
@@ -219,9 +265,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userDistrict,
       userGroup,
       token,
+      availableRoles,
       login,
       logout,
-      checkAuth
+      checkAuth,
+      switchRole
     }}>
       {children}
     </AuthContext.Provider>
