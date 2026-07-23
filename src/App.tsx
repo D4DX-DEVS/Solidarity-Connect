@@ -4,9 +4,10 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AppSidebar from "./components/app/AppSidebar";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
@@ -56,6 +57,14 @@ const queryClient = new QueryClient({
   },
 });
 
+// Persistent layout: sidebar stays mounted across route changes (no remount flash)
+const AppLayout = () => (
+  <>
+    <AppSidebar />
+    <Outlet />
+  </>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -66,6 +75,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
+            <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<ProtectedRoute requiredRoles={['group_admin']}><Dashboard /></ProtectedRoute>} />
             <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
             <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
@@ -100,6 +110,7 @@ const App = () => (
             <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
             <Route path="/org-files" element={<ProtectedRoute><OrgFiles /></ProtectedRoute>} />
             <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><Consolidation /></ProtectedRoute>} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

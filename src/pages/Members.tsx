@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
+import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
@@ -95,7 +96,7 @@ const Members = () => {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPrevPage, setHasPrevPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -190,7 +191,7 @@ const Members = () => {
     };
 
     fetchData();
-  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, refreshKey, toast]);
+  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, refreshKey, itemsPerPage, toast]);
 
   // Reset groups when district changes
   useEffect(() => {
@@ -343,17 +344,20 @@ const Members = () => {
           </div>
         </SectionCard>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {metricCards.map((item) => (
             <MetricCard key={item.title} title={item.title} value={item.value} icon={item.icon} tone={item.tone} />
           ))}
         </div>
 
-        <div className="data-strip text-center text-sm text-muted-foreground">
-          Showing {members.length} of {totalDocs} members
-          {totalPages > 1 && (
-            <span> • Page {currentPage} of {totalPages}</span>
-          )}
+        <div className="data-strip flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            Showing {members.length} of {totalDocs} members
+            {totalPages > 1 && (
+              <span> • Page {currentPage} of {totalPages}</span>
+            )}
+          </span>
+          <PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
         </div>
 
         {loading ? (
@@ -372,9 +376,9 @@ const Members = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-3 relative">
+          <div className="space-y-2 relative">
           {members.map((member) => (
-            <Card key={member._id} className="surface-card cursor-pointer transition-shadow duration-200 md:hover:-translate-y-0.5 md:hover:shadow-[0_24px_60px_-32px_hsl(var(--foreground)/0.32)] md:transition-all md:duration-200">
+            <Card key={member._id} className="surface-card cursor-pointer transition-shadow duration-200 md:hover:-translate-y-0.5 md:hover:shadow-sm md:transition-all md:duration-200">
               <div
                 className="p-4"
                 onClick={() => navigate(`/member/${member._id}`)}

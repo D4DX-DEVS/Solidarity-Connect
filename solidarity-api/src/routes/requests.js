@@ -86,6 +86,101 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
   }
 });
 
+// @route   GET /api/requests/pending
+// @desc    Get pending requests for current user's approval level
+// @access  Private
+router.get('/pending', authenticate, async (req, res) => {
+  try {
+    let approvalLevel;
+
+    switch (req.user.role) {
+      case 'state_admin':
+        approvalLevel = req.query.level || 'state_admin';
+        break;
+      case 'district_admin':
+        approvalLevel = 'district_admin';
+        break;
+      case 'group_admin':
+        approvalLevel = 'group_admin';
+        break;
+      default:
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
+    }
+
+    const requests = await Request.getPendingByLevel(approvalLevel)
+      .populate('member', 'name phone district group')
+      .populate('requestedBy', 'name phone role')
+      .limit(20);
+
+    res.status(200).json({
+      success: true,
+      data: requests
+    });
+
+  } catch (error) {
+    console.error('Get pending requests error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch pending requests'
+    });
+  }
+});
+
+// @route   GET /api/requests/stats
+// @desc    Get request statistics
+// @access  Private
+router.get('/stats', authenticate, async (req, res) => {
+  try {
+    let matchFilter = {};
+
+    // Apply role-based filtering
+    if (req.user.role === 'group_admin') {
+      matchFilter.approvalLevel = 'group_admin';
+    } else if (req.user.role === 'district_admin') {
+      matchFilter.approvalLevel = { $in: ['district_admin', 'group_admin'] };
+    }
+
+    const stats = await Request.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: null,
+          totalRequests: { $sum: 1 },
+          pendingRequests: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
+          approvedRequests: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
+          rejectedRequests: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } },
+          memberEditRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_edit'] }, 1, 0] } },
+          transferRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_transfer'] }, 1, 0] } },
+          statusChangeRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_status_change'] }, 1, 0] } }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: stats[0] || {
+        totalRequests: 0,
+        pendingRequests: 0,
+        approvedRequests: 0,
+        rejectedRequests: 0,
+        memberEditRequests: 0,
+        transferRequests: 0,
+        statusChangeRequests: 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get request stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch request statistics'
+    });
+  }
+});
+
 // @route   GET /api/requests/:id
 // @desc    Get single request by ID
 // @access  Private
@@ -425,100 +520,5 @@ router.post('/:id/comment',
     }
   }
 );
-
-// @route   GET /api/requests/pending
-// @desc    Get pending requests for current user's approval level
-// @access  Private
-router.get('/pending', authenticate, async (req, res) => {
-  try {
-    let approvalLevel;
-    
-    switch (req.user.role) {
-      case 'state_admin':
-        approvalLevel = req.query.level || 'state_admin';
-        break;
-      case 'district_admin':
-        approvalLevel = 'district_admin';
-        break;
-      case 'group_admin':
-        approvalLevel = 'group_admin';
-        break;
-      default:
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-    }
-
-    const requests = await Request.getPendingByLevel(approvalLevel)
-      .populate('member', 'name phone district group')
-      .populate('requestedBy', 'name phone role')
-      .limit(20);
-
-    res.status(200).json({
-      success: true,
-      data: requests
-    });
-
-  } catch (error) {
-    console.error('Get pending requests error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch pending requests'
-    });
-  }
-});
-
-// @route   GET /api/requests/stats
-// @desc    Get request statistics
-// @access  Private
-router.get('/stats', authenticate, async (req, res) => {
-  try {
-    let matchFilter = {};
-
-    // Apply role-based filtering
-    if (req.user.role === 'group_admin') {
-      matchFilter.approvalLevel = 'group_admin';
-    } else if (req.user.role === 'district_admin') {
-      matchFilter.approvalLevel = { $in: ['district_admin', 'group_admin'] };
-    }
-
-    const stats = await Request.aggregate([
-      { $match: matchFilter },
-      {
-        $group: {
-          _id: null,
-          totalRequests: { $sum: 1 },
-          pendingRequests: { $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] } },
-          approvedRequests: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
-          rejectedRequests: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } },
-          memberEditRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_edit'] }, 1, 0] } },
-          transferRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_transfer'] }, 1, 0] } },
-          statusChangeRequests: { $sum: { $cond: [{ $eq: ['$type', 'member_status_change'] }, 1, 0] } }
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: stats[0] || {
-        totalRequests: 0,
-        pendingRequests: 0,
-        approvedRequests: 0,
-        rejectedRequests: 0,
-        memberEditRequests: 0,
-        transferRequests: 0,
-        statusChangeRequests: 0
-      }
-    });
-
-  } catch (error) {
-    console.error('Get request stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch request statistics'
-    });
-  }
-});
 
 export default router;

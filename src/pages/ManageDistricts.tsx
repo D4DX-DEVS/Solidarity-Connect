@@ -1,4 +1,4 @@
-import { ArrowLeft, Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
+﻿import { ArrowLeft, Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -116,14 +116,14 @@ const ManageDistricts = () => {
         {isLoading ? (
           <ListSkeleton rows={4} />
         ) : error ? (
-          <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center">
             <p className="font-medium text-destructive">Failed to load districts</p>
             <Button variant="outline" onClick={() => window.location.reload()} className="mt-3">
               Retry
             </Button>
           </div>
         ) : districts.length === 0 ? (
-          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
             <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="font-medium text-foreground">No districts found</p>
             <p className="mt-1 text-sm text-muted-foreground">Add your first district to get started.</p>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import {
   FileText, Film, Music, Upload, Trash2, Edit, ArrowLeft,
   Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff, Search, Link2
@@ -105,6 +105,12 @@ const OrgFiles = () => {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Pagination + server-side summary counts
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [summary, setSummary] = useState({ total: 0, membershipForms: 0, hidden: 0 });
+
   // Upload form state
   const [uploadForm, setUploadForm] = useState({
     title: "",
@@ -130,9 +136,14 @@ const OrgFiles = () => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
+  // Reset to first page whenever the filter/search changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, debouncedSearch]);
+
   useEffect(() => {
     fetchFiles();
-  }, [activeCategory, debouncedSearch]);
+  }, [activeCategory, debouncedSearch, page]);
 
   const fetchFiles = async () => {
     try {
@@ -146,9 +157,15 @@ const OrgFiles = () => {
         }
       }
       if (debouncedSearch) params.search = debouncedSearch;
+      params.page = String(page);
+      params.limit = String(PAGE_SIZE);
       const queryString = new URLSearchParams(params).toString();
-      const result = await apiCall(`/org-files${queryString ? `?${queryString}` : ""}`);
+      // ponytail: members use their own auth middleware; admin /org-files rejects member tokens (401)
+      const basePath = user?.role === "member" ? "/member-auth/org-files" : "/org-files";
+      const result = await apiCall(`${basePath}${queryString ? `?${queryString}` : ""}`);
       setFiles(result.data || []);
+      setTotalPages(result.pagination?.totalPages || 1);
+      if (result.summary) setSummary(result.summary);
     } catch (error) {
       toast({ title: "Error", description: "Failed to load files", variant: "destructive" });
     } finally {
@@ -242,8 +259,6 @@ const OrgFiles = () => {
   });
 
   const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other", ...(canSeeMembershipForm ? ["membership_form"] : [])];
-  const hiddenFiles = files.filter((file) => !file.isActive).length;
-  const membershipFiles = files.filter((file) => file.fileType === "membership_form").length;
 
   const getBackPath = () => {
     return getHomeRouteByRole(user?.role);
@@ -273,9 +288,9 @@ const OrgFiles = () => {
       />
 
       <div className="grid gap-3 md:grid-cols-3">
-        <MetricCard title="Total Files" value={String(files.length)} icon={FileText} tone="primary" />
-        <MetricCard title="Membership Forms" value={String(membershipFiles)} icon={BookOpen} tone="warning" />
-        <MetricCard title="Hidden Files" value={String(hiddenFiles)} icon={EyeOff} tone="neutral" />
+        <MetricCard title="Total Files" value={String(summary.total)} icon={FileText} tone="primary" />
+        <MetricCard title="Membership Forms" value={String(summary.membershipForms)} icon={BookOpen} tone="warning" />
+        <MetricCard title="Hidden Files" value={String(summary.hidden)} icon={EyeOff} tone="neutral" />
       </div>
 
       <SectionCard title="Browse Library" description="Filter by category, search by title or description, and open management actions when allowed.">
@@ -310,7 +325,7 @@ const OrgFiles = () => {
         {loading ? (
           <div className="py-12 text-center text-muted-foreground">Loading files...</div>
         ) : filteredFiles.length === 0 ? (
-          <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
             <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
             <p className="font-semibold">No files found</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -405,6 +420,15 @@ const OrgFiles = () => {
             );
           })
           }
+          </div>
+        )}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-border/60 pt-4 mt-4">
+            <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</Button>
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
+            </div>
           </div>
         )}
       </SectionCard>

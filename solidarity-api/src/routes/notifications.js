@@ -199,10 +199,10 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
     if (!canView) {
       if (req.user.role === 'district_admin') {
         canView = targetAudienceValues.includes('district_admins') ||
-          (notification.targetDistricts && notification.targetDistricts.some(d => d._id.toString() === req.user.district._id.toString()));
+          (notification.targetDistricts && notification.targetDistricts.some(d => d._id.toString() === req.user.district?._id?.toString()));
       } else if (req.user.role === 'group_admin') {
         canView = targetAudienceValues.includes('group_admins') ||
-          (notification.targetGroups && notification.targetGroups.some(g => g._id.toString() === req.user.group._id.toString()));
+          (notification.targetGroups && notification.targetGroups.some(g => g._id.toString() === req.user.group?._id?.toString()));
       } else if (req.user.role === 'member') {
         canView = targetAudienceValues.includes('members');
       }

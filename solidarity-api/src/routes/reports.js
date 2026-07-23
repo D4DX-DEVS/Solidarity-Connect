@@ -8,7 +8,7 @@ import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 
@@ -227,9 +227,10 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
 // @route   GET /api/reports/members
 // @desc    Get detailed member report
 // @access  Private
-router.get('/members', 
-  authenticate, 
+router.get('/members',
+  authenticate,
   authorize(['view_reports']),
+  requireAreaScope,
   [
     query('startDate').optional().isISO8601(),
     query('endDate').optional().isISO8601(),

@@ -7,7 +7,7 @@ import User from '../models/User.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
 
 // Cache all district names (id -> name) for fallback when populate fails due to stale refs
 let districtNameCache = null;
@@ -113,7 +113,7 @@ const USER_TYPE_TO_AUDIENCES = {
 // @route   GET /api/consolidation/targets
 // @desc    Get targets available for a specific user type
 // @access  state_admin, district_admin, group_admin with view_reports
-router.get('/targets', authenticate, authorize(['view_reports']), async (req, res) => {
+router.get('/targets', authenticate, authorize(['view_reports']), requireAreaScope, async (req, res) => {
   try {
     const { userType } = req.query;
 
@@ -144,7 +144,7 @@ router.get('/targets', authenticate, authorize(['view_reports']), async (req, re
 // @route   GET /api/consolidation/report
 // @desc    Get consolidation report for selected filters
 // @access  state_admin, district_admin, group_admin with view_reports
-router.get('/report', authenticate, authorize(['view_reports']), async (req, res) => {
+router.get('/report', authenticate, authorize(['view_reports']), requireAreaScope, async (req, res) => {
   try {
     const { userType, targetId, districtId, groupId, dateFrom, dateTo } = req.query;
 

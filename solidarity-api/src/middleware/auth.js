@@ -197,6 +197,24 @@ export const requireGroupAccess = (req, res, next) => {
   });
 };
 
+// Guard scoped-role handlers that dereference req.user.group/district:
+// orphaned group/district refs get a clean 403 instead of a 500 crash.
+export const requireAreaScope = (req, res, next) => {
+  if (req.user?.role === 'group_admin' && !req.user.group?._id) {
+    return res.status(403).json({
+      success: false,
+      message: 'No group assigned to your account. Contact your administrator.'
+    });
+  }
+  if (req.user?.role === 'district_admin' && !req.user.district?._id) {
+    return res.status(403).json({
+      success: false,
+      message: 'No district assigned to your account. Contact your administrator.'
+    });
+  }
+  next();
+};
+
 // Optional authentication - doesn't fail if no token
 export const optionalAuth = async (req, res, next) => {
   try {

@@ -187,7 +187,7 @@ const MasterData = () => {
           {districtsLoading ? (
             <ListSkeleton rows={4} />
           ) : districts.length === 0 ? (
-            <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+            <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
               <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="font-medium text-foreground">No districts found</p>
               <p className="mt-1 text-sm text-muted-foreground">Add your first district to get started.</p>
@@ -250,7 +250,7 @@ const MasterData = () => {
                     variant="outline"
                     role="combobox"
                     aria-expanded={districtFilterOpen}
-                    className="w-full justify-between rounded-2xl border-border/70 bg-white/80 h-11 px-4 font-normal shadow-sm"
+                    className="w-full justify-between rounded-2xl border-border/70 bg-card h-11 px-4 font-normal shadow-sm"
                   >
                     {selectedDistrictFilter
                       ? allDistricts.find(d => d._id === selectedDistrictFilter)?.name || "All Districts"
@@ -307,7 +307,7 @@ const MasterData = () => {
           {groupsLoading ? (
             <ListSkeleton rows={4} />
           ) : groups.length === 0 ? (
-            <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+            <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
               <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="font-medium text-foreground">No areas found</p>
               <p className="mt-1 text-sm text-muted-foreground">

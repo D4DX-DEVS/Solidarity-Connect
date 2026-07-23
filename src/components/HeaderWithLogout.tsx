@@ -1,6 +1,5 @@
-import { LogOut, Menu, Repeat } from "lucide-react";
+﻿import { LogOut, Menu, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -76,31 +75,26 @@ const HeaderWithLogout = ({ icon, title, subtitle, leftAction }: HeaderWithLogou
 
   return (
     <>
-    <header className="sticky top-0 z-40 px-4 pt-4 sm:px-6 lg:px-8">
-      <div className="glass mx-auto flex max-w-7xl items-center gap-3 rounded-[1.8rem] px-4 py-3.5 sm:px-5">
+    <header className="sticky top-0 z-40 border-b border-border bg-card">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
         {leftAction && <div>{leftAction}</div>}
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_18px_34px_-18px_hsl(var(--primary)/0.85)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
-            {userRole ? <span className="hidden rounded-full bg-primary/10 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-primary md:inline-flex">{getRoleLabel()}</span> : null}
+            <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">{title}</h1>
+            {userRole ? <span className="hidden rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary md:inline-flex">{getRoleLabel()}</span> : null}
           </div>
           {subtitle && <p className="truncate text-xs font-medium text-muted-foreground sm:text-sm">{subtitle}</p>}
         </div>
-        {user?.group?.name && (
-          <Badge className="hidden sm:inline-flex rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
-            {user.group.name}
-          </Badge>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="shrink-0 border-white/60 bg-white/60">
-              <Menu className="h-6 w-6" />
+            <Button variant="outline" size="icon" className="shrink-0 lg:hidden">
+              <Menu className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+          <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
             <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
               <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || getRoleLabel()}</p>

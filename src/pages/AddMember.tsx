@@ -225,21 +225,21 @@ const AddMember = () => {
         }
         details={
           <>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Access</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
                 <span className="min-w-0 break-words leading-5">{roleLabel}</span>
               </div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="min-w-0 break-words leading-5">{userContext?.assignedDistrict?.code || "Selectable"}</span>
               </div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Group</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <Users className="h-4 w-4 text-primary" />
@@ -257,7 +257,7 @@ const AddMember = () => {
         {initialLoading ? (
           <FormSkeleton fields={6} />
         ) : !userContext?.permissions.canCreateMember ? (
-          <div className="space-y-4 rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-6 text-center">
+          <div className="space-y-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center">
             <p className="text-sm font-medium text-foreground">You do not have permission to add members.</p>
             <p className="text-sm text-muted-foreground">Return to the members directory or switch to an account with member-creation access.</p>
             <div className="flex justify-center">

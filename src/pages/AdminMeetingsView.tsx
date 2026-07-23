@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
@@ -358,17 +359,10 @@ const AdminMeetingsView = () => {
                   </SelectContent>
                 </Select>
 
-                <Select value={groupPagination.itemsPerPage.toString()} onValueChange={(value) => setGroupPagination(prev => ({ ...prev, itemsPerPage: parseInt(value), currentPage: 1 }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Groups per page" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">3 per page</SelectItem>
-                    <SelectItem value="5">5 per page</SelectItem>
-                    <SelectItem value="10">10 per page</SelectItem>
-                    <SelectItem value="20">20 per page</SelectItem>
-                  </SelectContent>
-                </Select>
+                <PageSizeInput
+                  value={groupPagination.itemsPerPage}
+                  onChange={(size) => setGroupPagination(prev => ({ ...prev, itemsPerPage: size, currentPage: 1 }))}
+                />
 
                 <Button variant="outline" onClick={() => setDetailFilters({ groupStatus: '', district: '' })}>
                   Clear Filters

@@ -409,7 +409,7 @@ const PersonalTargets = () => {
       <div className="container mx-auto max-w-7xl space-y-6 px-0 py-0">
 
         {/* ── Tab Toggle ── */}
-        <div className="flex gap-1 bg-muted/60 p-1.5 rounded-2xl w-fit border border-border/40 backdrop-blur-sm">
+        <div className="flex gap-1 bg-muted/60 p-1.5 rounded-2xl w-fit border border-border/40">
           <button
             onClick={() => setActiveTab('regular')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'regular' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
@@ -597,11 +597,11 @@ const PersonalTargets = () => {
                   placeholder="Search targets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm focus:bg-white transition-colors"
+                  className="pl-10 h-10 rounded-xl border-border/50 bg-card focus:bg-white transition-colors"
                 />
               </div>
               <Select value={audienceFilter || "all"} onValueChange={(v) => { setAudienceFilter(v === "all" ? "" : v); setCurrentPage(1); }}>
-                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm">
+                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-card">
                   <SelectValue placeholder="All User Types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -868,11 +868,11 @@ const PersonalTargets = () => {
                   placeholder="Search recurring targets..."
                   value={recurringSearch}
                   onChange={(e) => setRecurringSearch(e.target.value)}
-                  className="pl-10 h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm focus:bg-white transition-colors"
+                  className="pl-10 h-10 rounded-xl border-border/50 bg-card focus:bg-white transition-colors"
                 />
               </div>
               <Select value={recurringAudienceFilter || "all"} onValueChange={(v) => { setRecurringAudienceFilter(v === "all" ? "" : v); setRecurringPage(1); }}>
-                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-white/70 backdrop-blur-sm">
+                <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-card">
                   <SelectValue placeholder="All User Types" />
                 </SelectTrigger>
                 <SelectContent>

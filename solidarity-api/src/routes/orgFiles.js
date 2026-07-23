@@ -158,23 +158,21 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
 router.get('/', authenticate, async (req, res) => {
   try {
     const { category, fileType, search } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    let filter = {};
-
-    // State admin sees all files (including hidden); others see only active
-    if (req.user.role !== 'state_admin') {
-      filter.isActive = true;
-    }
-
-    // Restrict membership_form visibility
+    const isStateAdmin = req.user.role === 'state_admin';
     // Visible to state_admin and all group_admin users (area admins and local group admins)
-    const canSeeMembershipForm =
-      req.user.role === 'state_admin' || req.user.role === 'group_admin';
+    const canSeeMembershipForm = isStateAdmin || req.user.role === 'group_admin';
 
-    if (!canSeeMembershipForm) {
-      filter.fileType = 'general';
-    }
+    // Role-based visibility filter — drives the summary metric cards (library-wide totals)
+    const baseFilter = {};
+    if (!isStateAdmin) baseFilter.isActive = true; // only state admin sees hidden files
+    if (!canSeeMembershipForm) baseFilter.fileType = 'general';
 
+    // List filter = visibility + category/type/search
+    const filter = { ...baseFilter };
     if (category) filter.category = category;
     if (fileType && canSeeMembershipForm) filter.fileType = fileType;
 
@@ -187,11 +185,26 @@ router.get('/', authenticate, async (req, res) => {
       ];
     }
 
-    const files = await OrgFile.find(filter)
-      .populate('uploadedBy', 'name role')
-      .sort({ createdAt: -1 });
+    const [files, total, summaryTotal, membershipForms, hidden] = await Promise.all([
+      OrgFile.find(filter)
+        .populate('uploadedBy', 'name role')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      OrgFile.countDocuments(filter),
+      OrgFile.countDocuments(baseFilter),
+      canSeeMembershipForm
+        ? OrgFile.countDocuments({ ...baseFilter, fileType: 'membership_form' })
+        : Promise.resolve(0),
+      isStateAdmin ? OrgFile.countDocuments({ isActive: false }) : Promise.resolve(0)
+    ]);
 
-    res.status(200).json({ success: true, data: files });
+    res.status(200).json({
+      success: true,
+      data: files,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
+      summary: { total: summaryTotal, membershipForms, hidden }
+    });
   } catch (error) {
     console.error('Get org files error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch files' });

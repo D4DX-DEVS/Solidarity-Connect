@@ -316,7 +316,7 @@ const Login = () => {
         <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-violet-500/[0.04] blur-[120px]" />
       </div>
 
-      <div className="relative w-full max-w-[1100px] overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.03)] backdrop-blur-xl lg:grid lg:min-h-[700px] lg:grid-cols-[1.05fr_1fr]">
+      <div className="relative w-full max-w-[1100px] overflow-hidden rounded-[28px] border border-border bg-card shadow-sm lg:grid lg:min-h-[700px] lg:grid-cols-[1.05fr_1fr]">
         {/* Left panel — brand */}
         <div className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
           {/* Dark gradient background */}
@@ -332,7 +332,7 @@ const Login = () => {
 
           {/* Top — Logo */}
           <div className="relative z-10">
-            <div className="flex items-center justify-center gap-4 rounded-2xl border border-white/10 bg-white/[0.07] px-6 py-5 backdrop-blur-md">
+            <div className="flex items-center justify-center gap-4 rounded-2xl border border-border bg-white/[0.07] px-6 py-5">
               <img src="/logo.jpg" alt="SOLIDARITY" className="h-28 w-40 rounded-xl object-contain shadow-lg" />
               <div>
                 <span className="block text-xl font-bold tracking-tight text-white">SOLIDARITY</span>
@@ -353,8 +353,8 @@ const Login = () => {
 
           {/* Bottom — Trust badges */}
           <div className="relative z-10 space-y-2.5">
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 backdrop-blur-sm transition-colors hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
                 <ShieldCheck className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -362,8 +362,8 @@ const Login = () => {
                 <p className="text-[11px] text-slate-400">256-bit security protocol</p>
               </div>
             </div>
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 backdrop-blur-sm transition-colors hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
                 <Fingerprint className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -371,8 +371,8 @@ const Login = () => {
                 <p className="text-[11px] text-slate-400">One-time password every session</p>
               </div>
             </div>
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 backdrop-blur-sm transition-colors hover:bg-white/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
                 <LockKeyhole className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -442,7 +442,7 @@ const Login = () => {
                           "group relative flex items-center gap-3 rounded-2xl border px-3.5 py-3.5 text-left transition-all duration-200",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                           isActive
-                            ? "border-primary/30 bg-gradient-to-br from-primary/[0.05] to-primary/[0.02] shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.2)]"
+                            ? "border-primary/30 bg-gradient-to-br from-primary/[0.05] to-primary/[0.02] shadow-sm"
                             : "border-slate-200/80 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
                         )}
                       >
@@ -474,7 +474,7 @@ const Login = () => {
                           className={cn(
                             "h-[18px] w-[18px] shrink-0 rounded-full border-2 transition-all duration-200",
                             isActive
-                              ? "border-primary bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]"
+                              ? "border-primary bg-primary shadow-sm"
                               : "border-slate-300",
                           )}
                         >
@@ -525,7 +525,7 @@ const Login = () => {
               {!showOtp ? (
                 <Button
                   onClick={handleSendOtp}
-                  className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.4)] transition-all duration-200 hover:shadow-[0_12px_28px_-4px_hsl(var(--primary)/0.5)] active:scale-[0.98]"
+                  className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                   disabled={phone.length !== 10 || !userType || loading}
                 >
                   <span>{loading ? "Sending OTP..." : "Continue"}</span>
@@ -575,7 +575,7 @@ const Login = () => {
 
                   <Button
                     onClick={handleVerifyOtp}
-                    className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-[0_8px_24px_-6px_hsl(var(--primary)/0.4)] transition-all duration-200 hover:shadow-[0_12px_28px_-4px_hsl(var(--primary)/0.5)] active:scale-[0.98]"
+                    className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                     disabled={otp.join("").length !== 4 || loading}
                   >
                     <span>{loading ? "Verifying..." : "Verify & Sign In"}</span>

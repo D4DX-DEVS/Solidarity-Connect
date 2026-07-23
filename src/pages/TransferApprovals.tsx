@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import PageSizeInput from "@/components/app/PageSizeInput";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
@@ -59,14 +60,14 @@ const TransferApprovals = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const crossDistrictCount = transferRequests.filter((request) => request.isCrossDistrict).length;
   const waitingOnStateCount = transferRequests.filter((request) => request.stateApproval?.status === "pending").length;
 
   useEffect(() => {
     fetchTransferRequests();
-  }, []);
+  }, [itemsPerPage]);
 
   const fetchTransferRequests = async (page = 1, append = false) => {
     try {
@@ -275,6 +276,12 @@ const TransferApprovals = () => {
           </div>
         )}
 
+        {!loading && transferRequests.length > 0 && (
+          <div className="mt-3 flex justify-end">
+            <PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
+          </div>
+        )}
+
         {/* Load more */}
         {!loading && hasNextPage && (
           <Button variant="outline" className="mt-3 w-full" onClick={loadMoreRequests} disabled={loadingMore}>
@@ -284,7 +291,7 @@ const TransferApprovals = () => {
 
         {/* Empty state */}
         {!loading && transferRequests.length === 0 && (
-          <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-8 text-center shadow-sm">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center shadow-sm">
             <ArrowRightLeft className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Pending Transfers</h2>
             <p className="text-sm text-muted-foreground">
@@ -298,7 +305,7 @@ const TransferApprovals = () => {
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-[2rem] border-none shadow-2xl glass font-sans">
+        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-2xl border-none shadow-2xl glass font-sans">
           <div className="flex flex-col items-center text-center">
             <div className="bg-destructive/10 p-4 rounded-full mb-4 ring-8 ring-destructive/5">
               <XCircle className="h-8 w-8 text-destructive" />
@@ -320,7 +327,7 @@ const TransferApprovals = () => {
             />
           </div>
           <DialogFooter className="gap-3 sm:gap-2">
-            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-background/80" onClick={() => setRejectDialogOpen(false)}>
+            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-card" onClick={() => setRejectDialogOpen(false)}>
               Cancel
             </Button>
             <Button

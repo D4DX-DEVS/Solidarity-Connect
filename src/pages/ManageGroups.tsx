@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -128,7 +128,7 @@ const ManageGroups = () => {
           <div className="space-y-2">
             <label htmlFor="selected-district" className="text-sm font-medium text-foreground">Select District</label>
             {districtsLoading ? (
-              <Skeleton className="h-12 w-full rounded-[1rem]" />
+              <Skeleton className="h-12 w-full rounded-xl" />
             ) : (
               <Select
                 value={selectedDistrictId}
@@ -169,19 +169,19 @@ const ManageGroups = () => {
         {groupsLoading ? (
           <ListSkeleton rows={4} />
         ) : error ? (
-          <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-8 text-center">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center">
             <p className="font-medium text-destructive">Failed to load groups</p>
             <Button variant="outline" onClick={() => window.location.reload()} className="mt-3">
               Retry
             </Button>
           </div>
         ) : !selectedDistrictId ? (
-          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
             <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="font-medium text-foreground">Select a district to view groups</p>
           </div>
         ) : groups.length === 0 ? (
-          <div className="rounded-[1.6rem] border border-border/60 bg-background/70 p-8 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
             <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="font-medium text-foreground">No groups found in this district</p>
             <p className="mt-1 text-sm text-muted-foreground">Add your first group to get started.</p>

@@ -6,6 +6,7 @@ import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/A
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -106,7 +107,7 @@ const BaithulDataView = () => {
   const [totalMembers, setTotalMembers] = useState(0);
   const [totalPayments, setTotalPayments] = useState(0);
   const [totalGroups, setTotalGroups] = useState(0);
-  const itemsPerPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Fetch data
   const fetchBaithulData = async () => {
@@ -218,7 +219,7 @@ const BaithulDataView = () => {
 
   useEffect(() => {
     fetchBaithulData();
-  }, [selectedDistrict, selectedMonth, viewMode, currentPage]);
+  }, [selectedDistrict, selectedMonth, viewMode, currentPage, itemsPerPage]);
   
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when filters change
@@ -466,6 +467,7 @@ const BaithulDataView = () => {
                     </Card>
                     
                     {/* Pagination Controls */}
+                    <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalMembers > itemsPerPage && (
                       <Card>
                         <CardContent className="p-4">
@@ -567,6 +569,7 @@ const BaithulDataView = () => {
                     </Card>
                     
                     {/* Pagination Controls */}
+                    <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalPayments > itemsPerPage && (
                       <Card>
                         <CardContent className="p-4">
@@ -657,6 +660,7 @@ const BaithulDataView = () => {
                     </Card>
                     
                     {/* Pagination Controls */}
+                    <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalGroups > itemsPerPage && (
                       <Card>
                         <CardContent className="p-4">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { FileText, Check, X, MessageSquare, Clock, AlertCircle } from "lucide-react";
 import { PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
@@ -106,7 +106,7 @@ const Requests = () => {
         {loading ? (
           <ListSkeleton rows={4} />
         ) : requests.length === 0 ? (
-          <div className="rounded-[1.8rem] border border-border/60 bg-background/75 p-10 text-center shadow-sm">
+          <div className="rounded-2xl border border-border/60 bg-card p-10 text-center shadow-sm">
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Pending Requests</h2>
             <p className="text-sm text-muted-foreground">

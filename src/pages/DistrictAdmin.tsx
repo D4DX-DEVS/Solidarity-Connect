@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useNavigate } from "react-router-dom";
@@ -48,9 +49,12 @@ interface DashboardStats {
   groupStatistics?: { totalGroups: number } | null;
 }
 
+const PRIMARY_TOOL_LABELS = ["Members", "Meetings", "Meeting Agenda", "Org Files", "Group Reports"];
+
 const DistrictAdmin = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [showAllActions, setShowAllActions] = useState(false);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingTransfers, setPendingTransfers] = useState<TransferRequest[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -155,30 +159,29 @@ const DistrictAdmin = () => {
     { label: "Group Reports", path: "/state-admin/group-reports", icon: BarChart3, color: "text-primary" },
   ];
 
-  const primaryTools = districtTools.filter(({ label }) =>
-    ["Members", "Meetings", "Meeting Agenda", "Org Files", "Role Management"].includes(label)
-  );
-  const secondaryTools = districtTools.filter(({ label }) => !primaryTools.some(t => t.label === label));
-
   return (
     <PageShell>
       <PageHero
         eyebrow="District Control"
-        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
-        subtitle="District Admin Dashboard"
+        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'} 👋`}
+        subtitle="Here's what's happening in your district today."
         icon={<Building2 className="h-6 w-6" />}
         actions={
           <>
             <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
               {user?.district?.name || "District"}
             </Badge>
+            <Button variant="outline" size="icon" onClick={() => navigate("/notifications")} aria-label="Notifications">
+              <Bell className="h-5 w-5" />
+            </Button>
+          <span className="lg:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+            <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
               <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                 <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'District Admin'}</p>
@@ -199,70 +202,50 @@ const DistrictAdmin = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          </>
-        }
-        details={
-          <>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Transfers</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{loadingTransfers ? "Loading..." : pendingTransfers.length}</p>
-            </div>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{user?.district?.name || "District"}</p>
-            </div>
+          </span>
           </>
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <MetricCard title="Groups" value={loadingStats ? "..." : String(totalGroups)} icon={Building2} tone="primary" />
-        <MetricCard title="Total Members" value={loadingStats ? "..." : String(totalMembers)} icon={Users} tone="warning" />
-        <MetricCard title="Active Members" value={loadingStats ? "..." : String(activeMembers)} icon={CheckCircle} tone="success" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard title="Groups" value={loadingStats ? "..." : String(totalGroups)} detail="In your district" icon={Building2} tone="primary" onClick={() => navigate("/state-admin/groups")} />
+        <MetricCard title="Total Members" value={loadingStats ? "..." : String(totalMembers)} detail="Across all groups" icon={Users} tone="neutral" onClick={() => navigate("/members")} />
+        <MetricCard title="Active Members" value={loadingStats ? "..." : String(activeMembers)} detail="Currently active" icon={CheckCircle} tone="success" onClick={() => navigate("/members")} />
+        <MetricCard
+          title="Pending Transfers"
+          value={loadingTransfers ? "..." : String(pendingTransfers.length)}
+          detail={pendingTransfers.length ? "Needs your review" : "All clear"}
+          icon={ArrowRightLeft}
+          tone={pendingTransfers.length ? "danger" : "warning"}
+        />
       </div>
 
-      <SectionCard title="District Tools" description="Tools are grouped by the kind of work you do, so they are easier to find.">
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <div id="daily-workflows-heading">
-                  <p className="text-sm font-semibold text-foreground">Daily Workflows</p>
-                  <p className="text-xs text-muted-foreground">Member management, meetings, and file tasks used most often.</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="daily-workflows-heading">
-                  {primaryTools.map((action) => (
-                    <Button key={action.label} variant="outline" className="action-tile h-auto" onClick={() => navigate(action.path)}>
-                      <div className="action-tile-icon">
-                        <action.icon className={`h-5 w-5 ${action.color}`} />
-                      </div>
-                      <div className="space-y-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
+      <SectionCard title="Quick Actions" description="Frequently used actions">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {(showAllActions ? districtTools : districtTools.filter(({ label }) => PRIMARY_TOOL_LABELS.includes(label))).map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => navigate(action.path)}
+              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                <action.icon className={`h-5 w-5 ${action.color}`} />
               </div>
-
-              <div className="space-y-3">
-                <div id="management-reports-heading">
-                  <p className="text-sm font-semibold text-foreground">Management And Reports</p>
-                  <p className="text-xs text-muted-foreground">Configuration, oversight, and reporting tasks.</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="management-reports-heading">
-                  {secondaryTools.map((action) => (
-                    <Button key={action.label} variant="outline" className="action-tile h-auto" onClick={() => navigate(action.path)}>
-                      <div className="action-tile-icon">
-                        <action.icon className={`h-5 w-5 ${action.color}`} />
-                      </div>
-                      <div className="space-y-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs font-medium leading-tight text-foreground">{action.label}</p>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowAllActions((v) => !v)}
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+              <Menu className="h-5 w-5 text-muted-foreground" />
             </div>
+            <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
+          </button>
+        </div>
       </SectionCard>
 
         <UserTargetsSection />
@@ -285,16 +268,16 @@ const DistrictAdmin = () => {
               </div>
 
             {loadingTransfers ? (
-              <p className="pt-4 text-sm text-muted-foreground">Loading...</p>
+              <div className="pt-4"><ListSkeleton rows={2} /></div>
             ) : pendingTransfers.length === 0 ? (
               <div className="py-6 text-center">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
                 <p className="text-sm text-muted-foreground">No pending transfers to approve</p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
                 {pendingTransfers.map((transfer) => (
-                  <Card key={transfer._id} className="surface-card transition-transform hover:-translate-y-0.5">
+                  <Card key={transfer._id}>
                     <CardContent className="p-4">
                       <p className="font-semibold text-sm">{transfer.member?.name}</p>
                       <p className="text-xs text-muted-foreground">{transfer.member?.phone}</p>
@@ -307,20 +290,20 @@ const DistrictAdmin = () => {
                         )}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
-                        <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
                           Source: {transfer.sourceDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
                         </Badge>
                         {transfer.isCrossDistrict && (
-                          <Badge variant="outline" className={`text-xs ${transfer.targetDistrictApproval?.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          <Badge variant="outline" className={`text-xs ${transfer.targetDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
                             Target: {transfer.targetDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
                           </Badge>
                         )}
                       </div>
-                      <p className="mt-3 rounded-2xl bg-muted/70 p-3 text-xs text-muted-foreground">{transfer.reason}</p>
+                      <p className="mt-3 rounded-xl bg-muted/70 p-3 text-xs text-muted-foreground">{transfer.reason}</p>
                       <div className="mt-3 flex gap-2">
                         <Button
                           size="sm"
-                          className="h-9 flex-1 bg-green-600 text-xs hover:bg-green-700"
+                          className="h-9 flex-1 bg-success text-xs text-success-foreground hover:bg-success/90"
                           disabled={processingId === transfer._id}
                           onClick={() => { setSelectedTransfer(transfer); setApproveDialogOpen(true); }}
                         >
@@ -345,7 +328,7 @@ const DistrictAdmin = () => {
 
       {/* Approve Dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-[2rem] border-none shadow-2xl glass font-sans">
+        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-2xl">
           <div className="flex flex-col items-center text-center">
             <div className="bg-success/10 p-4 rounded-full mb-4 ring-8 ring-success/5">
               <CheckCircle className="h-8 w-8 text-success" />
@@ -362,7 +345,7 @@ const DistrictAdmin = () => {
             <Textarea className="resize-none rounded-xl border-input/50 focus:border-primary transition-colors bg-background/50" placeholder="Add comments..." value={commentText} onChange={e => setCommentText(e.target.value)} />
           </div>
           <DialogFooter className="gap-3 sm:gap-2">
-            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-background/80" onClick={() => setApproveDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-card" onClick={() => setApproveDialogOpen(false)}>Cancel</Button>
             <Button className="bg-success hover:bg-success/90 rounded-xl w-full sm:w-auto h-12 font-medium text-success-foreground shadow-lg shadow-success/20 active:scale-[0.98] transition-all" onClick={handleApprove} disabled={!!processingId}>
               {processingId ? "Processing..." : "Confirm Approval"}
             </Button>
@@ -372,7 +355,7 @@ const DistrictAdmin = () => {
 
       {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-[2rem] border-none shadow-2xl glass font-sans">
+        <DialogContent className="sm:max-w-md mx-auto p-6 rounded-2xl">
           <div className="flex flex-col items-center text-center">
             <div className="bg-destructive/10 p-4 rounded-full mb-4 ring-8 ring-destructive/5">
               <XCircle className="h-8 w-8 text-destructive" />
@@ -389,7 +372,7 @@ const DistrictAdmin = () => {
             <Textarea className="resize-none rounded-xl border-destructive/20 focus:border-destructive transition-colors bg-destructive/5" placeholder="Provide a detailed reason..." value={rejectReason} onChange={e => setRejectReason(e.target.value)} />
           </div>
           <DialogFooter className="gap-3 sm:gap-2">
-            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-background/80" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-card" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
             <Button variant="destructive" className="rounded-xl w-full sm:w-auto h-12 font-medium shadow-lg shadow-destructive/20 active:scale-[0.98] transition-all" onClick={handleReject} disabled={!!processingId || !rejectReason.trim()}>
               {processingId ? "Processing..." : "Confirm Rejection"}
             </Button>

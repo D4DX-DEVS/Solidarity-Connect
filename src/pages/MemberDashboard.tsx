@@ -25,7 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI, apiCall } from "@/utils/api";
 import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import {
   User,
@@ -214,7 +214,10 @@ const MemberDashboard = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeView = searchParams.get("view") || "overview";
+  const setActiveView = (view: string) =>
+    setSearchParams(view === "overview" ? {} : { view }, { replace: true });
   // Target interaction state
   const [expandedTargetId, setExpandedTargetId] = useState<string | null>(null);
   const [targetFeedback, setTargetFeedback] = useState<Record<string, string>>({});
@@ -1656,7 +1659,7 @@ const MemberDashboard = () => {
 
   return (
     <>
-    <PageShell contentClassName="pb-40">
+    <PageShell contentClassName="pb-40 lg:pb-8">
       <PageHero
         title={`Welcome, ${profile.profile.name}`}
         subtitle={
@@ -1666,14 +1669,15 @@ const MemberDashboard = () => {
         }
         eyebrow="Member Portal"
         icon={<Home className="h-6 w-6" />}
+        className="[&_.hero-details]:xl:grid-cols-3"
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+            <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
               <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                 <p className="text-sm font-bold text-foreground mt-0.5">{profile.profile.name}</p>
@@ -1741,15 +1745,15 @@ const MemberDashboard = () => {
 
       <SectionCard
         title={`${activeViewLabel} Workspace`}
-        description="Use the bottom menu to switch between your targets, meetings, leaders, and alerts."
+        description="Switch between your targets, meetings, files, and alerts from the menu."
       >
         <div className="space-y-4">
           {renderContent()}
         </div>
       </SectionCard>
 
-      <div className="fixed bottom-4 left-4 right-4 z-30">
-        <div className="mx-auto flex max-w-md items-center justify-around rounded-[1.6rem] border border-border/70 bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+      <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
+        <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-border/70 bg-background/95 px-3 py-2 shadow-lg">
           {menuItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = activeView === item.id;

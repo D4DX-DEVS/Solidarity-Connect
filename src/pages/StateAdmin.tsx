@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, X, LogOut, Database, Calendar, Menu } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, LogOut, Database, Calendar, Menu, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +76,19 @@ interface BaithulMaalStats {
   };
 }
 
+const PRIMARY_ACTION_LABELS = ["User Management", "Transfer Approvals", "Send Notifications", "Announcements", "Org Files", "Group Reports"];
+
+const CARD_PATHS: Record<string, string> = {
+  "Monthly Collection": "/state-admin/baithul-data",
+  "Pending Actions": "/requests",
+  "Districts": "/state-admin/districts",
+  "System Users": "/state-admin/users",
+  "Total Members": "/members",
+  "Active Members": "/members",
+  "Groups": "/state-admin/groups",
+  "Baithul Maal": "/state-admin/baithul-data",
+};
+
 const StateAdmin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -85,6 +98,7 @@ const StateAdmin = () => {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [baithulMaalStats, setBaithulMaalStats] = useState<BaithulMaalStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAllActions, setShowAllActions] = useState(false);
 
   // State admin recurring targets
   const [myRecurringTargets, setMyRecurringTargets] = useState<any[]>([]);
@@ -119,12 +133,6 @@ const StateAdmin = () => {
     { icon: FolderOpen, label: "Org Files", path: "/org-files", color: "text-teal-500" },
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
-
-  const primaryActions = adminActions.filter(({ label }) =>
-    ["Master Data", "User Management", "Transfer Approvals", "Send Notifications", "Announcements", "Org Files"].includes(label)
-  );
-
-  const secondaryActions = adminActions.filter(({ label }) => !primaryActions.some((action) => action.label === label));
 
   const fetchDashboardData = async () => {
     try {
@@ -248,6 +256,37 @@ const StateAdmin = () => {
     return `₹${amount}`;
   };
 
+  const kpiCards = [
+    {
+      title: "Monthly Collection",
+      value: baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0",
+      detail: `${baithulMaalStats?.overallStatistics?.contributingMembers || 0} contributing`,
+      icon: Wallet,
+      tone: "primary" as const,
+    },
+    {
+      title: "Pending Actions",
+      value: String(dashboardData?.pendingRequestsCount || 0),
+      detail: dashboardData?.pendingRequestsCount ? "Needs attention" : "All clear",
+      icon: FileCheck,
+      tone: (dashboardData?.pendingRequestsCount ? "danger" : "success") as "danger" | "success",
+    },
+    {
+      title: "Districts",
+      value: String(dashboardData?.districtStatistics?.totalDistricts || 0),
+      detail: `${dashboardData?.districtStatistics?.activeDistricts || 0} active`,
+      icon: Building2,
+      tone: "neutral" as const,
+    },
+    {
+      title: "System Users",
+      value: userStats?.totalUsers?.toLocaleString() || "0",
+      detail: `${userStats?.activeUsers?.toLocaleString() || "0"} active users`,
+      icon: UserCog,
+      tone: "warning" as const,
+    },
+  ];
+
   const analysisCards = [
     {
       title: "Total Members",
@@ -264,34 +303,23 @@ const StateAdmin = () => {
       tone: "success" as const,
     },
     {
+      title: "Groups",
+      value: String(dashboardData?.groupStatistics?.totalGroups || 0),
+      detail: `${dashboardData?.groupStatistics?.activeGroups || 0} active groups`,
+      icon: Users,
+      tone: "neutral" as const,
+    },
+    {
       title: "Baithul Maal",
       value: baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0",
       detail: `${baithulMaalStats?.overallStatistics?.contributingMembers || 0} contributing members`,
       icon: Wallet,
       tone: "warning" as const,
     },
-    {
-      title: "Pending Actions",
-      value: String(dashboardData?.pendingRequestsCount || 0),
-      detail: dashboardData?.pendingRequestsCount ? "Needs attention" : "All clear",
-      icon: FileCheck,
-      tone: (dashboardData?.pendingRequestsCount ? "danger" : "neutral") as "danger" | "neutral",
-    },
-    {
-      title: "Districts",
-      value: String(dashboardData?.districtStatistics?.totalDistricts || 0),
-      detail: `${dashboardData?.groupStatistics?.totalGroups || 0} total groups`,
-      icon: Building2,
-      tone: "neutral" as const,
-    },
-    {
-      title: "System Users",
-      value: userStats?.totalUsers?.toLocaleString() || "0",
-      detail: `${userStats?.activeUsers?.toLocaleString() || "0"} active users`,
-      icon: UserCog,
-      tone: "neutral" as const,
-    },
   ];
+
+  const pendingApprovals = (dashboardData?.pendingRequestsCount || 0) + (dashboardData?.pendingTransfersCount || 0);
+  const upcomingMeetingsCount = dashboardData?.upcomingMeetings?.length || 0;
 
   if (loading) {
     return (
@@ -303,21 +331,31 @@ const StateAdmin = () => {
     <PageShell>
       <PageHero
         eyebrow="State Overview"
-        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
-        subtitle="Use this page to review people, approvals, reports, and your recurring work in one place."
+        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'} 👋`}
+        subtitle="Here's what's happening across the state today."
         icon={<Shield className="h-6 w-6" />}
         actions={
           <>
+            <span className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground sm:flex">
+              <Calendar className="h-3.5 w-3.5" />
+              {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+            </span>
+            <Button variant="outline" size="icon" onClick={() => navigate("/notifications")} aria-label="Notifications">
+              <Bell className="h-5 w-5" />
+            </Button>
+            <span className="lg:hidden">
             <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
               State Admin
             </Badge>
+            </span>
+            <span className="lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
                   <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass w-64 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+              <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
                 <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                   <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
@@ -338,303 +376,278 @@ const StateAdmin = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </>
-        }
-        details={
-          <>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Monthly Collection</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{baithulMaalStats?.overallStatistics?.totalMonthlyAmount ? formatCurrency(baithulMaalStats.overallStatistics.totalMonthlyAmount) : "₹0"}</p>
-            </div>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Actions</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.pendingRequestsCount || 0}</p>
-            </div>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District Coverage</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.districtStatistics?.totalDistricts || 0} districts</p>
-            </div>
-            <div className="data-strip">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">System Users</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{userStats?.totalUsers?.toLocaleString() || "0"}</p>
-            </div>
+            </span>
           </>
         }
       />
 
-      <SectionCard title="Quick Analysis" description="A simple snapshot of the numbers that need attention today.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {analysisCards.map((card) => (
-                <MetricCard
-                  key={card.title}
-                  title={card.title}
-                  value={card.value}
-                  detail={card.detail}
-                  icon={card.icon}
-                  tone={card.tone}
-                />
-              ))}
-            </div>
-      </SectionCard>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {kpiCards.map((card) => (
+          <MetricCard
+            key={card.title}
+            title={card.title}
+            value={card.value}
+            detail={card.detail}
+            icon={card.icon}
+            tone={card.tone}
+            onClick={() => navigate(CARD_PATHS[card.title])}
+          />
+        ))}
+      </div>
 
-      <SectionCard
-        title="Administrative Controls"
-        description="Tools are grouped by the kind of work you do, so they are easier to find."
-      >
-            <div className="space-y-5">
-              <div className="space-y-3">
-                <div id="daily-workflows-heading">
-                  <p className="text-sm font-semibold text-foreground">Daily Workflows</p>
-                  <p className="text-xs text-muted-foreground">Approval, communication, and file tasks used most often.</p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="daily-workflows-heading">
-                  {primaryActions.map((action) => {
-                    // Show a count badge on the Transfer Approvals tile when
-                    // there are transfer requests pending the state admin's action.
-                    const badgeCount = action.label === 'Transfer Approvals'
-                      ? dashboardData?.pendingTransfersCount
-                      : undefined;
-                    return (
-                    <Button
-                      key={action.label}
-                      variant="outline"
-                      className="action-tile h-auto"
-                      onClick={() => navigate(action.path)}
-                    >
-                      <div className="action-tile-icon">
-                        <action.icon className={`h-5 w-5 ${action.color}`} />
-                      </div>
-                      <div className="space-y-1 text-left">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                          {badgeCount ? (
-                            <Badge variant="destructive" className="h-5 min-w-[1.25rem] justify-center px-1.5 text-[0.65rem]">
-                              {badgeCount > 99 ? '99+' : badgeCount}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
-                      </div>
-                    </Button>
-                    );
-                  })}
-                </div>
-              </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <SectionCard
+          title="Quick Analysis"
+          description="Key numbers at a glance"
+          action={
+            <Button variant="link" className="h-auto gap-1 p-0 text-sm text-info" onClick={() => navigate("/state-admin/group-reports")}>
+              View full analytics <ChevronRight className="h-4 w-4" />
+            </Button>
+          }
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {analysisCards.map((card) => (
+              <MetricCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                detail={card.detail}
+                icon={card.icon}
+                tone={card.tone}
+                onClick={() => navigate(CARD_PATHS[card.title])}
+              />
+            ))}
+          </div>
+        </SectionCard>
 
-              <div className="space-y-3">
-                <div id="management-reports-heading">
-                  <p className="text-sm font-semibold text-foreground">Management And Reports</p>
-                  <p className="text-xs text-muted-foreground">Configuration, oversight, and reporting tasks that are used less frequently.</p>
+        <SectionCard
+          title="Needs Attention"
+          description="Things that need your focus"
+          action={
+            <Button variant="link" className="h-auto gap-1 p-0 text-sm text-info" onClick={() => navigate("/notifications")}>
+              View all alerts <ChevronRight className="h-4 w-4" />
+            </Button>
+          }
+        >
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              onClick={() => navigate(pendingApprovals ? "/state-admin/transfer-approvals" : "/requests")}
+              className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors hover:bg-accent/60"
+            >
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pendingApprovals ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
+                {pendingApprovals ? <FileCheck className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">
+                  {pendingApprovals ? `${pendingApprovals} pending approvals` : "No pending approvals"}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {pendingApprovals ? "Review requests and transfers" : "Great! You're all caught up."}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </button>
+
+            {myRecurringTargets.length > 0 && (
+              <button
+                type="button"
+                onClick={() => document.getElementById("my-recurring-targets")?.scrollIntoView({ behavior: "smooth" })}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors hover:bg-accent/60"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
+                  <Target className="h-5 w-5" />
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" role="group" aria-labelledby="management-reports-heading">
-                  {secondaryActions.map((action) => (
-                    <Button
-                      key={action.label}
-                      variant="outline"
-                      className="action-tile h-auto"
-                      onClick={() => navigate(action.path)}
-                    >
-                      <div className="action-tile-icon">
-                        <action.icon className={`h-5 w-5 ${action.color}`} />
-                      </div>
-                      <div className="space-y-1 text-left">
-                        <p className="text-sm font-semibold text-foreground">{action.label}</p>
-                        <p className="text-xs text-muted-foreground">Open {action.label.toLowerCase()} tools.</p>
-                      </div>
-                    </Button>
-                  ))}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">{myRecurringTargets.length} recurring {myRecurringTargets.length === 1 ? "target" : "targets"} active</p>
+                  <p className="truncate text-xs text-muted-foreground">Track your progress below</p>
                 </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            )}
+
+            {upcomingMeetingsCount > 0 && (
+              <button
+                type="button"
+                onClick={() => navigate("/meetings")}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors hover:bg-accent/60"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple/10 text-purple">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground">{upcomingMeetingsCount} upcoming {upcomingMeetingsCount === 1 ? "meeting" : "meetings"}</p>
+                  <p className="truncate text-xs text-muted-foreground">In the next few days</p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </button>
+            )}
+
+            <div className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground">System health: Good</p>
+                <p className="truncate text-xs text-muted-foreground">All systems operational</p>
               </div>
             </div>
+          </div>
+        </SectionCard>
+      </div>
+
+      <SectionCard title="Quick Actions" description="Frequently used actions">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          {(showAllActions ? adminActions : adminActions.filter(({ label }) => PRIMARY_ACTION_LABELS.includes(label))).map((action) => {
+            // Show a count badge on the Transfer Approvals tile when
+            // there are transfer requests pending the state admin's action.
+            const badgeCount = action.label === 'Transfer Approvals'
+              ? dashboardData?.pendingTransfersCount
+              : undefined;
+            return (
+              <button
+                key={action.label}
+                type="button"
+                onClick={() => navigate(action.path)}
+                className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+              >
+                {badgeCount ? (
+                  <Badge variant="destructive" className="absolute right-2 top-2 h-5 min-w-[1.25rem] justify-center px-1.5 text-[0.65rem]">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </Badge>
+                ) : null}
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                  <action.icon className={`h-5 w-5 ${action.color}`} />
+                </div>
+                <p className="text-xs font-medium leading-tight text-foreground">{action.label}</p>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setShowAllActions((v) => !v)}
+            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+              <Menu className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
+          </button>
+        </div>
       </SectionCard>
 
         {myRecurringTargets.length > 0 && (
-          <SectionCard title="My Recurring Targets" description="These are repeating targets. Choose a month, then tap the week or month you completed.">
-              <div className="mb-4 grid gap-3 md:grid-cols-3">
-                <div className="rounded-[1.25rem] border border-blue-100 bg-blue-50/80 p-4">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-blue-700">Step 1</p>
-                  <p className="mt-2 text-sm font-semibold text-foreground">Choose a month</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Start by selecting the month you want to update.</p>
-                </div>
-                <div className="rounded-[1.25rem] border border-amber-100 bg-amber-50/80 p-4">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-amber-700">Step 2</p>
-                  <p className="mt-2 text-sm font-semibold text-foreground">Pick the target</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Each card tells you whether the target is monthly or weekly.</p>
-                </div>
-                <div className="rounded-[1.25rem] border border-green-100 bg-green-50/80 p-4">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-green-700">Step 3</p>
-                  <p className="mt-2 text-sm font-semibold text-foreground">Mark the work you finished</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Green means already marked. Future months stay locked.</p>
-                </div>
+          <div id="my-recurring-targets" className="scroll-mt-20">
+          <SectionCard title="My Recurring Targets" description="Track your progress at a glance">
+              <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
+                {MONTHS_SHORT.map((month, index) => {
+                  const monthNum = index + 1;
+                  const isActive = monthNum === selectedRecurringMonth;
+                  const isFuture = monthNum > currentMonth;
+                  return (
+                    <button
+                      key={month}
+                      type="button"
+                      onClick={() => setSelectedRecurringMonth(monthNum)}
+                      disabled={isFuture}
+                      aria-pressed={isActive}
+                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : isFuture
+                            ? 'cursor-not-allowed bg-muted text-muted-foreground/50'
+                            : 'bg-muted text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {month}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="mb-4 rounded-[1.6rem] border border-border/70 bg-background/75 p-3 backdrop-blur-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Selected Month</p>
-                    <p className="mt-1 text-sm font-semibold text-foreground">{MONTHS_SHORT[selectedRecurringMonth - 1]} {currentYear}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Pick a month first. Future months stay locked.</p>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 xl:grid-cols-12">
-                    {MONTHS_SHORT.map((month, index) => {
-                      const monthNum = index + 1;
-                      const isActive = monthNum === selectedRecurringMonth;
-                      const isFuture = monthNum > currentMonth;
-                      return (
-                        <button
-                          key={month}
-                          type="button"
-                          onClick={() => setSelectedRecurringMonth(monthNum)}
-                          disabled={isFuture}
-                          aria-pressed={isActive}
-                          className={`rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
-                            isActive
-                              ? 'bg-primary text-primary-foreground shadow-sm'
-                              : isFuture
-                                ? 'bg-muted text-muted-foreground/60'
-                                : 'bg-white text-muted-foreground hover:text-foreground'
-                          } ${isFuture ? 'cursor-not-allowed' : ''}`}
-                        >
-                          <span className="block">{month}</span>
-                          <span className="mt-0.5 block text-[8px] opacity-80">
-                            {isActive ? 'Selected' : isFuture ? 'Locked' : 'Open'}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {myRecurringTargets.map((target: any) => {
                   const freq = target.recurringFrequency || 'monthly';
                   const isWeekly = freq === 'weekly';
                   const selectedMonthLabel = MONTHS_SHORT[selectedRecurringMonth - 1];
                   const selectedMonthIsFuture = selectedRecurringMonth > currentMonth;
                   const completedCount = getCompletedRecurringCount(target._id, isWeekly);
-                  const totalDoneLabel = `${completedCount} ${isWeekly ? (completedCount === 1 ? 'week' : 'weeks') : (completedCount === 1 ? 'month' : 'months')} marked so far`;
+                  const weeksInSelectedMonth = getWeeksInMonth(currentYear, selectedRecurringMonth - 1);
+                  const completedInSelectedMonth = isWeekly
+                    ? WEEKLY_SLOTS.filter((w) => w <= weeksInSelectedMonth && myMarks[target._id]?.[`${currentYear}-${selectedRecurringMonth}-${w}`]).length
+                    : 0;
+                  const progressTotal = isWeekly ? weeksInSelectedMonth : 12;
+                  const progressDone = isWeekly ? completedInSelectedMonth : completedCount;
+                  const progressPct = progressTotal ? Math.round((progressDone / progressTotal) * 100) : 0;
+                  const monthKey = `${currentYear}-${selectedRecurringMonth}-0`;
+                  const monthCompleted = myMarks[target._id]?.[monthKey] || false;
+                  const monthLoadingKey = `${target._id}-${monthKey}`;
                   return (
-                    <div key={target._id} className="rounded-[1.6rem] border border-border/60 bg-background/80 p-4 shadow-sm">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-sm">{target.title}</p>
-                          {isWeekly && (
-                            <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700">Weekly</span>
-                          )}
+                    <div key={target._id} className="rounded-2xl border border-border bg-card p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">{target.title}</p>
+                          <Badge variant="outline" className="shrink-0 rounded-md px-1.5 py-0 text-[10px] font-medium">
+                            {isWeekly ? 'Weekly' : 'Monthly'}
+                          </Badge>
                         </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-muted-foreground shadow-sm">
-                          {totalDoneLabel}
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {isWeekly ? `${progressDone} / ${progressTotal} weeks` : `${progressDone} / 12 months`}
                         </span>
                       </div>
-                      <p className="mb-3 text-xs text-muted-foreground">
-                        {isWeekly
-                          ? 'Choose a month below, then tap each week after you finish it.'
-                          : 'Choose a month below, then tap the button when that month is complete.'}
-                      </p>
-
-                      {isWeekly ? (
-                        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
-                          <div className="space-y-3 rounded-[1.2rem] border border-border/60 bg-muted/20 p-4">
-                            <div>
-                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Month You Are Updating</p>
-                              <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-                              {WEEKLY_SLOTS.map((weekNum) => {
-                                const weeksInMonth = getWeeksInMonth(currentYear, selectedRecurringMonth - 1);
-                                const exists = weekNum <= weeksInMonth;
-                                if (!exists) {
-                                  return <div key={weekNum} className="h-16" aria-hidden />;
-                                }
-                                const key = `${currentYear}-${selectedRecurringMonth}-${weekNum}`;
-                                const completed = myMarks[target._id]?.[key] || false;
-                                const loadingKey = `${target._id}-${key}`;
-                                return (
-                                  <button
-                                    key={weekNum}
-                                    type="button"
-                                    onClick={() => !selectedMonthIsFuture && toggleMark(target._id, currentYear, selectedRecurringMonth, weekNum)}
-                                    disabled={markingLoading === loadingKey || selectedMonthIsFuture}
-                                    title={selectedMonthIsFuture ? 'Future week' : `${selectedMonthLabel} W${weekNum}`}
-                                    className={`flex h-16 flex-col items-center justify-center rounded-2xl border text-xs font-semibold transition-all ${
-                                      completed
-                                        ? 'border-green-500 bg-green-500 text-white'
-                                        : selectedMonthIsFuture
-                                          ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300'
-                                          : 'border-gray-200 bg-white text-gray-500 hover:border-primary hover:text-primary'
-                                    } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
-                                  >
-                                    <span>Week {weekNum}</span>
-                                    <span className={`mt-1 text-[9px] ${completed ? 'text-white/90' : 'opacity-80'}`}>
-                                      {completed ? 'Marked' : selectedMonthIsFuture ? 'Locked' : 'Tap to mark'}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
+                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={`h-full rounded-full transition-all ${isWeekly ? 'bg-success' : 'bg-primary/70'}`}
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        {isWeekly ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {WEEKLY_SLOTS.filter((w) => w <= weeksInSelectedMonth).map((weekNum) => {
+                              const key = `${currentYear}-${selectedRecurringMonth}-${weekNum}`;
+                              const completed = myMarks[target._id]?.[key] || false;
+                              const loadingKey = `${target._id}-${key}`;
+                              return (
+                                <button
+                                  key={weekNum}
+                                  type="button"
+                                  onClick={() => !selectedMonthIsFuture && toggleMark(target._id, currentYear, selectedRecurringMonth, weekNum)}
+                                  disabled={markingLoading === loadingKey || selectedMonthIsFuture}
+                                  title={selectedMonthIsFuture ? 'Future week' : `${selectedMonthLabel} W${weekNum}`}
+                                  className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                                    completed
+                                      ? 'bg-success text-success-foreground'
+                                      : selectedMonthIsFuture
+                                        ? 'cursor-not-allowed bg-muted text-muted-foreground/50'
+                                        : 'bg-muted text-muted-foreground hover:text-foreground'
+                                  } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
+                                >
+                                  W{weekNum}
+                                </button>
+                              );
+                            })}
                           </div>
-                          <div className="rounded-[1.2rem] border border-border/60 bg-white px-4 py-4 text-sm shadow-sm">
-                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">What To Do</p>
-                            <p className="mt-2 font-semibold text-foreground">
-                              {selectedMonthIsFuture ? 'Locked until this month starts' : 'Tap a week to mark or unmark it'}
-                            </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {selectedMonthIsFuture ? 'You can update this later.' : 'Green means the week is already marked.'}
-                            </p>
-                            <div className="mt-3 rounded-xl bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                              {completedCount > 0 ? totalDoneLabel : 'No weeks marked yet for this target.'}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px] xl:items-start">
-                          <div className="rounded-[1.2rem] border border-border/60 bg-muted/20 p-4">
-                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Month You Are Updating</p>
-                            <p className="mt-1 text-sm font-semibold text-foreground">{selectedMonthLabel} {currentYear}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {selectedMonthIsFuture ? 'This month will open when it begins.' : 'Use the button to mark this month complete.'}
-                            </p>
-                            <div className="mt-3 rounded-xl bg-white px-3 py-3 text-xs text-muted-foreground shadow-sm">
-                              {completedCount > 0 ? totalDoneLabel : 'No month marked yet for this target.'}
-                            </div>
-                          </div>
-                          <div className="rounded-[1.2rem] border border-border/60 bg-white p-4 shadow-sm">
-                            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Action</p>
-                            {selectedMonthIsFuture ? (
-                              <div className="mt-3 rounded-xl bg-muted/30 px-3 py-6 text-center text-xs font-semibold text-muted-foreground">Locked</div>
-                            ) : (
-                              (() => {
-                                const key = `${currentYear}-${selectedRecurringMonth}-0`;
-                                const completed = myMarks[target._id]?.[key] || false;
-                                const loadingKey = `${target._id}-${key}`;
-                                return (
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleMark(target._id, currentYear, selectedRecurringMonth, 0)}
-                                    disabled={markingLoading === loadingKey}
-                                    className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-semibold transition-colors ${
-                                      completed
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-white text-muted-foreground hover:text-foreground'
-                                    } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
-                                  >
-                                    {completed ? <CheckCircle className="h-4 w-4" /> : <X className="h-4 w-4" />}
-                                    {completed ? 'Month Marked' : 'Mark This Month'}
-                                  </button>
-                                );
-                              })()
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-muted-foreground mt-2 text-right">{currentYear}</p>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={markingLoading === monthLoadingKey || selectedMonthIsFuture}
+                            onClick={() => toggleMark(target._id, currentYear, selectedRecurringMonth, 0)}
+                            className={monthCompleted ? 'border-success/40 bg-success/10 text-success hover:bg-success/15' : ''}
+                          >
+                            {monthCompleted ? <CheckCircle className="h-4 w-4" /> : null}
+                            {monthCompleted ? `${selectedMonthLabel} marked` : selectedMonthIsFuture ? 'Locked' : `Mark ${selectedMonthLabel}`}
+                          </Button>
+                        )}
+                        <span className="text-[11px] text-muted-foreground">{selectedMonthLabel} {currentYear}</span>
+                      </div>
                     </div>
                   );
                 })}
               </div>
           </SectionCard>
+          </div>
         )}
 
       <BottomNav />

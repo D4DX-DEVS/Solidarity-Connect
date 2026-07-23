@@ -1182,8 +1182,12 @@ export { authenticateMember };
 router.get('/org-files', authenticateMember, async (req, res) => {
   try {
     const { category, search } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
 
-    const filter = { isActive: true, fileType: 'general' };
+    const baseFilter = { isActive: true, fileType: 'general' };
+    const filter = { ...baseFilter };
 
     if (category && category !== 'all') filter.category = category;
 
@@ -1195,11 +1199,23 @@ router.get('/org-files', authenticateMember, async (req, res) => {
       ];
     }
 
-    const files = await OrgFile.find(filter)
-      .select('title description category url link originalName mimetype size createdAt')
-      .sort({ createdAt: -1 });
+    const [files, total, summaryTotal] = await Promise.all([
+      OrgFile.find(filter)
+        .select('title description category fileType isActive url link originalName mimetype size createdAt')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      OrgFile.countDocuments(filter),
+      OrgFile.countDocuments(baseFilter)
+    ]);
 
-    res.status(200).json({ success: true, data: files });
+    res.status(200).json({
+      success: true,
+      data: files,
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
+      // Members never see membership forms or hidden files
+      summary: { total: summaryTotal, membershipForms: 0, hidden: 0 }
+    });
   } catch (error) {
     console.error('Member get org files error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch files' });

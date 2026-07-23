@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -237,7 +237,7 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
             )}
           </div>
 
-          <div className="rounded-[1.6rem] border-2 border-dashed border-border/70 bg-background/75 p-8 text-center shadow-sm">
+          <div className="rounded-2xl border-2 border-dashed border-border/70 bg-card p-8 text-center shadow-sm">
             <Upload className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
             <input
               type="file"
@@ -251,7 +251,7 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
             </label>
             <p className="mt-1 text-xs text-muted-foreground">Only CSV files are accepted for bulk import.</p>
             {selectedFile ? (
-              <div className="mx-auto mt-4 max-w-md rounded-[1rem] border border-border/60 bg-white/80 px-4 py-3 text-sm text-foreground shadow-sm">
+              <div className="mx-auto mt-4 max-w-md rounded-xl border border-border/60 bg-card px-4 py-3 text-sm text-foreground shadow-sm">
                 Selected: {selectedFile.name}
               </div>
             ) : null}

@@ -11,53 +11,65 @@
   unicode-range: U+0D00-0D7F; /* Malayalam script */
 }
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
+
+Clean flat theme: cool gray background, white cards, 1px slate borders,
+soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 */
 
 @layer base {
   :root {
-    --background: 28 33% 97%;
-    --foreground: 222 32% 13%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 32% 13%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 32% 13%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 6 84% 59%;
-    --primary-foreground: 28 100% 98%;
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 30 25% 93%;
-    --secondary-foreground: 222 32% 18%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 30 22% 94%;
-    --muted-foreground: 220 14% 42%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 16 56% 94%;
-    --accent-foreground: 222 32% 18%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --success: 148 66% 42%;
+    --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    --destructive: 0 78% 58%;
-    --destructive-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 24 25% 87%;
-    --input: 24 25% 87%;
-    --ring: 6 84% 59%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
 
-    --radius: 1.5rem;
+    --purple: 258 90% 66%;
+    --purple-foreground: 0 0% 100%;
 
-    --sidebar-background: 28 33% 97%;
-    --sidebar-foreground: 222 32% 13%;
-    --sidebar-primary: 6 84% 59%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 0 84% 60%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 0 84% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 30 22% 94%;
-    --sidebar-accent-foreground: 222 32% 18%;
-    --sidebar-border: 24 25% 87%;
-    --sidebar-ring: 6 84% 59%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 0 84% 60%;
   }
 
   .dark {
@@ -85,6 +97,15 @@ All colors MUST be HSL.
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
 
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --purple: 258 90% 66%;
+    --purple-foreground: 0 0% 100%;
+
     --destructive: 0 70% 45%;
     --destructive-foreground: 210 40% 98%;
 
@@ -111,12 +132,8 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
     font-family: "Segoe UI Variable Text", "Aptos", "Segoe UI", "Noto Sans Malayalam", sans-serif;
     min-height: 100vh;
-    background-image:
-      radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 28%),
-      radial-gradient(circle at top right, hsl(148 66% 42% / 0.08), transparent 24%),
-      linear-gradient(180deg, hsl(28 38% 99%), hsl(var(--background)) 28%, hsl(0 0% 100%));
-    background-attachment: fixed;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
   #root {
@@ -137,76 +154,80 @@ All colors MUST be HSL.
 
 @layer components {
   .app-page {
-    @apply relative min-h-screen overflow-x-hidden pb-28;
+    @apply relative min-h-screen overflow-x-hidden lg:pl-60;
   }
 
   .app-main {
-    @apply relative mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:px-8;
+    @apply relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-28 pt-3 sm:gap-4 sm:px-6 sm:pt-4 lg:px-8 lg:pb-8;
   }
 
-  .app-page-orb {
-    @apply pointer-events-none fixed inset-auto -z-10 h-72 w-72 rounded-full blur-3xl;
-  }
-
-  .app-page-orb-primary {
-    @apply left-[-5rem] top-20 bg-primary/10;
-  }
-
+  /* Decorative orbs removed in flat theme; class kept because pages render it. */
+  .app-page-orb,
+  .app-page-orb-primary,
   .app-page-orb-secondary {
-    @apply bottom-20 right-[-5rem] bg-emerald-400/10;
+    @apply hidden;
   }
 
   .hero-card {
-    @apply relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-5 shadow-[0_28px_80px_-44px_hsl(var(--foreground)/0.35)] backdrop-blur-xl sm:p-6;
+    @apply relative rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5 lg:border-0 lg:bg-transparent lg:p-1 lg:shadow-none;
   }
 
-  .hero-card::before {
-    content: "";
-    @apply absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  /* Soft staggered entrance for page sections */
+  .app-main > * {
+    animation: rise 0.35s ease-out both;
+  }
+  .app-main > *:nth-child(2) { animation-delay: 0.05s; }
+  .app-main > *:nth-child(3) { animation-delay: 0.1s; }
+  .app-main > *:nth-child(4) { animation-delay: 0.15s; }
+  .app-main > *:nth-child(5) { animation-delay: 0.2s; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .hero-icon {
-    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-[0_18px_38px_-20px_hsl(var(--primary)/0.85)];
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground lg:hidden;
   }
 
   .hero-eyebrow {
-    @apply text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-primary/80;
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   .hero-title {
-    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+    @apply text-xl font-bold tracking-tight sm:text-2xl;
   }
 
   .hero-subtitle {
-    @apply max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base;
+    @apply max-w-2xl text-sm leading-6 text-muted-foreground;
   }
 
   .hero-details {
-    @apply mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
+    @apply mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
   }
 
   .surface-card {
-    @apply border-white/70 bg-white/80 shadow-[0_24px_60px_-36px_hsl(var(--foreground)/0.35)] backdrop-blur-xl;
+    @apply rounded-2xl border border-border bg-card shadow-sm;
   }
 
   .metric-card {
-    @apply border-white/70 bg-white/90 shadow-[0_20px_48px_-34px_hsl(var(--foreground)/0.26)] backdrop-blur-xl;
+    @apply rounded-2xl border border-border bg-card shadow-sm;
   }
 
   .metric-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-2xl ring-8;
+    @apply flex h-10 w-10 items-center justify-center rounded-xl;
   }
 
   .action-tile {
-    @apply flex h-full min-h-28 flex-col items-start justify-between rounded-[1.6rem] border border-border/60 bg-white/90 p-4 text-left shadow-[0_20px_40px_-34px_hsl(var(--foreground)/0.25)] transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_26px_56px_-34px_hsl(var(--primary)/0.35)] sm:p-5;
+    @apply flex h-full min-h-24 flex-col items-start justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/40 hover:bg-accent/60;
   }
 
   .action-tile-icon {
-    @apply flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-foreground;
+    @apply flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground;
   }
 
   .data-strip {
-    @apply rounded-[1.6rem] border border-border/60 bg-background/75 p-4 backdrop-blur-sm;
+    @apply rounded-2xl border border-border bg-muted/60 p-4;
   }
 }
 
@@ -219,5 +240,6 @@ All colors MUST be HSL.
   }
 }
 
-.glass { @apply border border-white/50 bg-white/70 shadow-[0_24px_60px_-36px_hsl(var(--foreground)/0.3)] backdrop-blur-xl; }
-.dark .glass { @apply border border-white/10 bg-black/60 shadow-[0_24px_60px_-36px_black]; }
+/* Formerly glassmorphism; now a plain flat surface. Class name kept for existing markup. */
+.glass { @apply border border-border bg-card shadow-sm; }
+.dark .glass { @apply border border-white/10 bg-black/80; }

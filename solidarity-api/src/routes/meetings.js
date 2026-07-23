@@ -3,7 +3,10 @@ import Meeting from '../models/Meeting.js';
 import MeetingSession from '../models/MeetingSession.js';
 import Attendance from '../models/Attendance.js';
 import GuestAttendance from '../models/GuestAttendance.js';
-import { authenticate, authorize, requireRole } from '../middleware/auth.js';
+import { authenticate as verifyToken, authorize, requireRole, requireAreaScope } from '../middleware/auth.js';
+// Every meetings handler assumes req.user.group/district resolve for scoped
+// roles, so run the area-scope guard with authentication on all routes.
+const authenticate = [verifyToken, requireAreaScope];
 import { 
   createMeetingValidation,
   paginationValidation,
@@ -202,16 +205,6 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     };
 
     const result = await Meeting.paginate(filter, options);
-    
-    // If no results with filter, return all meetings for group admins since they are general
-    if (result.docs.length === 0 && req.user.role === 'group_admin') {
-      const allMeetingsResult = await Meeting.paginate({}, options);
-      if (allMeetingsResult.docs.length > 0) {
-        result.docs = allMeetingsResult.docs;
-        result.totalDocs = allMeetingsResult.totalDocs;
-        result.totalPages = allMeetingsResult.totalPages;
-      }
-    }
 
     // Enhance meeting data with session information and attendance details
     const enhancedMeetings = await Promise.all(
@@ -1213,6 +1206,17 @@ router.post('/:id/sessions/:sessionId/upload',
         return res.status(404).json({
           success: false,
           message: 'Session not found'
+        });
+      }
+
+      // Only the meeting creator or an admin role may attach files
+      const meeting = await Meeting.findById(req.params.id).select('createdBy');
+      const canUpload = ['state_admin', 'district_admin', 'group_admin'].includes(req.user.role) &&
+        (req.user.role !== 'group_admin' || meeting?.createdBy?.toString() === req.user._id.toString());
+      if (!canUpload) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have permission to upload files to this session'
         });
       }
 

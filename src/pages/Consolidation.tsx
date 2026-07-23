@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BarChart3, Users, CheckCircle2, Clock, Download, Filter, CalendarDays, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageHero, MetricCard, SectionCard } from '@/components/app/AppShell';
+import { PageHero, MetricCard, PageShell, SectionCard } from '@/components/app/AppShell';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -482,7 +482,7 @@ export default function Consolidation() {
   const isGroupAdmin = user?.role === 'group_admin';
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <PageShell>
       <PageHero
         title="Consolidation"
         subtitle="Track target completion across user types and regions"
@@ -735,7 +735,7 @@ export default function Consolidation() {
       </div>
 
       <BottomNav />
-    </div>
+    </PageShell>
   );
 }
 

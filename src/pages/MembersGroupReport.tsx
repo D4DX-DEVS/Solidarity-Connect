@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
+import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -276,7 +277,7 @@ const MembersGroupReport = () => {
         {/* Error State */}
         {error && (
           <SectionCard title="Report Error" description="The report could not be loaded with the current filters.">
-            <div className="rounded-[1.6rem] border border-destructive/20 bg-destructive/5 p-4 text-center">
+            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-center">
               <p className="text-destructive text-center">{error}</p>
               <Button 
                 variant="outline" 
@@ -375,20 +376,7 @@ const MembersGroupReport = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Select
-                    value={pageSize.toString()}
-                    onValueChange={(val) => handlePageSizeChange(Number(val))}
-                  >
-                    <SelectTrigger className="w-[130px] h-8 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 per page</SelectItem>
-                      <SelectItem value="10">10 per page</SelectItem>
-                      <SelectItem value="20">20 per page</SelectItem>
-                      <SelectItem value="50">50 per page</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <PageSizeInput value={pageSize} onChange={handlePageSizeChange} />
                   
                   <div className="flex items-center gap-1">
                     <Button

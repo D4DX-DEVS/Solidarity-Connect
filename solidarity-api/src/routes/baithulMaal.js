@@ -1,6 +1,6 @@
 import express from 'express';
 import Member from '../models/Member.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -13,7 +13,7 @@ const router = express.Router();
 // @route   GET /api/baithul-maal
 // @desc    Get Baithul Maal data
 // @access  Private
-router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationValidation, async (req, res) => {
+router.get('/', authenticate, authorize(['manage_baithul_maal']), requireAreaScope,paginationValidation, async (req, res) => {
   try {
     const {
       page = 1,
@@ -125,7 +125,7 @@ router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationVali
 // @route   GET /api/baithul-maal/member/:id
 // @desc    Get member's Baithul Maal details
 // @access  Private
-router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), objectIdValidation('id'), handleValidationErrors, async (req, res) => {
+router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), requireAreaScope,objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
     const member = await Member.findById(req.params.id)
       .populate('district', 'name code')
@@ -140,16 +140,16 @@ router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), obje
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && 
-        member.group._id.toString() !== req.user.group._id.toString()) {
+    if (req.user.role === 'group_admin' &&
+        member.group?._id?.toString() !== req.user.group._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only view Baithul Maal data for members in your group.'
       });
     }
 
-    if (req.user.role === 'district_admin' && 
-        member.district._id.toString() !== req.user.district._id.toString()) {
+    if (req.user.role === 'district_admin' &&
+        member.district?._id?.toString() !== req.user.district._id.toString()) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. You can only view Baithul Maal data for members in your district.'
@@ -189,8 +189,9 @@ router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), obje
 // @desc    Update member's Baithul Maal amount
 // @access  Private
 router.put('/member/:id', 
-  authenticate, 
-  authorize(['manage_baithul_maal']), 
+  authenticate,
+  authorize(['manage_baithul_maal']),
+  requireAreaScope,
   objectIdValidation('id'),
   [
     body('monthlyAmount')
@@ -219,7 +220,7 @@ router.put('/member/:id',
 
       // Check access permissions
       if (req.user.role === 'group_admin' && 
-          member.group.toString() !== req.user.group._id.toString()) {
+          member.group?.toString() !== req.user.group._id.toString()) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. You can only update Baithul Maal data for members in your group.'
@@ -227,7 +228,7 @@ router.put('/member/:id',
       }
 
       if (req.user.role === 'district_admin' && 
-          member.district.toString() !== req.user.district._id.toString()) {
+          member.district?.toString() !== req.user.district._id.toString()) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. You can only update Baithul Maal data for members in your district.'
@@ -273,8 +274,9 @@ router.put('/member/:id',
 // @desc    Record payment for member
 // @access  Private
 router.post('/member/:id/payment', 
-  authenticate, 
-  authorize(['manage_baithul_maal']), 
+  authenticate,
+  authorize(['manage_baithul_maal']),
+  requireAreaScope,
   objectIdValidation('id'),
   [
     body('amount')
@@ -304,7 +306,7 @@ router.post('/member/:id/payment',
 
       // Check access permissions
       if (req.user.role === 'group_admin' && 
-          member.group.toString() !== req.user.group._id.toString()) {
+          member.group?.toString() !== req.user.group._id.toString()) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. You can only record payments for members in your group.'
@@ -312,7 +314,7 @@ router.post('/member/:id/payment',
       }
 
       if (req.user.role === 'district_admin' && 
-          member.district.toString() !== req.user.district._id.toString()) {
+          member.district?.toString() !== req.user.district._id.toString()) {
         return res.status(403).json({
           success: false,
           message: 'Access denied. You can only record payments for members in your district.'
@@ -357,7 +359,7 @@ router.post('/member/:id/payment',
 // @route   GET /api/baithul-maal/stats
 // @desc    Get Baithul Maal statistics
 // @access  Private
-router.get('/stats', authenticate, authorize(['manage_baithul_maal']), async (req, res) => {
+router.get('/stats', authenticate, authorize(['manage_baithul_maal']), requireAreaScope,async (req, res) => {
   try {
     let matchFilter = { 
       status: 'Active', 
@@ -488,7 +490,7 @@ router.get('/stats', authenticate, authorize(['manage_baithul_maal']), async (re
 // @route   GET /api/baithul-maal/defaulters
 // @desc    Get members with pending payments
 // @access  Private
-router.get('/defaulters', authenticate, authorize(['manage_baithul_maal']), paginationValidation, async (req, res) => {
+router.get('/defaulters', authenticate, authorize(['manage_baithul_maal']), requireAreaScope,paginationValidation, async (req, res) => {
   try {
     const { page = 1, limit = 20, minPending = 100 } = req.query;
 

@@ -31,8 +31,8 @@ const BottomNav = () => {
   );
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 pb-safe sm:bottom-5 sm:px-4">
-      <nav className="glass pointer-events-auto w-full max-w-md rounded-[2rem] border-white/60 px-2 py-2 shadow-[0_28px_70px_-30px_hsl(var(--foreground)/0.35)]">
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 pb-safe sm:bottom-5 sm:px-4 lg:hidden">
+      <nav className="glass pointer-events-auto w-full max-w-md rounded-2xl px-2 py-2 shadow-lg shadow-foreground/5">
         <div className={`grid h-[4.6rem] items-center gap-1 ${navItems.length <= 4 ? 'grid-cols-4' : navItems.length === 5 ? 'grid-cols-5' : 'grid-cols-6'}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -45,14 +45,14 @@ const BottomNav = () => {
                 <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
+                      className={`flex h-full flex-col items-center justify-center rounded-xl px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                     >
                       <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />
                       <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-xl p-1.5 shadow-lg">
                     <DropdownMenuItem onClick={() => navigate("/notifications")} className="rounded-xl py-3 px-3 cursor-pointer mb-1 focus:bg-primary/10 transition-colors">
                       <Bell className="h-4 w-4 mr-2.5 text-primary" />
                       <span className="font-medium">Notifications</span>
@@ -72,14 +72,14 @@ const BottomNav = () => {
                 <DropdownMenu key={item.path} modal={false}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
+                      className={`flex h-full flex-col items-center justify-center rounded-xl px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                     >
                       <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />
                       <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-[1.4rem] border-border/50 p-1.5 shadow-2xl">
+                  <DropdownMenuContent align="center" side="top" className="glass mb-4 w-48 rounded-xl p-1.5 shadow-lg">
                     <DropdownMenuItem onClick={() => navigate("/meetings")} className="rounded-xl py-2.5 px-3 cursor-pointer focus:bg-primary/10 transition-colors font-medium">
                       <Calendar className="h-4 w-4 mr-2.5 text-primary" />
                       View Meetings
@@ -110,7 +110,7 @@ const BottomNav = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex h-full flex-col items-center justify-center rounded-[1.35rem] px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
+                className={`flex h-full flex-col items-center justify-center rounded-xl px-2 transition-all duration-300 ease-spring ${isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   }`}
               >
                 <Icon className={`h-[22px] w-[22px] transition-all duration-300 ${isActive ? "scale-105" : ""}`} />

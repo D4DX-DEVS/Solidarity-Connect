@@ -1,5 +1,4 @@
-import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText, BarChart3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users, CheckCircle, Clock, Calendar, Upload, Shield, Star, FileText, BarChart3, Menu } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MetricCard, PageHero, SectionCard } from "@/components/app/AppShell";
@@ -24,6 +23,8 @@ interface DashboardData {
   }>;
   pendingRequestsCount: number;
 }
+
+const PRIMARY_AREA_LABELS = ["Members", "Meetings", "Bulk Import", "Org Files", "Group Reports"];
 
 const Dashboard = () => {
   const { userRole, userDistrict, userGroup, user } = useAuth();
@@ -111,11 +112,23 @@ const Dashboard = () => {
   ];
 
   const firstName = user?.name?.trim().split(" ")[0] || "Admin";
+  const statPaths = ["/members", "/members", "/requests", "/meetings"];
+  const [showAllActions, setShowAllActions] = useState(false);
+
+  const areaTools = [
+    { label: "Members", path: "/members", Icon: Users, color: "text-info" },
+    { label: "Meetings", path: "/meetings", Icon: Calendar, color: "text-warning" },
+    { label: "Bulk Import", path: "/bulk-import", Icon: Upload, color: "text-purple" },
+    { label: "Org Files", path: "/org-files", Icon: FileText, color: "text-success" },
+    { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3, color: "text-info" },
+    { label: "Role Management", path: "/role-management", Icon: Shield, color: "text-purple" },
+    { label: "Leaders", path: "/leaders", Icon: Star, color: "text-warning" },
+    { label: "Consolidation", path: "/consolidation", Icon: BarChart3, color: "text-success" },
+    { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3, color: "text-primary" },
+  ];
 
   return (
     <div className="app-page">
-      <div className="app-page-orb app-page-orb-primary" aria-hidden />
-      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title="Area Admin Dashboard"
@@ -125,32 +138,12 @@ const Dashboard = () => {
       <main className="app-main pt-5">
         <PageHero
           eyebrow="Daily Overview"
-          title={`Welcome back, ${firstName}`}
-          subtitle="Your members, meetings, recurring targets, and pending work are all shown here in one simple view."
+          title={`Welcome back, ${firstName} 👋`}
+          subtitle="Here's what's happening in your area today."
           icon={<BarChart3 className="h-6 w-6" />}
-          details={
-            <>
-              <div className="data-strip">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Area</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{userGroup || user?.group?.name || "—"}</p>
-              </div>
-              <div className="data-strip">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{userDistrict || user?.district?.name || "—"}</p>
-              </div>
-              <div className="data-strip">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Pending Requests</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.pendingRequestsCount ?? 0}</p>
-              </div>
-              <div className="data-strip">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Upcoming Meetings</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">{dashboardData?.upcomingMeetings?.length ?? 0}</p>
-              </div>
-            </>
-          }
         />
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {stats.map((stat, index) => (
             <MetricCard
               key={index}
@@ -158,33 +151,36 @@ const Dashboard = () => {
               value={loading ? "..." : stat.value}
               icon={stat.icon}
               tone={stat.tone}
+              onClick={() => navigate(statPaths[index])}
             />
           ))}
         </div>
 
-        <SectionCard title="Area Admin Tools" description="Quick links to the tools you use most often.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {[
-                { label: "Members", path: "/members", Icon: Users },
-                { label: "Meetings", path: "/meetings", Icon: Calendar },
-                { label: "Role Management", path: "/role-management", Icon: Shield },
-                { label: "Leaders", path: "/leaders", Icon: Star },
-                { label: "Consolidation", path: "/consolidation", Icon: BarChart3 },
-                { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3 },
-                { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3 },
-                { label: "Bulk Import", path: "/bulk-import", Icon: Upload },
-                { label: "Org Files", path: "/org-files", Icon: FileText },
-              ].map(({ label, path, Icon }) => (
-                <Button key={label} variant="outline" className="action-tile h-auto" onClick={() => navigate(path)}>
-                  <div className="action-tile-icon">
-                    <Icon className="h-5 w-5" />
+        <SectionCard title="Quick Actions" description="Frequently used actions">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+              {(showAllActions ? areaTools : areaTools.filter(({ label }) => PRIMARY_AREA_LABELS.includes(label))).map(({ label, path, Icon, color }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => navigate(path)}
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                    <Icon className={`h-5 w-5 ${color}`} />
                   </div>
-                  <div className="space-y-1 text-left">
-                    <p className="text-sm font-semibold text-foreground">{label}</p>
-                    <p className="text-xs text-muted-foreground">Open {label.toLowerCase()} tools.</p>
-                  </div>
-                </Button>
+                  <p className="text-xs font-medium leading-tight text-foreground">{label}</p>
+                </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowAllActions((v) => !v)}
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
+                  <Menu className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
+              </button>
             </div>
         </SectionCard>
 

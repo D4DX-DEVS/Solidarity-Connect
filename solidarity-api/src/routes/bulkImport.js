@@ -6,7 +6,7 @@ import path from 'path';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
 import { body } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 
@@ -44,9 +44,10 @@ const upload = multer({
 // @route   POST /api/bulk-import/members
 // @desc    Bulk import members from CSV
 // @access  Private
-router.post('/members', 
-  authenticate, 
+router.post('/members',
+  authenticate,
   authorize(['bulk_import']),
+  requireAreaScope,
   upload.single('csvFile'),
   [
     body('district').isMongoId().withMessage('Invalid district ID'),
@@ -157,7 +158,7 @@ Jane Smith,+919876543211,jane@example.com,1995-05-20,B+,Teacher,Bachelors,Inacti
 // @route   GET /api/bulk-import/history
 // @desc    Get bulk import history
 // @access  Private
-router.get('/history', authenticate, authorize(['bulk_import']), async (req, res) => {
+router.get('/history', authenticate, authorize(['bulk_import']), requireAreaScope, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
 

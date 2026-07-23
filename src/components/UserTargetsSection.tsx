@@ -704,17 +704,17 @@ const UserTargetsSection = () => {
           action={<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>}
         >
             <div className="mb-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1.25rem] border border-blue-100 bg-blue-50/80 p-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50/80 p-4">
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-blue-700">Step 1</p>
                 <p className="mt-2 text-sm font-semibold text-foreground">Choose the year</p>
                 <p className="mt-1 text-xs text-muted-foreground">Use the arrows to move between years before you mark anything.</p>
               </div>
-              <div className="rounded-[1.25rem] border border-amber-100 bg-amber-50/80 p-4">
+              <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4">
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-amber-700">Step 2</p>
                 <p className="mt-2 text-sm font-semibold text-foreground">Open one target</p>
                 <p className="mt-1 text-xs text-muted-foreground">Each target shows whether it repeats every month or every week.</p>
               </div>
-              <div className="rounded-[1.25rem] border border-green-100 bg-green-50/80 p-4">
+              <div className="rounded-xl border border-green-100 bg-green-50/80 p-4">
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-green-700">Step 3</p>
                 <p className="mt-2 text-sm font-semibold text-foreground">Tap to mark finished work</p>
                 <p className="mt-1 text-xs text-muted-foreground">Green means done. Grey means not marked yet. Future periods stay locked.</p>
@@ -722,7 +722,7 @@ const UserTargetsSection = () => {
             </div>
 
             {/* Year selector */}
-            <div className="mb-5 rounded-[1.3rem] border border-border/60 bg-muted/20 p-3">
+            <div className="mb-5 rounded-xl border border-border/60 bg-muted/20 p-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <button
@@ -799,7 +799,7 @@ const UserTargetsSection = () => {
                 const expandedButtonLabel = isExpanded ? 'Hide details' : 'Show details';
 
                 return (
-                  <div key={progress._id} className="rounded-[1.4rem] border border-border/60 bg-background/80 shadow-sm overflow-hidden">
+                  <div key={progress._id} className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
                     {/* Header */}
                     <div
                       className="flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-muted/40 transition-colors"
@@ -917,7 +917,7 @@ const UserTargetsSection = () => {
                                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Current</span>
                                       )}
                                     </div>
-                                    <div className="rounded-xl bg-background/80 px-3 py-2 text-xs text-muted-foreground">
+                                    <div className="rounded-xl bg-card px-3 py-2 text-xs text-muted-foreground">
                                       <p className="font-semibold text-foreground">{monthCompleted} of {weeksInMonth} weeks marked</p>
                                       <p className="mt-0.5">{monthIsFuture ? 'This month is locked for now.' : 'Tap a week card to mark or unmark it.'}</p>
                                     </div>
@@ -941,7 +941,7 @@ const UserTargetsSection = () => {
                                             ${isCompleted
                                               ? 'bg-green-500 text-white shadow-md ring-1 ring-green-400/50'
                                               : isFuture
-                                                ? 'bg-white/60 text-gray-300 border border-gray-100 cursor-not-allowed'
+                                                ? 'bg-card text-gray-300 border border-gray-100 cursor-not-allowed'
                                                 : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-700 hover:shadow-sm active:scale-95'
                                             }
                                             ${isLoading ? 'opacity-50 animate-pulse' : ''}
@@ -976,7 +976,7 @@ const UserTargetsSection = () => {
                               <p className="mt-1">Tap a month after you finish it. Tap again to remove the mark. If you do the same target more than once in a month, use + or - to adjust the count.</p>
                             </div>
 
-                            <div className="mb-4 rounded-[1.1rem] border border-border/60 bg-muted/20 p-3">
+                            <div className="mb-4 rounded-xl border border-border/60 bg-muted/20 p-3">
                               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick meaning</p>
                               <div className="mt-2 grid gap-2 sm:grid-cols-3 text-xs text-muted-foreground">
                                 <div className="rounded-xl bg-white px-3 py-2">Green month: already finished</div>
@@ -1102,7 +1102,7 @@ const UserTargetsSection = () => {
 
       {/* ══════════ ATTENDANCE DIALOG ══════════ */}
       <Dialog open={attendanceOpen} onOpenChange={setAttendanceOpen}>
-        <DialogContent className="glass sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-[1.8rem] border-border/60">
+        <DialogContent className="glass sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-2xl border-border/60">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />

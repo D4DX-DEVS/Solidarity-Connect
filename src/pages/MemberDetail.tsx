@@ -290,7 +290,7 @@ const MemberDetail = () => {
   };
 
   const InfoRow = ({ icon: Icon, label, value }: any) => (
-    <div className="data-strip flex items-start gap-3 rounded-[1.3rem] px-4 py-3">
+    <div className="data-strip flex items-start gap-3 rounded-xl px-4 py-3">
       <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
       <div className="flex-1">
         <p className="text-sm text-muted-foreground">{label}</p>
@@ -352,13 +352,13 @@ const MemberDetail = () => {
         />
         <SectionCard title="Preparing Member View" description="Fetching profile, contribution, and attendance data.">
           <div className="space-y-4">
-            <div className="rounded-[1.8rem] border border-border/60 bg-background/80 p-6 text-center">
+            <div className="rounded-2xl border border-border/60 bg-card p-6 text-center">
               <Skeleton className="h-20 w-20 rounded-full mx-auto mb-4" />
               <Skeleton className="h-8 w-48 mx-auto mb-2" />
               <Skeleton className="h-6 w-24 mx-auto" />
             </div>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-[1.6rem] border border-border/60 bg-background/80 p-4">
+            <div key={i} className="rounded-2xl border border-border/60 bg-card p-4">
                 <Skeleton className="h-6 w-32 mb-3" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-full mb-2" />
@@ -387,7 +387,7 @@ const MemberDetail = () => {
           }
         />
         <SectionCard title="Member Not Found" description="The member may have been removed or the link may be outdated.">
-          <div className="rounded-[1.8rem] border border-border/60 bg-background/80 p-8 text-center">
+          <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
               <User className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="font-semibold text-lg mb-2">Member Not Found</h3>
               <p className="text-muted-foreground mb-4">The member you're looking for doesn't exist.</p>
@@ -419,25 +419,25 @@ const MemberDetail = () => {
         }
         details={
           <>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
               <div className="mt-2">{renderMemberStatus(member.status)}</div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Phone</p>
               <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
                 <Phone className="h-4 w-4 text-primary" />
                 <span className="min-w-0 break-words leading-5">{member.phone}</span>
               </div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Joined</p>
               <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="min-w-0 break-words leading-5">{member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : 'Unknown'}</span>
               </div>
             </div>
-            <div className="min-w-[220px] flex-1 rounded-[1.5rem] border border-border/60 bg-background/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="min-w-[220px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Actions</p>
               <div className="mt-2 flex flex-wrap gap-2">
               <a href={`tel:${member.phone}`}>
@@ -509,7 +509,7 @@ const MemberDetail = () => {
           {baithulMaalData.payments && baithulMaalData.payments.length > 0 ? (
             <div>
               <h4 className="mb-3 font-medium">All Monthly Payments</h4>
-              <div className="overflow-x-auto rounded-[1.2rem] border border-border/60 bg-background/70 p-2">
+              <div className="overflow-x-auto rounded-xl border border-border/60 bg-card p-2">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -551,7 +551,7 @@ const MemberDetail = () => {
               </div>
             </div>
           ) : (
-            <div className="rounded-[1.4rem] border border-border/60 bg-background/70 py-6 text-center text-muted-foreground">
+            <div className="rounded-xl border border-border/60 bg-card py-6 text-center text-muted-foreground">
               No payment records found
             </div>
           )}
@@ -566,7 +566,7 @@ const MemberDetail = () => {
             <MetricCard title="Absent" value={String(member.meetingAttendance.filter((a: any) => a.status === 'absent').length)} icon={XCircle} tone="danger" />
           </div>
 
-          <div className="overflow-x-auto rounded-[1.2rem] border border-border/60 bg-background/70 p-2">
+          <div className="overflow-x-auto rounded-xl border border-border/60 bg-card p-2">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -626,7 +626,7 @@ const MemberDetail = () => {
         </SectionCard>
       ) : (
         <SectionCard title="Meeting Attendance" description="Meeting participation history will appear here once records are available.">
-          <div className="rounded-[1.4rem] border border-border/60 bg-background/70 py-6 text-center text-muted-foreground">
+          <div className="rounded-xl border border-border/60 bg-card py-6 text-center text-muted-foreground">
             No attendance records found
           </div>
         </SectionCard>
