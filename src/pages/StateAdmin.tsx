@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { MetricCard } from "@/components/app/AppShell";
 import { PageSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
@@ -76,7 +76,7 @@ interface BaithulMaalStats {
   };
 }
 
-const PRIMARY_ACTION_LABELS = ["User Management", "Transfer Approvals", "Send Notifications", "Announcements", "Org Files", "Group Reports"];
+const PRIMARY_ACTION_LABELS = ["User Management", "Transfer Approvals", "Send Notifications", "Announcements", "Files", "Group Reports"];
 
 const CARD_PATHS: Record<string, string> = {
   "Monthly Collection": "/state-admin/baithul-data",
@@ -130,7 +130,7 @@ const StateAdmin = () => {
     { icon: Shield, label: "Role Management", path: "/role-management", color: "text-blue-500" },
     { icon: Star, label: "Leaders", path: "/leaders", color: "text-yellow-500" },
     { icon: Megaphone, label: "Announcements", path: "/announcements", color: "text-green-600" },
-    { icon: FolderOpen, label: "Org Files", path: "/org-files", color: "text-teal-500" },
+    { icon: FolderOpen, label: "Files", path: "/org-files", color: "text-teal-500" },
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
 
@@ -328,35 +328,27 @@ const StateAdmin = () => {
   }
 
   return (
-    <PageShell>
-      <PageHero
-        eyebrow="State Overview"
-        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'} 👋`}
-        subtitle="Here's what's happening across the state today."
-        icon={<Shield className="h-6 w-6" />}
-        actions={
-          <>
-            <span className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground sm:flex">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
-            </span>
-            <Button variant="outline" size="icon" onClick={() => navigate("/notifications")} aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-            </Button>
-            <span className="lg:hidden">
-            <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
-              State Admin
-            </Badge>
-            </span>
-            <span className="lg:hidden">
+    <div className="app-page">
+      <div className="sticky top-0 z-40 flex h-20 items-center justify-between gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 shadow-md sm:px-6 lg:px-8">
+        <div className="min-w-0">
+          <h1 className="truncate text-lg md:text-xl font-semibold text-primary-foreground">
+            {`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
+          </h1>
+          <p className="text-xs text-primary-foreground/80">State Admin Dashboard</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button size="icon" className="border-0 bg-white/15 text-primary-foreground hover:bg-white/25" onClick={() => navigate("/notifications")} aria-label="Notifications">
+            <Bell className="h-4 w-4" />
+          </Button>
+          <span className="lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Menu className="h-5 w-5" />
+                <Button size="icon" className="border-0 bg-white/15 text-primary-foreground hover:bg-white/25">
+                  <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
-                <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
+              <DropdownMenuContent align="end" className="glass w-56 rounded-xl border-border/50 p-1.5 shadow-2xl">
+                <div className="px-3 py-2 mb-1 bg-secondary/50 rounded-xl">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                   <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
@@ -376,12 +368,12 @@ const StateAdmin = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            </span>
-          </>
-        }
-      />
+          </span>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <main className="app-main pb-28">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         {kpiCards.map((card) => (
           <MetricCard
             key={card.title}
@@ -395,40 +387,35 @@ const StateAdmin = () => {
         ))}
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <SectionCard
-          title="Quick Analysis"
-          description="Key numbers at a glance"
-          action={
-            <Button variant="link" className="h-auto gap-1 p-0 text-sm text-info" onClick={() => navigate("/state-admin/group-reports")}>
-              View full analytics <ChevronRight className="h-4 w-4" />
-            </Button>
-          }
-        >
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {analysisCards.map((card) => (
-              <MetricCard
-                key={card.title}
-                title={card.title}
-                value={card.value}
-                detail={card.detail}
-                icon={card.icon}
-                tone={card.tone}
-                onClick={() => navigate(CARD_PATHS[card.title])}
-              />
-            ))}
-          </div>
-        </SectionCard>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold">Quick Analysis</h2>
+          <Button variant="link" className="h-auto gap-1 p-0 text-xs md:text-sm text-info" onClick={() => navigate("/state-admin/group-reports")}>
+            View all <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-4">
+          {analysisCards.map((card) => (
+            <MetricCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              detail={card.detail}
+              icon={card.icon}
+              tone={card.tone}
+              onClick={() => navigate(CARD_PATHS[card.title])}
+            />
+          ))}
+        </div>
+      </div>
 
-        <SectionCard
-          title="Needs Attention"
-          description="Things that need your focus"
-          action={
-            <Button variant="link" className="h-auto gap-1 p-0 text-sm text-info" onClick={() => navigate("/notifications")}>
-              View all alerts <ChevronRight className="h-4 w-4" />
-            </Button>
-          }
-        >
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="flex items-center gap-2 text-base font-semibold">Needs Attention</h2>
+          <Button variant="link" className="h-auto gap-1 p-0 text-xs md:text-sm text-info" onClick={() => navigate("/notifications")}>
+            View all <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
+          </Button>
+        </div>
           <div className="space-y-2.5">
             <button
               type="button"
@@ -493,12 +480,12 @@ const StateAdmin = () => {
               </div>
             </div>
           </div>
-        </SectionCard>
       </div>
 
-      <SectionCard title="Quick Actions" description="Frequently used actions">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-          {(showAllActions ? adminActions : adminActions.filter(({ label }) => PRIMARY_ACTION_LABELS.includes(label))).map((action) => {
+      <div>
+        <h2 className="flex items-center gap-2 text-base font-semibold mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-3 sm:grid-cols-5 lg:grid-cols-7">
+          {adminActions.map((action) => {
             // Show a count badge on the Transfer Approvals tile when
             // there are transfer requests pending the state admin's action.
             const badgeCount = action.label === 'Transfer Approvals'
@@ -509,37 +496,38 @@ const StateAdmin = () => {
                 key={action.label}
                 type="button"
                 onClick={() => navigate(action.path)}
-                className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+                className={`${showAllActions || PRIMARY_ACTION_LABELS.includes(action.label) ? "flex" : "hidden"} lg:flex relative cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border border-border bg-card p-2 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:gap-2 sm:p-4`}
               >
                 {badgeCount ? (
                   <Badge variant="destructive" className="absolute right-2 top-2 h-5 min-w-[1.25rem] justify-center px-1.5 text-[0.65rem]">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </Badge>
                 ) : null}
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-                  <action.icon className={`h-5 w-5 ${action.color}`} />
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted sm:h-10 sm:w-10">
+                  <action.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${action.color}`} />
                 </div>
-                <p className="text-xs font-medium leading-tight text-foreground">{action.label}</p>
+                <p className="text-[10px] font-medium leading-tight text-foreground sm:text-xs">{action.label}</p>
               </button>
             );
           })}
           <button
             type="button"
             onClick={() => setShowAllActions((v) => !v)}
-            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+            className="lg:hidden flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border bg-card p-2 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:gap-2 sm:p-4"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-              <Menu className="h-5 w-5 text-muted-foreground" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted sm:h-10 sm:w-10">
+              <Menu className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
             </div>
-            <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
+            <p className="text-[10px] font-medium leading-tight text-foreground sm:text-xs">{showAllActions ? "Less" : "More"}</p>
           </button>
         </div>
-      </SectionCard>
+      </div>
 
         {myRecurringTargets.length > 0 && (
           <div id="my-recurring-targets" className="scroll-mt-20">
-          <SectionCard title="My Recurring Targets" description="Track your progress at a glance">
-              <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1">
+          <h2 className="flex items-center gap-2 text-base font-semibold mb-3">My Recurring Targets</h2>
+          <div>
+              <div className="mb-4 grid grid-cols-6 gap-1.5 sm:flex sm:flex-wrap">
                 {MONTHS_SHORT.map((month, index) => {
                   const monthNum = index + 1;
                   const isActive = monthNum === selectedRecurringMonth;
@@ -551,7 +539,7 @@ const StateAdmin = () => {
                       onClick={() => setSelectedRecurringMonth(monthNum)}
                       disabled={isFuture}
                       aria-pressed={isActive}
-                      className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors sm:px-3 ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : isFuture
@@ -646,9 +634,10 @@ const StateAdmin = () => {
                   );
                 })}
               </div>
-          </SectionCard>
+          </div>
           </div>
         )}
+      </main>
 
       <BottomNav />
 
@@ -667,7 +656,7 @@ const StateAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </PageShell>
+    </div>
   );
 };
 

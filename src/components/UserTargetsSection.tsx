@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Target, CheckCircle, Clock, AlertCircle, MessageSquare,
-  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users, Plus, Minus
+  ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users, Plus, Minus,
+  BookOpen, Library, HandHeart, Heart, GraduationCap, Handshake
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -98,16 +99,18 @@ const statusConfig = {
   completed: { label: "Completed", icon: CheckCircle, color: "text-green-500", badge: "default" as const },
 };
 
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'quran': return '\u{1F4D6}';
-    case 'hadith': return '\u{1F4DA}';
-    case 'prayer': return '\u{1F932}';
-    case 'charity': return '\u{1F49D}';
-    case 'knowledge': return '\u{1F393}';
-    case 'community': return '\u{1F91D}';
-    default: return '\u{1F3AF}';
-  }
+const CATEGORY_ICONS: Record<string, typeof Target> = {
+  quran: BookOpen,
+  hadith: Library,
+  prayer: HandHeart,
+  charity: Heart,
+  knowledge: GraduationCap,
+  community: Handshake,
+};
+
+const getCategoryIcon = (category: string, className = "h-5 w-5") => {
+  const Icon = CATEGORY_ICONS[category] || Target;
+  return <Icon className={className} />;
 };
 
 const FREQ_LABELS: Record<string, string> = {
@@ -329,6 +332,18 @@ const UserTargetsSection = () => {
     }
   };
 
+  // ponytail: marking window = current + previous month; older months are expired (view-only)
+  const getSlotState = (year: number, monthNum: number): 'future' | 'expired' | 'open' => {
+    const now = new Date();
+    const ago = (now.getFullYear() - year) * 12 + (now.getMonth() + 1 - monthNum);
+    if (ago < 0) return 'future';
+    if (ago > 1) return 'expired';
+    return 'open';
+  };
+
+  const showExpiredToast = () =>
+    toast({ title: "Expired", description: "You can only mark the current or previous month.", variant: "destructive" });
+
   // Look up a stored mark for a specific slot. `week` defaults to 0 (month-level).
   const findMark = (targetId: string, year: number, month: number, week: number = 0) =>
     recurringMarks.find(
@@ -529,7 +544,6 @@ const UserTargetsSection = () => {
       {regularProgress.length > 0 && (
         <SectionCard
           title="My Targets"
-          description="Update progress, upload proof, and keep notes in one place."
           action={<Badge variant="outline">{regularProgress.length}</Badge>}
         >
             <div className="space-y-3">
@@ -700,69 +714,34 @@ const UserTargetsSection = () => {
       {recurringProgress.length > 0 && (
         <SectionCard
           title="Recurring Targets"
-          description="These targets repeat every week or month. Open a card, choose the time period, and tap when you finish it."
-          action={<Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>}
+          action={
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:flex items-center gap-2.5 text-[11px] text-muted-foreground mr-1">
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-green-500" />Done</span>
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gray-200 border border-gray-300" />Pending</span>
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-200 border border-blue-300" />Now</span>
+              </span>
+              <button
+                onClick={() => setRecurringYear(y => y - 1)}
+                className="h-7 w-7 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                aria-label="View previous year"
+              >
+                &larr;
+              </button>
+              <span className="text-sm font-bold tracking-tight text-foreground">{recurringYear}</span>
+              <button
+                onClick={() => setRecurringYear(y => y + 1)}
+                className="h-7 w-7 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40"
+                disabled={recurringYear >= new Date().getFullYear()}
+                aria-label="View next year"
+              >
+                &rarr;
+              </button>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{recurringProgress.length}</Badge>
+            </div>
+          }
         >
-            <div className="mb-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-blue-100 bg-blue-50/80 p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-blue-700">Step 1</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">Choose the year</p>
-                <p className="mt-1 text-xs text-muted-foreground">Use the arrows to move between years before you mark anything.</p>
-              </div>
-              <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-amber-700">Step 2</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">Open one target</p>
-                <p className="mt-1 text-xs text-muted-foreground">Each target shows whether it repeats every month or every week.</p>
-              </div>
-              <div className="rounded-xl border border-green-100 bg-green-50/80 p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-green-700">Step 3</p>
-                <p className="mt-2 text-sm font-semibold text-foreground">Tap to mark finished work</p>
-                <p className="mt-1 text-xs text-muted-foreground">Green means done. Grey means not marked yet. Future periods stay locked.</p>
-              </div>
-            </div>
-
-            {/* Year selector */}
-            <div className="mb-5 rounded-xl border border-border/60 bg-muted/20 p-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setRecurringYear(y => y - 1)}
-                    className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    aria-label="View previous year"
-                  >
-                    &larr;
-                  </button>
-                  <div>
-                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Viewing Year</p>
-                    <p className="text-base font-bold tracking-tight text-foreground">{recurringYear}</p>
-                  </div>
-                  <button
-                    onClick={() => setRecurringYear(y => y + 1)}
-                    className="h-8 w-8 rounded-full border border-border/60 bg-background flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    disabled={recurringYear >= new Date().getFullYear()}
-                    aria-label="View next year"
-                  >
-                    &rarr;
-                  </button>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                    <span>Done</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full bg-gray-200 border border-gray-300" />
-                    <span>Not done yet</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full bg-blue-200 border border-blue-300" />
-                    <span>Current time period</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               {recurringProgress.map((progress) => {
                 const target = progress.personalTarget;
                 if (!target) return null;
@@ -791,42 +770,33 @@ const UserTargetsSection = () => {
                 }
                 const progressPct = totalSlots > 0 ? Math.round((completedSlots / totalSlots) * 100) : 0;
                 const summaryLabel = `${completedSlots} of ${totalSlots} ${isWeekly ? 'weeks' : 'months'} marked`;
-                const actionLabel = isWeekly
-                  ? 'Open to choose a month and tap each finished week.'
-                  : target.attendanceNeeded && isAreaAdmin
-                    ? 'Open to mark the month and record attendance.'
-                    : 'Open to mark each finished month.';
-                const expandedButtonLabel = isExpanded ? 'Hide details' : 'Show details';
 
                 return (
                   <div key={progress._id} className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
                     {/* Header */}
                     <div
-                      className="flex items-center gap-3 px-4 py-4 cursor-pointer hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-2.5 p-3 cursor-pointer hover:bg-muted/40 transition-colors"
                       onClick={() => setExpandedRecurringId(isExpanded ? null : progress._id)}
                     >
-                      <span className="text-xl shrink-0">{getCategoryIcon(target.category)}</span>
+                      <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">{getCategoryIcon(target.category)}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold text-sm truncate">{target.title}</p>
-                          <Badge className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 border-blue-200 shrink-0">
+                        <p className="font-semibold text-sm truncate">{target.title}</p>
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          <Badge className="text-[10px] px-1.5 py-0 bg-blue-50 text-blue-600 border-blue-200 shrink-0">
                             <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
-                            Repeats {FREQ_LABELS[freq] || freq}
+                            {FREQ_LABELS[freq] || freq}
                           </Badge>
                           {target.attendanceNeeded && isAreaAdmin && (
-                            <Badge className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 border-amber-200 shrink-0">
+                            <Badge className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-600 border-amber-200 shrink-0">
                               <Users className="h-2.5 w-2.5 mr-1 inline" />
-                              Attendance needed
+                              Attendance
                             </Badge>
                           )}
+                          <span className="text-[11px] font-medium text-foreground/70">{summaryLabel}</span>
                         </div>
-                        <p className="mt-1 text-xs font-medium text-foreground/80">{summaryLabel}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                          {isExpanded && target.instructions ? target.instructions : actionLabel}
-                        </p>
                       </div>
                       {/* Progress indicator */}
-                      <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         <div className="relative h-9 w-9">
                           <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
                             <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-gray-100" />
@@ -834,64 +804,49 @@ const UserTargetsSection = () => {
                           </svg>
                           <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-green-700">{progressPct}%</span>
                         </div>
-                        <button className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors">
-                          <span>{expandedButtonLabel}</span>
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </button>
+                        {isExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
                       </div>
                     </div>
 
                     {/* Grid */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 border-t border-border/40">
+                      <div className="px-3 pb-3 border-t border-border/40">
                         {freq === 'weekly' ? (
                           <div className="mt-3">
-                            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
-                              <p className="font-semibold">How to update this target</p>
-                              <p className="mt-1">1. Choose a month. 2. Tap each week you completed. Future months stay locked until that month begins.</p>
-                            </div>
-
                             {/* Month selector pills */}
-                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 mb-4">
+                            <div className="grid grid-cols-6 gap-1.5 mb-3">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
                                 const weeksInMonth = getWeeksInMonth(recurringYear, idx);
                                 const isSelected = weeklySelectedMonth === monthNum;
                                 const isCurrent = recurringYear === today.getFullYear() && monthNum === today.getMonth() + 1;
-                                const monthIsFuture = recurringYear > today.getFullYear() || (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+                                const pillState = getSlotState(recurringYear, monthNum);
 
-                                // Count completed weeks
                                 let monthCompleted = 0;
                                 for (let w = 1; w <= weeksInMonth; w++) {
                                   if (findMark(target._id, recurringYear, monthNum, w)?.completed) monthCompleted++;
                                 }
-                                const allDone = monthCompleted === weeksInMonth && !monthIsFuture;
+                                const allDone = monthCompleted === weeksInMonth && pillState !== 'future';
 
                                 return (
                                   <button
                                     key={monthNum}
                                     onClick={() => setWeeklySelectedMonth(monthNum)}
                                     className={`
-                                      px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center
+                                      py-1.5 rounded-lg text-xs font-semibold transition-all text-center
                                       ${isSelected
-                                        ? 'bg-primary text-white shadow-md ring-2 ring-primary/30'
+                                        ? 'bg-primary text-primary-foreground shadow'
                                         : allDone
                                           ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
                                           : isCurrent
-                                            ? 'bg-blue-50 text-blue-700 border-2 border-blue-400 hover:bg-blue-100'
-                                            : monthIsFuture
-                                              ? 'bg-gray-50 text-gray-300 border border-gray-100'
-                                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-muted/60 hover:border-gray-300'
+                                            ? 'bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100'
+                                            : pillState !== 'open'
+                                              ? 'bg-muted/40 text-muted-foreground/40'
+                                              : 'bg-card text-muted-foreground border border-border hover:bg-muted/60'
                                       }
                                     `}
                                   >
-                                    <span className="block">{month}</span>
-                                    <span className="mt-0.5 block text-[8px] opacity-80">
-                                      {isSelected ? 'Selected' : allDone ? 'Done' : isCurrent ? 'Current' : monthIsFuture ? 'Locked' : 'Open'}
-                                    </span>
-                                    {!isSelected && allDone && (
-                                      <span className="sr-only">Done</span>
-                                    )}
+                                    {month}
                                   </button>
                                 );
                               })}
@@ -901,28 +856,21 @@ const UserTargetsSection = () => {
                             {(() => {
                               const selIdx = weeklySelectedMonth - 1;
                               const weeksInMonth = getWeeksInMonth(recurringYear, selIdx);
-                              const monthIsFuture = recurringYear > today.getFullYear() || (recurringYear === today.getFullYear() && weeklySelectedMonth > today.getMonth() + 1);
-                              const isCurrent = recurringYear === today.getFullYear() && weeklySelectedMonth === today.getMonth() + 1;
+                              const slotState = getSlotState(recurringYear, weeklySelectedMonth);
+                              const monthIsFuture = slotState === 'future';
+                              const monthIsExpired = slotState === 'expired';
                               let monthCompleted = 0;
                               for (let w = 1; w <= weeksInMonth; w++) {
                                 if (findMark(target._id, recurringYear, weeklySelectedMonth, w)?.completed) monthCompleted++;
                               }
 
                               return (
-                                <div className={`rounded-xl border ${isCurrent ? 'border-green-200 bg-green-50/20' : 'border-border/40 bg-muted/10'} p-4`}>
-                                  <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-sm font-bold text-foreground">{MONTHS_FULL[selIdx]}</span>
-                                      {isCurrent && (
-                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Current</span>
-                                      )}
-                                    </div>
-                                    <div className="rounded-xl bg-card px-3 py-2 text-xs text-muted-foreground">
-                                      <p className="font-semibold text-foreground">{monthCompleted} of {weeksInMonth} weeks marked</p>
-                                      <p className="mt-0.5">{monthIsFuture ? 'This month is locked for now.' : 'Tap a week card to mark or unmark it.'}</p>
-                                    </div>
-                                  </div>
-                                  <div className="grid grid-cols-5 gap-2.5">
+                                <>
+                                  <p className="mb-2 text-xs text-muted-foreground">
+                                    <span className="font-semibold text-foreground">{MONTHS_FULL[selIdx]}</span>
+                                    {' '}· {monthCompleted}/{weeksInMonth} weeks{monthIsFuture ? ' · locked' : monthIsExpired ? ' · expired' : ''}
+                                  </p>
+                                  <div className="grid grid-cols-5 gap-2">
                                     {WEEKLY_SLOTS.map((weekNum) => {
                                       const exists = weekNum <= weeksInMonth;
                                       if (!exists) return <div key={weekNum} />;
@@ -934,58 +882,36 @@ const UserTargetsSection = () => {
                                       return (
                                         <button
                                           key={weekNum}
-                                          onClick={() => !isFuture && handleSlotClick(target, recurringYear, weeklySelectedMonth, weekNum)}
+                                          onClick={() => {
+                                            if (isFuture) return;
+                                            if (monthIsExpired) { showExpiredToast(); return; }
+                                            handleSlotClick(target, recurringYear, weeklySelectedMonth, weekNum);
+                                          }}
                                           disabled={isLoading || isFuture}
                                           className={`
-                                            h-16 rounded-xl text-xs font-semibold transition-all flex flex-col items-center justify-center gap-1
+                                            h-11 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1
                                             ${isCompleted
-                                              ? 'bg-green-500 text-white shadow-md ring-1 ring-green-400/50'
-                                              : isFuture
-                                                ? 'bg-card text-gray-300 border border-gray-100 cursor-not-allowed'
-                                                : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:bg-green-50 hover:text-green-700 hover:shadow-sm active:scale-95'
+                                              ? 'bg-green-500 text-white shadow-sm'
+                                              : isFuture || monthIsExpired
+                                                ? 'bg-muted/40 text-muted-foreground/40 cursor-not-allowed'
+                                                : 'bg-card text-foreground border border-border hover:border-green-300 hover:bg-green-50 hover:text-green-700 active:scale-95'
                                             }
                                             ${isLoading ? 'opacity-50 animate-pulse' : ''}
                                           `}
                                         >
-                                          {isCompleted ? (
-                                            <>
-                                              <CheckCircle className="h-4 w-4" />
-                                              <span className="text-[10px] font-semibold">Week {weekNum}</span>
-                                              <span className="text-[9px] text-white/90">Done</span>
-                                            </>
-                                          ) : (
-                                            <>
-                                              <span className="text-[10px] font-semibold">Week {weekNum}</span>
-                                              <span className={`text-[9px] ${isFuture ? 'text-gray-300' : 'text-muted-foreground'}`}>
-                                                {isFuture ? 'Locked' : 'Tap to mark'}
-                                              </span>
-                                            </>
-                                          )}
+                                          {isCompleted && <CheckCircle className="h-3.5 w-3.5" />}
+                                          W{weekNum}
                                         </button>
                                       );
                                     })}
                                   </div>
-                                </div>
+                                </>
                               );
                             })()}
                           </div>
                         ) : (
                           <div className="mt-3">
-                            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-xs text-blue-900">
-                              <p className="font-semibold">How to update this target</p>
-                              <p className="mt-1">Tap a month after you finish it. Tap again to remove the mark. If you do the same target more than once in a month, use + or - to adjust the count.</p>
-                            </div>
-
-                            <div className="mb-4 rounded-xl border border-border/60 bg-muted/20 p-3">
-                              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick meaning</p>
-                              <div className="mt-2 grid gap-2 sm:grid-cols-3 text-xs text-muted-foreground">
-                                <div className="rounded-xl bg-white px-3 py-2">Green month: already finished</div>
-                                <div className="rounded-xl bg-white px-3 py-2">Blue month: this is the current month</div>
-                                <div className="rounded-xl bg-white px-3 py-2">Grey month: not available yet</div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
                                 const slotKey = `${target._id}-${recurringYear}-${monthNum}-0`;
@@ -994,59 +920,54 @@ const UserTargetsSection = () => {
                                 const isCompleted = mark?.completed || false;
                                 const count = mark?.completionCount || (isCompleted ? 1 : 0);
                                 const isLoading = markingKey === slotKey || markingKey === countKey;
-                                const isFuture =
-                                  recurringYear > today.getFullYear() ||
-                                  (recurringYear === today.getFullYear() && monthNum > today.getMonth() + 1);
+                                const slotState = getSlotState(recurringYear, monthNum);
+                                const isFuture = slotState === 'future';
+                                const isExpired = slotState === 'expired';
                                 const isCurrent =
                                   recurringYear === today.getFullYear() && monthNum === today.getMonth() + 1;
 
                                 return (
                                   <div key={monthNum} className={`
-                                    rounded-xl border overflow-hidden transition-all
+                                    rounded-lg border overflow-hidden transition-all
                                     ${isCompleted
-                                      ? 'border-green-300 bg-green-50 shadow-sm'
+                                      ? 'border-green-300 bg-green-50'
                                       : isCurrent
-                                        ? 'border-blue-200 bg-blue-50/30'
-                                        : isFuture
-                                          ? 'border-gray-100 bg-gray-50/50'
-                                          : 'border-gray-200 bg-white'
+                                        ? 'border-blue-300 bg-blue-50/40'
+                                        : isFuture || isExpired
+                                          ? 'border-border/40 bg-muted/30'
+                                          : 'border-border bg-card'
                                     }
                                   `}>
                                     <button
-                                      onClick={() => !isFuture && handleSlotClick(target, recurringYear, monthNum, 0)}
+                                      onClick={() => {
+                                        if (isFuture) return;
+                                        if (isExpired) { showExpiredToast(); return; }
+                                        handleSlotClick(target, recurringYear, monthNum, 0);
+                                      }}
                                       disabled={isLoading || isFuture}
                                       className={`
-                                        w-full px-2 py-3 flex flex-col items-center gap-1.5 transition-all
+                                        w-full px-1 py-2.5 flex flex-col items-center gap-1 transition-all
                                         ${isCompleted
                                           ? 'text-green-700'
-                                          : isFuture
-                                            ? 'text-gray-300 cursor-not-allowed'
-                                            : 'text-gray-700 hover:bg-green-50 active:scale-95'
+                                          : isFuture || isExpired
+                                            ? 'text-muted-foreground/40 cursor-not-allowed'
+                                            : 'text-foreground hover:bg-green-50 active:scale-95'
                                         }
                                         ${isLoading ? 'opacity-50 animate-pulse' : ''}
                                       `}
                                     >
                                       {isCompleted ? (
-                                        <div className="h-7 w-7 rounded-full bg-green-500 flex items-center justify-center">
-                                          <CheckCircle className="h-4 w-4 text-white" />
-                                        </div>
+                                        <CheckCircle className="h-4 w-4 text-green-600" />
                                       ) : (
-                                        <div className={`h-7 w-7 rounded-full border-2 flex items-center justify-center ${isFuture ? 'border-gray-200' : isCurrent ? 'border-blue-300' : 'border-gray-300'}`}>
-                                          <span className="text-[9px] font-bold">{monthNum}</span>
-                                        </div>
+                                        <span className={`h-4 w-4 rounded-full border-2 ${isFuture || isExpired ? 'border-border/40' : isCurrent ? 'border-blue-400' : 'border-border'}`} />
                                       )}
-                                      <span className={`text-xs font-semibold ${isCompleted ? 'text-green-700' : isFuture ? 'text-gray-300' : ''}`}>
-                                        {month}
-                                      </span>
-                                      <span className={`text-[9px] ${isCompleted ? 'text-green-700' : isFuture ? 'text-gray-300' : 'text-muted-foreground'}`}>
-                                        {isCompleted ? 'Done' : isFuture ? 'Locked' : 'Tap to mark'}
-                                      </span>
-                                      {isCurrent && !isCompleted && !isFuture && (
-                                        <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600 font-medium -mt-0.5">Now</span>
+                                      <span className="text-xs font-semibold">{month}</span>
+                                      {isExpired && !isCompleted && (
+                                        <span className="text-[9px] text-muted-foreground/50">Expired</span>
                                       )}
                                     </button>
-                                    {isCompleted && !isFuture && (
-                                      <div className="flex items-center justify-center gap-1 pb-2 px-2 border-t border-green-200 pt-1.5">
+                                    {isCompleted && slotState === 'open' && (
+                                      <div className="flex items-center justify-center gap-1 pb-1.5 px-1">
                                         <button
                                           onClick={() => adjustCompletionCount(target._id, recurringYear, monthNum, -1)}
                                           disabled={isLoading || count <= 0}
@@ -1065,11 +986,6 @@ const UserTargetsSection = () => {
                                           <Plus className="h-2.5 w-2.5" />
                                         </button>
                                       </div>
-                                    )}
-                                    {isCompleted && !isFuture && (
-                                      <p className="px-2 pb-2 text-center text-[10px] font-medium text-green-700">
-                                        Done {count} {count === 1 ? 'time' : 'times'}
-                                      </p>
                                     )}
                                   </div>
                                 );

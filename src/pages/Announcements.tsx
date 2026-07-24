@@ -28,7 +28,7 @@ const AUDIENCE_OPTIONS = [
   { value: "all", label: "All Users", description: "Everyone in the system" },
   { value: "state_admins", label: "State Admins", description: "State-level administrators" },
   { value: "district_admins", label: "District Admins", description: "District-level administrators" },
-  { value: "group_admins", label: "Group Admins (Murabbi)", description: "Group-level administrators" },
+  { value: "group_admins", label: "Area Admins (Murabbi)", description: "Area-level administrators" },
   { value: "members", label: "Members", description: "All registered members" },
 ];
 
@@ -63,6 +63,8 @@ const Announcements = () => {
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isStateAdmin = userRole === 'state_admin';
+  const isGroupAdmin = userRole === 'group_admin';
+  const canCreate = isStateAdmin || isGroupAdmin;
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -201,7 +203,7 @@ const Announcements = () => {
       toast({ title: "Validation", description: "Description is required", variant: "destructive" });
       return;
     }
-    if (selectedAudiences.length === 0) {
+    if (!isGroupAdmin && selectedAudiences.length === 0) {
       toast({ title: "Validation", description: "Select at least one audience", variant: "destructive" });
       return;
     }
@@ -223,8 +225,11 @@ const Announcements = () => {
           size: f.file.size,
         }));
 
-      // Determine primary targetAudience for backward compat
-      const primaryAudience = selectedAudiences.includes("all") ? "all" : selectedAudiences[0];
+      // Determine primary targetAudience for backward compat.
+      // Group admins send anything — backend forces scope to their own group.
+      const primaryAudience = isGroupAdmin
+        ? "specific_groups"
+        : selectedAudiences.includes("all") ? "all" : selectedAudiences[0];
 
       await notificationsAPI.createNotification({
         title: title.trim(),
@@ -233,7 +238,7 @@ const Announcements = () => {
         priority: "high",
         status: "sent",
         targetAudience: primaryAudience,
-        targetAudiences: selectedAudiences,
+        targetAudiences: isGroupAdmin ? [] : selectedAudiences,
         channels: ["in_app"],
         attachments,
       });
@@ -257,6 +262,7 @@ const Announcements = () => {
   const audienceLabel = (audiences: string[], singleAudience?: string) => {
     const arr = audiences?.length > 0 ? audiences : (singleAudience ? [singleAudience] : []);
     if (arr.includes("all")) return "All Users";
+    if (arr.length === 0 || arr.includes("specific_groups")) return "Area Members";
     return arr
       .map((a) => AUDIENCE_OPTIONS.find((o) => o.value === a)?.label || a)
       .join(", ");
@@ -287,8 +293,13 @@ const Announcements = () => {
 
       <main className="app-main pt-4 space-y-4">
         {/* Create Form */}
-        {isStateAdmin && showForm && (
-          <SectionCard title="New Announcement" description="Write a message, attach files, and choose the audience.">
+        {canCreate && showForm && (
+          <SectionCard
+            title="New Announcement"
+            description={isGroupAdmin
+              ? "Write a message and attach files. It will be sent to your area's members."
+              : "Write a message, attach files, and choose the audience."}
+          >
 
               {/* Title */}
               <div className="space-y-1">
@@ -383,7 +394,8 @@ const Announcements = () => {
                 )}
               </div>
 
-              {/* Target audience */}
+              {/* Target audience (state admin picks; group admin fixed to own area) */}
+              {!isGroupAdmin && (
               <div className="space-y-2">
                 <Label>Send to *</Label>
                 <div className="space-y-2">
@@ -407,6 +419,7 @@ const Announcements = () => {
                   ))}
                 </div>
               </div>
+              )}
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">
@@ -433,7 +446,7 @@ const Announcements = () => {
         <SectionCard
           title="Past Announcements"
           description="Search and review previously published announcement messages."
-          action={isStateAdmin ? (
+          action={canCreate ? (
             <Button size="sm" onClick={() => setShowForm((v) => !v)}>
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-1" />}
               {showForm ? "Close" : "New"}
@@ -452,34 +465,34 @@ const Announcements = () => {
                 className="pl-9"
               />
             </div>
-            <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-              <SelectTrigger className="w-40 flex-shrink-0">
-                <Filter className="h-4 w-4 mr-1 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Audiences</SelectItem>
-                <SelectItem value="members">Members Only</SelectItem>
-                <SelectItem value="group_admins">Group Admins</SelectItem>
-                <SelectItem value="district_admins">District Admins</SelectItem>
-                <SelectItem value="state_admins">State Admins</SelectItem>
-              </SelectContent>
-            </Select>
+            {canCreate && (
+              <Select value={audienceFilter} onValueChange={setAudienceFilter}>
+                <SelectTrigger className="w-40 flex-shrink-0">
+                  <Filter className="h-4 w-4 mr-1 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Audiences</SelectItem>
+                  <SelectItem value="members">Members Only</SelectItem>
+                  <SelectItem value="group_admins">Area Admins</SelectItem>
+                  <SelectItem value="district_admins">District Admins</SelectItem>
+                  <SelectItem value="state_admins">State Admins</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
           {loadingList ? (
             <ListSkeleton rows={4} />
           ) : announcements.length === 0 ? (
-            <Card className="surface-card">
-              <CardContent className="p-8 text-center">
-                <Megaphone className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No announcements yet</p>
-                {isStateAdmin && (
-                  <Button className="mt-4" size="sm" onClick={() => setShowForm(true)}>
-                    <Plus className="h-4 w-4 mr-1" /> Create first announcement
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <div className="p-8 text-center">
+              <Megaphone className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No announcements yet</p>
+              {canCreate && (
+                <Button className="mt-4" size="sm" onClick={() => setShowForm(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Create first announcement
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="space-y-3">
               {announcements.map((ann) => (

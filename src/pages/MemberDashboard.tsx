@@ -12,8 +12,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
-import { DashboardSkeleton } from "@/components/ui/loading-skeletons";
+import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +26,7 @@ import { memberAuthAPI, apiCall } from "@/utils/api";
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
+import Leaders from "@/pages/Leaders";
 import {
   User,
   CreditCard,
@@ -65,7 +65,12 @@ import {
   Search,
   Link2,
   LogOut,
-  Menu
+  Menu,
+  Library,
+  HandHeart,
+  Heart,
+  GraduationCap,
+  Handshake
 } from "lucide-react";
 
 interface MemberProfile {
@@ -73,6 +78,7 @@ interface MemberProfile {
     id: string;
     name: string;
     phone: string;
+    avatar?: string;
     email?: string;
     dateOfBirth?: string;
     age?: number;
@@ -94,6 +100,15 @@ interface MemberProfile {
     lastPaymentDate?: string;
     paymentCount: number;
   };
+}
+
+interface BaithulPayment {
+  _id: string;
+  amount: number;
+  paymentDate: string;
+  paymentMonth: string; // YYYY-MM
+  receiptNumber?: string;
+  paymentMethod?: string;
 }
 
 interface FileAttachment {
@@ -229,6 +244,7 @@ const MemberDashboard = () => {
 
   // Recurring marks state
   const [recurringMarks, setRecurringMarks] = useState<RecurringMark[]>([]);
+  const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
   const [recurringMarkKey, setRecurringMarkKey] = useState<string | null>(null);
   const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
   const [weeklyViewMonth, setWeeklyViewMonth] = useState(new Date().getMonth() + 1);
@@ -240,12 +256,19 @@ const MemberDashboard = () => {
   const [orgFilesCategory, setOrgFilesCategory] = useState("all");
   const [orgFilesSearch, setOrgFilesSearch] = useState("");
   const [orgFilesDebouncedSearch, setOrgFilesDebouncedSearch] = useState("");
+  const [viewerFile, setViewerFile] = useState<OrgFileItem | null>(null);
+  const [expandedMeetingId, setExpandedMeetingId] = useState<string | null>(null);
+  const [expandedFileId, setExpandedFileId] = useState<string | null>(null);
 
   // Profile edit state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarFileRef = useRef<HTMLInputElement | null>(null);
+  const [showChangeRequest, setShowChangeRequest] = useState(false);
+  const [changeRequestForm, setChangeRequestForm] = useState({ name: "", phone: "", note: "" });
+  const [changeRequestSending, setChangeRequestSending] = useState(false);
   const [editProfileForm, setEditProfileForm] = useState({
-    name: "",
     email: "",
     profession: "",
     education: "",
@@ -260,6 +283,9 @@ const MemberDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [baithulPayments, setBaithulPayments] = useState<BaithulPayment[]>([]);
+  const [baithulLoading, setBaithulLoading] = useState(false);
+  const [baithulFetched, setBaithulFetched] = useState(false);
 
   const syncTargetState = (data: PersonalTarget[]) => {
     const feedbackMap: Record<string, string> = {};
@@ -326,6 +352,17 @@ const MemberDashboard = () => {
     }
   }, [token, toast]);
 
+  // Fetch payment history first time the Baithul Maal tab opens
+  useEffect(() => {
+    if (activeView !== "baithul" || baithulFetched) return;
+    setBaithulFetched(true);
+    setBaithulLoading(true);
+    memberAuthAPI.getBaithulMaal({ limit: "24" })
+      .then((res) => setBaithulPayments(res.data?.payments || []))
+      .catch(() => toast({ title: "Error", description: "Failed to load payment history", variant: "destructive" }))
+      .finally(() => setBaithulLoading(false));
+  }, [activeView, baithulFetched, toast]);
+
   // Debounce org files search
   useEffect(() => {
     const t = setTimeout(() => setOrgFilesDebouncedSearch(orgFilesSearch), 400);
@@ -378,30 +415,38 @@ const MemberDashboard = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'quran': return '📖';
-      case 'hadith': return '📚';
-      case 'prayer': return '🤲';
-      case 'charity': return '💝';
-      case 'knowledge': return '🎓';
-      case 'community': return '🤝';
-      default: return '🎯';
-    }
+  const getCategoryIcon = (category: string, className = "h-5 w-5") => {
+    const icons: Record<string, typeof Target> = {
+      quran: BookOpen,
+      hadith: Library,
+      prayer: HandHeart,
+      charity: Heart,
+      knowledge: GraduationCap,
+      community: Handshake,
+    };
+    const Icon = icons[category] || Target;
+    return <Icon className={className} />;
   };
 
   if (loading) {
     return (
-      <PageShell contentClassName="pb-32">
-        <PageHero
-          title="Member Dashboard"
-          subtitle="Loading your profile, targets, meetings, and notifications."
-          eyebrow="Member Portal"
-          icon={<Home className="h-6 w-6" />}
-        />
-        <SectionCard title="Preparing Dashboard" description="Fetching the latest member workspace data.">
-          <DashboardSkeleton />
-        </SectionCard>
+      <PageShell contentClassName="pb-40 lg:pb-8">
+        <Card className="surface-card">
+          <CardContent className="flex items-center gap-3 p-3">
+            <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-muted" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+              <div className="h-3 w-24 animate-pulse rounded bg-muted" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid grid-cols-2 gap-2">
+          {[0, 1].map((i) => (
+            <div key={i} className="h-[4.75rem] animate-pulse rounded-xl border bg-card" />
+          ))}
+        </div>
+        <div className="h-24 animate-pulse rounded-xl border bg-card" />
+        <div className="h-40 animate-pulse rounded-xl border bg-card" />
       </PageShell>
     );
   }
@@ -510,18 +555,16 @@ const MemberDashboard = () => {
   };
 
   const menuItems = [
-    { id: "overview", label: "Overview", icon: Home },
-    { id: "profile", label: "Profile", icon: User },
+    { id: "overview", label: "Home", icon: Home },
     { id: "targets", label: "Targets", icon: Target },
     { id: "meetings", label: "Meetings", icon: Calendar },
-    { id: "orgfiles", label: "Org Files", icon: FolderOpen },
-    { id: "notifications", label: "Alerts", icon: Bell }
+    { id: "orgfiles", label: "Files", icon: FolderOpen },
+    { id: "leaders", label: "Leaders", icon: Star }
   ];
 
 
-  const activeViewLabel = menuItems.find((item) => item.id === activeView)?.label || "Overview";
   const unreadNotificationCount = notifications.filter((notification) => !notification.isRead).length;
-  const handleLeadersClick = () => navigate("/leaders");
+  const handleLeadersClick = () => setActiveView("leaders");
   // Keep for overview quick link
 
   const renderContent = () => {
@@ -538,6 +581,10 @@ const MemberDashboard = () => {
         return renderOrgFilesContent();
       case "notifications":
         return renderNotificationsContent();
+      case "baithul":
+        return renderBaithulContent();
+      case "leaders":
+        return <Leaders embedded />;
       default:
         return renderOverviewContent();
     }
@@ -545,76 +592,66 @@ const MemberDashboard = () => {
 
   const renderOverviewContent = () => (
     <div className="space-y-4">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Baithul Maal Paid</CardTitle>
-            <IndianRupee className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(profile.baithulMaal.totalPaid)}
+      {/* Compact stat strip */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { label: "Targets", value: targets.length, icon: Target, view: "targets", tone: "text-primary bg-primary/10" },
+          { label: "Meetings", value: meetings.length, icon: Calendar, view: "meetings", tone: "text-green-600 bg-green-100" },
+        ].map(({ label, value, icon: Icon, view, tone }) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left shadow-[0_1px_2px_rgba(16,24,40,0.06),0_4px_12px_-2px_rgba(16,24,40,0.08)] transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+          >
+            <div className={`inline-flex rounded-lg p-2 ${tone}`}>
+              <Icon className="h-5 w-5" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {profile.baithulMaal.paymentCount} payments made
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Amount</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {formatCurrency(profile.baithulMaal.pendingAmount)}
+            <div>
+              <p className="text-xl font-bold leading-none">{value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{label}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Monthly: {formatCurrency(profile.baithulMaal.monthlyAmount)}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Targets</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {targets.filter(t => t.status === 'in_progress' || t.status === 'not_started').length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {targets.filter(t => t.status === 'completed').length} completed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Upcoming Meetings</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {meetings.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Next scheduled items
-            </p>
-          </CardContent>
-        </Card>
+          </button>
+        ))}
       </div>
+
+      {/* Baithul Maal summary — opens Baithul Maal view */}
+      <Card
+        role="button"
+        tabIndex={0}
+        onClick={() => setActiveView("baithul")}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setActiveView("baithul"); }}
+        className="cursor-pointer transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+      >
+        <CardContent className="p-4">
+          <div className="mb-2 flex items-center justify-between text-sm font-semibold">
+            <span className="flex items-center gap-2">
+              <IndianRupee className="h-4 w-4" /> Baithul Maal
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">See details</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Paid</p>
+              <p className="text-lg font-bold text-green-600">{formatCurrency(profile.baithulMaal.totalPaid)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-lg font-bold text-orange-600">{formatCurrency(profile.baithulMaal.pendingAmount)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Targets */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Target className="h-5 w-5" />
             Recent Targets
           </CardTitle>
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setActiveView("targets")}>
+            See all
+          </Button>
         </CardHeader>
         <CardContent>
           {targets.length === 0 ? (
@@ -622,28 +659,21 @@ const MemberDashboard = () => {
               No targets available
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y">
               {targets.slice(0, 3).map((target) => (
-                <div key={target._id ?? target.personalTarget._id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">
-                      {getCategoryIcon(target.personalTarget.category)}
-                    </span>
-                    <div>
-                      <h4 className="font-medium">{target.personalTarget.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {target.currentProgress} / {target.targetValue} {target.personalTarget.unit}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className={getStatusColor(target.status)}>
-                      {target.status.replace('_', ' ')}
-                    </Badge>
-                    <div className="text-sm font-medium mt-1">
-                      {target.progressPercentage.toFixed(1)}%
-                    </div>
-                  </div>
+                <div key={target._id ?? target.personalTarget._id} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
+                  <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    {getCategoryIcon(target.personalTarget.category)}
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium malayalam-text">
+                    {target.personalTarget.title}
+                  </p>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {target.currentProgress}/{target.targetValue}
+                  </span>
+                  <span className="shrink-0 text-sm font-semibold">
+                    {target.progressPercentage.toFixed(0)}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -651,75 +681,46 @@ const MemberDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Notifications */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Recent Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {notifications.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              No recent notifications
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {notifications.slice(0, 3).map((notification) => (
-                <div key={notification._id} className="flex items-start gap-3 p-3 border rounded-lg">
-                  <div className={`w-2 h-2 rounded-full mt-2 ${notification.isRead ? 'bg-gray-300' : 'bg-blue-500'}`} />
-                  <div className="flex-1">
-                    <h4 className="font-medium">{notification.title}</h4>
-                    <p className="text-sm text-muted-foreground">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatDate(notification.createdAt)}
-                    </p>
-                    {notification.attachments && notification.attachments.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {notification.attachments.map((att, i) => {
-                          const mime = att.mimetype || '';
-                          const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
-                          return (
-                            <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-primary hover:underline">
-                              <Icon className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{att.originalName || `File ${i + 1}`}</span>
-                            </a>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Leaders Quick Link */}
-      <Card
-        className="shadow-sm border-primary/20 cursor-pointer hover:border-primary/50 transition-colors"
-        onClick={handleLeadersClick}
-      >
-        <CardContent className="p-4 flex items-center gap-3">
-          <div className="bg-yellow-100 p-2 rounded-full">
-            <Star className="h-5 w-5 text-yellow-600 fill-yellow-500" />
-          </div>
-          <div className="flex-1">
-            <p className="font-semibold">Leaders</p>
-            <p className="text-sm text-muted-foreground">View all designated leaders</p>
-          </div>
-          <Star className="h-4 w-4 text-muted-foreground" />
-        </CardContent>
-      </Card>
     </div>
   );
 
+  const uploadAvatar = async (file: File) => {
+    try {
+      setAvatarUploading(true);
+      const result = await memberAuthAPI.uploadFile(file);
+      const url = result.data?.url;
+      if (!url) throw new Error("Upload failed");
+      await memberAuthAPI.updateProfile({ avatar: url });
+      setProfile(prev => prev ? { ...prev, profile: { ...prev.profile, avatar: url } } : prev);
+      toast({ title: "Photo Updated", description: "Your profile photo has been updated." });
+    } catch {
+      toast({ title: "Error", description: "Failed to update photo", variant: "destructive" });
+    } finally {
+      setAvatarUploading(false);
+      if (avatarFileRef.current) avatarFileRef.current.value = "";
+    }
+  };
+
+  const submitChangeRequest = async () => {
+    try {
+      setChangeRequestSending(true);
+      await memberAuthAPI.requestProfileChange({
+        name: changeRequestForm.name.trim() || undefined,
+        phone: changeRequestForm.phone.trim() || undefined,
+        note: changeRequestForm.note.trim() || undefined,
+      });
+      setShowChangeRequest(false);
+      setChangeRequestForm({ name: "", phone: "", note: "" });
+      toast({ title: "Request Sent", description: "Your area admin will review the change." });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to send request", variant: "destructive" });
+    } finally {
+      setChangeRequestSending(false);
+    }
+  };
+
   const openEditProfile = () => {
     setEditProfileForm({
-      name: profile!.profile.name || "",
       email: profile!.profile.email || "",
       profession: profile!.profile.profession || "",
       education: profile!.profile.education || "",
@@ -782,13 +783,47 @@ const MemberDashboard = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center gap-3">
+            {profile.profile.avatar ? (
+              <img src={profile.profile.avatar} alt={profile.profile.name} className="h-16 w-16 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
+                {profile.profile.name.charAt(0)}
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={avatarFileRef}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadAvatar(file);
+              }}
+            />
+            <div className="space-y-1.5">
+              <Button size="sm" variant="outline" disabled={avatarUploading} onClick={() => avatarFileRef.current?.click()}>
+                <Upload className="h-3.5 w-3.5 mr-1.5" />
+                {avatarUploading ? "Uploading..." : "Change Photo"}
+              </Button>
+              <button
+                className="block text-xs text-primary hover:underline"
+                onClick={() => {
+                  setChangeRequestForm({ name: profile.profile.name, phone: profile.profile.phone, note: "" });
+                  setShowChangeRequest(true);
+                }}
+              >
+                Request name/phone change
+              </button>
+            </div>
+          </div>
           {!isEditingProfile ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-2 gap-3 md:gap-4 [&_p]:text-sm [&_p]:md:text-base [&_label]:text-xs [&_label]:md:text-sm">
+              <div className="col-span-2 md:col-span-1">
                 <label className="text-sm font-medium text-muted-foreground">Name</label>
                 <p className="text-lg">{profile.profile.name}</p>
               </div>
-              <div>
+              <div className="col-span-2 md:col-span-1">
                 <label className="text-sm font-medium text-muted-foreground">Phone</label>
                 <p className="text-lg flex items-center gap-2">
                   <Phone className="h-4 w-4" />
@@ -855,7 +890,7 @@ const MemberDashboard = () => {
                 </p>
               </div>
               {profile.profile.address && (
-                <div className="md:col-span-2">
+                <div className="col-span-2">
                   <label className="text-sm font-medium text-muted-foreground">Address</label>
                   <p className="text-lg">{profile.profile.address}</p>
                 </div>
@@ -863,16 +898,6 @@ const MemberDashboard = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="member-profile-name" className="text-sm font-medium">Name *</label>
-                <Input
-                  id="member-profile-name"
-                  value={editProfileForm.name}
-                  onChange={e => setEditProfileForm(p => ({ ...p, name: e.target.value }))}
-                  placeholder="Full name"
-                  className="mt-1"
-                />
-              </div>
               <div>
                 <label htmlFor="member-profile-email" className="text-sm font-medium">Email</label>
                 <Input
@@ -967,7 +992,7 @@ const MemberDashboard = () => {
               <div className="md:col-span-2 p-3 bg-muted/50 rounded-md">
                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                   <Phone className="h-3 w-3" />
-                  Phone number and group/district cannot be changed here. Contact your admin for such changes.
+                  Name, phone, and group/district changes need admin approval — use "Request name/phone change".
                 </p>
               </div>
             </div>
@@ -975,6 +1000,11 @@ const MemberDashboard = () => {
         </CardContent>
       </Card>
 
+      {baithulDetailsCard}
+    </div>
+  );
+
+  const baithulDetailsCard = (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -983,7 +1013,7 @@ const MemberDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Monthly Amount</label>
               <p className="text-xl font-semibold text-blue-600">
@@ -1013,6 +1043,46 @@ const MemberDashboard = () => {
             <div className="mt-4">
               <label className="text-sm font-medium text-muted-foreground">Last Payment</label>
               <p className="text-lg">{formatDate(profile.baithulMaal.lastPaymentDate)}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+  );
+
+  const formatPaymentMonth = (ym: string) => {
+    const [year, month] = ym.split("-");
+    return `${MONTHS_SHORT[parseInt(month) - 1] || month} ${year}`;
+  };
+
+  const renderBaithulContent = () => (
+    <div className="space-y-4">
+      {baithulDetailsCard}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Payment History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {baithulLoading ? (
+            <p className="text-sm text-muted-foreground">Loading payments…</p>
+          ) : baithulPayments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
+          ) : (
+            <div className="divide-y">
+              {baithulPayments.map((p) => (
+                <div key={p._id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{formatPaymentMonth(p.paymentMonth)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(p.paymentDate)}
+                      {p.receiptNumber ? ` • Receipt ${p.receiptNumber}` : ""}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold text-green-600">{formatCurrency(p.amount)}</p>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
@@ -1059,14 +1129,11 @@ const MemberDashboard = () => {
 
         {/* ── Regular Targets ── */}
         {regularTargets.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Personal Targets
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="surface-card p-4">
+            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
+              <Target className="h-5 w-5" />
+              Personal Targets
+            </h2>
               <div className="space-y-3">
                 {regularTargets.map((target) => {
                   const targetId = target.personalTarget._id;
@@ -1081,7 +1148,7 @@ const MemberDashboard = () => {
                       <CardContent className="pt-3 pb-3">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-start gap-2 flex-1">
-                            <span className="text-2xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
+                            <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">{getCategoryIcon(target.personalTarget.category, "h-5 w-5")}</span>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap mb-1">
                                 <Badge className={getStatusColor(target.status)}>
@@ -1231,25 +1298,19 @@ const MemberDashboard = () => {
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+          </div>
         )}
 
         {/* ── Recurring Targets (same as district admin: title + month grid, mark done only) ── */}
         {recurringTargets.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="surface-card p-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
                 <RefreshCw className="h-5 w-5 text-blue-500" />
                 Recurring Targets
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Tick each month you completed the target. You can mark or unmark anytime.
-              </p>
-            </CardHeader>
-            <CardContent>
+              </h2>
               {/* Year selector */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setRecurringYear(y => y - 1)}
                   className="px-2 py-1 rounded border text-xs hover:bg-muted"
@@ -1263,6 +1324,7 @@ const MemberDashboard = () => {
                   aria-label={`Show recurring targets for ${recurringYear + 1}`}
                 >→</button>
               </div>
+            </div>
 
               <div className="space-y-4">
                 {recurringTargets.map((target) => {
@@ -1272,7 +1334,7 @@ const MemberDashboard = () => {
                     <Card key={target._id ?? targetId} className="border border-blue-100">
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-3">
-                          <span className="text-xl shrink-0">{getCategoryIcon(target.personalTarget.category)}</span>
+                          <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">{getCategoryIcon(target.personalTarget.category)}</span>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-medium text-sm truncate">{target.personalTarget.title}</p>
@@ -1342,8 +1404,45 @@ const MemberDashboard = () => {
                           </>
                         ) : (
                           <>
-                            <p className="text-xs text-muted-foreground mb-2 font-medium">Mark completed months:</p>
-                            <div className="grid grid-cols-6 gap-1.5">
+                            {(() => {
+                              const now = new Date();
+                              const curMonth = now.getMonth() + 1;
+                              const curYear = now.getFullYear();
+                              const curMark = recurringMarks.find(
+                                m => m.targetId === targetId && m.year === curYear && m.month === curMonth && (m.week ?? 0) === 0
+                              );
+                              const curDone = curMark?.completed || false;
+                              const doneCount = MONTHS_SHORT.filter((_, i) =>
+                                recurringMarks.find(m => m.targetId === targetId && m.year === recurringYear && m.month === i + 1 && (m.week ?? 0) === 0)?.completed
+                              ).length;
+                              const isOpen = expandedRecurringId === targetId;
+                              const curKey = `${targetId}-${curYear}-${curMonth}-0`;
+                              return (
+                                <div className="flex items-center gap-2 mb-2">
+                                  <button
+                                    onClick={() => toggleRecurringMark(targetId, curYear, curMonth, 0)}
+                                    disabled={recurringMarkKey === curKey}
+                                    className={`flex-1 h-9 rounded-lg text-xs font-medium border transition-all ${
+                                      curDone
+                                        ? 'bg-green-500 border-green-500 text-white'
+                                        : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
+                                    }`}
+                                  >
+                                    {curDone ? `✓ ${MONTHS_SHORT[curMonth - 1]} done` : `Mark ${MONTHS_SHORT[curMonth - 1]} done`}
+                                  </button>
+                                  <button
+                                    onClick={() => setExpandedRecurringId(isOpen ? null : targetId)}
+                                    className="shrink-0 h-9 px-3 rounded-lg text-xs font-medium border bg-white text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center gap-1"
+                                    aria-expanded={isOpen}
+                                  >
+                                    {doneCount}/12
+                                    {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                            {expandedRecurringId === targetId && (
+                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                               {MONTHS_SHORT.map((month, idx) => {
                                 const monthNum = idx + 1;
                                 const key = `${targetId}-${recurringYear}-${monthNum}-0`;
@@ -1376,6 +1475,7 @@ const MemberDashboard = () => {
                                 );
                               })}
                             </div>
+                            )}
                           </>
                         )}
                       </CardContent>
@@ -1383,8 +1483,7 @@ const MemberDashboard = () => {
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+          </div>
         )}
 
         {/* Empty state */}
@@ -1404,44 +1503,30 @@ const MemberDashboard = () => {
     const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other"];
     return (
       <div className="space-y-3 org-files-malayalam">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderOpen className="h-5 w-5" />
-              Organizational Files
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pb-2">
-            {/* Category filter */}
-            <div className="px-4 pt-1 pb-2 flex gap-2 overflow-x-auto">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setOrgFilesCategory(cat)}
-                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    orgFilesCategory === cat
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-border text-muted-foreground hover:border-primary"
-                  }`}
-                >
-                  {cat === "all" ? "All" : orgCategoryLabels[cat] || cat}
-                </button>
-              ))}
-            </div>
-            {/* Search */}
-            <div className="px-4 pb-3">
-              <div className="relative">
+            {/* Search + category filter in one row */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search files..."
                   value={orgFilesSearch}
                   onChange={e => setOrgFilesSearch(e.target.value)}
-                  className="pl-9 h-8 text-sm"
+                  className="pl-9 h-9 text-sm"
                 />
               </div>
+              <Select value={orgFilesCategory} onValueChange={setOrgFilesCategory}>
+                <SelectTrigger className="h-9 w-[7.5rem] shrink-0 text-sm" aria-label="Filter by category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat === "all" ? "All" : orgCategoryLabels[cat] || cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
 
         {orgFilesLoading ? (
           <div className="text-center py-8 text-muted-foreground text-sm">Loading files...</div>
@@ -1455,58 +1540,53 @@ const MemberDashboard = () => {
         ) : (
           orgFiles.map(file => {
             const Icon = orgCategoryIcons[file.category] || File;
+            const isOpen = expandedFileId === file._id;
             return (
               <Card key={file._id} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg shrink-0 bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" />
+                <button
+                  type="button"
+                  onClick={() => setExpandedFileId(isOpen ? null : file._id)}
+                  className="flex w-full items-center gap-2.5 p-2.5 text-left"
+                >
+                  <div className="p-1.5 rounded-lg shrink-0 bg-primary/10">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="flex-1 min-w-0 truncate font-medium text-sm malayalam-text">{file.title}</p>
+                  {isOpen ? <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                </button>
+                {isOpen && (
+                  <div className="px-2.5 pb-2.5 pl-11">
+                    {file.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-3 malayalam-text">{file.description}</p>
+                    )}
+                    <div className="flex items-center gap-2 flex-wrap mt-1.5">
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {orgCategoryLabels[file.category] || file.category}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm malayalam-text">{file.title}</p>
-                      {file.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 malayalam-text">{file.description}</p>
-                      )}
-                      <div className="flex items-center gap-2 flex-wrap mt-1">
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {orgCategoryLabels[file.category] || file.category}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
-                      </div>
-                      {file.link && (
-                        <a href={file.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
-                          <Link2 className="h-3 w-3" />{file.link.length > 50 ? file.link.slice(0, 50) + "..." : file.link}
+                    <div className="flex gap-2 mt-2">
+                      {file.category === "link" && file.link ? (
+                        <a href={file.link} target="_blank" rel="noopener noreferrer">
+                          <Button size="sm" variant="outline" className="text-xs h-7">
+                            <Link2 className="h-3 w-3 mr-1" />Open Link
+                          </Button>
                         </a>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        {file.category === "link" && file.link ? (
-                          <a href={file.link} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="outline" className="text-xs h-7">
-                              <Link2 className="h-3 w-3 mr-1" />Open Link
+                      ) : file.url ? (
+                        <>
+                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setViewerFile(file)}>
+                            <Eye className="h-3 w-3 mr-1" />View
+                          </Button>
+                          <a href={file.url} download>
+                            <Button size="sm" variant="ghost" className="text-xs h-7">
+                              <Download className="h-3 w-3 mr-1" />Download
                             </Button>
                           </a>
-                        ) : file.url ? (
-                          <>
-                            <a href={file.url} target="_blank" rel="noopener noreferrer">
-                              <Button size="sm" variant="outline" className="text-xs h-7">
-                                {file.mimetype?.startsWith('video/') || file.mimetype?.startsWith('audio/') ? (
-                                  <><Eye className="h-3 w-3 mr-1" />Open</>
-                                ) : (
-                                  <><Eye className="h-3 w-3 mr-1" />View</>
-                                )}
-                              </Button>
-                            </a>
-                            <a href={file.url} download>
-                              <Button size="sm" variant="ghost" className="text-xs h-7">
-                                <Download className="h-3 w-3 mr-1" />Download
-                              </Button>
-                            </a>
-                          </>
-                        ) : null}
-                      </div>
+                        </>
+                      ) : null}
                     </div>
                   </div>
-                </CardContent>
+                )}
               </Card>
             );
           })
@@ -1516,87 +1596,86 @@ const MemberDashboard = () => {
   };
 
   const renderMeetingsContent = () => (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Upcoming Meetings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {meetings.length === 0 ? (
+    <div className="space-y-3">
+      {meetings.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               No upcoming meetings scheduled
             </p>
           ) : (
-            <div className="space-y-4">
-              {meetings.map((meeting) => (
-                <Card key={meeting._id} className="border-l-4 border-l-green-500">
-                  <CardContent className="pt-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">{meeting.title}</h3>
-                        {meeting.description && (
-                          <p className="text-muted-foreground mb-2">{meeting.description}</p>
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(meeting.scheduledDate)}
-                          </span>
-                          <span>Duration: {meeting.duration} minutes</span>
-                          {meeting.venue && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {meeting.venue}
-                            </span>
-                          )}
-                        </div>
-                        {meeting.agenda && meeting.agenda.length > 0 && (
-                          <div className="mt-3">
-                            <strong className="text-sm">Agenda:</strong>
-                            <ul className="list-disc list-inside text-sm text-muted-foreground mt-1">
-                              {meeting.agenda.slice(0, 3).map((item, index) => (
-                                <li key={index}>{item.item}</li>
-                              ))}
-                              {meeting.agenda.length > 3 && (
-                                <li>... and {meeting.agenda.length - 3} more items</li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <Badge className="bg-green-100 text-green-800">
-                          {meeting.meetingType}
-                        </Badge>
-                        <Badge className="bg-blue-100 text-blue-800 ml-2">
-                          {meeting.status}
-                        </Badge>
-                      </div>
+            <div className="space-y-2.5">
+              {meetings.map((meeting) => {
+                const isOpen = expandedMeetingId === meeting._id;
+                return (
+                <Card
+                  key={meeting._id}
+                  className={`overflow-hidden transition-colors ${isOpen ? "border-green-500/40" : "hover:border-green-500/30"}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMeetingId(isOpen ? null : meeting._id)}
+                    className="flex w-full items-center gap-3 p-3 text-left"
+                  >
+                    <div className="shrink-0 rounded-lg bg-green-100 p-2 text-green-600">
+                      <Calendar className="h-4 w-4" />
                     </div>
-                  </CardContent>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold text-sm malayalam-text">{meeting.title}</h3>
+                      <p className="text-xs text-muted-foreground">{formatDate(meeting.scheduledDate)}</p>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="space-y-2 px-3 pb-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge className="bg-green-100 text-green-800 text-xs">{meeting.meetingType}</Badge>
+                        <Badge className="bg-blue-100 text-blue-800 text-xs">{meeting.status}</Badge>
+                      </div>
+                      {meeting.description && (
+                        <p className="text-sm text-muted-foreground malayalam-text">{meeting.description}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-muted/50 p-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {formatDate(meeting.scheduledDate)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {meeting.duration} min
+                        </span>
+                        {meeting.venue && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span className="malayalam-text">{meeting.venue}</span>
+                          </span>
+                        )}
+                      </div>
+                      {meeting.agenda && meeting.agenda.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-xs font-semibold text-foreground">Agenda</p>
+                          {meeting.agenda.map((item, index) => (
+                            <div key={index} className="rounded-lg border border-border/60 p-2">
+                              <p className="text-sm font-medium malayalam-text">{item.item}</p>
+                              <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground">
+                                {item.duration ? <span>{item.duration} min</span> : null}
+                                {item.presenter ? <span className="malayalam-text">{item.presenter}</span> : null}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
-        </CardContent>
-      </Card>
     </div>
   );
 
   const renderNotificationsContent = () => (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {notifications.length === 0 ? (
+    <div className="space-y-3">
+      {notifications.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               No notifications available
             </p>
@@ -1607,22 +1686,18 @@ const MemberDashboard = () => {
                   <CardContent className="pt-4">
                     <div className="flex items-start gap-3">
                       <div className={`w-3 h-3 rounded-full mt-1 ${notification.isRead ? 'bg-gray-300' : 'bg-blue-500'}`} />
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <p className="text-muted-foreground mt-1">{notification.message}</p>
-                          </div>
-                          <div className="text-right">
-                            <Badge className={`${notification.priority === 'high' ? 'bg-red-100 text-red-800' : 
-                              notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
-                              'bg-gray-100 text-gray-800'}`}>
-                              {notification.priority}
-                            </Badge>
-                            <Badge className="bg-blue-100 text-blue-800 ml-2">
-                              {notification.type}
-                            </Badge>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium">{notification.title}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <Badge className={`text-xs ${notification.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'}`}>
+                            {notification.priority}
+                          </Badge>
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">
+                            {notification.type}
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">
                           {formatDate(notification.createdAt)}
@@ -1652,28 +1727,61 @@ const MemberDashboard = () => {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
     </div>
   );
 
   return (
     <>
     <PageShell contentClassName="pb-40 lg:pb-8">
-      <PageHero
-        title={`Welcome, ${profile.profile.name}`}
-        subtitle={
-          profile.profile.group.name === profile.profile.district.name
-            ? profile.profile.district.name
-            : `${profile.profile.group.name} • ${profile.profile.district.name}`
-        }
-        eyebrow="Member Portal"
-        icon={<Home className="h-6 w-6" />}
-        className="[&_.hero-details]:xl:grid-cols-3"
-        actions={
+      <header className="hero-card">
+        <div className="flex items-center gap-3">
+          {/* ponytail: brand logo on mobile only — desktop sidebar already shows it */}
+          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain lg:hidden" />
+          {activeView === "overview" ? (
+            <>
+              {profile.profile.avatar ? (
+                <img
+                  src={profile.profile.avatar}
+                  alt={profile.profile.name}
+                  className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white/40"
+                />
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                  {profile.profile.name.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold leading-tight">{profile.profile.name}</p>
+                <p className="truncate text-xs text-primary-foreground/70">
+                  {profile.profile.group.name === profile.profile.district.name
+                    ? profile.profile.district.name
+                    : `${profile.profile.group.name} • ${profile.profile.district.name}`}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="min-w-0 flex-1 truncate text-base font-bold">
+              {{ profile: "My Profile", targets: "Targets", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders" }[activeView] || ""}
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative shrink-0 border-0 bg-white/15 text-white hover:bg-white/25 hover:text-white"
+            onClick={() => setActiveView("notifications")}
+            aria-label={`Notifications${unreadNotificationCount > 0 ? `, ${unreadNotificationCount} unread` : ""}`}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-primary">
+                {unreadNotificationCount}
+              </span>
+            )}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="lg:hidden">
+              {/* ponytail: hamburger hidden on lg — sidebar covers profile/roles/logout there */}
+              <Button variant="ghost" size="icon" className="border-0 bg-white/15 text-white hover:bg-white/25 hover:text-white lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -1713,44 +1821,22 @@ const MemberDashboard = () => {
                 </>
               )}
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveView("profile")}>
+                <User className="mr-2 h-4 w-4" />My Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLeadersClick}>
+                <Star className="mr-2 h-4 w-4" />Leaders
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        }
-        details={
-          <>
-            <div className="data-strip space-y-1 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Status</p>
-              <p className="text-sm font-semibold text-foreground">{profile.profile.status || "Member"}</p>
-            </div>
-            <div className="data-strip space-y-1 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Joined</p>
-              <p className="text-sm font-semibold text-foreground">{formatDate(profile.profile.joinedDate)}</p>
-            </div>
-            <div className="data-strip space-y-1 px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Current View</p>
-              <p className="text-sm font-semibold text-foreground">{activeViewLabel}</p>
-            </div>
-          </>
-        }
-      />
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <MetricCard title="Targets" value={String(targets.length)} icon={Target} tone="primary" />
-        <MetricCard title="Upcoming Meetings" value={String(meetings.length)} icon={Calendar} tone="success" />
-        <MetricCard title="Unread Alerts" value={String(unreadNotificationCount)} icon={Bell} tone="warning" />
-      </div>
-
-      <SectionCard
-        title={`${activeViewLabel} Workspace`}
-        description="Switch between your targets, meetings, files, and alerts from the menu."
-      >
-        <div className="space-y-4">
-          {renderContent()}
         </div>
-      </SectionCard>
+      </header>
+
+      {renderContent()}
 
       <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
         <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-border/70 bg-background/95 px-3 py-2 shadow-lg">
@@ -1762,9 +1848,9 @@ const MemberDashboard = () => {
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
                 aria-pressed={isActive}
-                className={`flex min-w-0 flex-col items-center space-y-1 rounded-2xl px-3 py-2 transition-colors ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary' 
+                className={`flex min-w-0 flex-1 flex-col items-center space-y-1 rounded-2xl px-2 py-2 transition-colors ${
+                  isActive
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                 }`}
               >
@@ -1778,6 +1864,78 @@ const MemberDashboard = () => {
         </div>
       </div>
     </PageShell>
+
+    <Dialog open={!!viewerFile} onOpenChange={(o) => !o && setViewerFile(null)}>
+      <DialogContent className="max-w-3xl p-3 sm:p-4">
+        <DialogHeader className="pr-8">
+          <DialogTitle className="truncate text-base malayalam-text">{viewerFile?.title}</DialogTitle>
+        </DialogHeader>
+        {viewerFile && (
+          viewerFile.mimetype?.startsWith("image/") ? (
+            <img src={viewerFile.url} alt={viewerFile.title} className="max-h-[70dvh] w-full rounded-lg object-contain" />
+          ) : viewerFile.mimetype?.startsWith("video/") ? (
+            <video src={viewerFile.url} controls className="max-h-[70dvh] w-full rounded-lg" />
+          ) : viewerFile.mimetype?.startsWith("audio/") ? (
+            <audio src={viewerFile.url} controls className="w-full" />
+          ) : viewerFile.mimetype === "application/pdf" ? (
+            <iframe src={viewerFile.url} title={viewerFile.title} className="h-[70dvh] w-full rounded-lg border" />
+          ) : (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Preview not available for this file type.
+              <a href={viewerFile.url} target="_blank" rel="noopener noreferrer" className="mt-2 block text-primary hover:underline">
+                Open in new tab
+              </a>
+            </div>
+          )
+        )}
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showChangeRequest} onOpenChange={setShowChangeRequest}>
+      <DialogContent className="max-w-sm rounded-2xl">
+        <DialogHeader>
+          <DialogTitle>Request Name/Phone Change</DialogTitle>
+          <DialogDescription>Your area admin will review and approve this change.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="change-request-name" className="text-sm font-medium">New Name</label>
+            <Input
+              id="change-request-name"
+              value={changeRequestForm.name}
+              onChange={e => setChangeRequestForm(p => ({ ...p, name: e.target.value }))}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label htmlFor="change-request-phone" className="text-sm font-medium">New Phone</label>
+            <Input
+              id="change-request-phone"
+              type="tel"
+              value={changeRequestForm.phone}
+              onChange={e => setChangeRequestForm(p => ({ ...p, phone: e.target.value }))}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <label htmlFor="change-request-note" className="text-sm font-medium">Reason (optional)</label>
+            <Input
+              id="change-request-note"
+              value={changeRequestForm.note}
+              onChange={e => setChangeRequestForm(p => ({ ...p, note: e.target.value }))}
+              placeholder="Why is this change needed?"
+              className="mt-1"
+            />
+          </div>
+        </div>
+        <DialogFooter className="flex flex-row gap-2 justify-end">
+          <Button variant="outline" onClick={() => setShowChangeRequest(false)} disabled={changeRequestSending}>Cancel</Button>
+          <Button onClick={submitChangeRequest} disabled={changeRequestSending}>
+            {changeRequestSending ? "Sending..." : "Send Request"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
       <DialogContent className="max-w-sm rounded-2xl">

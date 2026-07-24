@@ -1,4 +1,5 @@
-import { ArrowLeft, Plus, Calendar, Clock, Users, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Clock, Users, MoreVertical, Edit, Trash2, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ const MeetingAgenda = () => {
   const { toast } = useToast();
   const { data: meetingsResponse, isLoading, error } = useMeetings();
   const deleteMeeting = useDeleteMeeting();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const meetings = meetingsResponse?.data || [];
 
@@ -168,34 +170,37 @@ const MeetingAgenda = () => {
             </p>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {meetings.map((meeting) => (
-              <Card key={meeting._id} className="surface-card shadow-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg mb-1">{meeting.title || 'Untitled Meeting'}</h3>
-                      {meeting.description && (
-                        <p className="text-sm text-muted-foreground mb-2">{meeting.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
+          <div className="space-y-2 sm:space-y-3">
+            {meetings.map((meeting) => {
+              const isExpanded = expandedId === meeting._id;
+              return (
+              <Card
+                key={meeting._id}
+                className="surface-card cursor-pointer shadow-sm"
+                onClick={() => setExpandedId(isExpanded ? null : meeting._id)}
+              >
+                <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate font-semibold text-base sm:text-lg">{meeting.title || 'Untitled Meeting'}</h3>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Clock className="h-3.5 w-3.5 shrink-0" />
                           {meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a') : 'No date set'}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
+                        </span>
+                        <span className="flex items-center gap-1 whitespace-nowrap">
+                          <Users className="h-3.5 w-3.5 shrink-0" />
                           {getTargetAudienceText(meeting)}
-                        </div>
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex shrink-0 items-center gap-1">
                       <Badge className={getStatusColor(meeting.status || 'unknown')}>
                         {meeting.status ? meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1) : 'Unknown'}
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -204,7 +209,7 @@ const MeetingAgenda = () => {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => handleDeleteMeeting(meeting._id, meeting.title || 'Untitled Meeting')}
                             className="text-red-600"
                           >
@@ -213,26 +218,25 @@ const MeetingAgenda = () => {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-4">
-                      <span className="text-muted-foreground">
-                        Duration: {meeting.duration || 0} minutes
-                      </span>
-                      <span className="text-muted-foreground">
-                        Type: {meeting.meetingType ? meeting.meetingType.charAt(0).toUpperCase() + meeting.meetingType.slice(1) : 'Unknown'}
-                      </span>
+                {isExpanded && (
+                  <CardContent className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
+                    {meeting.description && (
+                      <p className="mb-2 text-sm text-muted-foreground">{meeting.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                      <span>Duration: {meeting.duration || 0} min</span>
+                      <span>Type: {meeting.meetingType ? meeting.meetingType.replace(/_/g, ' ') : 'Unknown'}</span>
+                      <span>Created by {meeting.createdBy?.name || 'Unknown'}</span>
                     </div>
-                    <span className="text-muted-foreground">
-                      Created by {meeting.createdBy?.name || 'Unknown'}
-                    </span>
-                  </div>
-                </CardContent>
+                  </CardContent>
+                )}
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </SectionCard>

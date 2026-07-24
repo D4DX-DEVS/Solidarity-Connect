@@ -1,4 +1,4 @@
-import { Wallet, ArrowLeft, Download, Users, TrendingUp, AlertCircle, Calendar } from "lucide-react";
+import { Wallet, Download, Users, TrendingUp, AlertCircle, Calendar, Plus, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
-import { useNavigate } from "react-router-dom";
+import BaithulEnrollDialog from "@/components/BaithulEnrollDialog";
+import BaithulStatusDialog from "@/components/BaithulStatusDialog";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { baithulMaalAPI, districtsAPI } from "@/utils/api";
@@ -22,6 +23,7 @@ interface BaithulMember {
     monthlyAmount: number;
     totalPaid: number;
     lastPaymentDate?: string;
+    startDate?: string;
   };
   district: {
     _id: string;
@@ -86,7 +88,6 @@ interface District {
 }
 
 const BaithulDataView = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   // State
@@ -100,6 +101,9 @@ const BaithulDataView = () => {
   // Filters
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
+  const [statusMember, setStatusMember] = useState<BaithulMember | null>(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [viewMode, setViewMode] = useState<"members" | "payments" | "groups" | "monthly">("members");
   
   // Pagination
@@ -247,10 +251,57 @@ const BaithulDataView = () => {
     return months;
   };
 
+  // ponytail: exports only the currently loaded page/view, not the full dataset — add a backend export endpoint if "export everything" is needed
+  const handleExport = () => {
+    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    let rows: string[][];
+
+    if (viewMode === "members") {
+      rows = [
+        ["Name", "Phone", "District", "Group", "Monthly Amount", "Total Paid", "Last Payment", "Joined Date"],
+        ...baithulMembers.map((m) => [
+          m.name, m.phone, m.district?.name ?? "", m.group?.name ?? "",
+          String(m.baithulMaal.monthlyAmount), String(m.baithulMaal.totalPaid),
+          m.baithulMaal.lastPaymentDate ?? "", m.joinedDate,
+        ]),
+      ];
+    } else if (viewMode === "payments") {
+      rows = [
+        ["Member", "Phone", "Group", "District", "Amount", "Payment Month", "Payment Date", "Recorded By"],
+        ...baithulPayments.map((p) => [
+          p.member?.name ?? "", p.member?.phone ?? "", p.member?.group?.name ?? "", p.member?.district?.name ?? "",
+          String(p.amount), p.paymentMonth, p.paymentDate, p.recordedBy?.name ?? "",
+        ]),
+      ];
+    } else if (viewMode === "groups") {
+      rows = [
+        ["Group", "Code", "Members", "Monthly Total", "Paid Total", "Average"],
+        ...(baithulStats?.groupStatistics ?? []).map((g) => [
+          g.groupName, g.groupCode, String(g.memberCount),
+          String(g.totalMonthlyAmount), String(g.totalPaidAmount), String(g.averageAmount),
+        ]),
+      ];
+    } else {
+      rows = [
+        ["Month", "Total Amount", "Total Payments", "Average Amount"],
+        ...monthlyReportData.map((m) => [m.monthLabel, String(m.totalAmount), String(m.totalPayments), String(m.avgAmount)]),
+      ];
+    }
+
+    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `baithul-maal-${viewMode}-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const contentTitleMap = {
-    members: "Contributing Members",
-    payments: "Recent Payments",
-    groups: "Group Statistics",
+    members: `Contributing Members (${totalMembers})`,
+    payments: `Recent Payments (${totalPayments})`,
+    groups: `Group Statistics (${totalGroups})`,
     monthly: "Monthly Report"
   } as const;
 
@@ -265,29 +316,27 @@ const BaithulDataView = () => {
     <PageShell contentClassName="pb-24">
       <PageHero
         title="Baithul Maal Data"
-        subtitle="Review members, payments, group performance, and monthly trends from the same financial workspace."
         eyebrow="Finance"
         icon={<Wallet className="h-6 w-6" />}
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/state-admin")}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <Button size="sm" variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-          </div>
-        }
       />
 
         {/* Filters */}
-        <SectionCard title="Filters & Views" description="Switch between member, payment, group, and monthly financial views.">
+        <SectionCard
+          title="Filters & Views"
+          description="Switch between member, payment, group, and monthly financial views."
+          action={
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => setShowEnrollDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Member
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </div>
+          }
+        >
           <div className="space-y-3">
             {/* View Mode Tabs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -326,7 +375,7 @@ const BaithulDataView = () => {
             </div>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <Select value={selectedDistrict || "all"} onValueChange={(value) => setSelectedDistrict(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Districts" />
@@ -363,7 +412,7 @@ const BaithulDataView = () => {
 
         {/* Summary Statistics */}
         {baithulStats && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-3 [&_.metric-icon]:hidden [&_.metric-card>div]:!p-2.5 [&_.metric-card_.text-\[13px\]]:!text-[11px] [&_.metric-card_.text-\[13px\]]:!leading-tight [&_.metric-card_.font-bold]:!text-base sm:[&_.metric-icon]:flex sm:[&_.metric-card>div]:!p-5 sm:[&_.metric-card_.font-bold]:!text-[1.7rem]">
             <MetricCard title="Contributing Members" value={String(baithulStats.overallStatistics.contributingMembers)} icon={Users} tone="primary" />
             <MetricCard title="Monthly Target" value={`₹${baithulStats.overallStatistics.totalMonthlyAmount.toLocaleString()}`} icon={TrendingUp} tone="success" />
             <MetricCard title="Total Collected" value={`₹${baithulStats.overallStatistics.totalPaidAmount.toLocaleString()}`} icon={Wallet} tone="warning" />
@@ -389,9 +438,6 @@ const BaithulDataView = () => {
           <>
             {viewMode === "members" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-semibold">Contributing Members ({totalMembers})</h2>
-                </div>
                 {baithulMembers.length === 0 ? (
                   <Card>
                     <CardContent className="p-8 text-center">
@@ -402,8 +448,7 @@ const BaithulDataView = () => {
                   </Card>
                 ) : (
                   <>
-                    <Card>
-                      <CardContent className="p-0">
+                    <div className="overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -414,14 +459,16 @@ const BaithulDataView = () => {
                               <TableHead className="text-right">Pending</TableHead>
                               <TableHead>Last Payment</TableHead>
                               <TableHead>Status</TableHead>
+                              <TableHead className="text-center">Edit</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {baithulMembers
                               .filter(member => member && member._id && member.name)
                               .map((member) => {
-                                const monthsActive = member.joinedDate ? 
-                                  Math.floor((Date.now() - new Date(member.joinedDate).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
+                                const contribStart = member.baithulMaal.startDate || member.joinedDate;
+                                const monthsActive = contribStart ?
+                                  Math.floor((Date.now() - new Date(contribStart).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
                                 const expectedTotal = monthsActive * member.baithulMaal.monthlyAmount;
                                 const pendingAmount = Math.max(0, expectedTotal - member.baithulMaal.totalPaid);
                                 
@@ -458,14 +505,27 @@ const BaithulDataView = () => {
                                         {pendingAmount > 0 ? "Pending" : "Up to Date"}
                                       </Badge>
                                     </TableCell>
+                                    <TableCell className="text-center">
+                                      <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        aria-label={`Change payment status for ${member.name}`}
+                                        onClick={() => {
+                                          setStatusMember(member);
+                                          setShowStatusDialog(true);
+                                        }}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                    </TableCell>
                                   </TableRow>
                                 );
                               })}
                           </TableBody>
                         </Table>
-                      </CardContent>
-                    </Card>
-                    
+                    </div>
+
                     {/* Pagination Controls */}
                     <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalMembers > itemsPerPage && (
@@ -505,9 +565,6 @@ const BaithulDataView = () => {
 
             {viewMode === "payments" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-semibold">Recent Payments ({totalPayments})</h2>
-                </div>
                 {baithulPayments.length === 0 ? (
                   <Card>
                     <CardContent className="p-8 text-center">
@@ -518,8 +575,7 @@ const BaithulDataView = () => {
                   </Card>
                 ) : (
                   <>
-                    <Card>
-                      <CardContent className="p-0">
+                    <div className="overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -565,9 +621,8 @@ const BaithulDataView = () => {
                               ))}
                           </TableBody>
                         </Table>
-                      </CardContent>
-                    </Card>
-                    
+                    </div>
+
                     {/* Pagination Controls */}
                     <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalPayments > itemsPerPage && (
@@ -607,9 +662,6 @@ const BaithulDataView = () => {
 
             {viewMode === "groups" && baithulStats && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-semibold">Group Statistics ({totalGroups})</h2>
-                </div>
                 {baithulStats.groupStatistics.length === 0 ? (
                   <Card>
                     <CardContent className="p-8 text-center">
@@ -620,8 +672,7 @@ const BaithulDataView = () => {
                   </Card>
                 ) : (
                   <>
-                    <Card>
-                      <CardContent className="p-0">
+                    <div className="overflow-x-auto">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -656,9 +707,8 @@ const BaithulDataView = () => {
                               ))}
                           </TableBody>
                         </Table>
-                      </CardContent>
-                    </Card>
-                    
+                    </div>
+
                     {/* Pagination Controls */}
                     <div className="flex justify-end pt-2"><PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} /></div>
                     {totalGroups > itemsPerPage && (
@@ -834,6 +884,19 @@ const BaithulDataView = () => {
           </>
         )}
         </SectionCard>
+
+      <BaithulEnrollDialog
+        open={showEnrollDialog}
+        onOpenChange={setShowEnrollDialog}
+        onSaved={fetchBaithulData}
+      />
+
+      <BaithulStatusDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        member={statusMember}
+        onChanged={fetchBaithulData}
+      />
 
       <BottomNav />
     </PageShell>

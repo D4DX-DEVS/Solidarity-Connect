@@ -157,8 +157,9 @@ router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), requ
     }
 
     // Calculate additional statistics
-    const monthsActive = member.joinedDate ? 
-      Math.floor((Date.now() - member.joinedDate.getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
+    const contribStart = member.baithulMaal.startDate || member.joinedDate;
+    const monthsActive = contribStart ?
+      Math.floor((Date.now() - contribStart.getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0;
     
     const expectedTotal = monthsActive * (member.baithulMaal.monthlyAmount || 0);
     const pendingAmount = Math.max(0, expectedTotal - (member.baithulMaal.totalPaid || 0));
@@ -205,6 +206,10 @@ router.put('/member/:id',
       .optional()
       .isISO8601()
       .withMessage('Invalid payment date'),
+    body('startMonth')
+      .optional()
+      .matches(/^\d{4}-\d{2}$/)
+      .withMessage('Start month must be in YYYY-MM format'),
     handleValidationErrors
   ],
   async (req, res) => {
@@ -235,14 +240,16 @@ router.put('/member/:id',
         });
       }
 
-      const { monthlyAmount, totalPaid, lastPaymentDate } = req.body;
+      const { monthlyAmount, totalPaid, lastPaymentDate, startMonth } = req.body;
 
       // Update Baithul Maal data
       member.baithulMaal = {
         ...member.baithulMaal,
         monthlyAmount: monthlyAmount !== undefined ? monthlyAmount : member.baithulMaal.monthlyAmount,
         totalPaid: totalPaid !== undefined ? totalPaid : member.baithulMaal.totalPaid,
-        lastPaymentDate: lastPaymentDate ? new Date(lastPaymentDate) : member.baithulMaal.lastPaymentDate
+        lastPaymentDate: lastPaymentDate ? new Date(lastPaymentDate) : member.baithulMaal.lastPaymentDate,
+        // Admin-chosen contribution start month; pending is counted from here
+        startDate: startMonth ? new Date(`${startMonth}-01`) : member.baithulMaal.startDate
       };
 
       member.updatedBy = req.user._id;
@@ -514,7 +521,7 @@ router.get('/defaulters', authenticate, authorize(['manage_baithul_maal']), requ
           monthsActive: {
             $floor: {
               $divide: [
-                { $subtract: [new Date(), '$joinedDate'] },
+                { $subtract: [new Date(), { $ifNull: ['$baithulMaal.startDate', '$joinedDate'] }] },
                 1000 * 60 * 60 * 24 * 30
               ]
             }
@@ -583,7 +590,7 @@ router.get('/defaulters', authenticate, authorize(['manage_baithul_maal']), requ
           monthsActive: {
             $floor: {
               $divide: [
-                { $subtract: [new Date(), '$joinedDate'] },
+                { $subtract: [new Date(), { $ifNull: ['$baithulMaal.startDate', '$joinedDate'] }] },
                 1000 * 60 * 60 * 24 * 30
               ]
             }

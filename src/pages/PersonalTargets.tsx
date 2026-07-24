@@ -8,11 +8,12 @@ import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
-import { Target, Plus, Edit, Trash2, ArrowLeft, Search, RefreshCw } from "lucide-react";
+import { Target, Plus, Edit, Trash2, ArrowLeft, Search, RefreshCw, AlertTriangle } from "lucide-react";
 import { PiBookOpenTextFill, PiBooksFill, PiHandsPrayingFill, PiHeartFill, PiGraduationCapFill, PiHandshakeFill, PiTargetFill } from "react-icons/pi";
 
 interface PersonalTarget {
@@ -95,6 +96,7 @@ const PersonalTargets = () => {
   const [debouncedRecurringSearch, setDebouncedRecurringSearch] = useState("");
   const [audienceFilter, setAudienceFilter] = useState("");
   const [recurringAudienceFilter, setRecurringAudienceFilter] = useState("");
+  const [deleteRequest, setDeleteRequest] = useState<{ id: string; recurring: boolean } | null>(null);
 
   const [recurringForm, setRecurringForm] = useState({
     title: '',
@@ -207,7 +209,6 @@ const PersonalTargets = () => {
   };
 
   const handleDelete = async (targetId: string) => {
-    if (!confirm('Are you sure you want to delete this target?')) return;
     try {
       await apiCall(`/personal-targets/${targetId}`, { method: 'DELETE' });
       toast({ title: "Success", description: "Target deleted successfully" });
@@ -286,7 +287,6 @@ const PersonalTargets = () => {
   };
 
   const handleDeleteRecurring = async (targetId: string) => {
-    if (!confirm('Are you sure you want to delete this recurring target?')) return;
     try {
       await apiCall(`/personal-targets/${targetId}`, { method: 'DELETE' });
       toast({ title: "Success", description: "Recurring target deleted successfully" });
@@ -432,7 +432,7 @@ const PersonalTargets = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {!canManageTargets && (
                 <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
-                  ⚠️ Read-only access. Only State Admins can create/edit targets.
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
                 </div>
               )}
               {canManageTargets && (
@@ -670,7 +670,7 @@ const PersonalTargets = () => {
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10 hover:text-primary" onClick={() => openEditDialog(target)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => handleDelete(target._id)}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteRequest({ id: target._id, recurring: false })}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -710,7 +710,7 @@ const PersonalTargets = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {!canManageTargets && (
                 <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
-                  ⚠️ Read-only access. Only State Admins can create/edit targets.
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
                 </div>
               )}
               {canManageTargets && (
@@ -943,7 +943,7 @@ const PersonalTargets = () => {
                             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600" onClick={() => openEditRecurringDialog(target)}>
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => handleDeleteRecurring(target._id)}>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50 hover:text-red-600" onClick={() => setDeleteRequest({ id: target._id, recurring: true })}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -972,6 +972,29 @@ const PersonalTargets = () => {
 
       </div>
       </SectionCard>
+
+      <AlertDialog open={!!deleteRequest} onOpenChange={(open) => !open && setDeleteRequest(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteRequest?.recurring ? "recurring " : ""}target?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (!deleteRequest) return;
+                if (deleteRequest.recurring) handleDeleteRecurring(deleteRequest.id);
+                else handleDelete(deleteRequest.id);
+                setDeleteRequest(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageShell>
   );
 };

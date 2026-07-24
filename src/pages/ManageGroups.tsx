@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { ArrowLeft, Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
+import { Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import GroupDialog from "@/components/GroupDialog";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
@@ -16,7 +15,6 @@ import { useDistricts } from "@/hooks/useDistricts";
 import { Group } from "@/lib/groups";
 
 const ManageGroups = () => {
-  const navigate = useNavigate();
   const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDialog, setShowDialog] = useState(false);
@@ -96,16 +94,10 @@ const ManageGroups = () => {
         subtitle="Switch districts, review active groups, and manage area-level structure from one place."
         eyebrow="Organization"
         icon={<Users className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to State Admin
-          </Button>
-        }
       />
 
       <div className="grid gap-3 md:grid-cols-3">
-        <MetricCard title="Selected District" value={selectedDistrict?.code || "None"} icon={Users} tone="primary" />
+        <MetricCard title="Selected District" value={selectedDistrict?.name || "None"} icon={Users} tone="primary" />
         <MetricCard title="Active Groups" value={String(groups.length)} icon={Users} tone="warning" />
         <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
       </div>

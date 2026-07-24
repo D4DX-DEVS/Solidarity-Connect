@@ -20,10 +20,9 @@ const BottomNav = () => {
   const baseNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardPath },
     { icon: Users, label: "Members", path: "/members", hideForRoles: ["member"] },
-    { icon: Plus, label: "Add", path: "/add-member", hideForRoles: ["district_admin", "state_admin", "member"] },
     { icon: Calendar, label: "Meetings", path: "/meetings", hasMenu: true, hideForRoles: ["member"] },
     { icon: Star, label: "Leaders", path: "/leaders" },
-    { icon: Bell, label: "Alerts", path: "/notifications", hasMenu: true },
+    { icon: Bell, label: "Alerts", path: "/notifications", hasMenu: true, hideForRoles: ["member"] },
   ];
 
   const navItems = baseNavItems.filter(

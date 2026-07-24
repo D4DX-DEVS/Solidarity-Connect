@@ -32,6 +32,10 @@ const memberSchema = new mongoose.Schema({
     type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
   },
+  avatar: {
+    type: String,
+    trim: true
+  },
   profession: {
     type: String,
     trim: true,
@@ -91,7 +95,8 @@ const memberSchema = new mongoose.Schema({
       default: 0,
       min: [0, 'Total paid cannot be negative']
     },
-    lastPaymentDate: Date
+    lastPaymentDate: Date,
+    startDate: Date // when contribution began; pending is counted from here, not joinedDate
   },
   emergencyContact: {
     name: String,
@@ -186,6 +191,12 @@ memberSchema.pre('save', function(next) {
     
     this.age = age;
   }
+
+  // Stamp contribution start when monthly amount first set
+  if (this.baithulMaal?.monthlyAmount > 0 && !this.baithulMaal.startDate) {
+    this.baithulMaal.startDate = new Date();
+  }
+
   next();
 });
 

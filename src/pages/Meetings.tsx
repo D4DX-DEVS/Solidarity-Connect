@@ -311,9 +311,9 @@ const Meetings = () => {
                 <AccordionItem value={meeting._id} className="border-none">
                   <AccordionTrigger className="px-4 pt-4 pb-2 hover:no-underline">
                     <div className="flex-1 text-left">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-semibold text-lg">{meeting.title}</h3>
-                        <div className="flex items-center gap-2 ml-4">
+                      <div className="flex justify-between items-start mb-2 gap-2">
+                        <h3 className="font-semibold text-base sm:text-lg">{meeting.title}</h3>
+                        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                           <Badge 
                             variant={
                               meeting.status === 'scheduled' ? 'default' :
@@ -350,29 +350,29 @@ const Meetings = () => {
                       </div>
                       
                       {meeting.description && (
-                        <p className="text-sm text-muted-foreground mb-3">
+                        <p className="mb-2 line-clamp-2 text-xs text-muted-foreground sm:mb-3 sm:text-sm">
                           {meeting.description}
                         </p>
                       )}
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           {format(new Date(meeting.scheduledDate), 'MMM dd, yyyy')}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
+                          <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           {meeting.duration} min
                         </div>
                         <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           {meeting.targetAudience.replace('_', ' ')}
                         </div>
                       </div>
 
                       {/* Quick Stats */}
                       {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && (
-                        <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:mt-3">
                           <span>Sessions: {completedSessions}/{totalSessions}</span>
                           {totalParticipants > 0 && (
                             <span>Participants: {totalParticipants}</span>

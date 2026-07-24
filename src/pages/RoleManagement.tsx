@@ -402,7 +402,7 @@ const RoleManagement = () => {
     const map: Record<string, string> = {
       state_admin: "State Admin",
       district_admin: "District Admin",
-      group_admin: "Group Admin",
+      group_admin: "Area Admin",
     };
     return role ? (map[role] || role) : "Member";
   };
@@ -470,7 +470,7 @@ const RoleManagement = () => {
                 {userRole === 'state_admin' && <SelectItem value="all">All Roles</SelectItem>}
                 {userRole === 'state_admin' && <SelectItem value="state_admin">State Admins</SelectItem>}
                 {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="district_admin">District Admins</SelectItem>}
-                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin">Group Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin">Area Admins</SelectItem>}
                 <SelectItem value="member">Members</SelectItem>
                 <SelectItem value="leaders">
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Leaders Only</span>

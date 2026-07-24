@@ -153,12 +153,14 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 }
 
 @layer components {
+  /* overflow-x-clip (not hidden) so position:sticky headers still stick */
   .app-page {
-    @apply relative min-h-screen overflow-x-hidden lg:pl-60;
+    @apply relative min-h-screen overflow-x-clip lg:pl-60;
   }
 
+  /* Full-width, left-aligned content so headers meet the sidebar edge */
   .app-main {
-    @apply relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 pb-28 pt-3 sm:gap-4 sm:px-6 sm:pt-4 lg:px-8 lg:pb-8;
+    @apply relative flex w-full flex-col gap-3 px-4 pb-28 pt-3 sm:gap-4 sm:px-6 sm:pt-4 lg:px-8 lg:pb-8;
   }
 
   /* Decorative orbs removed in flat theme; class kept because pages render it. */
@@ -168,8 +170,9 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
     @apply hidden;
   }
 
+  /* Unified brand header: full-bleed gradient bar, same 5rem height as page headers */
   .hero-card {
-    @apply relative rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5 lg:border-0 lg:bg-transparent lg:p-1 lg:shadow-none;
+    @apply sticky top-0 z-40 -mx-4 -mt-3 flex min-h-20 flex-col justify-center rounded-b-2xl bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 py-3 text-white shadow-md sm:-mx-6 sm:-mt-4 sm:px-6 lg:-mx-8 lg:px-8;
   }
 
   /* Soft staggered entrance for page sections */
@@ -187,19 +190,19 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
   }
 
   .hero-icon {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground lg:hidden;
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white lg:hidden;
   }
 
   .hero-eyebrow {
-    @apply text-xs font-medium text-muted-foreground;
+    @apply text-xs font-medium text-white/70;
   }
 
   .hero-title {
-    @apply text-xl font-bold tracking-tight sm:text-2xl;
+    @apply text-lg font-bold tracking-tight sm:text-xl;
   }
 
   .hero-subtitle {
-    @apply max-w-2xl text-sm leading-6 text-muted-foreground;
+    @apply max-w-2xl text-sm leading-6 text-white/70;
   }
 
   .hero-details {

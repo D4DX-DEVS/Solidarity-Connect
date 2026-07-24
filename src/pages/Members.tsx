@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MetricCard, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import PageSizeInput from "@/components/app/PageSizeInput";
 import BottomNav from "@/components/BottomNav";
@@ -259,13 +258,13 @@ const Members = () => {
 
   // Removed early loading return to prevent search focus loss
 
-  const metricCards = [
-    { title: "Total", value: String(statistics.total), icon: Users, tone: "primary" as const },
-    { title: "Active", value: String(statistics.active), icon: ShieldCheck, tone: "success" as const },
-    { title: "Applicant", value: String(statistics.applicant), icon: Clock, tone: "warning" as const },
-    { title: "Inactive", value: String(statistics.inactive), icon: Users, tone: "neutral" as const },
-    { title: "Abroad", value: String(statistics.abroad), icon: MapPin, tone: "neutral" as const },
-    { title: "Dismissed", value: String(statistics.dismissed), icon: Users, tone: "danger" as const },
+  const statChips = [
+    { title: "All", value: statistics.total, status: "" },
+    { title: "Active", value: statistics.active, status: "Active" },
+    { title: "Applicant", value: statistics.applicant, status: "Applicant" },
+    { title: "Inactive", value: statistics.inactive, status: "Inactive" },
+    { title: "Abroad", value: statistics.abroad, status: "Abroad" },
+    { title: "Dismissed", value: statistics.dismissed, status: "Dismissed" },
   ];
 
   return (
@@ -277,9 +276,8 @@ const Members = () => {
         title="Members"
       />
 
-      <main className="app-main pt-4">
-        <SectionCard title="Search & Filters" description="Find members by person, district, group, or status.">
-          <div className="space-y-3">
+      <main className="app-main pt-4 pb-28 lg:pb-8">
+        <div className="space-y-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -290,7 +288,7 @@ const Members = () => {
               />
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-flow-col auto-cols-fr gap-1.5 sm:gap-2">
               {userRole === "state_admin" && (
                 <Select value={selectedDistrict || "all"} onValueChange={(value) => setSelectedDistrict(value === "all" ? "" : value)}>
                   <SelectTrigger>
@@ -342,22 +340,35 @@ const Members = () => {
               </Select>
             </div>
           </div>
-        </SectionCard>
 
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-          {metricCards.map((item) => (
-            <MetricCard key={item.title} title={item.title} value={item.value} icon={item.icon} tone={item.tone} />
-          ))}
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {statChips.map((chip) => {
+            const active = (selectedStatus || "") === chip.status;
+            return (
+              <button
+                key={chip.title}
+                onClick={() => { setSelectedStatus(chip.status); setCurrentPage(1); }}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {chip.title}
+                <span className={`font-bold ${active ? "text-primary-foreground" : "text-foreground"}`}>{chip.value}</span>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="data-strip flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <span>
+        <div className="data-strip flex items-center justify-between gap-2 text-xs text-muted-foreground sm:text-sm">
+          <span className="min-w-0 truncate">
             Showing {members.length} of {totalDocs} members
             {totalPages > 1 && (
               <span> • Page {currentPage} of {totalPages}</span>
             )}
           </span>
-          <PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
+          <PageSizeInput className="shrink-0" value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
         </div>
 
         {loading ? (
@@ -366,25 +377,58 @@ const Members = () => {
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No members found</p>
-            {userRole !== 'group_admin' && (
-              <Button
-                onClick={() => navigate('/add-member')}
-                className="mt-4"
-              >
-                Add First Member
-              </Button>
-            )}
+            <Button
+              onClick={() => navigate('/add-member')}
+              className="mt-4"
+            >
+              Add First Member
+            </Button>
           </div>
         ) : (
           <div className="space-y-2 relative">
           {members.map((member) => (
             <Card key={member._id} className="surface-card cursor-pointer transition-shadow duration-200 md:hover:-translate-y-0.5 md:hover:shadow-sm md:transition-all md:duration-200">
               <div
-                className="p-4"
+                className="p-2 sm:p-3"
                 onClick={() => navigate(`/member/${member._id}`)}
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-lg">{member.name}</h3>
+                <div className="flex justify-between items-center mb-1.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <h3 className="truncate font-semibold text-sm sm:text-base">{member.name}</h3>
+                    {member.status === "Active" ? (
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500"
+                        title="Active"
+                        aria-label="Active"
+                      />
+                    ) : (
+                      <Badge
+                        variant="secondary"
+                        className={`shrink-0 px-2 py-0 text-[11px] ${
+                          member.status === "Applicant"
+                            ? "bg-orange-100 text-orange-800"
+                            : member.status === "Abroad"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {member.status}
+                      </Badge>
+                    )}
+                    {member.transferRequest && (
+                      <Badge
+                        variant="outline"
+                        className={`shrink-0 flex items-center gap-1 px-2 py-0 text-[11px] ${
+                          member.transferRequest.status === 'pending'
+                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                            : "bg-green-100 text-green-800 border-green-300"
+                        }`}
+                      >
+                        <Clock className="h-3 w-3" />
+                        Transfer {member.transferRequest.status === 'pending' ? 'Pending' : 'Approved'}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     {!member.isApproved && (
                       <Badge variant="outline" className="text-orange-600 border-orange-600">
@@ -406,81 +450,46 @@ const Members = () => {
                   </div>
                 </div>
 
-                <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
-                    <Mail className="h-4 w-4" />
+                <div className="grid grid-cols-2 gap-1.5 text-xs text-muted-foreground sm:gap-2 xl:grid-cols-4">
+                  <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5">
+                    <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.email || "No email"}</span>
                   </div>
                   <a
                     href={`tel:${member.phone}`}
-                    className="flex items-center gap-2 rounded-2xl bg-primary/5 px-3 py-2 text-primary"
+                    className="flex min-w-0 items-center gap-1.5 rounded-xl bg-primary/5 px-2 py-1 text-primary sm:gap-2 sm:px-2.5 sm:py-1.5"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Phone className="h-4 w-4" />
+                    <Phone className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.phone}</span>
                   </a>
-                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
-                    <Users className="h-4 w-4" />
+                  <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5">
+                    <Users className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.group.name} ({member.group.code})</span>
                   </div>
-                  <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2">
-                    <MapPin className="h-4 w-4" />
+                  <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.district.name} ({member.district.code})</span>
                   </div>
                 </div>
 
-                <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
-                  {member.status === "Active" ? (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
-                      <span>{member.status}</span>
-                    </div>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className={
-                        member.status === "Applicant"
-                          ? "bg-orange-100 text-orange-800"
-                          : member.status === "Abroad"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                      }
-                    >
-                      {member.status}
-                    </Badge>
-                  )}
-                  {member.transferRequest && (
-                    <Badge
-                      variant="outline"
-                      className={
-                        member.transferRequest.status === 'pending'
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-300 flex items-center gap-1"
-                          : "bg-green-100 text-green-800 border-green-300 flex items-center gap-1"
-                      }
-                    >
-                      <Clock className="h-3 w-3" />
-                      Transfer {member.transferRequest.status === 'pending' ? 'Pending' : 'Approved'}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
+                    className="h-9 gap-1.5 px-1 sm:px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/member/${member._id}/edit`);
                     }}
                   >
-                    <Edit className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight">Edit</span>
+                    <Edit className="h-4 w-4 text-primary" />
+                    <span className="text-xs">Edit</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
+                    className="h-9 gap-1.5 px-1 sm:px-2"
                     // State + district admins move a member directly (no TransferRequest),
                     // so the button stays enabled even if a pending request exists.
                     // Group admins create a TransferRequest and are blocked while one is pending.
@@ -491,35 +500,35 @@ const Members = () => {
                       setShowTransfer(true);
                     }}
                   >
-                    <ArrowRightLeft className={`h-5 w-5 ${member.transferRequest && userRole === 'group_admin' ? 'text-muted-foreground' : 'text-success'}`} />
-                    <span className="text-xs text-center leading-tight">
+                    <ArrowRightLeft className={`h-4 w-4 ${member.transferRequest && userRole === 'group_admin' ? 'text-muted-foreground' : 'text-success'}`} />
+                    <span className="text-xs">
                       {userRole === 'state_admin' || userRole === 'district_admin' ? 'Move' : 'Transfer'}
                     </span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
+                    className="h-9 gap-1.5 px-1 sm:px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedMember(member);
                       setShowBaithul(true);
                     }}
                   >
-                    <Wallet className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight">Baithul</span>
+                    <Wallet className="h-4 w-4 text-primary" />
+                    <span className="text-xs">Baithul</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-auto min-h-16 flex-col gap-1 py-3 px-2"
+                    className="h-9 gap-1.5 px-1 sm:px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/member/${member._id}`);
                     }}
                   >
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <span className="text-xs text-center leading-tight">Details</span>
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span className="text-xs">Details</span>
                   </Button>
                 </div>
               </div>
@@ -530,30 +539,14 @@ const Members = () => {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="data-strip flex justify-between items-center py-4 px-4">
-            <Button
-              onClick={goToPrevPage}
-              disabled={!hasPrevPage}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
+          <div className="flex items-center justify-center gap-2 py-1">
+            <Button onClick={goToPrevPage} disabled={!hasPrevPage} variant="outline" size="icon" className="h-8 w-8" aria-label="Previous page">
               <ChevronLeft className="h-4 w-4" />
-              Previous
             </Button>
-
-            <div className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </div>
-
-            <Button
-              onClick={goToNextPage}
-              disabled={!hasNextPage}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              Next
+            <span className="min-w-12 text-center text-sm text-muted-foreground">
+              {currentPage} / {totalPages}
+            </span>
+            <Button onClick={goToNextPage} disabled={!hasNextPage} variant="outline" size="icon" className="h-8 w-8" aria-label="Next page">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -573,15 +566,14 @@ const Members = () => {
       />
 
       {/* Floating Add Member Button */}
-      {userRole !== 'group_admin' && (
-        <Button
-          onClick={() => navigate('/add-member')}
-          className="fixed bottom-24 right-4 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
-          size="icon"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      )}
+      <Button
+        onClick={() => navigate('/add-member')}
+        className="fixed bottom-28 right-4 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50 lg:bottom-8"
+        size="icon"
+        aria-label="Add member"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
       <BottomNav />
     </div>

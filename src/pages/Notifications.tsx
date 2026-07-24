@@ -42,7 +42,11 @@ const Notifications = () => {
       setLoading(true);
       const userType = localStorage.getItem('userType');
       if (userType === 'member') {
-        const result = await memberAuthAPI.getNotifications({ page: currentPage.toString(), limit: '10' });
+        const result = await memberAuthAPI.getNotifications({
+          page: currentPage.toString(),
+          limit: '10',
+          excludeType: 'announcement',
+        });
         setNotifications(result.data?.notifications || []);
         if (result.data?.pagination) {
           setTotalPages(result.data.pagination.totalPages);
@@ -177,7 +181,9 @@ const Notifications = () => {
       <main className="app-main pt-4 space-y-4">
         <SectionCard
           title="Notifications"
-          description="Draft, review, and send notification messages without leaving the main workflow."
+          description={userRole === "state_admin"
+            ? "Draft, review, and send notification messages without leaving the main workflow."
+            : "Alerts and updates sent to you."}
           action={userRole === "state_admin" ? (
             <Button onClick={() => navigate("/state-admin/send-notification")}>
               <Send className="h-4 w-4 mr-2" />
@@ -187,12 +193,10 @@ const Notifications = () => {
         >
         <div className="space-y-3">
           {notifications.length === 0 ? (
-            <Card className="surface-card">
-              <CardContent className="p-8 text-center">
-                <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No notifications found</p>
-              </CardContent>
-            </Card>
+            <div className="p-8 text-center">
+              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No notifications found</p>
+            </div>
           ) : (
             notifications.map((notification) => (
               <Card key={notification._id} className="surface-card transition-all hover:-translate-y-0.5">

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { BarChart3, Users, CheckCircle2, Clock, Download, Filter, CalendarDays, ChevronRight } from 'lucide-react';
+import { BarChart3, Users, CheckCircle2, Clock, Download, Filter, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PageHero, MetricCard, PageShell, SectionCard } from '@/components/app/AppShell';
+import { PageHero, PageShell, SectionCard } from '@/components/app/AppShell';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -498,41 +497,33 @@ export default function Consolidation() {
       />
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Filters Section */}
+        {/* Filters Section — compact single-row layout */}
         <SectionCard title="Filters" description="Select user type, target, and date range to generate report">
-          <div className="space-y-4">
-            {/* Step 1: User Type */}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">User Type</label>
-              <ToggleGroup
-                type="single"
+          {/* All filters in one auto-flow grid — no labels, selects self-describe */}
+          <div className="grid grid-cols-2 lg:grid-cols-12 gap-2">
+            <div className="col-span-2 lg:col-span-2">
+              <Select
                 value={selectedUserType}
-                onValueChange={(val) => {
-                  if (val) setSelectedUserType(val as ConsolidationUserType);
-                }}
-                className="flex flex-wrap justify-start gap-1"
+                onValueChange={(val) => { if (val) setSelectedUserType(val as ConsolidationUserType); }}
               >
-                {USER_TYPE_OPTIONS.map(opt => (
-                  <ToggleGroupItem
-                    key={opt.value}
-                    value={opt.value}
-                    className="text-xs sm:text-sm px-3 py-1.5"
-                  >
-                    {opt.label}
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
+                <SelectTrigger aria-label="User type">
+                  <SelectValue placeholder="User type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {USER_TYPE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Step 2: Target Selection */}
             {selectedUserType && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">Target</label>
+              <div className="col-span-2 lg:col-span-3">
                 {loadingTargets ? (
                   <Skeleton className="h-10 w-full" />
                 ) : (
                   <Select value={selectedTargetId} onValueChange={setSelectedTargetId}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="Target">
                       <SelectValue placeholder="Select a target..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -559,13 +550,11 @@ export default function Consolidation() {
               </div>
             )}
 
-            {/* Step 3: Region Filter (conditional) */}
-            {showDistrictFilter && !isDistrictAdmin && !isGroupAdmin && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">District</label>
+            {selectedUserType && showDistrictFilter && !isDistrictAdmin && !isGroupAdmin && (
+              <>
+                <div className="col-span-1 lg:col-span-2">
                   <Select value={selectedDistrictId} onValueChange={setSelectedDistrictId}>
-                    <SelectTrigger>
+                    <SelectTrigger aria-label="District">
                       <SelectValue placeholder="All Districts" />
                     </SelectTrigger>
                     <SelectContent>
@@ -578,10 +567,9 @@ export default function Consolidation() {
                 </div>
 
                 {showGroupFilter && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">Group</label>
+                  <div className="col-span-1 lg:col-span-2">
                     <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Group">
                         <SelectValue placeholder="All Groups" />
                       </SelectTrigger>
                       <SelectContent>
@@ -593,54 +581,39 @@ export default function Consolidation() {
                     </Select>
                   </div>
                 )}
-              </div>
+              </>
             )}
 
-            {/* Step 4: Date Range */}
             {selectedTargetId && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                  <CalendarDays className="h-4 w-4 inline mr-1" />
-                  Date Range
-                </label>
-                <div className="flex flex-wrap items-center gap-3">
-                  <ToggleGroup
-                    type="single"
-                    value={dateMode}
-                    onValueChange={(val) => { if (val) setDateMode(val as 'all' | 'custom'); }}
-                  >
-                    <ToggleGroupItem value="all" className="text-xs sm:text-sm">All Time</ToggleGroupItem>
-                    <ToggleGroupItem value="custom" className="text-xs sm:text-sm">Custom Range</ToggleGroupItem>
-                  </ToggleGroup>
-
-                  {dateMode === 'custom' && (
-                    <div className="flex items-center gap-2">
-                      <MonthPicker
-                        value={dateFrom}
-                        onChange={setDateFrom}
-                        placeholder="From month"
-                      />
-                      <span className="text-muted-foreground text-sm">to</span>
-                      <MonthPicker
-                        value={dateTo}
-                        onChange={setDateTo}
-                        placeholder="To month"
-                      />
-                    </div>
-                  )}
-                </div>
+              <div className="col-span-1 lg:col-span-2">
+                <Select value={dateMode} onValueChange={(val) => { if (val) setDateMode(val as 'all' | 'custom'); }}>
+                  <SelectTrigger aria-label="Date range">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="custom">Custom Range</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
-            {/* Generate Button */}
-            {selectedUserType && selectedTargetId && (
+            {selectedTargetId && dateMode === 'custom' && (
+              <div className="col-span-2 lg:col-span-3 flex items-center gap-2">
+                <MonthPicker value={dateFrom} onChange={setDateFrom} placeholder="From month" />
+                <span className="text-muted-foreground text-sm">to</span>
+                <MonthPicker value={dateTo} onChange={setDateTo} placeholder="To month" />
+              </div>
+            )}
+
+            {selectedTargetId && (
               <Button
                 onClick={handleGenerateReport}
                 disabled={loadingReport || (dateMode === 'custom' && (!dateFrom || !dateTo))}
-                className="w-full sm:w-auto"
+                className="col-span-1 lg:col-span-3 w-full"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                {loadingReport ? 'Generating...' : 'Generate Report'}
+                {loadingReport ? 'Generating...' : 'Generate'}
               </Button>
             )}
           </div>
@@ -659,33 +632,23 @@ export default function Consolidation() {
         {/* Results Section */}
         {report && !loadingReport && (
           <>
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <MetricCard
-                title="Total Users"
-                value={String(report.summary.totalUsers)}
-                icon={Users}
-                tone="neutral"
-              />
-              <MetricCard
-                title="Completed"
-                value={String(report.summary.completed)}
-                icon={CheckCircle2}
-                tone="success"
-              />
-              <MetricCard
-                title="Pending"
-                value={String(report.summary.pending)}
-                icon={Clock}
-                tone="warning"
-              />
-              <MetricCard
-                title="Completion Rate"
-                value={`${report.summary.completionRate}%`}
-                icon={BarChart3}
-                tone={report.summary.completionRate >= 70 ? 'success' : report.summary.completionRate >= 40 ? 'warning' : 'danger'}
-              />
-            </div>
+            {/* Summary — single compact stat strip instead of 4 cards */}
+            <Card>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-border [&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-r-0">
+                  <StatCell icon={Users} label="Total Users" value={String(report.summary.totalUsers)} className="text-foreground" />
+                  <StatCell icon={CheckCircle2} label="Completed" value={String(report.summary.completed)} className="text-green-600" />
+                  <StatCell icon={Clock} label="Pending" value={String(report.summary.pending)} className="text-amber-600" />
+                  <StatCell
+                    icon={BarChart3}
+                    label="Completion Rate"
+                    value={`${report.summary.completionRate}%`}
+                    className={report.summary.completionRate >= 70 ? 'text-green-600' : report.summary.completionRate >= 40 ? 'text-amber-600' : 'text-red-600'}
+                    progress={report.summary.completionRate}
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Monthly Breakdown (if available) */}
             {report.monthlyBreakdown.length > 0 && (
@@ -762,9 +725,9 @@ function MonthlyBreakdownSection({
 
   return (
     <SectionCard title="Monthly Breakdown" description={isRecurring ? 'Click a month to filter the detailed view below' : 'Completion status per month'}>
-      <Accordion type="single" collapsible className="space-y-2" onValueChange={handleValueChange}>
+      <Accordion type="single" collapsible className="divide-y divide-border" onValueChange={handleValueChange}>
         {breakdown.map((month, idx) => (
-          <AccordionItem key={`${month.year}-${month.month}`} value={`month-${idx}`} className="border rounded-lg px-4">
+          <AccordionItem key={`${month.year}-${month.month}`} value={`month-${idx}`} className="border-b-0 px-1">
             <AccordionTrigger className="hover:no-underline py-3">
               <div className="flex items-center justify-between w-full mr-4">
                 <span className="font-medium text-sm">{month.label}</span>
@@ -959,6 +922,25 @@ function UserTable({ users, type, isRecurring }: { users: ConsolidationUser[]; t
           ))}
         </TableBody>
       </Table>
+    </div>
+  );
+}
+
+function StatCell({ icon: Icon, label, value, className, progress }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  className?: string;
+  progress?: number;
+}) {
+  return (
+    <div className="flex flex-col gap-1 p-3 sm:p-4">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        <span className="text-[11px] sm:text-xs font-medium truncate">{label}</span>
+      </div>
+      <div className={cn('text-xl sm:text-2xl font-bold leading-tight', className)}>{value}</div>
+      {progress !== undefined && <Progress value={progress} className="h-1 mt-1" />}
     </div>
   );
 }

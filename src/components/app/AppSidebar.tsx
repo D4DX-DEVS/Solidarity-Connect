@@ -56,7 +56,6 @@ const SECTIONS: NavSection[] = [
       { label: "Consolidation", path: "/consolidation", icon: Landmark, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Master Data", path: "/state-admin/master-data", icon: Database, roles: ["state_admin"] },
-      { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog, roles: ["member"] },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
     ],
   },
@@ -66,7 +65,6 @@ const SECTIONS: NavSection[] = [
       { label: "Notifications", path: "/notifications", icon: Bell },
       { label: "Announcements", path: "/announcements", icon: Megaphone },
       { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar, roles: ["member"] },
       { label: "Send Notification", path: "/state-admin/send-notification", icon: Send, roles: ["state_admin"] },
     ],
   },
@@ -74,9 +72,25 @@ const SECTIONS: NavSection[] = [
     title: "Targets & Planning",
     items: [
       { label: "My Targets", path: "/my-targets", icon: Target, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target, roles: ["member"] },
       { label: "Personal Targets", path: "/personal-targets", icon: Target, roles: ["state_admin"] },
       { label: "Leaders", path: "/leaders", icon: Star },
+    ],
+  },
+];
+
+// ponytail: member gets flat daily-use-first list; admin roles keep grouped SECTIONS
+const MEMBER_SECTIONS: NavSection[] = [
+  {
+    items: [
+      { label: "Dashboard", path: "__home__", icon: LayoutDashboard },
+      { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target },
+      { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar },
+      { label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet },
+      { label: "Notifications", path: "/notifications", icon: Bell },
+      { label: "Announcements", path: "/announcements", icon: Megaphone },
+      { label: "Leaders", path: "/leaders", icon: Star },
+      { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
+      { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog },
     ],
   },
 ];
@@ -108,17 +122,15 @@ function AppSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card lg:flex">
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Shield className="h-5 w-5" />
-        </div>
+      <div className="flex h-20 items-center gap-3 border-b border-border px-5">
+        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain" />
         <div className="min-w-0">
           <p className="truncate text-base font-bold text-foreground">Solidarity</p>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {SECTIONS.map((section, si) => {
+        {(userRole === "member" ? MEMBER_SECTIONS : SECTIONS).map((section, si) => {
           const items = section.items.filter((item) => !item.roles || item.roles.includes(userRole || ""));
           if (!items.length) return null;
           return (

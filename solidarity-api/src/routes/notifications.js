@@ -74,7 +74,8 @@ router.get('/', authenticate, async (req, res) => {
 
       filter.$or = [
         { targetAudience: { $in: audienceValues } },
-        { targetAudiences: { $in: audienceValues } }
+        { targetAudiences: { $in: audienceValues } },
+        { createdBy: req.user._id }
       ];
     }
 
@@ -230,9 +231,9 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 });
 
 // @route   POST /api/notifications
-// @desc    Create new notification (Only State Admins) - Simplified
-// @access  Private - State Admin Only
-router.post('/', authenticate, requireRole('state_admin'), async (req, res) => {
+// @desc    Create new notification (State Admins; Group Admins scoped to own group)
+// @access  Private - State Admin / Group Admin
+router.post('/', authenticate, requireRole(['state_admin', 'group_admin']), async (req, res) => {
   try {
     const {
       title,
@@ -255,9 +256,24 @@ router.post('/', authenticate, requireRole('state_admin'), async (req, res) => {
       });
     }
 
-    const normalizedTargetAudiences = Array.isArray(targetAudiences) && targetAudiences.length > 0
+    let normalizedTargetAudiences = Array.isArray(targetAudiences) && targetAudiences.length > 0
       ? targetAudiences
       : [targetAudience];
+
+    // Group admins can only announce to their own group's members
+    let effectiveTargetAudience = targetAudience;
+    let targetGroups = [];
+    if (req.user.role === 'group_admin') {
+      if (!req.user.group) {
+        return res.status(400).json({
+          success: false,
+          message: 'No group assigned to your account'
+        });
+      }
+      effectiveTargetAudience = 'specific_groups';
+      normalizedTargetAudiences = [];
+      targetGroups = [req.user.group._id || req.user.group];
+    }
 
     const normalizedAttachments = Array.isArray(attachments)
       ? attachments
@@ -277,8 +293,9 @@ router.post('/', authenticate, requireRole('state_admin'), async (req, res) => {
       message: message.trim(),
       type,
       priority,
-      targetAudience,
+      targetAudience: effectiveTargetAudience,
       targetAudiences: normalizedTargetAudiences,
+      targetGroups,
       channels,
       attachments: normalizedAttachments,
       createdBy: req.user._id,

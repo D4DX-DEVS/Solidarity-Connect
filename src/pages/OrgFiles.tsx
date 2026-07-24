@@ -267,7 +267,7 @@ const OrgFiles = () => {
   return (
     <PageShell contentClassName="pb-24">
       <PageHero
-        title="Organizational Files"
+        title="Files"
         subtitle="Browse documents, training media, and membership resources from one searchable library."
         eyebrow="Resources"
         icon={<FileText className="h-6 w-6" />}

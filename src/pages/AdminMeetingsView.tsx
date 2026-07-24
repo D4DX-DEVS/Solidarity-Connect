@@ -280,7 +280,7 @@ const AdminMeetingsView = () => {
                 </div>
                 <div>
                   <p className="text-muted-foreground">Date</p>
-                  <p className="font-medium">{format(new Date(selectedMeeting.scheduledDate), 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{format(new Date(selectedMeeting.scheduledDate), 'MMM dd, yyyy • h:mm a')}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Type</p>
@@ -331,7 +331,7 @@ const AdminMeetingsView = () => {
 
           {/* Group Progress Filters */}
           <SectionCard title="Group Filters" description="Narrow the meeting progress table by status, district, and page size.">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
                 <Select value={detailFilters.groupStatus || "all"} onValueChange={(value) => handleDetailFilterChange('groupStatus', value === "all" ? "" : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Filter by Status" />
@@ -383,19 +383,73 @@ const AdminMeetingsView = () => {
               })()} groups)</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div>
                 {(() => {
                   const filteredGroups = selectedMeeting.groupProgress.filter(group => {
                     if (detailFilters.groupStatus && group.status !== detailFilters.groupStatus) return false;
                     if (detailFilters.district && group.district?._id !== detailFilters.district) return false;
                     return true;
                   });
-                  
+
                   const startIndex = (groupPagination.currentPage - 1) * groupPagination.itemsPerPage;
                   const endIndex = startIndex + groupPagination.itemsPerPage;
                   const paginatedGroups = filteredGroups.slice(startIndex, endIndex);
-                  
+
                   return (
+                    <>
+                    {/* Mobile: card list — no horizontal scroll */}
+                    <div className="space-y-2 p-3 md:hidden">
+                      {paginatedGroups.map((group, index) => (
+                        <div key={startIndex + index} className="rounded-2xl border border-border bg-card p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-semibold text-sm">{group.groupName || 'Unknown Group'}</p>
+                              <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3 shrink-0" />
+                                {group.district?.name || 'Unknown'} • {group.groupCode || 'N/A'}
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                              <Badge className={getStatusColor(group.status)}>
+                                {group.status.replace('_', ' ')}
+                              </Badge>
+                              {group.programConducted && (
+                                <Badge variant="outline" className="text-[10px] text-green-600 border-green-600">
+                                  Conducted
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-2 grid grid-cols-5 gap-1 text-center">
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold text-blue-600">{group.totalMembers || 0}</p>
+                              <p className="text-[10px] text-muted-foreground">Total</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold text-green-600">{group.presentMembers || 0}</p>
+                              <p className="text-[10px] text-muted-foreground">Present</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold text-red-600">{group.absentMembers || 0}</p>
+                              <p className="text-[10px] text-muted-foreground">Absent</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold text-yellow-600">{group.abroadMembers || 0}</p>
+                              <p className="text-[10px] text-muted-foreground">Abroad</p>
+                            </div>
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold text-purple-600">
+                                {group.attendanceRate ? `${group.attendanceRate}%` : '-'}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">Attend</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop: table */}
+                    <div className="hidden overflow-x-auto md:block">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -468,6 +522,8 @@ const AdminMeetingsView = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
+                    </>
                   );
                 })()}
               </div>
@@ -486,8 +542,8 @@ const AdminMeetingsView = () => {
                   if (totalPages <= 1) return null;
                   
                   return (
-                    <div className="data-strip flex items-center justify-between pt-4 border-0">
-                      <div className="text-sm text-muted-foreground">
+                    <div className="data-strip flex flex-wrap items-center justify-center gap-2 border-0 pt-4 md:justify-between">
+                      <div className="text-xs text-muted-foreground sm:text-sm">
                         Showing {((groupPagination.currentPage - 1) * groupPagination.itemsPerPage) + 1} to {Math.min(groupPagination.currentPage * groupPagination.itemsPerPage, filteredGroups.length)} of {filteredGroups.length} groups
                       </div>
                       <div className="flex items-center gap-2">
@@ -498,7 +554,7 @@ const AdminMeetingsView = () => {
                           disabled={groupPagination.currentPage <= 1}
                         >
                           <ChevronLeft className="h-4 w-4" />
-                          Previous
+                          <span className="hidden sm:inline">Previous</span>
                         </Button>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -523,7 +579,7 @@ const AdminMeetingsView = () => {
                           onClick={() => handleGroupPageChange(groupPagination.currentPage + 1)}
                           disabled={groupPagination.currentPage >= totalPages}
                         >
-                          Next
+                          <span className="hidden sm:inline">Next</span>
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </div>
@@ -551,18 +607,18 @@ const AdminMeetingsView = () => {
         {/* Summary Statistics */}
         {summaryStats && (
           <SectionCard title="Overview" description="Track meeting completion and program conduction across all groups.">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="data-strip text-center p-3">
-                  <p className="text-2xl font-bold text-primary">{summaryStats.totalMeetings}</p>
-                  <p className="text-sm text-muted-foreground">Total Meetings</p>
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
+                <div className="data-strip text-center p-2 sm:p-3">
+                  <p className="text-xl font-bold text-primary sm:text-2xl">{summaryStats.totalMeetings}</p>
+                  <p className="text-[11px] text-muted-foreground sm:text-sm">Total Meetings</p>
                 </div>
-                <div className="data-strip border-green-200 bg-green-50 text-center p-3">
-                  <p className="text-2xl font-bold text-green-600">{summaryStats.completedMeetings}</p>
-                  <p className="text-sm text-muted-foreground">Completed</p>
+                <div className="data-strip border-green-200 bg-green-50 text-center p-2 sm:p-3">
+                  <p className="text-xl font-bold text-green-600 sm:text-2xl">{summaryStats.completedMeetings}</p>
+                  <p className="text-[11px] text-muted-foreground sm:text-sm">Completed</p>
                 </div>
-                <div className="data-strip border-red-200 bg-red-50 text-center p-3">
-                  <p className="text-2xl font-bold text-red-600">{summaryStats.pendingMeetings}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
+                <div className="data-strip border-red-200 bg-red-50 text-center p-2 sm:p-3">
+                  <p className="text-xl font-bold text-red-600 sm:text-2xl">{summaryStats.pendingMeetings}</p>
+                  <p className="text-[11px] text-muted-foreground sm:text-sm">Pending</p>
                 </div>
               </div>
           </SectionCard>
@@ -570,8 +626,8 @@ const AdminMeetingsView = () => {
 
         {/* Filters */}
         <SectionCard title="Filters" description="Search meetings and narrow the overview by meeting and completion status.">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
+            <div className="grid grid-cols-3 gap-2 md:grid-cols-4 md:gap-4">
+              <div className="relative col-span-3 md:col-span-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search meetings..."
@@ -580,7 +636,7 @@ const AdminMeetingsView = () => {
                   className="pl-10"
                 />
               </div>
-              
+
               <Select value={filters.status || "all"} onValueChange={(value) => handleFilterChange('status', value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Meeting Status" />
@@ -595,7 +651,7 @@ const AdminMeetingsView = () => {
 
               <Select value={filters.completionStatus || "all"} onValueChange={(value) => handleFilterChange('completionStatus', value === "all" ? "" : value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Completion Status" />
+                  <SelectValue placeholder="Completion" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Completion</SelectItem>
@@ -605,7 +661,8 @@ const AdminMeetingsView = () => {
               </Select>
 
               <Button variant="outline" onClick={clearFilters}>
-                Clear Filters
+                <span className="sm:hidden">Clear</span>
+                <span className="hidden sm:inline">Clear Filters</span>
               </Button>
             </div>
         </SectionCard>
@@ -626,7 +683,51 @@ const AdminMeetingsView = () => {
                 <p className="text-muted-foreground">No meetings match your current filters.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              {/* Mobile: card list — no horizontal scroll */}
+              <div className="space-y-2 p-3 md:hidden">
+                {meetings.map((meeting) => (
+                  <button
+                    key={meeting._id}
+                    type="button"
+                    onClick={() => setSelectedMeeting(meeting)}
+                    className="w-full rounded-2xl border border-border bg-card p-3 text-left transition-colors hover:bg-accent/60"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-sm">{meeting.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {format(new Date(meeting.scheduledDate), 'MMM dd, yyyy')} • {meeting.meetingType.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                      <Badge className={`shrink-0 ${getStatusColor(meeting.overallProgress.status)}`}>
+                        {meeting.overallProgress.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
+                      <div className="rounded-lg bg-muted/60 px-1 py-1.5">
+                        <p className="text-sm font-bold">{meeting.overallProgress.totalGroups}</p>
+                        <p className="text-[10px] text-muted-foreground">Groups</p>
+                      </div>
+                      <div className="rounded-lg bg-green-50 px-1 py-1.5">
+                        <p className="text-sm font-bold text-green-600">{meeting.overallProgress.programsConducted}</p>
+                        <p className="text-[10px] text-muted-foreground">Conducted</p>
+                      </div>
+                      <div className="rounded-lg bg-red-50 px-1 py-1.5">
+                        <p className="text-sm font-bold text-red-600">{meeting.overallProgress.programsNotConducted}</p>
+                        <p className="text-[10px] text-muted-foreground">Pending</p>
+                      </div>
+                      <div className="rounded-lg bg-blue-50 px-1 py-1.5">
+                        <p className="text-sm font-bold text-blue-600">{meeting.overallProgress.completedGroups}</p>
+                        <p className="text-[10px] text-muted-foreground">Completed</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -688,6 +789,7 @@ const AdminMeetingsView = () => {
                   </TableBody>
                 </Table>
               </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -696,8 +798,8 @@ const AdminMeetingsView = () => {
         {!loading && meetings.length > 0 && pagination.totalPages > 1 && (
           <Card className="surface-card">
             <CardContent className="p-4">
-              <div className="data-strip flex items-center justify-between border-0">
-                <div className="text-sm text-muted-foreground">
+              <div className="data-strip flex flex-wrap items-center justify-center gap-2 border-0 md:justify-between">
+                <div className="text-xs text-muted-foreground sm:text-sm">
                   Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of {pagination.totalDocs} meetings
                 </div>
                 <div className="flex items-center gap-2">
@@ -708,7 +810,7 @@ const AdminMeetingsView = () => {
                     disabled={!pagination.hasPrevPage || loading}
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <div className="flex items-center gap-1">
                     {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
@@ -734,7 +836,7 @@ const AdminMeetingsView = () => {
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                     disabled={!pagination.hasNextPage || loading}
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

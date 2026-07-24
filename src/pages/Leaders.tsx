@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
@@ -42,7 +41,7 @@ const ROLE_TYPE_COLORS: Record<string, string> = {
 const ADMIN_ROLE_LABELS: Record<string, string> = {
   state_admin: "State Admin",
   district_admin: "District Admin",
-  group_admin: "Group Admin",
+  group_admin: "Area Admin",
   member: "Member",
 };
 
@@ -62,7 +61,7 @@ interface FilterOption {
   label: string;
 }
 
-const Leaders = () => {
+const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -248,7 +247,7 @@ const Leaders = () => {
   const fetchLeaders = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { page: currentPage, limit: 20 };
+      const params: Record<string, any> = { page: currentPage, limit: 10 };
       if (activeTab !== "all") params.roleType = activeTab;
       if (debouncedSearch) params.search = debouncedSearch;
       if (requiresDistrict && selectedDistrictId) params.districtId = selectedDistrictId;
@@ -293,46 +292,28 @@ const Leaders = () => {
     fetchLeaders();
   }, [fetchLeaders]);
 
-  return (
-    <div className="app-page">
-      <div className="app-page-orb app-page-orb-primary" aria-hidden />
-      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
-      <HeaderWithLogout
-        icon={<Star className="h-6 w-6 text-primary-foreground" />}
-        title="Leaders"
-        subtitle="All designated leaders"
-        leftAction={
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        }
-      />
-
-      <main className="app-main pt-4 space-y-4">
-        <SectionCard title="Search & Filters" description="Browse leaders by role type, district, area, or unit.">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name, phone or role name…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-
-        {/* Role type tabs */}
-        <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
-          {ROLE_TYPES.map((tab) => (
-            <Button
-              key={tab.value}
-              size="sm"
-              variant={activeTab === tab.value ? "default" : "outline"}
-              className="flex-shrink-0"
-              onClick={() => setActiveTab(tab.value)}
-            >
-              {tab.label}
-            </Button>
-          ))}
+  const content = (
+      <div className="space-y-3">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search name or phone…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-[7.5rem] shrink-0" aria-label="Filter by role type">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLE_TYPES.map((tab) => (
+                <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Hierarchy filters */}
@@ -398,13 +379,12 @@ const Leaders = () => {
               </Select>
           </div>
         )}
-        </SectionCard>
 
         {/* Leader count */}
         {!loading && (
-          <div className="data-strip text-sm text-muted-foreground">
+          <p className="px-1 text-xs text-muted-foreground">
             {totalDocs} leader{totalDocs !== 1 ? "s" : ""} found
-          </div>
+          </p>
         )}
 
         {/* Leaders list */}
@@ -418,22 +398,22 @@ const Leaders = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {leaders.map((leader) => (
-              <Card key={leader._id} className="surface-card transition-all hover:-translate-y-0.5">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
+              <Card key={leader._id} className="surface-card">
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-2.5">
+                    {typeof leader.roleTag?.listingOrder === "number" && (
+                      <span className="mt-0.5 text-[11px] font-semibold bg-primary/10 text-primary rounded-full w-5 h-5 inline-flex items-center justify-center flex-shrink-0">
+                        {leader.roleTag.listingOrder}
+                      </span>
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {typeof leader.roleTag?.listingOrder === "number" && (
-                          <span className="text-[11px] font-semibold bg-primary/10 text-primary rounded-full w-6 h-6 inline-flex items-center justify-center flex-shrink-0">
-                            {leader.roleTag.listingOrder}
-                          </span>
-                        )}
-                        <p className="font-semibold truncate">{leader.name}</p>
+                        <p className="font-semibold text-sm truncate">{leader.name}</p>
                         {leader.roleTag?.type && (
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${
                               ROLE_TYPE_COLORS[leader.roleTag.type] || "bg-gray-100 text-gray-800"
                             }`}
                           >
@@ -443,47 +423,31 @@ const Leaders = () => {
                       </div>
 
                       {leader.roleTag?.name && (
-                        <p className="text-sm font-medium text-primary mt-0.5">
-                          {leader.roleTag.name}
-                        </p>
+                        <p className="text-xs font-medium text-primary">{leader.roleTag.name}</p>
                       )}
 
-                      {leader.roleTag?.roleDescription && (
-                        <p className="text-xs text-muted-foreground mt-0.5 italic">
-                          {leader.roleTag.roleDescription}
-                        </p>
-                      )}
-
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2 text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        {leader.phone}
-                      </div>
-
-                      <div className="flex gap-2 mt-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <a href={`tel:${leader.phone}`} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5" />
+                          {leader.phone}
+                        </a>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                           {ADMIN_ROLE_LABELS[leader.role] || leader.role}
                         </Badge>
                         {leader.district && (
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             {leader.district.name}
                           </Badge>
                         )}
-                        {leader.group && (
-                          <Badge variant="secondary" className="text-xs">
+                        {leader.group && leader.group.name !== leader.district?.name && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                             {leader.group.name}
-                          </Badge>
-                        )}
-                        {leader.roleTag?.areaId && (
-                          <Badge variant="secondary" className="text-xs bg-teal-100 text-teal-800">
-                            Area: {leader.roleTag.areaId.name}
                           </Badge>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
-                      <Star className="h-5 w-5 text-primary fill-primary" />
-                    </div>
+                    <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0 mt-0.5" />
                   </div>
                 </CardContent>
               </Card>
@@ -493,30 +457,35 @@ const Leaders = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="data-strip flex items-center justify-between py-4">
-            <p className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => p - 1)}
-                disabled={!hasPrevPage || loading}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" /> Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage((p) => p + 1)}
-                disabled={!hasNextPage || loading}
-              >
-                Next <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage((p) => p - 1)} disabled={!hasPrevPage || loading} aria-label="Previous page">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-14 text-center text-sm text-muted-foreground">{currentPage} / {totalPages}</span>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage((p) => p + 1)} disabled={!hasNextPage || loading} aria-label="Next page">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         )}
+      </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
+      <HeaderWithLogout
+        icon={<Star className="h-6 w-6 text-primary-foreground" />}
+        title="Leaders"
+        subtitle="All designated leaders"
+      />
+
+      <main className="app-main pt-4 pb-28 lg:pb-8 space-y-3">
+        {content}
       </main>
 
       <BottomNav />

@@ -181,6 +181,12 @@ export const memberAuthAPI = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+
+  requestProfileChange: (data: { name?: string; phone?: string; note?: string }) =>
+    apiCall('/member-auth/profile-change-request', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Users API calls
@@ -323,8 +329,14 @@ export const baithulMaalAPI = {
     return apiCall(`/baithul-maal-payments${queryString}`);
   },
 
-  getMemberPayments: (memberId: string) => 
+  getMemberPayments: (memberId: string) =>
     apiCall(`/baithul-maal-payments/member/${memberId}`),
+
+  updateMemberAmount: (memberId: string, data: { monthlyAmount: number; startMonth?: string }) =>
+    apiCall(`/baithul-maal/member/${memberId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 
   createPayment: (paymentData: any) =>
     apiCall('/baithul-maal-payments', {

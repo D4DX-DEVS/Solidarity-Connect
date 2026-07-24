@@ -16,6 +16,7 @@ import User from '../models/User.js';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
 import OrgFile from '../models/OrgFile.js';
+import Request from '../models/Request.js';
 import { body, validationResult } from 'express-validator';
 
 // Multer in-memory storage for file uploads
@@ -469,6 +470,7 @@ router.get('/profile', authenticateMember, async (req, res) => {
           id: member._id,
           name: member.name,
           phone: member.phone,
+          avatar: member.avatar,
           email: member.email,
           dateOfBirth: member.dateOfBirth,
           age: member.age,
@@ -508,7 +510,8 @@ router.get('/profile', authenticateMember, async (req, res) => {
 router.put('/profile', authenticateMember, async (req, res) => {
   try {
     const member = req.member;
-    const allowedFields = ['name', 'email', 'profession', 'education', 'address', 'bloodGroup', 'age', 'areaOfInterest', 'skills'];
+    // Name/phone changes go through profile-change-request (admin approval)
+    const allowedFields = ['email', 'profession', 'education', 'address', 'bloodGroup', 'age', 'areaOfInterest', 'skills', 'avatar'];
     const updates = {};
 
     for (const field of allowedFields) {
@@ -549,7 +552,8 @@ router.put('/profile', authenticateMember, async (req, res) => {
         bloodGroup: updatedMember.bloodGroup,
         age: updatedMember.age,
         areaOfInterest: updatedMember.areaOfInterest,
-        skills: updatedMember.skills
+        skills: updatedMember.skills,
+        avatar: updatedMember.avatar
       }
     });
 
@@ -559,6 +563,66 @@ router.put('/profile', authenticateMember, async (req, res) => {
       success: false,
       message: 'Failed to update profile'
     });
+  }
+});
+
+// @route   POST /api/member-auth/profile-change-request
+// @desc    Member requests a name/phone change; goes to area admin for approval
+// @access  Private (Member)
+router.post('/profile-change-request', authenticateMember, async (req, res) => {
+  try {
+    const member = req.member;
+    const { name, phone, note } = req.body;
+
+    const proposedData = {};
+    if (name && name.trim() && name.trim() !== member.name) proposedData.name = name.trim();
+    if (phone && phone.trim() && phone.trim() !== member.phone) proposedData.phone = phone.trim();
+
+    if (Object.keys(proposedData).length === 0) {
+      return res.status(400).json({ success: false, message: 'No changes requested' });
+    }
+
+    if (proposedData.phone && !/^(\+91)?[6-9]\d{9}$/.test(proposedData.phone)) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number' });
+    }
+
+    const existingPending = await Request.findOne({
+      member: member._id,
+      type: 'member_edit',
+      status: 'pending'
+    });
+    if (existingPending) {
+      return res.status(400).json({ success: false, message: 'You already have a pending change request' });
+    }
+
+    const changes = Object.keys(proposedData).map((field) => ({
+      field,
+      oldValue: member[field],
+      newValue: proposedData[field]
+    }));
+
+    const request = await Request.create({
+      type: 'member_edit',
+      member: member._id,
+      // ponytail: self-request — requestedBy holds the member id, not a User; admin UI shows requester from title
+      requestedBy: member._id,
+      title: `Profile change request from ${member.name} (self)`,
+      description: note?.trim() || 'Member requested name/phone update from the member portal.',
+      currentData: { name: member.name, phone: member.phone },
+      proposedData,
+      changes,
+      approvalLevel: 'group_admin',
+      priority: 'medium'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Change request sent to your area admin for approval',
+      data: { id: request._id, status: request.status }
+    });
+  } catch (error) {
+    console.error('Member profile change request error:', error);
+    res.status(500).json({ success: false, message: 'Failed to submit change request' });
   }
 });
 
@@ -763,7 +827,7 @@ router.get('/targets', authenticateMember, async (req, res) => {
 // @access  Private (Member)
 router.get('/notifications', authenticateMember, async (req, res) => {
   try {
-    const { page = 1, limit = 20, isRead, status, type } = req.query;
+    const { page = 1, limit = 20, isRead, status, type, excludeType } = req.query;
     const member = req.member;
 
     let filter = {
@@ -784,6 +848,8 @@ router.get('/notifications', authenticateMember, async (req, res) => {
 
     if (type) {
       filter.type = type;
+    } else if (excludeType) {
+      filter.type = { $ne: excludeType };
     }
 
     const options = {

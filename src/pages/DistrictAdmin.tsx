@@ -18,7 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import { MetricCard, PageHero, PageShell } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import UserTargetsSection from "@/components/UserTargetsSection";
@@ -49,7 +49,8 @@ interface DashboardStats {
   groupStatistics?: { totalGroups: number } | null;
 }
 
-const PRIMARY_TOOL_LABELS = ["Members", "Meetings", "Meeting Agenda", "Org Files", "Group Reports"];
+// Members & Meetings live in bottom nav — don't duplicate them in Quick Actions
+const PRIMARY_TOOL_LABELS = ["Meeting Agenda", "Groups", "Files", "Group Reports", "Baithul Maal"];
 
 const DistrictAdmin = () => {
   const navigate = useNavigate();
@@ -153,18 +154,16 @@ const DistrictAdmin = () => {
     { label: "Groups", path: "/state-admin/groups", icon: Building2, color: "text-sky-600" },
     { label: "Role Management", path: "/role-management", icon: Shield, color: "text-blue-500" },
     { label: "Leaders", path: "/leaders", icon: Star, color: "text-yellow-500" },
-    { label: "Org Files", path: "/org-files", icon: FolderOpen, color: "text-teal-500" },
+    { label: "Files", path: "/org-files", icon: FolderOpen, color: "text-teal-500" },
     { label: "Consolidation", path: "/consolidation", icon: BarChart3, color: "text-indigo-500" },
     { label: "Baithul Maal", path: "/state-admin/baithul-data", icon: BarChart3, color: "text-primary" },
     { label: "Group Reports", path: "/state-admin/group-reports", icon: BarChart3, color: "text-primary" },
   ];
 
   return (
-    <PageShell>
+    <PageShell contentClassName="pb-28">
       <PageHero
-        eyebrow="District Control"
-        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'} 👋`}
-        subtitle="Here's what's happening in your district today."
+        title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
         icon={<Building2 className="h-6 w-6" />}
         actions={
           <>
@@ -207,7 +206,7 @@ const DistrictAdmin = () => {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2">
         <MetricCard title="Groups" value={loadingStats ? "..." : String(totalGroups)} detail="In your district" icon={Building2} tone="primary" onClick={() => navigate("/state-admin/groups")} />
         <MetricCard title="Total Members" value={loadingStats ? "..." : String(totalMembers)} detail="Across all groups" icon={Users} tone="neutral" onClick={() => navigate("/members")} />
         <MetricCard title="Active Members" value={loadingStats ? "..." : String(activeMembers)} detail="Currently active" icon={CheckCircle} tone="success" onClick={() => navigate("/members")} />
@@ -220,14 +219,18 @@ const DistrictAdmin = () => {
         />
       </div>
 
-      <SectionCard title="Quick Actions" description="Frequently used actions">
+      <div>
+        <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
+          <Menu className="h-5 w-5" />
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-          {(showAllActions ? districtTools : districtTools.filter(({ label }) => PRIMARY_TOOL_LABELS.includes(label))).map((action) => (
+          {districtTools.map((action) => (
             <button
               key={action.label}
               type="button"
               onClick={() => navigate(action.path)}
-              className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+              className={`${showAllActions || PRIMARY_TOOL_LABELS.includes(action.label) ? "flex" : "hidden"} lg:flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4`}
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
                 <action.icon className={`h-5 w-5 ${action.color}`} />
@@ -238,7 +241,7 @@ const DistrictAdmin = () => {
           <button
             type="button"
             onClick={() => setShowAllActions((v) => !v)}
-            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
+            className="lg:hidden flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-3 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-4"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
               <Menu className="h-5 w-5 text-muted-foreground" />
@@ -246,85 +249,82 @@ const DistrictAdmin = () => {
             <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
           </button>
         </div>
-      </SectionCard>
+      </div>
 
-        <UserTargetsSection />
+      <UserTargetsSection />
 
-      <SectionCard
-        title="Transfer Approvals"
-        description="These transfer requests need district review before they move forward."
-        action={
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-base font-semibold">
+            <ArrowRightLeft className="h-5 w-5 text-orange-500" />
+            Transfer Approvals
+          </h2>
           <div className="flex items-center gap-2">
             {pendingTransfers.length > 0 && <Badge variant="destructive">{pendingTransfers.length}</Badge>}
             <Button variant="outline" size="icon" className="h-9 w-9" onClick={fetchPendingTransfers}>
               <RefreshCcw className="h-4 w-4" />
             </Button>
           </div>
-        }
-      >
-              <div className="flex items-center gap-2">
-                <ArrowRightLeft className="h-5 w-5 text-orange-500" />
-                <p className="text-sm font-semibold text-foreground">Approval Queue</p>
-              </div>
+        </div>
 
-            {loadingTransfers ? (
-              <div className="pt-4"><ListSkeleton rows={2} /></div>
-            ) : pendingTransfers.length === 0 ? (
-              <div className="py-6 text-center">
-                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
-                <p className="text-sm text-muted-foreground">No pending transfers to approve</p>
-              </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {pendingTransfers.map((transfer) => (
-                  <Card key={transfer._id}>
-                    <CardContent className="p-4">
-                      <p className="font-semibold text-sm">{transfer.member?.name}</p>
-                      <p className="text-xs text-muted-foreground">{transfer.member?.phone}</p>
-                      <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                        <span>{transfer.currentGroup?.name}</span>
-                        <span>→</span>
-                        <span>{transfer.targetGroup?.name}</span>
-                        {transfer.currentDistrict?._id !== transfer.targetDistrict?._id && (
-                          <Badge variant="outline" className="text-xs ml-1">Cross-District</Badge>
-                        )}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
-                          Source: {transfer.sourceDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
-                        </Badge>
-                        {transfer.isCrossDistrict && (
-                          <Badge variant="outline" className={`text-xs ${transfer.targetDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
-                            Target: {transfer.targetDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="mt-3 rounded-xl bg-muted/70 p-3 text-xs text-muted-foreground">{transfer.reason}</p>
-                      <div className="mt-3 flex gap-2">
-                        <Button
-                          size="sm"
-                          className="h-9 flex-1 bg-success text-xs text-success-foreground hover:bg-success/90"
-                          disabled={processingId === transfer._id}
-                          onClick={() => { setSelectedTransfer(transfer); setApproveDialogOpen(true); }}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-9 flex-1 text-destructive text-xs"
-                          disabled={processingId === transfer._id}
-                          onClick={() => { setSelectedTransfer(transfer); setRejectDialogOpen(true); }}
-                        >
-                          <XCircle className="h-3 w-3 mr-1" />Reject
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-      </SectionCard>
+        {loadingTransfers ? (
+          <div className="pt-4"><ListSkeleton rows={2} /></div>
+        ) : pendingTransfers.length === 0 ? (
+          <div className="py-6 text-center">
+            <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
+            <p className="text-sm text-muted-foreground">No pending transfers to approve</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pendingTransfers.map((transfer) => (
+              <Card key={transfer._id}>
+                <CardContent className="p-4">
+                  <p className="font-semibold text-sm">{transfer.member?.name}</p>
+                  <p className="text-xs text-muted-foreground">{transfer.member?.phone}</p>
+                  <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>{transfer.currentGroup?.name}</span>
+                    <span>→</span>
+                    <span>{transfer.targetGroup?.name}</span>
+                    {transfer.currentDistrict?._id !== transfer.targetDistrict?._id && (
+                      <Badge variant="outline" className="text-xs ml-1">Cross-District</Badge>
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <Badge variant="outline" className={`text-xs ${transfer.sourceDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
+                      Source: {transfer.sourceDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
+                    </Badge>
+                    {transfer.isCrossDistrict && (
+                      <Badge variant="outline" className={`text-xs ${transfer.targetDistrictApproval?.status === 'approved' ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
+                        Target: {transfer.targetDistrictApproval?.status === 'approved' ? '✓' : 'pending'}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-3 rounded-xl bg-muted/70 p-3 text-xs text-muted-foreground">{transfer.reason}</p>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      className="h-9 flex-1 bg-success text-xs text-success-foreground hover:bg-success/90"
+                      disabled={processingId === transfer._id}
+                      onClick={() => { setSelectedTransfer(transfer); setApproveDialogOpen(true); }}
+                    >
+                      <CheckCircle className="h-3 w-3 mr-1" />Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 flex-1 text-destructive text-xs"
+                      disabled={processingId === transfer._id}
+                      onClick={() => { setSelectedTransfer(transfer); setRejectDialogOpen(true); }}
+                    >
+                      <XCircle className="h-3 w-3 mr-1" />Reject
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Approve Dialog */}
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>

@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { FileText, Check, X, MessageSquare, Clock, AlertCircle } from "lucide-react";
-import { PageShell, SectionCard } from "@/components/app/AppShell";
+import { SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
@@ -99,9 +99,10 @@ const Requests = () => {
   };
 
   return (
-    <PageShell contentClassName="pb-24">
+    <div className="app-page">
       <HeaderWithLogout icon={<FileText className="h-6 w-6 text-primary-foreground" />} title="Requests" />
 
+      <main className="app-main pb-24">
       <SectionCard title="Pending Queue" description="Requests awaiting your action.">
         {loading ? (
           <ListSkeleton rows={4} />
@@ -166,9 +167,10 @@ const Requests = () => {
           </div>
         )}
       </SectionCard>
+      </main>
 
       <BottomNav />
-    </PageShell>
+    </div>
   );
 };
 

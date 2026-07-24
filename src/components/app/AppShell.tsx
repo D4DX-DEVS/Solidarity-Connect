@@ -58,15 +58,14 @@ function PageShell({ children, className, contentClassName }: PageShellProps) {
 function PageHero({ title, subtitle, eyebrow, icon, actions, details, className }: PageHeroProps) {
   return (
     <section className={cn("hero-card", className)}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 gap-3 sm:gap-4">
-          <div className="hero-icon">{icon}</div>
-          <div className="min-w-0 space-y-1.5">
-            {eyebrow ? <p className="hero-eyebrow">{eyebrow}</p> : null}
-            <div className="space-y-1">
-              <h1 className="hero-title">{title}</h1>
-              {subtitle ? <p className="hero-subtitle">{subtitle}</p> : null}
-            </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+          {/* ponytail: brand logo everywhere; per-page icon prop kept for API compat but unused */}
+          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-12 w-12 shrink-0 rounded-2xl object-contain lg:hidden" />
+          {/* ponytail: eyebrow dropped for uniform h-20 header; prop kept for API compat */}
+          <div className="min-w-0 space-y-0.5">
+            <h1 className="hero-title truncate">{title}</h1>
+            {subtitle ? <p className="hero-subtitle truncate">{subtitle}</p> : null}
           </div>
         </div>
         {actions ? <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div> : null}
@@ -79,16 +78,17 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className 
 function SectionCard({ title, description, action, children, className, contentClassName }: SectionCardProps) {
   return (
     <Card className={cn("surface-card", className)}>
-      <CardHeader className="space-y-3 p-5 pb-0 sm:p-6 sm:pb-0">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <CardHeader className="space-y-3 p-4 pb-0 sm:p-6 sm:pb-0">
+        <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <CardTitle className="text-base font-semibold tracking-tight sm:text-lg">{title}</CardTitle>
-            {description ? <CardDescription className="text-sm">{description}</CardDescription> : null}
+            {/* ponytail: descriptions hidden on mobile to save vertical space */}
+            {description ? <CardDescription className="hidden text-sm sm:block">{description}</CardDescription> : null}
           </div>
           {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       </CardHeader>
-      <CardContent className={cn("p-5 pt-5 sm:p-6 sm:pt-5", contentClassName)}>{children}</CardContent>
+      <CardContent className={cn("p-4 pt-4 sm:p-6 sm:pt-5", contentClassName)}>{children}</CardContent>
     </Card>
   );
 }
