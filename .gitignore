@@ -27,3 +27,25 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+.playwright-mcp/
+
+# code-review-graph
+.code-review-graph/
+
+# Crash dumps
+*.stackdump
+
+# Member/admin PII data dumps (migration artifacts)
+admin-dis.json
+admins-st.json
+leaders-Dis.json
+state.json
+migration-failures.md
+migration-failures.json
+migration-data.xlsx
+new members.json

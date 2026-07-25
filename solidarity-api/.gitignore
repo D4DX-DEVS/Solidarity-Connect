@@ -66,6 +66,19 @@ jspm_packages/
 .env.*
 !.env.example
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Crash dumps
+*.stackdump
+
+# Member/admin PII data dumps (migration artifacts)
+migration-failures.json
+migration-data.xlsx
+new members.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
