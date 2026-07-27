@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, ShieldCheck } from "lucide-react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, ShieldCheck, Download, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Member {
   _id: string;
@@ -64,10 +74,6 @@ const Members = () => {
   const { userRole, userDistrict, userGroup, user } = useAuth();
   const { toast } = useToast();
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statistics, setStatistics] = useState({
     total: 0,
     active: 0,
@@ -98,6 +104,7 @@ const Members = () => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [exporting, setExporting] = useState(false);
 
   // Debounced search state
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
@@ -116,103 +123,76 @@ const Members = () => {
     setCurrentPage(1);
   }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus]);
 
-  // Fetch districts and groups ONCE on mount (not on every page change)
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        if (userRole === 'state_admin') {
-          const districtsResult = await districtsAPI.getDistricts({ limit: 100 });
-          setDistricts(districtsResult.data || []);
-        }
-        if (userRole === 'state_admin' || userRole === 'district_admin') {
-          const groupParams: any = { limit: 100 };
-          if (userRole === 'district_admin' && userDistrict) {
-            groupParams.district = user?.district?._id;
-          }
-          const groupsResult = await groupsAPI.getGroups(groupParams);
-          setGroups(groupsResult.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch filter data:', error);
-      }
-    };
-    fetchFilters();
-  }, [userRole, userDistrict]);
+  // ponytail: cached queries — filters and list survive navigation away and back
+  const { data: districts = [] } = useQuery({
+    queryKey: ['members', 'districts'],
+    queryFn: async () => ((await districtsAPI.getDistricts({ limit: 100 })).data || []) as District[],
+    enabled: userRole === 'state_admin',
+  });
 
-  // Fetch members and related data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const params = new URLSearchParams();
-        if (debouncedSearchQuery) params.append('search', debouncedSearchQuery);
-        if (selectedDistrict) params.append('district', selectedDistrict);
-        if (selectedGroup) params.append('group', selectedGroup);
-        if (selectedStatus === 'pending_approval') {
-          params.append('isApproved', 'false');
-        } else if (selectedStatus) {
-          params.append('status', selectedStatus);
-        }
-        params.append('page', currentPage.toString());
-        params.append('limit', itemsPerPage.toString());
-        params.append('sort', '-createdAt');
-        // Skip heavy stats aggregation on page 2+; keep stats when filters change (page resets to 1)
-        if (currentPage > 1) params.append('includeStats', 'false');
+  // Group list narrows to the selected district when one is picked
+  const groupDistrictId = selectedDistrict || (userRole === 'district_admin' ? user?.district?._id : undefined);
+  const { data: groups = [] } = useQuery({
+    queryKey: ['members', 'groups', groupDistrictId ?? null],
+    queryFn: async () => {
+      const params: Record<string, string | number> = { limit: 100 };
+      if (groupDistrictId) params.district = groupDistrictId;
+      return ((await groupsAPI.getGroups(params)).data || []) as Group[];
+    },
+    enabled: userRole === 'state_admin' || userRole === 'district_admin',
+  });
 
-        // Fetch members only
-        const membersResult = await membersAPI.getMembers(Object.fromEntries(params));
-
-        if (membersResult) {
-          setMembers(membersResult.data || []);
-          if (membersResult.statistics) {
-            setStatistics(membersResult.statistics);
-          }
-
-          // Update pagination state
-          if (membersResult.pagination) {
-            setTotalPages(membersResult.pagination.totalPages);
-            setTotalDocs(membersResult.pagination.totalDocs);
-            setHasNextPage(membersResult.pagination.hasNextPage);
-            setHasPrevPage(membersResult.pagination.hasPrevPage);
-          }
-        }
-
-      } catch (error) {
-        console.error('Failed to fetch members:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load members",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [debouncedSearchQuery, selectedDistrict, selectedGroup, selectedStatus, currentPage, refreshKey, itemsPerPage, toast]);
-
-  // Reset groups when district changes
+  // Clear the group filter whenever the district filter changes
   useEffect(() => {
     if (selectedDistrict && (userRole === 'state_admin' || userRole === 'district_admin')) {
-      setSelectedGroup(""); // Clear group selection when district changes
-
-      // Fetch groups for the selected district
-      const fetchDistrictGroups = async () => {
-        try {
-          const groupsResult = await groupsAPI.getGroups({
-            district: selectedDistrict,
-            limit: 100
-          });
-          setGroups(groupsResult.data || []);
-        } catch (error) {
-          console.error('Failed to fetch district groups:', error);
-        }
-      };
-
-      fetchDistrictGroups();
+      setSelectedGroup("");
     }
   }, [selectedDistrict, userRole]);
+
+  // Shared with handleExport so the download always matches the on-screen filters
+  const memberFilterParams = {
+    ...(debouncedSearchQuery ? { search: debouncedSearchQuery } : {}),
+    ...(selectedDistrict ? { district: selectedDistrict } : {}),
+    ...(selectedGroup ? { group: selectedGroup } : {}),
+    ...(selectedStatus === 'pending_approval'
+      ? { isApproved: 'false' }
+      : selectedStatus ? { status: selectedStatus } : {}),
+  };
+
+  const memberQueryParams = {
+    ...memberFilterParams,
+    page: currentPage.toString(),
+    limit: itemsPerPage.toString(),
+    sort: '-createdAt',
+    // Skip heavy stats aggregation on page 2+; page resets to 1 when filters change
+    ...(currentPage > 1 ? { includeStats: 'false' } : {}),
+  };
+
+  const { data: membersResult, isPending: loading, isError: membersError } = useQuery({
+    queryKey: ['members', 'list', memberQueryParams, refreshKey],
+    queryFn: () => membersAPI.getMembers(memberQueryParams),
+    placeholderData: keepPreviousData,
+  });
+
+  const members: Member[] = membersResult?.data || [];
+
+  useEffect(() => {
+    if (membersError) {
+      toast({ title: "Error", description: "Failed to load members", variant: "destructive" });
+    }
+  }, [membersError, toast]);
+
+  // Stats only come back on page 1 — keep the last known set for later pages
+  useEffect(() => {
+    if (membersResult?.statistics) setStatistics(membersResult.statistics);
+    const p = membersResult?.pagination;
+    if (p) {
+      setTotalPages(p.totalPages);
+      setTotalDocs(p.totalDocs);
+      setHasNextPage(p.hasNextPage);
+      setHasPrevPage(p.hasPrevPage);
+    }
+  }, [membersResult]);
 
   // Navigate to next page
   const goToNextPage = () => {
@@ -253,6 +233,76 @@ const Members = () => {
       });
     } finally {
       setApprovingMemberId(null);
+    }
+  };
+
+  const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Status', 'District', 'Group', 'Approved', 'Joined'];
+  const memberExportRow = (m: Member) => [
+    m.name,
+    m.phone,
+    m.email || '',
+    m.status,
+    m.district ? `${m.district.name} (${m.district.code})` : '',
+    m.group ? `${m.group.name} (${m.group.code})` : '',
+    m.isApproved ? 'Yes' : 'No',
+    m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '',
+  ];
+
+  // Fetches every member matching the current filters, not just the visible page.
+  // Backend clamps `limit` to 100/request regardless of what we pass, so this
+  // pages through in batches of 100 and concatenates the results.
+  const fetchAllFilteredMembers = async (): Promise<Member[]> => {
+    const all: Member[] = [];
+    let page = 1;
+    let totalPages = 1;
+    do {
+      const res = await membersAPI.getMembers({
+        ...memberFilterParams,
+        page: page.toString(),
+        limit: '100',
+        sort: '-createdAt',
+        includeStats: 'false',
+      });
+      all.push(...((res.data || []) as Member[]));
+      totalPages = res.pagination?.totalPages || 1;
+      page += 1;
+    } while (page <= totalPages);
+    return all;
+  };
+
+  const handleExport = async (format: 'excel' | 'pdf') => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const members = await fetchAllFilteredMembers();
+      const rows = members.map(memberExportRow);
+      const filename = `members-${new Date().toISOString().split('T')[0]}`;
+
+      if (format === 'excel') {
+        const sheet = XLSX.utils.aoa_to_sheet([EXPORT_HEADERS, ...rows]);
+        sheet['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 24 }, { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 10 }, { wch: 12 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, sheet, 'Members');
+        XLSX.writeFile(wb, `${filename}.xlsx`);
+      } else {
+        const doc = new jsPDF({ orientation: 'landscape' });
+        doc.text('Members', 14, 12);
+        autoTable(doc, {
+          head: [EXPORT_HEADERS],
+          body: rows,
+          startY: 18,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [39, 39, 42] },
+        });
+        doc.save(`${filename}.pdf`);
+      }
+
+      toast({ title: 'Exported', description: `${rows.length} member${rows.length === 1 ? '' : 's'} exported as ${format === 'excel' ? 'Excel' : 'PDF'} file` });
+    } catch (error) {
+      console.error('Failed to export members:', error);
+      toast({ title: 'Error', description: 'Failed to export members', variant: 'destructive' });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -368,7 +418,27 @@ const Members = () => {
               <span> • Page {currentPage} of {totalPages}</span>
             )}
           </span>
-          <PageSizeInput className="shrink-0" value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
+          <div className="flex shrink-0 items-center gap-1.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  disabled={exporting || totalDocs === 0}
+                  aria-label="Download members"
+                  title="Download members"
+                >
+                  {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport('excel')}>Excel (.xlsx)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF (.pdf)</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
+          </div>
         </div>
 
         {loading ? (

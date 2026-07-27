@@ -108,12 +108,12 @@ function MetricCard({ title, value, detail, icon: Icon, tone = "neutral", classN
     >
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-[13px] font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold tracking-tight text-foreground sm:text-[1.7rem]">{value}</p>
-            {detail ? <p className="text-xs text-muted-foreground sm:text-sm">{detail}</p> : null}
+          <div className="min-w-0 space-y-1">
+            <p className="truncate text-[13px] font-medium text-muted-foreground">{title}</p>
+            <p className="truncate text-2xl font-bold tracking-tight text-foreground sm:text-[1.7rem]">{value}</p>
+            {detail ? <p className="truncate text-xs text-muted-foreground sm:text-sm">{detail}</p> : null}
           </div>
-          <div className={cn("metric-icon", toneClasses[tone])}>
+          <div className={cn("metric-icon shrink-0", toneClasses[tone])}>
             <Icon className="h-5 w-5" />
           </div>
         </div>

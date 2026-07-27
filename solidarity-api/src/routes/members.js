@@ -244,25 +244,17 @@ router.get('/user-context', authenticate, async (req, res) => {
       canBulkImport: req.user.permissions.includes('bulk_import')
     };
 
+    // Orphaned admins (missing/dangling district or group ref) must not crash here —
+    // report the gap so the UI can show a "contact admin" state instead of a 500.
+    const scope = (doc) => doc ? { _id: doc._id, name: doc.name, code: doc.code } : null;
+
     if (req.user.role === 'group_admin') {
-      // For group admin, provide their assigned district and group
-      context.assignedDistrict = {
-        _id: req.user.district._id,
-        name: req.user.district.name,
-        code: req.user.district.code
-      };
-      context.assignedGroup = {
-        _id: req.user.group._id,
-        name: req.user.group.name,
-        code: req.user.group.code
-      };
+      context.assignedDistrict = scope(req.user.district);
+      context.assignedGroup = scope(req.user.group);
+      context.scopeMissing = !req.user.group || !req.user.district;
     } else if (req.user.role === 'district_admin') {
-      // For district admin, provide their assigned district
-      context.assignedDistrict = {
-        _id: req.user.district._id,
-        name: req.user.district.name,
-        code: req.user.district.code
-      };
+      context.assignedDistrict = scope(req.user.district);
+      context.scopeMissing = !req.user.district;
     }
 
     res.status(200).json({

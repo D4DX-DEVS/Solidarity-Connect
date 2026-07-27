@@ -17,9 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { uploadsAPI, notificationsAPI, memberAuthAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,8 +55,8 @@ const getFileIcon = (mimetype: string) => {
   return FileText;
 };
 
-const Announcements = () => {
-  const navigate = useNavigate();
+/** Announcements list + create form. Rendered inside the merged Alerts page. */
+const AnnouncementsPanel = () => {
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isStateAdmin = userRole === 'state_admin';
@@ -277,21 +274,7 @@ const Announcements = () => {
   };
 
   return (
-    <div className="app-page">
-      <div className="app-page-orb app-page-orb-primary" aria-hidden />
-      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
-      <HeaderWithLogout
-        icon={<Megaphone className="h-6 w-6 text-primary-foreground" />}
-        title="Announcements"
-        subtitle="Send announcements to users"
-        leftAction={
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-        }
-      />
-
-      <main className="app-main pt-4 space-y-4">
+    <div className="space-y-4">
         {/* Create Form */}
         {canCreate && showForm && (
           <SectionCard
@@ -576,11 +559,8 @@ const Announcements = () => {
             </div>
           )}
         </SectionCard>
-      </main>
-
-      <BottomNav />
     </div>
   );
 };
 
-export default Announcements;
+export default AnnouncementsPanel;

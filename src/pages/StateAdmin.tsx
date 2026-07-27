@@ -21,7 +21,8 @@ import { MetricCard } from "@/components/app/AppShell";
 import { PageSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
@@ -94,15 +95,52 @@ const StateAdmin = () => {
   const { toast } = useToast();
   const { logout, user } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [baithulMaalStats, setBaithulMaalStats] = useState<BaithulMaalStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [showAllActions, setShowAllActions] = useState(false);
+  const queryClient = useQueryClient();
 
-  // State admin recurring targets
-  const [myRecurringTargets, setMyRecurringTargets] = useState<any[]>([]);
-  const [myMarks, setMyMarks] = useState<Record<string, Record<string, boolean>>>({});
+  // ponytail: cached queries, not useEffect+setState — revisiting the dashboard
+  // paints from cache instead of refetching everything.
+  const { data: dashboardData = null, isPending: loading } = useQuery({
+    queryKey: ['state-admin', 'dashboard'],
+    queryFn: async () => (await reportsAPI.getDashboard()).data as DashboardData,
+  });
+
+  const { data: userStats = null } = useQuery({
+    queryKey: ['state-admin', 'user-stats'],
+    queryFn: async () => (await usersAPI.getUserStats()).data.statistics as UserStats,
+  });
+
+  const { data: baithulMaalStats = null } = useQuery({
+    queryKey: ['state-admin', 'baithul-stats'],
+    queryFn: async () => (await baithulMaalAPI.getStats()).data as BaithulMaalStats,
+  });
+
+  const { data: myRecurringTargets = [] } = useQuery({
+    queryKey: ['state-admin', 'recurring-targets'],
+    queryFn: async () => {
+      const res = await apiCall('/personal-targets?isRecurring=true&targetAudience=state_admins&limit=50');
+      const now = new Date();
+      return (res.data || []).filter((t: any) =>
+        t.isRecurring && t.targetAudience === 'state_admins' &&
+        t.status === 'active' &&
+        new Date(t.startDate) <= now && new Date(t.endDate) >= now
+      );
+    },
+  });
+
+  const { data: myMarks = {} } = useQuery({
+    queryKey: ['state-admin', 'recurring-marks'],
+    queryFn: async () => {
+      const res = await apiCall('/recurring-marks/my');
+      const marksMap: Record<string, Record<string, boolean>> = {};
+      for (const m of (res.data || [])) {
+        if (!marksMap[m.targetId]) marksMap[m.targetId] = {};
+        marksMap[m.targetId][`${m.year}-${m.month}-${m.week || 0}`] = m.completed;
+      }
+      return marksMap;
+    },
+  });
+
   const [markingLoading, setMarkingLoading] = useState<string | null>(null);
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -134,75 +172,6 @@ const StateAdmin = () => {
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-
-      // Fetch dashboard overview
-      const dashboardResult = await reportsAPI.getDashboard();
-      setDashboardData(dashboardResult.data);
-
-      // Fetch user statistics
-      const userStatsResult = await usersAPI.getUserStats();
-      setUserStats(userStatsResult.data.statistics);
-
-      // Fetch Baithul Maal statistics
-      const baithulMaalResult = await baithulMaalAPI.getStats();
-      setBaithulMaalStats(baithulMaalResult.data);
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboardData();
-    fetchMyRecurringTargets();
-    fetchMyMarks();
-  }, []);
-
-  const fetchMyRecurringTargets = async () => {
-    try {
-      const res = await apiCall('/personal-targets?isRecurring=true&targetAudience=state_admins&limit=50');
-      const now = new Date();
-      const filtered = (res.data || []).filter((t: any) =>
-        t.isRecurring && t.targetAudience === 'state_admins' &&
-        t.status === 'active' &&
-        new Date(t.startDate) <= now && new Date(t.endDate) >= now
-      );
-      setMyRecurringTargets(filtered);
-    } catch {}
-  };
-
-  const fetchMyMarks = async () => {
-    try {
-      const res = await apiCall('/recurring-marks/my');
-      const marksMap: Record<string, Record<string, boolean>> = {};
-      for (const m of (res.data || [])) {
-        if (!marksMap[m.targetId]) marksMap[m.targetId] = {};
-        const week = m.week || 0;
-        marksMap[m.targetId][`${m.year}-${m.month}-${week}`] = m.completed;
-      }
-      setMyMarks(marksMap);
-    } catch {}
-  };
-
   const toggleMark = async (targetId: string, year: number, month: number, week: number = 0) => {
     const key = `${year}-${month}-${week}`;
     const current = myMarks[targetId]?.[key] || false;
@@ -210,10 +179,13 @@ const StateAdmin = () => {
     setMarkingLoading(loadingKey);
     try {
       await apiCall('/recurring-marks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, year, month, week, completed: !current }) });
-      setMyMarks(prev => ({
-        ...prev,
-        [targetId]: { ...prev[targetId], [key]: !current }
-      }));
+      queryClient.setQueryData(
+        ['state-admin', 'recurring-marks'],
+        (prev: Record<string, Record<string, boolean>> = {}) => ({
+          ...prev,
+          [targetId]: { ...prev[targetId], [key]: !current },
+        })
+      );
     } catch {
       toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
     } finally {
@@ -329,8 +301,10 @@ const StateAdmin = () => {
 
   return (
     <div className="app-page">
-      <div className="sticky top-0 z-40 flex h-20 items-center justify-between gap-2 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 shadow-md sm:px-6 lg:px-8">
-        <div className="min-w-0">
+      <div className="sticky top-0 z-40 flex h-20 items-center justify-between gap-3 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 shadow-md sm:px-6 lg:px-8">
+        {/* ponytail: brand logo on mobile only — matches HeaderWithLogout/PageHero */}
+        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain lg:hidden" />
+        <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg md:text-xl font-semibold text-primary-foreground">
             {`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
           </h1>

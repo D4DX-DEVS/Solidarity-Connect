@@ -6,6 +6,8 @@ import { SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
+import AnnouncementsPanel from "@/components/AnnouncementsPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -131,29 +133,27 @@ const Notifications = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="app-page">
-        <HeaderWithLogout
-          icon={<Bell className="h-6 w-6 text-primary-foreground" />}
-          title="Notifications"
-        />
-        <main className="app-main pt-4">
-          <ListSkeleton rows={5} />
-        </main>
-        <BottomNav />
-      </div>
-    );
-  }
+  return (
+    <div className="app-page">
+      <div className="app-page-orb app-page-orb-primary" aria-hidden />
+      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
+      <HeaderWithLogout
+        icon={<Bell className="h-6 w-6 text-primary-foreground" />}
+        title="Alerts"
+      />
 
-  if (error) {
-    return (
-      <div className="app-page">
-        <HeaderWithLogout
-          icon={<Bell className="h-6 w-6 text-primary-foreground" />}
-          title="Notifications"
-        />
-        <main className="app-main pt-4">
+      <main className="app-main pt-4 space-y-4">
+        {/* ponytail: notifications + announcements merged into one page for every role */}
+        <Tabs defaultValue="notifications" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="notifications" className="mt-0 space-y-4">
+        {loading ? (
+          <ListSkeleton rows={5} />
+        ) : error ? (
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
               <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
@@ -163,22 +163,8 @@ const Notifications = () => {
               </Button>
             </div>
           </div>
-        </main>
-        <BottomNav />
-      </div>
-    );
-  }
-
-  return (
-    <div className="app-page">
-      <div className="app-page-orb app-page-orb-primary" aria-hidden />
-      <div className="app-page-orb app-page-orb-secondary" aria-hidden />
-      <HeaderWithLogout
-        icon={<Bell className="h-6 w-6 text-primary-foreground" />}
-        title="Notifications"
-      />
-
-      <main className="app-main pt-4 space-y-4">
+        ) : (
+        <>
         <SectionCard
           title="Notifications"
           description={userRole === "state_admin"
@@ -326,6 +312,14 @@ const Notifications = () => {
             </Button>
           </div>
         )}
+        </>
+        )}
+          </TabsContent>
+
+          <TabsContent value="announcements" className="mt-0">
+            <AnnouncementsPanel />
+          </TabsContent>
+        </Tabs>
       </main>
 
       <BottomNav />

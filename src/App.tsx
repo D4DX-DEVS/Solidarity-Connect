@@ -16,7 +16,6 @@ import ManageDistricts from "./pages/ManageDistricts";
 import ManageGroups from "./pages/ManageGroups";
 import MasterData from "./pages/MasterData";
 import TransferApprovals from "./pages/TransferApprovals";
-import MeetingAgenda from "./pages/MeetingAgenda";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
 import MeetingDetail from "./pages/MeetingDetail";
 import Members from "./pages/Members";
@@ -39,7 +38,6 @@ import PersonalTargets from "./pages/PersonalTargets";
 import UserManagement from "./pages/UserManagement";
 import RoleManagement from "./pages/RoleManagement";
 import Leaders from "./pages/Leaders";
-import Announcements from "./pages/Announcements";
 import OrgFiles from "./pages/OrgFiles";
 import Consolidation from "./pages/Consolidation";
 import MyTargets from "./pages/MyTargets";
@@ -53,6 +51,11 @@ const queryClient = new QueryClient({
         if (error?.status >= 400 && error?.status < 500) return false;
         return failureCount < 3;
       },
+      // ponytail: one global cache policy instead of per-hook staleTime.
+      // Cached data paints instantly on revisit; refetch runs in background.
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -82,7 +85,8 @@ const App = () => (
             <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><ManageGroups /></ProtectedRoute>} />
             <Route path="/state-admin/master-data" element={<ProtectedRoute requiredRoles={['state_admin']}><MasterData /></ProtectedRoute>} />
             <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
-            <Route path="/state-admin/meeting-agenda" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingAgenda /></ProtectedRoute>} />
+            {/* ponytail: agenda list folded into the single meetings workspace */}
+            <Route path="/state-admin/meeting-agenda" element={<Navigate to="/admin/meetings-view" replace />} />
             <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
             <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute>} />
             <Route path="/state-admin/send-notification" element={<ProtectedRoute requiredRoles={['state_admin']}><SendNotification /></ProtectedRoute>} />
@@ -107,7 +111,8 @@ const App = () => (
             <Route path="/state-admin/users" element={<ProtectedRoute requiredRoles={['state_admin']}><UserManagement /></ProtectedRoute>} />
             <Route path="/role-management" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><RoleManagement /></ProtectedRoute>} />
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
-            <Route path="/announcements" element={<ProtectedRoute><Announcements /></ProtectedRoute>} />
+            {/* ponytail: announcements are a tab on the merged alerts page */}
+            <Route path="/announcements" element={<Navigate to="/notifications" replace />} />
             <Route path="/org-files" element={<ProtectedRoute><OrgFiles /></ProtectedRoute>} />
             <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><Consolidation /></ProtectedRoute>} />
             </Route>

@@ -1,5 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { meetingsApi, Meeting, CreateMeetingData, CreateMonthlyMeetingData, CreateFormData } from '@/lib/meetings';
+import { meetingsAPI } from '@/utils/api';
 
 // Query keys
 export const meetingKeys = {
@@ -10,6 +11,18 @@ export const meetingKeys = {
   detail: (id: string) => [...meetingKeys.details(), id] as const,
   upcoming: () => [...meetingKeys.all, 'upcoming'] as const,
   createData: () => [...meetingKeys.all, 'create-data'] as const,
+  adminOverview: (filters: Record<string, any>) => [...meetingKeys.all, 'admin-overview', filters] as const,
+};
+
+// Admin meetings overview (cached — no refetch-on-every-visit)
+export const useAdminMeetingsOverview = (filters: Record<string, any>) => {
+  return useQuery({
+    queryKey: meetingKeys.adminOverview(filters),
+    queryFn: () => meetingsAPI.getAdminOverview(
+      Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '' && v != null).map(([k, v]) => [k, String(v)]))
+    ),
+    placeholderData: keepPreviousData,
+  });
 };
 
 // Get all meetings

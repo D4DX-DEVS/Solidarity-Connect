@@ -1002,17 +1002,14 @@ router.get('/attendance/summary',
             groupName: { $first: '$groupInfo.name' },
             groupCode: { $first: '$groupInfo.code' },
             totalRecords: { $sum: 1 },
-            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
+            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } }
+          }
+        },
+        {
+          // $multiply is not an accumulator — the rate must be derived after $group
+          $addFields: {
             attendanceRate: {
-              $multiply: [
-                {
-                  $divide: [
-                    { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
-                    { $sum: 1 }
-                  ]
-                },
-                100
-              ]
+              $multiply: [{ $divide: ['$presentCount', '$totalRecords'] }, 100]
             }
           }
         },
@@ -1038,17 +1035,14 @@ router.get('/attendance/summary',
               month: '$meetingMonth'
             },
             totalRecords: { $sum: 1 },
-            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
+            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } }
+          }
+        },
+        {
+          // $multiply is not an accumulator — the rate must be derived after $group
+          $addFields: {
             attendanceRate: {
-              $multiply: [
-                {
-                  $divide: [
-                    { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
-                    { $sum: 1 }
-                  ]
-                },
-                100
-              ]
+              $multiply: [{ $divide: ['$presentCount', '$totalRecords'] }, 100]
             }
           }
         },

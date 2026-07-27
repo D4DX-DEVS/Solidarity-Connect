@@ -5,6 +5,7 @@ import { MetricCard } from "@/components/app/AppShell";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { reportsAPI } from "@/utils/api";
@@ -31,9 +32,6 @@ const Dashboard = () => {
   const { userRole, userDistrict, userGroup, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     // Redirect based on role
     if (userRole === "state_admin") {
@@ -43,42 +41,22 @@ const Dashboard = () => {
     }
   }, [userRole, navigate]);
 
+  // ponytail: cached — only group admins have dashboard data to fetch
+  const { data: dashboardData = null, isPending, isError } = useQuery({
+    queryKey: ['dashboard', 'group-admin'],
+    queryFn: async () => (await reportsAPI.getDashboard()).data as DashboardData,
+    enabled: userRole === 'group_admin',
+  });
+  const loading = userRole === 'group_admin' && isPending;
+
   useEffect(() => {
-    if (!userRole) return; // Still loading auth, wait
-
-    if (userRole !== 'group_admin') {
-      setLoading(false);
-      return;
-    }
-
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const result = await reportsAPI.getDashboard();
-
-        if (result && result.data) {
-          setDashboardData(result.data);
-        } else {
-          toast({
-            title: "Error",
-            description: result?.message || "Failed to fetch dashboard data",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error('Dashboard fetch error:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [userRole]);
+    if (!isError) return;
+    toast({
+      title: "Error",
+      description: "Failed to load dashboard data",
+      variant: "destructive",
+    });
+  }, [isError, toast]);
 
   const stats = dashboardData ? [
     {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Star, Search, ChevronLeft, ChevronRight, Users, Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,8 +67,6 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
 
-  const [leaders, setLeaders] = useState<Leader[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -244,53 +243,44 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
     loadUnitOptions();
   }, [requiresUnit, selectedDistrictId, selectedAreaId, userRole]);
 
-  const fetchLeaders = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, any> = { page: currentPage, limit: 10 };
-      if (activeTab !== "all") params.roleType = activeTab;
-      if (debouncedSearch) params.search = debouncedSearch;
-      if (requiresDistrict && selectedDistrictId) params.districtId = selectedDistrictId;
-      if (requiresArea && selectedAreaId) params.groupId = selectedAreaId;
-      if (requiresUnit && selectedUnit) params.unitName = selectedUnit;
-      if (requiresMurabiArea && selectedMurabiAreaId) params.groupId = selectedMurabiAreaId;
+  // ponytail: the list is cached; the cascading filter-option loaders above stay as-is —
+  // two effects share areaOptions, and untangling that buys no user-visible speed.
+  const leaderParams: Record<string, any> = {
+    page: currentPage,
+    limit: 10,
+    ...(activeTab !== "all" ? { roleType: activeTab } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(requiresDistrict && selectedDistrictId ? { districtId: selectedDistrictId } : {}),
+    ...(requiresArea && selectedAreaId ? { groupId: selectedAreaId } : {}),
+    ...(requiresUnit && selectedUnit ? { unitName: selectedUnit } : {}),
+    ...(requiresMurabiArea && selectedMurabiAreaId ? { groupId: selectedMurabiAreaId } : {}),
+  };
 
-      const result =
-        userRole === "member"
-          ? await leadersAPI.getMemberLeaders(params)
-          : await leadersAPI.getLeaders(params);
+  const { data: leadersResult, isPending: loading, isError: leadersError } = useQuery({
+    queryKey: ['leaders', 'list', userRole, leaderParams],
+    queryFn: () =>
+      userRole === "member"
+        ? leadersAPI.getMemberLeaders(leaderParams)
+        : leadersAPI.getLeaders(leaderParams),
+    placeholderData: keepPreviousData,
+  });
 
-      setLeaders(result.data || []);
-      if (result.pagination) {
-        setTotalPages(result.pagination.totalPages || 1);
-        setTotalDocs(result.pagination.totalDocs || 0);
-        setHasNextPage(result.pagination.hasNextPage || false);
-        setHasPrevPage(result.pagination.hasPrevPage || false);
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to load leaders", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    currentPage,
-    activeTab,
-    debouncedSearch,
-    userRole,
-    toast,
-    requiresDistrict,
-    requiresArea,
-    requiresUnit,
-    requiresMurabiArea,
-    selectedDistrictId,
-    selectedAreaId,
-    selectedUnit,
-    selectedMurabiAreaId,
-  ]);
+  const leaders: Leader[] = leadersResult?.data || [];
 
   useEffect(() => {
-    fetchLeaders();
-  }, [fetchLeaders]);
+    if (leadersError) {
+      toast({ title: "Error", description: "Failed to load leaders", variant: "destructive" });
+    }
+  }, [leadersError, toast]);
+
+  useEffect(() => {
+    const p = leadersResult?.pagination;
+    if (!p) return;
+    setTotalPages(p.totalPages || 1);
+    setTotalDocs(p.totalDocs || 0);
+    setHasNextPage(p.hasNextPage || false);
+    setHasPrevPage(p.hasPrevPage || false);
+  }, [leadersResult]);
 
   const content = (
       <div className="space-y-3">

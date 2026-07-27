@@ -1,6 +1,9 @@
-import { useState, useEffect } from "react";
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, Eye, Search, ArrowLeft, BarChart3, MapPin, Building2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Calendar, Clock, Users, Eye, Search, ArrowLeft, BarChart3, MapPin, ChevronLeft, ChevronRight, Plus, MoreVertical, Edit, Trash2, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +24,8 @@ import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
-import { meetingsAPI, districtsAPI } from "@/utils/api";
+import { useAdminMeetingsOverview, useMeetings, useDeleteMeeting } from "@/hooks/useMeetings";
+import { useDistricts } from "@/hooks/useDistricts";
 
 interface GroupProgress {
   groupId: string;
@@ -111,21 +115,11 @@ interface PaginationInfo {
 
 const AdminMeetingsView = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   useAuth();
-  const [meetings, setMeetings] = useState<MeetingData[]>([]);
-  const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingData | null>(null);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    currentPage: 1,
-    totalPages: 1,
-    totalDocs: 0,
-    limit: 20,
-    hasNextPage: false,
-    hasPrevPage: false
-  });
-  
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   // Filter states
   const [filters, setFilters] = useState({
     search: '',
@@ -148,49 +142,57 @@ const AdminMeetingsView = () => {
     itemsPerPage: 20
   });
 
-  const fetchMeetings = async () => {
+  const { data: overview, isPending: loading } = useAdminMeetingsOverview(filters);
+  const meetings: MeetingData[] = overview?.data ?? [];
+  const summaryStats: SummaryStats | null = overview?.summaryStats ?? null;
+  const pagination: PaginationInfo = overview?.pagination ?? {
+    currentPage: 1,
+    totalPages: 1,
+    totalDocs: 0,
+    limit: 20,
+    hasNextPage: false,
+    hasPrevPage: false,
+  };
+
+  const { data: districtsResponse } = useDistricts();
+  const districts: District[] = (districtsResponse?.data as District[]) ?? [];
+
+  // Agendas tab: full list + edit/delete
+  const { data: agendaResponse, isPending: agendasLoading } = useMeetings();
+  const agendas = agendaResponse?.data || [];
+  const deleteMeeting = useDeleteMeeting();
+
+  const handleDeleteMeeting = async (meetingId: string, meetingTitle: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${meetingTitle}"?`)) return;
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value.toString());
-      });
-
-      const result = await meetingsAPI.getAdminOverview(Object.fromEntries(queryParams));
-      setMeetings(result.data);
-      setSummaryStats(result.summaryStats);
-      setPagination(result.pagination);
-    } catch (error) {
-      console.error('Error fetching meetings:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load meetings data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      await deleteMeeting.mutateAsync(meetingId);
+      toast({ title: "Success", description: "Meeting deleted successfully" });
+    } catch {
+      toast({ title: "Error", description: "Failed to delete meeting", variant: "destructive" });
     }
   };
 
-  const fetchDistricts = async () => {
-    try {
-      const result = await districtsAPI.getDistricts();
-      setDistricts(result.data || []);
-    } catch (error) {
-      console.error('Error fetching districts:', error);
+  const getAgendaStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'ongoing': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'postponed': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  useEffect(() => {
-    fetchMeetings();
-  }, [filters]);
-
-  useEffect(() => {
-    fetchDistricts();
-  }, []);
+  const getTargetAudienceText = (meeting: any) => {
+    switch (meeting.targetAudience) {
+      case 'all': return 'All Members';
+      case 'group_admins': return 'Area Admins';
+      case 'district_admins': return 'District Admins';
+      case 'specific_groups': return `${meeting.targetGroups?.length || 0} Groups`;
+      case 'specific_districts': return `${meeting.targetDistricts?.length || 0} Districts`;
+      default: return meeting.targetAudience || 'Unknown';
+    }
+  };
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ 
@@ -247,13 +249,14 @@ const AdminMeetingsView = () => {
           icon={<Eye className="h-6 w-6 text-primary-foreground" />}
           title="Meeting Details"
           leftAction={
-            <Button 
-              variant="ghost" 
-              size="sm"
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Back"
+              className="shrink-0 text-white hover:bg-white/15 hover:text-white"
               onClick={() => setSelectedMeeting(null)}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           }
         />
@@ -600,10 +603,23 @@ const AdminMeetingsView = () => {
     <div className="app-page pb-20">
       <HeaderWithLogout
         icon={<Calendar className="h-6 w-6 text-primary-foreground" />}
-        title="Admin Meetings View"
+        title="Meetings"
       />
 
       <main className="app-main space-y-4">
+        <Tabs defaultValue="overview" className="space-y-4">
+          <div className="flex items-center gap-2">
+            <TabsList className="grid flex-1 grid-cols-2">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="agendas">Agendas</TabsTrigger>
+            </TabsList>
+            <Button size="sm" onClick={() => navigate("/state-admin/create-meeting")}>
+              <Plus className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">New</span>
+            </Button>
+          </div>
+
+          <TabsContent value="overview" className="space-y-4 mt-0">
         {/* Summary Statistics */}
         {summaryStats && (
           <SectionCard title="Overview" description="Track meeting completion and program conduction across all groups.">
@@ -844,6 +860,93 @@ const AdminMeetingsView = () => {
             </CardContent>
           </Card>
         )}
+          </TabsContent>
+
+          <TabsContent value="agendas" className="mt-0">
+            <SectionCard title="Scheduled Meetings" description="Create, edit, or remove meeting agendas.">
+              {agendasLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+                </div>
+              ) : agendas.length === 0 ? (
+                <Card className="surface-card p-8 text-center shadow-sm">
+                  <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                  <h2 className="font-semibold text-lg mb-2">No Meetings Scheduled</h2>
+                  <p className="text-sm text-muted-foreground">Create a meeting agenda to notify all members.</p>
+                </Card>
+              ) : (
+                <div className="space-y-2 sm:space-y-3">
+                  {agendas.map((meeting: any) => {
+                    const isExpanded = expandedId === meeting._id;
+                    return (
+                      <Card
+                        key={meeting._id}
+                        className="surface-card cursor-pointer shadow-sm"
+                        onClick={() => setExpandedId(isExpanded ? null : meeting._id)}
+                      >
+                        <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="truncate font-semibold text-base sm:text-lg">{meeting.title || 'Untitled Meeting'}</h3>
+                              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                                <span className="flex items-center gap-1 whitespace-nowrap">
+                                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                                  {meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a') : 'No date set'}
+                                </span>
+                                <span className="flex items-center gap-1 whitespace-nowrap">
+                                  <Users className="h-3.5 w-3.5 shrink-0" />
+                                  {getTargetAudienceText(meeting)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-1">
+                              <Badge className={getAgendaStatusColor(meeting.status || 'unknown')}>
+                                {meeting.status ? meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1) : 'Unknown'}
+                              </Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => navigate(`/state-admin/meeting/${meeting._id}`)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteMeeting(meeting._id, meeting.title || 'Untitled Meeting')}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                        </CardHeader>
+                        {isExpanded && (
+                          <CardContent className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
+                            {meeting.description && (
+                              <p className="mb-2 text-sm text-muted-foreground">{meeting.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                              <span>Duration: {meeting.duration || 0} min</span>
+                              <span>Type: {meeting.meetingType ? meeting.meetingType.replace(/_/g, ' ') : 'Unknown'}</span>
+                              <span>Created by {meeting.createdBy?.name || 'Unknown'}</span>
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
       </main>
 
       <BottomNav />

@@ -24,7 +24,8 @@ import BottomNav from "@/components/BottomNav";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { apiCall } from "@/utils/api";
 
@@ -56,10 +57,7 @@ const DistrictAdmin = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [showAllActions, setShowAllActions] = useState(false);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [pendingTransfers, setPendingTransfers] = useState<TransferRequest[]>([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [loadingTransfers, setLoadingTransfers] = useState(true);
+  const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -70,35 +68,20 @@ const DistrictAdmin = () => {
   const [commentText, setCommentText] = useState("");
   const [rejectReason, setRejectReason] = useState("");
 
-  useEffect(() => {
-    fetchStats();
-    fetchPendingTransfers();
-  }, []);
+  // ponytail: cached queries so returning to the dashboard paints from cache
+  const { data: stats = null, isPending: loadingStats } = useQuery({
+    queryKey: ['district-admin', 'dashboard'],
+    queryFn: async () => (await apiCall("/reports/dashboard")).data as DashboardStats,
+  });
 
-  const fetchStats = async () => {
-    try {
-      setLoadingStats(true);
-      const result = await apiCall("/reports/dashboard");
-      setStats(result.data);
-    } catch (err) {
-      console.error("Failed to fetch district stats:", err);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
+  // No ?status= param — backend auto-filters to requests pending this district's approval
+  const { data: pendingTransfers = [], isPending: loadingTransfers } = useQuery({
+    queryKey: ['district-admin', 'transfers'],
+    queryFn: async () => ((await apiCall("/transfer-requests?sort=-createdAt&limit=20")).data || []) as TransferRequest[],
+  });
 
-  const fetchPendingTransfers = async () => {
-    try {
-      setLoadingTransfers(true);
-      // No ?status= param — backend auto-filters to show only requests pending this district's approval
-      const result = await apiCall("/transfer-requests?sort=-createdAt&limit=20");
-      setPendingTransfers(result.data || []);
-    } catch (err) {
-      console.error("Failed to fetch transfers:", err);
-    } finally {
-      setLoadingTransfers(false);
-    }
-  };
+  const fetchPendingTransfers = () =>
+    queryClient.invalidateQueries({ queryKey: ['district-admin', 'transfers'] });
 
   const handleApprove = async () => {
     if (!selectedTransfer) return;
