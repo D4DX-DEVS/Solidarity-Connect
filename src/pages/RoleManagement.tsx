@@ -433,7 +433,7 @@ const RoleManagement = () => {
         }
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3 [&_.metric-icon]:hidden [&_.metric-card>div]:!p-2.5 [&_.metric-card_.text-\[13px\]]:!text-[11px] [&_.metric-card_.text-\[13px\]]:!leading-tight [&_.metric-card_.font-bold]:!text-base sm:[&_.metric-icon]:flex sm:[&_.metric-card>div]:!p-5 sm:[&_.metric-card_.font-bold]:!text-[1.7rem]">
         <MetricCard title="Current View" value={currentViewLabel} icon={Filter} tone="primary" />
         <MetricCard title="Records" value={String(currentRecordCount)} icon={Users} tone="warning" />
         <MetricCard
@@ -449,18 +449,20 @@ const RoleManagement = () => {
         description="Search users, switch role scopes, and narrow the current management view."
       >
         <div className="space-y-3">
-            <label htmlFor="role-management-search" className="text-sm font-medium text-foreground">
-              Search Users
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="role-management-search"
-                placeholder="Search by name or phone..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+            <div className="flex items-center gap-2">
+              <label htmlFor="role-management-search" className="shrink-0 text-sm font-medium text-foreground">
+                Search Users
+              </label>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="role-management-search"
+                  placeholder="Search by name or phone..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger>
@@ -668,68 +670,71 @@ const RoleManagement = () => {
                   const changed = hasChanges(user, state);
                   return (
                     <Card key={user._id} className={`shadow-sm transition-opacity duration-200 ${fetching ? "opacity-60" : "opacity-100"}`}>
-                      <CardContent className="space-y-3 p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">{user.phone}</p>
-                            <div className="mt-1 flex flex-wrap gap-2">
+                      <CardContent className="space-y-2 p-3 sm:space-y-3 sm:p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-baseline gap-x-2">
+                              <p className="truncate font-semibold">{user.name}</p>
+                              <p className="text-sm text-muted-foreground">{user.phone}</p>
+                            </div>
+                            <div className="mt-1 flex flex-wrap gap-1 sm:gap-2">
                               {isMemberView ? (
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="px-1.5 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-xs">
                                   {user.status || "Member"}
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="px-1.5 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-xs">
                                   {roleLabel(user.role)}
                                 </Badge>
                               )}
                               {user.district && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-xs">
                                   {user.district.name}
                                 </Badge>
                               )}
                               {user.group && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-xs">
                                   {user.group.name}
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          {user.isLeader && user.roleTag?.type && (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
-                                {ROLE_TYPE_LABELS[user.roleTag.type]}
-                                {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
-                              </span>
-                              {(user.extraRoleTags || []).map((extra, i) =>
-                                extra?.type ? (
-                                  <span key={i} className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[extra.type] || "bg-gray-100 text-gray-700"}`}>
-                                    {ROLE_TYPE_LABELS[extra.type] || extra.type}
-                                    {extra.name ? ` · ${extra.name}` : ""}
-                                  </span>
-                                ) : null
-                              )}
+                          <div className="flex shrink-0 flex-col items-end gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <Label htmlFor={`leader-${user._id}`} className="text-xs font-medium text-muted-foreground">
+                                Leader
+                              </Label>
+                              <Switch
+                                id={`leader-${user._id}`}
+                                checked={state.isLeader}
+                                onCheckedChange={(checked) =>
+                                  updateEditState(user._id, {
+                                    isLeader: checked,
+                                    roleTagType: checked ? state.roleTagType : "",
+                                    roleTagName: checked ? state.roleTagName : "",
+                                    listingOrder: checked ? state.listingOrder : "",
+                                    extraRoles: checked ? state.extraRoles : [],
+                                  })
+                                }
+                              />
                             </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <Switch
-                            id={`leader-${user._id}`}
-                            checked={state.isLeader}
-                            onCheckedChange={(checked) =>
-                              updateEditState(user._id, {
-                                isLeader: checked,
-                                roleTagType: checked ? state.roleTagType : "",
-                                roleTagName: checked ? state.roleTagName : "",
-                                listingOrder: checked ? state.listingOrder : "",
-                                extraRoles: checked ? state.extraRoles : [],
-                              })
-                            }
-                          />
-                          <Label htmlFor={`leader-${user._id}`} className="text-sm font-medium">
-                            Is Leader
-                          </Label>
+                            {user.isLeader && user.roleTag?.type && (
+                              <>
+                                <span className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[user.roleTag.type]}`}>
+                                  {ROLE_TYPE_LABELS[user.roleTag.type]}
+                                  {user.roleTag.name ? ` · ${user.roleTag.name}` : ""}
+                                </span>
+                                {(user.extraRoleTags || []).map((extra, i) =>
+                                  extra?.type ? (
+                                    <span key={i} className={`rounded-full px-2 py-1 text-xs font-medium ${ROLE_TYPE_COLORS[extra.type] || "bg-gray-100 text-gray-700"}`}>
+                                      {ROLE_TYPE_LABELS[extra.type] || extra.type}
+                                      {extra.name ? ` · ${extra.name}` : ""}
+                                    </span>
+                                  ) : null
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
 
                         {state.isLeader && (
@@ -889,26 +894,28 @@ const RoleManagement = () => {
             )}
 
             {totalPages > 1 && !isLeadersView && (
-              <div className="flex items-center justify-between py-2">
-                <p className="text-sm text-muted-foreground">
-                  Page {currentPage} of {totalPages} ({totalDocs} users)
+              <div className="flex items-center justify-between gap-2 py-2">
+                <p className="truncate text-xs text-muted-foreground sm:text-sm">
+                  Page {currentPage}/{totalPages} · {totalDocs} users
                 </p>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 px-2 text-xs sm:px-3 sm:text-sm"
                     onClick={() => setCurrentPage((p) => p - 1)}
                     disabled={!hasPrevPage || loading || fetching}
                   >
-                    <ChevronLeft className="mr-1 h-4 w-4" /> Previous
+                    <ChevronLeft className="h-4 w-4 sm:mr-1" /> <span className="hidden sm:inline">Previous</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
+                    className="h-8 px-2 text-xs sm:px-3 sm:text-sm"
                     onClick={() => setCurrentPage((p) => p + 1)}
                     disabled={!hasNextPage || loading || fetching}
                   >
-                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                    <span className="hidden sm:inline">Next</span> <ChevronRight className="h-4 w-4 sm:ml-1" />
                   </Button>
                 </div>
               </div>

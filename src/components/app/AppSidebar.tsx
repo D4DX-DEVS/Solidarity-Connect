@@ -62,8 +62,8 @@ const SECTIONS: NavSection[] = [
   {
     title: "Communication",
     items: [
-      { label: "Notifications", path: "/notifications", icon: Bell },
-      { label: "Announcements", path: "/announcements", icon: Megaphone },
+      // ponytail: one entry — announcements are a tab on the alerts page
+      { label: "Alerts", path: "/notifications", icon: Bell },
       { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Send Notification", path: "/state-admin/send-notification", icon: Send, roles: ["state_admin"] },
     ],
@@ -86,8 +86,7 @@ const MEMBER_SECTIONS: NavSection[] = [
       { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target },
       { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar },
       { label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet },
-      { label: "Notifications", path: "/notifications", icon: Bell },
-      { label: "Announcements", path: "/announcements", icon: Megaphone },
+      { label: "Alerts", path: "/notifications", icon: Bell },
       { label: "Leaders", path: "/leaders", icon: Star },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
       { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog },

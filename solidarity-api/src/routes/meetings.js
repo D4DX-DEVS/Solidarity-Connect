@@ -2005,17 +2005,14 @@ router.get('/admin/dashboard-stats',
             groupName: { $first: '$groupInfo.name' },
             groupCode: { $first: '$groupInfo.code' },
             totalRecords: { $sum: 1 },
-            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
+            presentCount: { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } }
+          }
+        },
+        {
+          // $multiply is not an accumulator — the rate must be derived after $group
+          $addFields: {
             attendanceRate: {
-              $multiply: [
-                {
-                  $divide: [
-                    { $sum: { $cond: [{ $in: ['$status', ['present', 'late']] }, 1, 0] } },
-                    { $sum: 1 }
-                  ]
-                },
-                100
-              ]
+              $multiply: [{ $divide: ['$presentCount', '$totalRecords'] }, 100]
             }
           }
         },
@@ -3263,6 +3260,34 @@ router.get('/admin/overview',
         allGroups = await Group.find({}).populate('district', 'name code');
       }
 
+      // ponytail: member counts per group are meeting-independent — compute once with a
+      // single aggregation instead of 4 countDocuments per group per meeting
+      // (was ~groups x meetings x 4 queries: the 5-6s page load).
+      const Member = (await import('../models/Member.js')).default;
+      const memberStatsLookup = {};
+      const memberCounts = await Member.aggregate([
+        { $match: { isApproved: true, status: { $in: ['Active', 'Inactive', 'Abroad'] } } },
+        { $group: { _id: { group: '$group', status: '$status' }, count: { $sum: 1 } } }
+      ]);
+      memberCounts.forEach(({ _id, count }) => {
+        const groupId = _id.group ? _id.group.toString() : null;
+        if (!groupId) return;
+        if (!memberStatsLookup[groupId]) {
+          memberStatsLookup[groupId] = {
+            groupId,
+            totalMembers: 0,
+            activeMembers: 0,
+            inactiveMembers: 0,
+            abroadMembers: 0
+          };
+        }
+        const stats = memberStatsLookup[groupId];
+        stats.totalMembers += count;
+        if (_id.status === 'Active') stats.activeMembers += count;
+        else if (_id.status === 'Inactive') stats.inactiveMembers += count;
+        else if (_id.status === 'Abroad') stats.abroadMembers += count;
+      });
+
       // Enhance meetings with group completion status
       const enhancedMeetings = await Promise.all(
         result.docs.map(async (meeting) => {
@@ -3289,50 +3314,7 @@ router.get('/admin/overview',
               .populate('guestAttendance.addedBy', 'group');
 
             const groupProgress = {};
-            
-            // Get actual member counts and status breakdown from Member collection
-            const Member = (await import('../models/Member.js')).default;
-            const memberStats = await Promise.all(
-              targetGroups.map(async (group) => {
-                const [totalMembers, activeMembers, inactiveMembers, abroadMembers] = await Promise.all([
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: { $in: ['Active', 'Inactive', 'Abroad'] }, // Count all members except dismissed
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Active',
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Inactive',
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Abroad',
-                    isApproved: true 
-                  })
-                ]);
-                
-                return { 
-                  groupId: group._id.toString(), 
-                  totalMembers,
-                  activeMembers,
-                  inactiveMembers,
-                  abroadMembers
-                };
-              })
-            );
-            
-            // Create member stats lookup
-            const memberStatsLookup = {};
-            memberStats.forEach((stats) => {
-              memberStatsLookup[stats.groupId] = stats;
-            });
-            
+
             // Initialize group progress tracking with actual member counts and status breakdown
             targetGroups.forEach(group => {
               const stats = memberStatsLookup[group._id.toString()] || {
@@ -3571,49 +3553,6 @@ router.get('/admin/overview',
                   groupAttendanceData[groupId].lastActivity = record.addedAt;
                 }
               }
-            });
-
-            // Get actual member counts and status breakdown for non-monthly series meetings too
-            const Member = (await import('../models/Member.js')).default;
-            const memberStats = await Promise.all(
-              targetGroups.map(async (group) => {
-                const [totalMembers, activeMembers, inactiveMembers, abroadMembers] = await Promise.all([
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: { $in: ['Active', 'Inactive', 'Abroad'] }, // Count all members except dismissed
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Active',
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Inactive',
-                    isApproved: true 
-                  }),
-                  Member.countDocuments({ 
-                    group: group._id, 
-                    status: 'Abroad',
-                    isApproved: true 
-                  })
-                ]);
-                
-                return { 
-                  groupId: group._id.toString(), 
-                  totalMembers,
-                  activeMembers,
-                  inactiveMembers,
-                  abroadMembers
-                };
-              })
-            );
-            
-            // Create member stats lookup
-            const memberStatsLookup = {};
-            memberStats.forEach((stats) => {
-              memberStatsLookup[stats.groupId] = stats;
             });
 
             const groupProgress = targetGroups.map(group => {
