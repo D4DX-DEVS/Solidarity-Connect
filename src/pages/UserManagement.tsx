@@ -541,10 +541,18 @@ const UserManagement = () => {
         }
       />
 
+      {/* ponytail: 4-up on mobile via child selectors; icon hidden + text shrunk so 4 cards fit ~360px */}
       {userStats && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
           {topStats.map((item) => (
-            <MetricCard key={item.title} title={item.title} value={item.value} icon={item.icon} tone={item.tone} />
+            <MetricCard
+              key={item.title}
+              title={item.title}
+              value={item.value}
+              icon={item.icon}
+              tone={item.tone}
+              className="[&>div]:p-2 sm:[&>div]:p-5 [&_.metric-icon]:hidden sm:[&_.metric-icon]:inline-flex [&_p:first-child]:text-[10px] sm:[&_p:first-child]:text-[13px] [&_p:nth-child(2)]:text-lg sm:[&_p:nth-child(2)]:text-[1.7rem]"
+            />
           ))}
         </div>
       )}
@@ -563,9 +571,9 @@ const UserManagement = () => {
               </div>
 
               {/* First filter row: Role + Status */}
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-row items-center gap-2">
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-full sm:w-44">
+                  <SelectTrigger className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -578,7 +586,7 @@ const UserManagement = () => {
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="min-w-0 flex-1 sm:w-40 sm:flex-none">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -589,17 +597,18 @@ const UserManagement = () => {
                 </Select>
 
                 <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  {/* ponytail: icon-only on mobile so filter row stays one line */}
                   <DialogTrigger asChild>
-                    <Button className="sm:ml-auto">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add User
+                    <Button className="shrink-0 px-3 sm:ml-auto sm:px-4">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Add User</span>
                     </Button>
                   </DialogTrigger>
                 </Dialog>
               </div>
 
               {/* Second filter row: District + Group */}
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-row gap-2">
                 <Select
                   value={districtFilter}
                   onValueChange={(val) => {
@@ -608,7 +617,7 @@ const UserManagement = () => {
                     fetchFilterGroupsForDistrict(val);
                   }}
                 >
-                  <SelectTrigger className="w-full sm:w-52">
+                  <SelectTrigger className="min-w-0 flex-1 sm:w-52 sm:flex-none">
                     <SelectValue placeholder="All Districts" />
                   </SelectTrigger>
                   <SelectContent>
@@ -627,7 +636,7 @@ const UserManagement = () => {
                     onValueChange={setGroupFilter}
                     disabled={loadingFilterGroups}
                   >
-                    <SelectTrigger className="w-full sm:w-52">
+                    <SelectTrigger className="min-w-0 flex-1 sm:w-52 sm:flex-none">
                       <SelectValue placeholder={loadingFilterGroups ? "Loading…" : "All Groups"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -785,33 +794,35 @@ const UserManagement = () => {
         {!isMemberView && <div className="space-y-3">
           {users.map((user) => (
             <Card key={user._id} className="surface-card transition-transform hover:-translate-y-0.5">
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <h3 className="font-semibold">{user.name}</h3>
-                      <Badge className={roleColors[user.role]}>
+                  <div className="min-w-0 flex-1">
+                    {/* ponytail: badges shrunk on mobile so name + role + status stay one line */}
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5 [&_.badge-sm]:px-1.5 [&_.badge-sm]:py-0 [&_.badge-sm]:text-[10px] sm:[&_.badge-sm]:px-2.5 sm:[&_.badge-sm]:py-0.5 sm:[&_.badge-sm]:text-xs">
+                      <h3 className="min-w-0 truncate text-sm font-semibold sm:text-base">{user.name}</h3>
+                      <Badge className={`badge-sm shrink-0 ${roleColors[user.role]}`}>
                         {roleLabels[user.role]}
                       </Badge>
-                      <Badge variant={user.isActive ? "default" : "secondary"}>
+                      <Badge className="badge-sm shrink-0" variant={user.isActive ? "default" : "secondary"}>
                         {user.isActive ? "Active" : "Inactive"}
                       </Badge>
                       {user.isLeader && (
-                        <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-300">
+                        <Badge className="badge-sm shrink-0 bg-yellow-100 text-yellow-800 border border-yellow-300">
                           <Star className="h-3 w-3 mr-1" />
                           Leader{user.roleTag?.name ? ` · ${user.roleTag.name}` : ""}
                         </Badge>
                       )}
                     </div>
                     
-                    <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-3">
-                      <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Phone className="h-4 w-4" />{user.phone}</div>
-                      {user.email && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Mail className="h-4 w-4" />{user.email}</div>}
-                      {user.district && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Building2 className="h-4 w-4" />{user.district.name}</div>}
-                      {user.group && <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Users className="h-4 w-4" />{user.group.name}</div>}
-                      <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><CalendarDays className="h-4 w-4" />Created: {new Date(user.createdAt).toLocaleDateString()}</div>
+                    {/* ponytail: single line, chips shrink-0 + horizontal scroll when they overflow; wraps normally at sm+ */}
+                    <div className="-mx-0.5 flex flex-nowrap gap-1 overflow-x-auto px-0.5 pb-0.5 text-[10px] text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-1.5 sm:overflow-visible sm:text-sm">
+                      <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Phone"><Phone className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.phone}</div>
+                      {user.email && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Email"><Mail className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.email}</div>}
+                      {user.district && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="District"><Building2 className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.district.name}</div>}
+                      {user.group && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Group"><Users className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.group.name}</div>}
+                      <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Created"><CalendarDays className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{new Date(user.createdAt).toLocaleDateString()}</div>
                       {user.lastLogin && (
-                        <div className="flex items-center gap-2 rounded-2xl bg-muted/65 px-3 py-2"><Clock3 className="h-4 w-4" />Last login: {new Date(user.lastLogin).toLocaleDateString()}</div>
+                        <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Last login"><Clock3 className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{new Date(user.lastLogin).toLocaleDateString()}</div>
                       )}
                     </div>
                   </div>
