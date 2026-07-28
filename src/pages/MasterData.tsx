@@ -135,15 +135,9 @@ const MasterData = () => {
         subtitle="Manage districts and areas — the organizational backbone of the system."
         eyebrow="State Admin"
         icon={<Building2 className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        }
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Districts" value={String(districts.length)} icon={Building2} tone="primary" />
         <MetricCard title="Areas" value={String(totalGroups)} icon={MapPin} tone="warning" />
         <MetricCard title="Total Members" value={String(totalMembers)} icon={Users} tone="success" />
@@ -196,20 +190,20 @@ const MasterData = () => {
             <div className="space-y-3">
               {districts.map((district) => (
                 <Card key={district._id} className="surface-card border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="action-tile-icon">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="action-tile-icon shrink-0">
                           <Building2 className="h-5 w-5 text-primary" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{district.name}</h3>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="min-w-0">
+                          <h3 className="truncate font-semibold text-foreground">{district.name}</h3>
+                          <p className="truncate text-xs text-muted-foreground">
                             Code: {district.code} · {district.statistics?.totalGroups || 0} Areas · {district.statistics?.totalMembers || 0} Members
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 gap-1 sm:gap-2">
                         <Button size="icon" variant="ghost" onClick={() => handleEditDistrict(district)}>
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -243,19 +237,21 @@ const MasterData = () => {
               </Button>
             }
           >
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <Popover open={districtFilterOpen} onOpenChange={setDistrictFilterOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={districtFilterOpen}
-                    className="w-full justify-between rounded-2xl border-border/70 bg-card h-11 px-4 font-normal shadow-sm"
+                    className="w-full min-w-0 justify-between rounded-2xl border-border/70 bg-card h-11 px-2.5 font-normal shadow-sm sm:px-4"
                   >
-                    {selectedDistrictFilter
-                      ? allDistricts.find(d => d._id === selectedDistrictFilter)?.name || "All Districts"
-                      : "All Districts"}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    <span className="truncate">
+                      {selectedDistrictFilter
+                        ? allDistricts.find(d => d._id === selectedDistrictFilter)?.name || "All Districts"
+                        : "All Districts"}
+                    </span>
+                    <ChevronsUpDown className="ml-1 h-4 w-4 shrink-0 opacity-50 sm:ml-2" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -318,20 +314,20 @@ const MasterData = () => {
             <div className="space-y-3">
               {groups.map((group) => (
                 <Card key={group._id} className="surface-card border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="action-tile-icon">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="action-tile-icon shrink-0">
                           <MapPin className="h-5 w-5 text-orange-500" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-foreground">{group.name}</h3>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="min-w-0">
+                          <h3 className="truncate font-semibold text-foreground">{group.name}</h3>
+                          <p className="truncate text-xs text-muted-foreground">
                             {group.district?.name || "—"} · Code: {group.code} · {group.statistics?.totalMembers || 0} Members
                           </p>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 gap-1 sm:gap-2">
                         <Button size="icon" variant="ghost" onClick={() => handleEditGroup(group)}>
                           <Edit className="h-4 w-4" />
                         </Button>

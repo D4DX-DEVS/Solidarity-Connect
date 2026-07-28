@@ -18,13 +18,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { MetricCard } from "@/components/app/AppShell";
-import { PageSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import { useNavigate } from "react-router-dom";
+import { PageSkeleton } from "@/components/ui/loading-skeletons";import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
+import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
 import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
 
 interface DashboardData {
@@ -327,15 +327,8 @@ const StateAdmin = () => {
                   <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
                 </div>
-                <DropdownMenuItem onClick={() => navigate("/members")}>Members</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/meetings")}>Meeting Agendas</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/role-management")}>
-                  <Shield className="mr-2 h-4 w-4" />Role Management
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/leaders")}>
-                  <Star className="mr-2 h-4 w-4" />Leaders
-                </DropdownMenuItem>
+                <RoleSwitchMenuItems />
+                <MoreNavMenuItems />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />Logout
@@ -612,16 +605,13 @@ const StateAdmin = () => {
           </div>
         )}
       </main>
-
-      <BottomNav />
-
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>Are you sure you want to log out?</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-row gap-2 justify-end">
+          <DialogFooter className="flex flex-row justify-center gap-2">
             <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
             <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="h-4 w-4 mr-2" />

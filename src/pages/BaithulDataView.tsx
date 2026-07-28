@@ -6,9 +6,7 @@ import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/A
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import PageSizeInput from "@/components/app/PageSizeInput";
-import BottomNav from "@/components/BottomNav";
-import BaithulEnrollDialog from "@/components/BaithulEnrollDialog";
+import PageSizeInput from "@/components/app/PageSizeInput";import BaithulEnrollDialog from "@/components/BaithulEnrollDialog";
 import BaithulStatusDialog from "@/components/BaithulStatusDialog";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -896,10 +894,7 @@ const BaithulDataView = () => {
         onOpenChange={setShowStatusDialog}
         member={statusMember}
         onChanged={fetchBaithulData}
-      />
-
-      <BottomNav />
-    </PageShell>
+      />    </PageShell>
   );
 };
 

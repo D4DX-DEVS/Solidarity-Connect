@@ -54,8 +54,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import BottomNav from "@/components/BottomNav";
-
 interface User {
   _id: string;
   name: string;
@@ -534,11 +532,6 @@ const UserManagement = () => {
         title="User Management"
         subtitle="Manage admin users, filters, and leader assignments with a cleaner responsive control surface."
         icon={<Users className="h-6 w-6" />}
-        actions={
-          <Button onClick={() => navigate(-1)} variant="outline" size="sm">
-            Back
-          </Button>
-        }
       />
 
       {/* ponytail: 4-up on mobile via child selectors; icon hidden + text shrunk so 4 cards fit ~360px */}
@@ -559,21 +552,20 @@ const UserManagement = () => {
 
       <SectionCard title="Search & Filters" description="Search by person and narrow by role, status, district, or group.">
             <div className="flex flex-col gap-3">
-              {/* Search bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by name or phone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+              {/* Search + filter row: 2-per-row grid on mobile/tablet, all inline from lg up */}
+              <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:gap-2">
+                <div className="relative col-span-2 lg:w-64 lg:shrink-0">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or phone..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
 
-              {/* First filter row: Role + Status */}
-              <div className="flex flex-row items-center gap-2">
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="min-w-0 flex-1 sm:w-44 sm:flex-none">
+                  <SelectTrigger className="w-full lg:w-44 lg:flex-none">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -586,7 +578,7 @@ const UserManagement = () => {
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="min-w-0 flex-1 sm:w-40 sm:flex-none">
+                  <SelectTrigger className="w-full lg:w-40 lg:flex-none">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -596,19 +588,6 @@ const UserManagement = () => {
                   </SelectContent>
                 </Select>
 
-                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                  {/* ponytail: icon-only on mobile so filter row stays one line */}
-                  <DialogTrigger asChild>
-                    <Button className="shrink-0 px-3 sm:ml-auto sm:px-4">
-                      <Plus className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Add User</span>
-                    </Button>
-                  </DialogTrigger>
-                </Dialog>
-              </div>
-
-              {/* Second filter row: District + Group */}
-              <div className="flex flex-row gap-2">
                 <Select
                   value={districtFilter}
                   onValueChange={(val) => {
@@ -617,7 +596,7 @@ const UserManagement = () => {
                     fetchFilterGroupsForDistrict(val);
                   }}
                 >
-                  <SelectTrigger className="min-w-0 flex-1 sm:w-52 sm:flex-none">
+                  <SelectTrigger className="w-full lg:w-52 lg:flex-none">
                     <SelectValue placeholder="All Districts" />
                   </SelectTrigger>
                   <SelectContent>
@@ -636,7 +615,7 @@ const UserManagement = () => {
                     onValueChange={setGroupFilter}
                     disabled={loadingFilterGroups}
                   >
-                    <SelectTrigger className="min-w-0 flex-1 sm:w-52 sm:flex-none">
+                    <SelectTrigger className="w-full lg:w-52 lg:flex-none">
                       <SelectValue placeholder={loadingFilterGroups ? "Loading…" : "All Groups"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -655,7 +634,7 @@ const UserManagement = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="sm:ml-auto text-muted-foreground hover:text-foreground"
+                    className="w-full text-muted-foreground hover:text-foreground lg:w-auto"
                     onClick={() => {
                       setSearchTerm("");
                       setRoleFilter("all");
@@ -668,6 +647,16 @@ const UserManagement = () => {
                     Clear filters
                   </Button>
                 )}
+
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  {/* ponytail: icon-only on mobile so filter row stays compact */}
+                  <DialogTrigger asChild>
+                    <Button className="w-full shrink-0 px-3 sm:px-4 lg:ml-auto lg:w-auto">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Add User</span>
+                    </Button>
+                  </DialogTrigger>
+                </Dialog>
               </div>
 
               {/* Active filter summary chips */}
@@ -1133,10 +1122,7 @@ const UserManagement = () => {
             </div>
           </div>
         </DialogContent>
-      </Dialog>
-
-      <BottomNav />
-    </PageShell>
+      </Dialog>    </PageShell>
   );
 };
 

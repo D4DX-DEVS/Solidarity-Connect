@@ -1,6 +1,4 @@
-import { Users, CheckCircle, Clock, Calendar, Upload, Shield, FileText, BarChart3, Menu, Target } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { Users, CheckCircle, Clock, Calendar, Upload, Shield, FileText, BarChart3, Menu, Target } from "lucide-react";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MetricCard } from "@/components/app/AppShell";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useAuth } from "@/contexts/AuthContext";
@@ -181,10 +179,7 @@ const Dashboard = () => {
             </div>
           )}
         </div>
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

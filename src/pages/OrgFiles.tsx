@@ -271,23 +271,9 @@ const OrgFiles = () => {
         subtitle="Browse documents, training media, and membership resources from one searchable library."
         eyebrow="Resources"
         icon={<FileText className="h-6 w-6" />}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate(getBackPath())}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            {isStateAdmin ? (
-              <Button size="sm" onClick={() => setShowUploadDialog(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Upload
-              </Button>
-            ) : null}
-          </div>
-        }
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Total Files" value={String(summary.total)} icon={FileText} tone="primary" />
         <MetricCard title="Membership Forms" value={String(summary.membershipForms)} icon={BookOpen} tone="warning" />
         <MetricCard title="Hidden Files" value={String(summary.hidden)} icon={EyeOff} tone="neutral" />
@@ -295,13 +281,13 @@ const OrgFiles = () => {
 
       <SectionCard title="Browse Library" description="Filter by category, search by title or description, and open management actions when allowed.">
         <div className="space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             {categories.map(cat => (
               <Button
                 key={cat}
                 variant={activeCategory === cat ? "default" : "outline"}
                 size="sm"
-                className="shrink-0 capitalize"
+                className="h-7 shrink-0 px-2.5 text-xs capitalize sm:h-9 sm:px-3 sm:text-sm"
                 onClick={() => setActiveCategory(cat)}
               >
                 {cat === "all" ? "All" : cat === "membership_form" ? "Membership Form" : categoryLabels[cat] || cat}
@@ -321,7 +307,18 @@ const OrgFiles = () => {
         </div>
       </SectionCard>
 
-      <SectionCard title="File Library" description="Open, download, edit, or hide organizational resources based on your access level.">
+      <SectionCard
+        title="File Library"
+        description="Open, download, edit, or hide organizational resources based on your access level."
+        action={
+          isStateAdmin ? (
+            <Button size="sm" onClick={() => setShowUploadDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Upload
+            </Button>
+          ) : null
+        }
+      >
         {loading ? (
           <div className="py-12 text-center text-muted-foreground">Loading files...</div>
         ) : filteredFiles.length === 0 ? (
@@ -354,7 +351,7 @@ const OrgFiles = () => {
                             )}
                           </div>
                           {file.description && (
-                            <p className="text-xs text-muted-foreground mb-1">{file.description}</p>
+                            <p className="line-clamp-2 text-xs text-muted-foreground mb-1">{file.description}</p>
                           )}
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline" className="text-xs capitalize">
@@ -363,25 +360,20 @@ const OrgFiles = () => {
                             <span className="text-xs text-muted-foreground">{file.size ? formatFileSize(file.size) : ""}</span>
                             {file.originalName && <span className="text-xs text-muted-foreground malayalam-text">{decodeFilename(file.originalName)}</span>}
                           </div>
-                          {file.link && (
-                            <a href={file.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1">
-                              <Link2 className="h-3 w-3" />{file.link.length > 50 ? file.link.slice(0, 50) + "..." : file.link}
-                            </a>
-                          )}
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-3 flex-wrap">
+                      <div className="flex items-center gap-1.5 mt-2.5 flex-nowrap">
                         {file.category === "link" && file.link ? (
                           <a href={file.link} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="outline" className="text-xs h-7">
+                            <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
                               <Link2 className="h-3 w-3 mr-1" />Open Link
                             </Button>
                           </a>
                         ) : file.url ? (
                           <>
                             <a href={file.url} target="_blank" rel="noopener noreferrer">
-                              <Button size="sm" variant="outline" className="text-xs h-7">
+                              <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
                                 {isMembershipForm ? (
                                   <><Download className="h-3 w-3 mr-1" />Download</>
                                 ) : (
@@ -391,7 +383,7 @@ const OrgFiles = () => {
                             </a>
                             {isMembershipForm && (
                               <a href={file.url} download>
-                                <Button size="sm" variant="default" className="text-xs h-7">
+                                <Button size="sm" variant="default" className="text-xs h-7 px-2.5">
                                   <Download className="h-3 w-3 mr-1" />Download PDF
                                 </Button>
                               </a>
@@ -400,15 +392,23 @@ const OrgFiles = () => {
                         ) : null}
                         {isStateAdmin && (
                           <>
-                            <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => openEditDialog(file)}>
-                              <Edit className="h-3 w-3 mr-1" />Edit
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 shrink-0"
+                              onClick={() => openEditDialog(file)}
+                              aria-label="Edit file"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
                             </Button>
                             <Button
-                              size="sm" variant="ghost"
-                              className="text-xs h-7 text-destructive"
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 shrink-0 text-destructive"
                               onClick={() => handleDelete(file)}
+                              aria-label="Delete file"
                             >
-                              <Trash2 className="h-3 w-3 mr-1" />Delete
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </>
                         )}

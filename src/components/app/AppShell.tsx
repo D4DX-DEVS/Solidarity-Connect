@@ -1,7 +1,14 @@
 import { type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, Menu } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
+import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 interface PageShellProps {
@@ -55,6 +62,34 @@ function PageShell({ children, className, contentClassName }: PageShellProps) {
   );
 }
 
+// ponytail: every page header carries the same mobile menu — no per-page wiring
+function PageHeroMenu() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="outline" className="shrink-0 lg:hidden" aria-label="Menu">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="glass max-h-[70vh] w-56 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
+        <RoleSwitchMenuItems />
+        <MoreNavMenuItems />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => { logout(); navigate("/login"); }}
+          className="cursor-pointer rounded-xl px-3 py-2.5 font-medium text-destructive focus:bg-destructive/10"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function PageHero({ title, subtitle, eyebrow, icon, actions, details, className }: PageHeroProps) {
   return (
     <section className={cn("hero-card", className)}>
@@ -68,7 +103,10 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className 
             {subtitle ? <p className="hero-subtitle truncate">{subtitle}</p> : null}
           </div>
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div> : null}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          {actions}
+          <PageHeroMenu />
+        </div>
       </div>
       {details ? <div className="hero-details">{details}</div> : null}
     </section>
@@ -106,15 +144,15 @@ function MetricCard({ title, value, detail, icon: Icon, tone = "neutral", classN
         className,
       )}
     >
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-1">
-            <p className="truncate text-[13px] font-medium text-muted-foreground">{title}</p>
-            <p className="truncate text-2xl font-bold tracking-tight text-foreground sm:text-[1.7rem]">{value}</p>
-            {detail ? <p className="truncate text-xs text-muted-foreground sm:text-sm">{detail}</p> : null}
+      <CardContent className="p-2.5 sm:p-4 md:p-5">
+        <div className="flex items-start justify-between gap-1.5 sm:gap-3">
+          <div className="min-w-0 space-y-0.5 sm:space-y-1">
+            <p className="truncate text-[10px] font-medium leading-tight text-muted-foreground sm:text-[13px]">{title}</p>
+            <p className="truncate text-lg font-bold leading-tight tracking-tight text-foreground sm:text-2xl md:text-[1.7rem]">{value}</p>
+            {detail ? <p className="truncate text-[10px] text-muted-foreground sm:text-xs md:text-sm">{detail}</p> : null}
           </div>
-          <div className={cn("metric-icon shrink-0", toneClasses[tone])}>
-            <Icon className="h-5 w-5" />
+          <div className={cn("metric-icon h-7 w-7 shrink-0 sm:h-10 sm:w-10", toneClasses[tone])}>
+            <Icon className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
           </div>
         </div>
       </CardContent>

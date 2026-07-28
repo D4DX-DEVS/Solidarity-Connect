@@ -155,19 +155,9 @@ const TransferApprovals = () => {
         subtitle={`${transferRequests.length} request${transferRequests.length !== 1 ? "s" : ""} currently need review or action.`}
         eyebrow="Approvals"
         icon={<ArrowRightLeft className="h-6 w-6" />}
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(userRole === "district_admin" ? "/district-admin" : "/state-admin")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        }
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Pending Requests" value={String(transferRequests.length)} icon={ArrowRightLeft} tone="primary" />
         <MetricCard title="Cross-District" value={String(crossDistrictCount)} icon={Clock} tone="warning" />
         <MetricCard title="Waiting on State" value={String(waitingOnStateCount)} icon={CheckCircle} tone="success" />

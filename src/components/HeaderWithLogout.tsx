@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getHomeRouteByRole, type AppUserRole } from "@/lib/roleRoutes";
+import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,7 +94,7 @@ const HeaderWithLogout = ({ title, subtitle, leftAction }: HeaderWithLogoutProps
               <Menu className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
+          <DropdownMenuContent align="end" className="glass max-h-[70vh] w-64 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
             <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
               <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || getRoleLabel()}</p>
@@ -118,6 +119,8 @@ const HeaderWithLogout = ({ title, subtitle, leftAction }: HeaderWithLogoutProps
                 <DropdownMenuSeparator />
               </>
             )}
+            <MoreNavMenuItems />
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive focus:bg-destructive/10 cursor-pointer rounded-xl transition-colors py-2.5 px-3 font-medium mt-1">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -133,7 +136,7 @@ const HeaderWithLogout = ({ title, subtitle, leftAction }: HeaderWithLogoutProps
           <DialogTitle>Confirm Logout</DialogTitle>
           <DialogDescription>Are you sure you want to log out?</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex flex-row gap-2 justify-end">
+        <DialogFooter className="flex flex-row justify-center gap-2">
           <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
           <Button variant="destructive" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Shield, Search, ChevronLeft, ChevronRight, Users, Tag, Save, X, ListOrdered, Star, Filter, Plus, Trash2 } from "lucide-react";
+import { Shield, Search, ChevronLeft, ChevronRight, ChevronDown, Users, Tag, Save, X, ListOrdered, Star, Filter, Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,9 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import BottomNav from "@/components/BottomNav";
-import { useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label";import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { usersAPI, leadersAPI, membersAPI, districtsAPI } from "@/utils/api";
@@ -123,6 +121,7 @@ const RoleManagement = () => {
   const [roleFilter, setRoleFilter] = useState(userRole === 'state_admin' ? "all" : "member");
   const [saving, setSaving] = useState<string | null>(null);
   const [editStates, setEditStates] = useState<Record<string, EditState>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
@@ -425,12 +424,6 @@ const RoleManagement = () => {
         subtitle="Assign leader roles, tune listing order, and manage leader visibility without changing the existing permissions flow."
         eyebrow="Administration"
         icon={<Shield className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        }
       />
 
       <div className="grid grid-cols-3 gap-1.5 sm:gap-3 [&_.metric-icon]:hidden [&_.metric-card>div]:!p-2.5 [&_.metric-card_.text-\[13px\]]:!text-[11px] [&_.metric-card_.text-\[13px\]]:!leading-tight [&_.metric-card_.font-bold]:!text-base sm:[&_.metric-icon]:flex sm:[&_.metric-card>div]:!p-5 sm:[&_.metric-card_.font-bold]:!text-[1.7rem]">
@@ -450,7 +443,7 @@ const RoleManagement = () => {
       >
         <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <label htmlFor="role-management-search" className="shrink-0 text-sm font-medium text-foreground">
+              <label htmlFor="role-management-search" className="hidden shrink-0 text-sm font-medium text-foreground sm:block">
                 Search Users
               </label>
               <div className="relative flex-1">
@@ -463,12 +456,11 @@ const RoleManagement = () => {
                   className="pl-9"
                 />
               </div>
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-[104px] shrink-0 sm:w-[180px]">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
                 {userRole === 'state_admin' && <SelectItem value="all">All Roles</SelectItem>}
                 {userRole === 'state_admin' && <SelectItem value="state_admin">State Admins</SelectItem>}
                 {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="district_admin">District Admins</SelectItem>}
@@ -477,8 +469,9 @@ const RoleManagement = () => {
                 <SelectItem value="leaders">
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Leaders Only</span>
                 </SelectItem>
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Leaders sub-filters */}
             {isLeadersView && (
@@ -668,11 +661,17 @@ const RoleManagement = () => {
                   const state = editStates[user._id];
                   if (!state) return null;
                   const changed = hasChanges(user, state);
+                  const isExpanded = !!expandedCards[user._id];
+                  const toggleExpanded = () =>
+                    setExpandedCards((prev) => ({ ...prev, [user._id]: !prev[user._id] }));
                   return (
                     <Card key={user._id} className={`shadow-sm transition-opacity duration-200 ${fetching ? "opacity-60" : "opacity-100"}`}>
                       <CardContent className="space-y-2 p-3 sm:space-y-3 sm:p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
+                          <div
+                            className={`min-w-0 flex-1 ${state.isLeader ? "cursor-pointer" : ""}`}
+                            onClick={state.isLeader ? toggleExpanded : undefined}
+                          >
                             <div className="flex flex-wrap items-baseline gap-x-2">
                               <p className="truncate font-semibold">{user.name}</p>
                               <p className="text-sm text-muted-foreground">{user.phone}</p>
@@ -717,6 +716,16 @@ const RoleManagement = () => {
                                   })
                                 }
                               />
+                              {state.isLeader && (
+                                <button
+                                  type="button"
+                                  aria-label={isExpanded ? `Collapse leader role details for ${user.name}` : `Expand leader role details for ${user.name}`}
+                                  onClick={toggleExpanded}
+                                  className="rounded p-0.5 text-muted-foreground hover:bg-muted"
+                                >
+                                  <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                                </button>
+                              )}
                             </div>
                             {user.isLeader && user.roleTag?.type && (
                               <>
@@ -737,7 +746,7 @@ const RoleManagement = () => {
                           </div>
                         </div>
 
-                        {state.isLeader && (
+                        {state.isLeader && isExpanded && (
                           <div className="ml-1 space-y-2 border-l-2 border-primary/20 pl-1">
                             <div className="flex items-center gap-2">
                               <Tag className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -922,10 +931,7 @@ const RoleManagement = () => {
             )}
           </>
         )}
-      </SectionCard>
-
-      <BottomNav />
-    </PageShell>
+      </SectionCard>    </PageShell>
   );
 };
 

@@ -1,11 +1,10 @@
-﻿import { ArrowLeft, Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
+﻿import { Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
@@ -13,7 +12,6 @@ import { useDistricts, useDeleteDistrict } from "@/hooks/useDistricts";
 import { District } from "@/lib/districts";
 
 const ManageDistricts = () => {
-  const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
@@ -77,15 +75,9 @@ const ManageDistricts = () => {
         subtitle="Create, update, and retire district records without leaving the admin workspace."
         eyebrow="Organization"
         icon={<Building2 className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to State Admin
-          </Button>
-        }
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Active Districts" value={String(districts.length)} icon={Building2} tone="primary" />
         <MetricCard title="Mapped Groups" value={String(totalGroups)} icon={Users} tone="warning" />
         <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
@@ -132,30 +124,30 @@ const ManageDistricts = () => {
           <div className="space-y-3">
             {districts.map((district) => (
               <Card key={district._id} className="surface-card border-border/70">
-                <CardContent className="space-y-4 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="action-tile-icon">
+                      <div className="action-tile-icon shrink-0">
                         <Building2 className="h-5 w-5 text-primary" />
                       </div>
-                      <div className="space-y-2">
+                      <div className="min-w-0 space-y-1.5 sm:space-y-2">
                         <div>
-                          <h3 className="text-lg font-semibold text-foreground">{district.name}</h3>
+                          <h3 className="text-base font-semibold text-foreground sm:text-lg">{district.name}</h3>
                           <p className="text-sm text-muted-foreground">Code: {district.code}</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                            <Users className="h-4 w-4" />
+                          <div className="data-strip inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground sm:gap-2 sm:px-3 sm:py-2 sm:text-sm">
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             {district.statistics?.totalGroups || 0} Groups
                           </div>
-                          <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                            <Users className="h-4 w-4" />
+                          <div className="data-strip inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground sm:gap-2 sm:px-3 sm:py-2 sm:text-sm">
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             {district.statistics?.totalMembers || 0} Members
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[260px]">
+                    <div className="grid grid-cols-2 gap-2 lg:min-w-[260px]">
                       <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(district)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit

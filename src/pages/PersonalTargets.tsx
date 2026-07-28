@@ -376,12 +376,6 @@ const PersonalTargets = () => {
           subtitle="Loading the current target catalogue and recurring schedules."
           eyebrow="Targets"
           icon={<Target className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          }
         />
         <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
           <ListSkeleton rows={5} />
@@ -397,12 +391,6 @@ const PersonalTargets = () => {
         subtitle="Create, search, and manage regular or recurring targets without changing the existing workflows."
         eyebrow="Targets"
         icon={<Target className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        }
       />
 
       <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">

@@ -123,12 +123,6 @@ const MeetingDetail = () => {
           subtitle="Review the meeting setup, sessions, and status information."
           eyebrow="Meetings"
           icon={<Calendar className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          }
         />
         <SectionCard title="Loading" description="Fetching meeting details.">
           <DetailSkeleton />
@@ -145,12 +139,6 @@ const MeetingDetail = () => {
           subtitle="Review the meeting setup, sessions, and status information."
           eyebrow="Meetings"
           icon={<Calendar className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          }
         />
         <SectionCard title="Meeting Not Found" description="The meeting could not be loaded or is not accessible.">
           <div className="text-center text-red-500">
@@ -177,10 +165,7 @@ const MeetingDetail = () => {
         icon={<Calendar className="h-6 w-6" />}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
+            
             {!isEditing ? (
               <Button size="sm" onClick={() => setIsEditing(true)}>
                 <Edit className="mr-2 h-4 w-4" />

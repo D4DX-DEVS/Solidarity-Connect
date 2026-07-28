@@ -100,12 +100,6 @@ const EditNotification = () => {
           subtitle="Update the content and audience for this notification draft."
           eyebrow="Alerts"
           icon={<Bell className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/notifications")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          }
         />
         <SectionCard title="Loading" description="Fetching notification details.">
           <FormSkeleton fields={3} />
@@ -122,12 +116,6 @@ const EditNotification = () => {
           subtitle="Update the content and audience for this notification draft."
           eyebrow="Alerts"
           icon={<Bell className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/notifications")}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          }
         />
         <SectionCard title="Notification Not Found" description="The requested notification could not be loaded.">
           <div className="text-center py-8">
@@ -145,12 +133,6 @@ const EditNotification = () => {
         subtitle="Update the content and audience for this notification draft."
         eyebrow="Alerts"
         icon={<Bell className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/notifications")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        }
       />
 
       <SectionCard title="Notification Details" description="Edit the draft message and target audience.">

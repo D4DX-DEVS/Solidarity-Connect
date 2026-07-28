@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppSidebar from "./components/app/AppSidebar";
+import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
@@ -61,10 +62,12 @@ const queryClient = new QueryClient({
 });
 
 // Persistent layout: sidebar stays mounted across route changes (no remount flash)
+// ponytail: BottomNav lives here so every protected page keeps the mobile footer
 const AppLayout = () => (
   <>
     <AppSidebar />
     <Outlet />
+    <BottomNav />
   </>
 );
 

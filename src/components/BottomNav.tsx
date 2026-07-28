@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, Calendar, Bell, Star } from "lucide-react";
+import { LayoutDashboard, Users, Calendar, Star, Bell } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
@@ -24,6 +24,9 @@ const BottomNav = () => {
   const navItems = baseNavItems.filter(
     item => !item.hideForRoles?.includes(userRole || "")
   );
+
+  // ponytail: member dashboard ships its own tab bar — don't stack two
+  if (location.pathname.startsWith("/member-dashboard")) return null;
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 pb-safe sm:bottom-5 sm:px-4 lg:hidden">

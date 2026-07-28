@@ -3,9 +3,7 @@ import { Bell, Send, Edit, Trash2, Eye, AlertCircle, FileText, Image, Film, Pape
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/app/AppShell";
-import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import AnnouncementsPanel from "@/components/AnnouncementsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -320,10 +318,7 @@ const Notifications = () => {
             <AnnouncementsPanel />
           </TabsContent>
         </Tabs>
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

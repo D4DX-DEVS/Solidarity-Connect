@@ -27,8 +27,8 @@ const NotFound = () => {
           </p>
           <div className="mt-6 flex justify-center">
             <Button onClick={() => window.location.assign("/") }>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Return to Home
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Return to Home</span>
             </Button>
           </div>
         </div>
