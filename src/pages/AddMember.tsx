@@ -7,9 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
-import { FormSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import { useToast } from "@/hooks/use-toast";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 
 interface UserContext {
@@ -217,12 +215,6 @@ const AddMember = () => {
         subtitle="Create a member profile with the right district, group, and optional background details."
         eyebrow="Members"
         icon={<UserPlus className="h-6 w-6" />}
-        actions={
-          <Button className="hidden md:inline-flex" variant="outline" size="sm" onClick={() => navigate("/members")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Members
-          </Button>
-        }
         details={
           <>
             <div className="hidden min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
@@ -262,8 +254,8 @@ const AddMember = () => {
             <p className="text-sm text-muted-foreground">Return to the members directory or switch to an account with member-creation access.</p>
             <div className="flex justify-center">
               <Button variant="outline" onClick={() => navigate("/members")}>
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Members
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back to Members</span>
               </Button>
             </div>
           </div>
@@ -491,10 +483,7 @@ const AddMember = () => {
             </div>
           </form>
         )}
-      </SectionCard>
-
-      <BottomNav />
-    </PageShell>
+      </SectionCard>    </PageShell>
   );
 };
 

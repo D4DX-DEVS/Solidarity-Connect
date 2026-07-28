@@ -1,9 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { FileText, Check, X, MessageSquare, Clock, AlertCircle } from "lucide-react";
 import { SectionCard } from "@/components/app/AppShell";
-import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -167,10 +165,7 @@ const Requests = () => {
           </div>
         )}
       </SectionCard>
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

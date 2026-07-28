@@ -6,9 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import PageSizeInput from "@/components/app/PageSizeInput";
-import BottomNav from "@/components/BottomNav";
-import { useNavigate } from "react-router-dom";
+import PageSizeInput from "@/components/app/PageSizeInput";import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
 
@@ -177,11 +175,12 @@ const MembersGroupReport = () => {
     return stat?.count || 0;
   };
 
-  const totalMembers = reportsData?.groupStatistics?.reduce((sum, group) => sum + group.totalMembers, 0) || 0;
   const totalActive = getStatusCount('Active');
   const totalInactive = getStatusCount('Inactive');
   const totalAbroad = getStatusCount('Abroad');
   const totalApplicant = getStatusCount('Applicant');
+  // ponytail: Total must be global status sum, not a sum over the current page's 10 groups
+  const totalMembers = totalActive + totalInactive + totalAbroad + totalApplicant;
 
   // Filter groups based on selection
   const filteredGroups = groups.filter(group => {
@@ -250,10 +249,7 @@ const MembersGroupReport = () => {
         icon={<Users className="h-6 w-6" />}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
+            
             <Button
               size="sm"
               variant="outline"
@@ -356,7 +352,7 @@ const MembersGroupReport = () => {
           <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <MetricCard title="Total" value={String(totalMembers)} icon={Users} tone="primary" />
             <MetricCard title="Active" value={String(totalActive)} icon={TrendingUp} tone="success" />
-            <MetricCard title="Inactive" value={String(totalInactive)} icon={Users} tone="neutral" />
+            <MetricCard title="Inactive" value={String(totalInactive)} icon={Users} tone="neutral" className="hidden sm:block" />
             <MetricCard title="Abroad" value={String(totalAbroad)} icon={Users} tone="warning" />
             <MetricCard title="Applicant" value={String(totalApplicant)} icon={Users} tone="danger" />
           </div>
@@ -366,18 +362,16 @@ const MembersGroupReport = () => {
         {!loading && !error && pagination && pagination.totalDocs > 0 && (
           <Card className="surface-card border-border/70">
             <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
-                    {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of{" "}
-                    {pagination.totalDocs} groups
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-xs text-muted-foreground sm:text-sm">
+                  Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
+                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of{" "}
+                  {pagination.totalDocs} groups
+                </span>
+
+                <div className="flex items-center justify-between gap-2 sm:justify-end">
                   <PageSizeInput value={pageSize} onChange={handlePageSizeChange} />
-                  
+
                   <div className="flex items-center gap-1">
                     <Button
                       variant="outline"
@@ -387,11 +381,11 @@ const MembersGroupReport = () => {
                     >
                       {paginationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-4 w-4" />}
                     </Button>
-                    
-                    <span className="px-3 py-1 text-sm">
+
+                    <span className="px-2 py-1 text-xs sm:px-3 sm:text-sm whitespace-nowrap">
                       {pagination.currentPage} of {pagination.totalPages}
                     </span>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -543,9 +537,7 @@ const MembersGroupReport = () => {
               </div>
             </CardContent>
           </Card>
-        )}
-      <BottomNav />
-    </PageShell>
+        )}    </PageShell>
   );
 };
 

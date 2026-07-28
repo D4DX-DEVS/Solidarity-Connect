@@ -62,12 +62,6 @@ const SendNotification = () => {
         subtitle="Create a notification draft for the selected audience."
         eyebrow="Alerts"
         icon={<Send className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin")}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        }
       />
 
       <SectionCard title="Notification Draft" description="Compose the message and choose who should receive it.">

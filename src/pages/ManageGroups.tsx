@@ -96,7 +96,7 @@ const ManageGroups = () => {
         icon={<Users className="h-6 w-6" />}
       />
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Selected District" value={selectedDistrict?.name || "None"} icon={Users} tone="primary" />
         <MetricCard title="Active Groups" value={String(groups.length)} icon={Users} tone="warning" />
         <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
@@ -116,9 +116,9 @@ const ManageGroups = () => {
           </Button>
         }
       >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
-          <div className="space-y-2">
-            <label htmlFor="selected-district" className="text-sm font-medium text-foreground">Select District</label>
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+          <div className="space-y-1.5 sm:space-y-2">
+            <label htmlFor="selected-district" className="text-xs font-medium text-foreground sm:text-sm">Select District</label>
             {districtsLoading ? (
               <Skeleton className="h-12 w-full rounded-xl" />
             ) : (
@@ -141,8 +141,8 @@ const ManageGroups = () => {
             )}
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="group-search" className="text-sm font-medium text-foreground">Search Groups</label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <label htmlFor="group-search" className="text-xs font-medium text-foreground sm:text-sm">Search Groups</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -182,24 +182,24 @@ const ManageGroups = () => {
           <div className="space-y-3">
             {groups.map((group) => (
               <Card key={group._id} className="surface-card border-border/70">
-                <CardContent className="space-y-4 p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="action-tile-icon">
+                      <div className="action-tile-icon shrink-0">
                         <Users className="h-5 w-5 text-primary" />
                       </div>
-                      <div className="space-y-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">{group.name}</h3>
+                      <div className="min-w-0 space-y-1 sm:space-y-2">
+                        <h3 className="truncate text-base font-semibold text-foreground sm:text-lg">{group.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2">
                           <p className="text-sm text-muted-foreground">Code: {group.code}</p>
-                        </div>
-                        <div className="data-strip inline-flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          {group.statistics?.totalMembers || 0} Members
+                          <div className="data-strip inline-flex items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm">
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            {group.statistics?.totalMembers || 0} Members
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[260px]">
+                    <div className="grid grid-cols-2 gap-2 lg:min-w-[260px]">
                       <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(group)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit

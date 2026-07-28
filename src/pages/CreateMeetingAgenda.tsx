@@ -192,12 +192,6 @@ const CreateMeetingAgenda = () => {
         subtitle="Prepare the monthly agenda, sessions, and supporting file."
         eyebrow="Meetings"
         icon={<Calendar className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/state-admin/meeting-agenda")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-        }
       />
 
       <form onSubmit={handleSubmit} className="space-y-4">

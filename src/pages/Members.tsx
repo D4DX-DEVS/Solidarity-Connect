@@ -11,7 +11,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import PageSizeInput from "@/components/app/PageSizeInput";
-import BottomNav from "@/components/BottomNav";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
@@ -644,8 +643,6 @@ const Members = () => {
       >
         <Plus className="h-6 w-6" />
       </Button>
-
-      <BottomNav />
     </div>
   );
 };

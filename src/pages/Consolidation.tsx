@@ -16,9 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useDistricts } from '@/hooks/useDistricts';
 import { useGroups } from '@/hooks/useGroups';
-import { consolidationService, type ConsolidationUserType, type ConsolidationTarget, type ConsolidationReport, type ConsolidationUser, type MonthlyBreakdown } from '@/services/consolidationService';
-import BottomNav from '@/components/BottomNav';
-import * as XLSX from 'xlsx';
+import { consolidationService, type ConsolidationUserType, type ConsolidationTarget, type ConsolidationReport, type ConsolidationUser, type MonthlyBreakdown } from '@/services/consolidationService';import * as XLSX from 'xlsx';
 
 const USER_TYPE_OPTIONS: { value: ConsolidationUserType; label: string }[] = [
   { value: 'state_admin', label: 'State Admin' },
@@ -695,10 +693,7 @@ export default function Consolidation() {
             </CardContent>
           </Card>
         )}
-      </div>
-
-      <BottomNav />
-    </PageShell>
+      </div>    </PageShell>
   );
 }
 

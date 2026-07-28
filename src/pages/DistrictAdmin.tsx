@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { MetricCard, PageHero, PageShell } from "@/components/app/AppShell";
-import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import UserTargetsSection from "@/components/UserTargetsSection";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";import UserTargetsSection from "@/components/UserTargetsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
+import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -156,35 +156,7 @@ const DistrictAdmin = () => {
             <Button variant="outline" size="icon" onClick={() => navigate("/notifications")} aria-label="Notifications">
               <Bell className="h-5 w-5" />
             </Button>
-          <span className="lg:hidden">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
-              <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
-                <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'District Admin'}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
-              </div>
-              <DropdownMenuItem onClick={() => navigate("/members")}>Members</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/meetings")}>Meeting Agendas</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/role-management")}>
-                <Shield className="mr-2 h-4 w-4" />Role Management
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/leaders")}>
-                <Star className="mr-2 h-4 w-4" />Leaders
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          </span>
+          {/* ponytail: hamburger now lives in PageHero for every page */}
           </>
         }
       />
@@ -362,16 +334,13 @@ const DistrictAdmin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <BottomNav />
-
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>Are you sure you want to log out?</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-row gap-2 justify-end">
+          <DialogFooter className="flex flex-row justify-center gap-2">
             <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
             <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="h-4 w-4 mr-2" />

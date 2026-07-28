@@ -16,9 +16,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+} from "@/components/ui/accordion";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MeetingAttendance } from "@/components/MeetingAttendance";
 import { SectionCard } from "@/components/app/AppShell";
 import { useMeetings } from "@/hooks/useMeetings";
@@ -201,10 +199,7 @@ const Meetings = () => {
               }}
             />
           )}
-        </main>
-
-        <BottomNav />
-      </div>
+        </main>      </div>
     );
   }
 
@@ -223,9 +218,7 @@ const Meetings = () => {
               <Skeleton className="h-4 w-1/4" />
             </Card>
           ))}
-        </main>
-        <BottomNav />
-      </div>
+        </main>      </div>
     );
   }
 
@@ -244,9 +237,7 @@ const Meetings = () => {
               {error.message || "Failed to load meetings. Please try again."}
             </p>
           </Card>
-        </main>
-        <BottomNav />
-      </div>
+        </main>      </div>
     );
   }
 
@@ -265,9 +256,7 @@ const Meetings = () => {
               State admin will create meeting agendas that will appear here.
             </p>
           </Card>
-        </main>
-        <BottomNav />
-      </div>
+        </main>      </div>
     );
   }
 
@@ -502,10 +491,7 @@ const Meetings = () => {
             </Card>
           );
         })}
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

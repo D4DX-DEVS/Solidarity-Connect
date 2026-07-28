@@ -143,12 +143,6 @@ Adhil Salim Noor,+918891323881,,1995-05-20,B+,Teacher,Bachelors,Active`;
         subtitle="Upload a CSV, map it to the right district or group, and queue members for approval."
         eyebrow="Members"
         icon={<FileSpreadsheet className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Members
-          </Button>
-        }
       />
 
       <SectionCard

@@ -12,9 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -476,10 +474,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
       <main className="app-main pt-4 pb-28 lg:pb-8 space-y-3">
         {content}
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

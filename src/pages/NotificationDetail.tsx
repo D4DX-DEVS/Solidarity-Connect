@@ -122,7 +122,7 @@ const NotificationDetail = () => {
   if (loading) {
     return (
       <PageShell>
-        <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} actions={<Button variant="outline" size="sm" onClick={() => navigate("/notifications")}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>} />
+        <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} />
         <SectionCard title="Loading" description="Fetching notification details.">
           <DetailSkeleton />
         </SectionCard>
@@ -133,7 +133,7 @@ const NotificationDetail = () => {
   if (!notification) {
     return (
       <PageShell>
-        <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} actions={<Button variant="outline" size="sm" onClick={() => navigate("/notifications")}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>} />
+        <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} />
         <SectionCard title="Notification Not Found" description="The requested notification could not be loaded.">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Notification not found</p>
@@ -145,7 +145,7 @@ const NotificationDetail = () => {
 
   return (
     <PageShell>
-      <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} actions={<Button variant="outline" size="sm" onClick={() => navigate("/notifications")}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>} />
+      <PageHero title="Notification Details" subtitle="Review content, status, audience, and attachments." eyebrow="Alerts" icon={<Bell className="h-6 w-6" />} />
 
       <Card className="surface-card">
         <CardHeader>

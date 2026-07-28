@@ -269,12 +269,6 @@ const EditMemberDetails = () => {
           subtitle="Loading the current member record before opening the edit form."
           eyebrow="Members"
           icon={<PencilLine className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Members
-            </Button>
-          }
         />
         <SectionCard title="Preparing Edit Form" description="Fetching member details and current organization mapping.">
           <FormSkeleton fields={6} />
@@ -290,12 +284,6 @@ const EditMemberDetails = () => {
         subtitle={member?.name || "Update the member profile without changing their organization mapping."}
         eyebrow="Members"
         icon={<PencilLine className="h-6 w-6" />}
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Members
-          </Button>
-        }
         details={
           <>
             <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">

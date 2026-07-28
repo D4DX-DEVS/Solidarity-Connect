@@ -343,12 +343,6 @@ const MemberDetail = () => {
           subtitle="Loading the latest member profile and supporting records."
           eyebrow="Members"
           icon={<User className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Members
-            </Button>
-          }
         />
         <SectionCard title="Preparing Member View" description="Fetching profile, contribution, and attendance data.">
           <div className="space-y-4">
@@ -379,12 +373,6 @@ const MemberDetail = () => {
           subtitle="The requested member record could not be loaded."
           eyebrow="Members"
           icon={<User className="h-6 w-6" />}
-          actions={
-            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Members
-            </Button>
-          }
         />
         <SectionCard title="Member Not Found" description="The member may have been removed or the link may be outdated.">
           <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
@@ -411,10 +399,7 @@ const MemberDetail = () => {
               <Edit className="mr-2 h-4 w-4" />
               Edit Request
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/members")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Members
-            </Button>
+            
           </>
         }
         details={

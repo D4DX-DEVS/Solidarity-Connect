@@ -18,9 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import PageSizeInput from "@/components/app/PageSizeInput";
-import BottomNav from "@/components/BottomNav";
-import HeaderWithLogout from "@/components/HeaderWithLogout";
+import PageSizeInput from "@/components/app/PageSizeInput";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -593,10 +591,7 @@ const AdminMeetingsView = () => {
               </div>
             </CardContent>
           </Card>
-        </main>
-
-        <BottomNav />
-      </div>
+        </main>      </div>
     );
   }
 
@@ -948,10 +943,7 @@ const AdminMeetingsView = () => {
             </SectionCard>
           </TabsContent>
         </Tabs>
-      </main>
-
-      <BottomNav />
-    </div>
+      </main>    </div>
   );
 };
 

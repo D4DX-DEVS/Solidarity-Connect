@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import type { LucideIcon } from "lucide-react";
-import {
-  LayoutDashboard, Users, UserCog, Building2, ArrowRightLeft, Shield, FileCheck,
-  BarChart3, FolderOpen, Database, Wallet, Bell, Megaphone, Calendar, Send,
-  Target, Star, Landmark, LogOut, ChevronsUpDown, Repeat,
-} from "lucide-react";
+import { LogOut, ChevronsUpDown, Repeat } from "lucide-react";
+import { SECTIONS, MEMBER_SECTIONS } from "@/lib/navSections";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,74 +21,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { getHomeRouteByRole, type AppUserRole } from "@/lib/roleRoutes";
-
-interface NavItem {
-  label: string;
-  path: string;
-  icon: LucideIcon;
-  roles?: string[]; // undefined = all roles
-}
-
-interface NavSection {
-  title?: string;
-  items: NavItem[];
-}
-
-const SECTIONS: NavSection[] = [
-  {
-    items: [{ label: "Dashboard", path: "__home__", icon: LayoutDashboard }],
-  },
-  {
-    title: "Management",
-    items: [
-      { label: "Members", path: "/members", icon: Users, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Users", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
-      { label: "Districts", path: "/state-admin/districts", icon: Building2, roles: ["state_admin"] },
-      { label: "Groups", path: "/state-admin/groups", icon: Users, roles: ["state_admin", "district_admin"] },
-      { label: "Transfers", path: "/state-admin/transfer-approvals", icon: ArrowRightLeft, roles: ["state_admin", "district_admin"] },
-      { label: "Role Management", path: "/role-management", icon: Shield, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Requests", path: "/requests", icon: FileCheck, roles: ["group_admin"] },
-      { label: "Reports", path: "/state-admin/group-reports", icon: BarChart3, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Consolidation", path: "/consolidation", icon: Landmark, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Master Data", path: "/state-admin/master-data", icon: Database, roles: ["state_admin"] },
-      { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
-    ],
-  },
-  {
-    title: "Communication",
-    items: [
-      // ponytail: one entry — announcements are a tab on the alerts page
-      { label: "Alerts", path: "/notifications", icon: Bell },
-      { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Send Notification", path: "/state-admin/send-notification", icon: Send, roles: ["state_admin"] },
-    ],
-  },
-  {
-    title: "Targets & Planning",
-    items: [
-      { label: "My Targets", path: "/my-targets", icon: Target, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Personal Targets", path: "/personal-targets", icon: Target, roles: ["state_admin"] },
-      { label: "Leaders", path: "/leaders", icon: Star },
-    ],
-  },
-];
-
-// ponytail: member gets flat daily-use-first list; admin roles keep grouped SECTIONS
-const MEMBER_SECTIONS: NavSection[] = [
-  {
-    items: [
-      { label: "Dashboard", path: "__home__", icon: LayoutDashboard },
-      { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target },
-      { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar },
-      { label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet },
-      { label: "Alerts", path: "/notifications", icon: Bell },
-      { label: "Leaders", path: "/leaders", icon: Star },
-      { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
-      { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog },
-    ],
-  },
-];
 
 const roleTitles: Record<string, string> = {
   state_admin: "State Admin",
@@ -215,7 +143,7 @@ function AppSidebar() {
             <DialogTitle>Confirm Logout</DialogTitle>
             <DialogDescription>Are you sure you want to log out?</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-row justify-end gap-2">
+          <DialogFooter className="flex flex-row justify-center gap-2">
             <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
             <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="mr-2 h-4 w-4" />
