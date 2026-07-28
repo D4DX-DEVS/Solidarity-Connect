@@ -377,7 +377,7 @@ const BaithulDataView = () => {
             {/* Filters */}
             <div className="grid grid-cols-2 gap-3">
               <Select value={selectedDistrict || "all"} onValueChange={(value) => setSelectedDistrict(value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                   <SelectValue placeholder="All Districts" />
                 </SelectTrigger>
                 <SelectContent>
@@ -394,7 +394,7 @@ const BaithulDataView = () => {
 
               {/* Month selector – visible for all view modes */}
               <Select value={selectedMonth || "all"} onValueChange={(value) => setSelectedMonth(value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                   <SelectValue placeholder="All Months" />
                 </SelectTrigger>
                 <SelectContent>

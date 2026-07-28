@@ -300,7 +300,7 @@ const MembersGroupReport = () => {
                   value={selectedDistrict || "all"}
                   onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="All Districts" />
                   </SelectTrigger>
                   <SelectContent>
@@ -316,7 +316,7 @@ const MembersGroupReport = () => {
                   value={selectedGroup || "all"}
                   onValueChange={(val) => setSelectedGroup(val === "all" ? "" : val)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="All Groups" />
                   </SelectTrigger>
                   <SelectContent>
