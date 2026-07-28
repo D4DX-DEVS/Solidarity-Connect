@@ -341,7 +341,7 @@ const Members = () => {
             <div className="grid grid-flow-col auto-cols-fr gap-1.5 sm:gap-2">
               {userRole === "state_admin" && (
                 <Select value={selectedDistrict || "all"} onValueChange={(value) => setSelectedDistrict(value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="All Districts" />
                   </SelectTrigger>
                   <SelectContent>
@@ -357,7 +357,7 @@ const Members = () => {
 
               {(userRole === "state_admin" || userRole === "district_admin") && (
                 <Select value={selectedGroup || "all"} onValueChange={(value) => setSelectedGroup(value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="All Groups" />
                   </SelectTrigger>
                   <SelectContent>
@@ -372,7 +372,7 @@ const Members = () => {
               )}
 
               <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>

@@ -336,7 +336,7 @@ const AdminMeetingsView = () => {
           <SectionCard title="Group Filters" description="Narrow the meeting progress table by status, district, and page size.">
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
                 <Select value={detailFilters.groupStatus || "all"} onValueChange={(value) => handleDetailFilterChange('groupStatus', value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="Filter by Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -347,7 +347,7 @@ const AdminMeetingsView = () => {
                 </Select>
 
                 <Select value={detailFilters.district || "all"} onValueChange={(value) => handleDetailFilterChange('district', value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="Filter by District" />
                   </SelectTrigger>
                   <SelectContent>
@@ -367,8 +367,9 @@ const AdminMeetingsView = () => {
                   onChange={(size) => setGroupPagination(prev => ({ ...prev, itemsPerPage: size, currentPage: 1 }))}
                 />
 
-                <Button variant="outline" onClick={() => setDetailFilters({ groupStatus: '', district: '' })}>
-                  Clear Filters
+                <Button variant="outline" className="h-9 px-2 text-xs sm:h-11 sm:px-4 sm:text-sm" onClick={() => setDetailFilters({ groupStatus: '', district: '' })}>
+                  <span className="sm:hidden">Clear</span>
+                  <span className="hidden sm:inline">Clear Filters</span>
                 </Button>
               </div>
           </SectionCard>
@@ -654,7 +655,7 @@ const AdminMeetingsView = () => {
               </div>
 
               <Select value={filters.status || "all"} onValueChange={(value) => handleFilterChange('status', value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                   <SelectValue placeholder="Meeting Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -666,7 +667,7 @@ const AdminMeetingsView = () => {
               </Select>
 
               <Select value={filters.completionStatus || "all"} onValueChange={(value) => handleFilterChange('completionStatus', value === "all" ? "" : value)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                   <SelectValue placeholder="Completion" />
                 </SelectTrigger>
                 <SelectContent>
@@ -676,7 +677,7 @@ const AdminMeetingsView = () => {
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" className="h-9 px-2 text-xs sm:h-11 sm:px-4 sm:text-sm" onClick={clearFilters}>
                 <span className="sm:hidden">Clear</span>
                 <span className="hidden sm:inline">Clear Filters</span>
               </Button>

@@ -554,7 +554,7 @@ export default function Consolidation() {
               <>
                 <div className="col-span-1 lg:col-span-2">
                   <Select value={selectedDistrictId} onValueChange={setSelectedDistrictId}>
-                    <SelectTrigger aria-label="District">
+                    <SelectTrigger aria-label="District" className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                       <SelectValue placeholder="All Districts" />
                     </SelectTrigger>
                     <SelectContent>
@@ -569,7 +569,7 @@ export default function Consolidation() {
                 {showGroupFilter && (
                   <div className="col-span-1 lg:col-span-2">
                     <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                      <SelectTrigger aria-label="Group">
+                      <SelectTrigger aria-label="Group" className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                         <SelectValue placeholder="All Groups" />
                       </SelectTrigger>
                       <SelectContent>
@@ -587,7 +587,7 @@ export default function Consolidation() {
             {selectedTargetId && (
               <div className="col-span-1 lg:col-span-2">
                 <Select value={dateMode} onValueChange={(val) => { if (val) setDateMode(val as 'all' | 'custom'); }}>
-                  <SelectTrigger aria-label="Date range">
+                  <SelectTrigger aria-label="Date range" className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
