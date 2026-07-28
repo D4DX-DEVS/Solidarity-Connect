@@ -23,6 +23,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI, apiCall } from "@/utils/api";
+import { downloadFile } from "@/utils/downloadFile";
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
@@ -51,6 +52,7 @@ import {
   ChevronDown,
   ChevronUp,
   Upload,
+  Trash2,
   X,
   RefreshCw,
   FolderOpen,
@@ -78,7 +80,7 @@ interface MemberProfile {
     id: string;
     name: string;
     phone: string;
-    avatar?: string;
+    avatar?: string | null;
     email?: string;
     dateOfBirth?: string;
     age?: number;
@@ -701,6 +703,19 @@ const MemberDashboard = () => {
     }
   };
 
+  const removeAvatar = async () => {
+    try {
+      setAvatarUploading(true);
+      await memberAuthAPI.updateProfile({ avatar: null });
+      setProfile(prev => prev ? { ...prev, profile: { ...prev.profile, avatar: null } } : prev);
+      toast({ title: "Photo Removed", description: "Your profile photo has been removed." });
+    } catch {
+      toast({ title: "Error", description: "Failed to remove photo", variant: "destructive" });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const submitChangeRequest = async () => {
     try {
       setChangeRequestSending(true);
@@ -802,10 +817,17 @@ const MemberDashboard = () => {
               }}
             />
             <div className="space-y-1.5">
-              <Button size="sm" variant="outline" disabled={avatarUploading} onClick={() => avatarFileRef.current?.click()}>
-                <Upload className="h-3.5 w-3.5 mr-1.5" />
-                {avatarUploading ? "Uploading..." : "Change Photo"}
-              </Button>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="outline" disabled={avatarUploading} onClick={() => avatarFileRef.current?.click()}>
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {avatarUploading ? "Uploading..." : "Change Photo"}
+                </Button>
+                {profile.profile.avatar && (
+                  <Button size="sm" variant="outline" disabled={avatarUploading} onClick={removeAvatar}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+              </div>
               <button
                 className="block text-xs text-primary hover:underline"
                 onClick={() => {
@@ -1559,29 +1581,25 @@ const MemberDashboard = () => {
                     {file.description && (
                       <p className="text-xs text-muted-foreground line-clamp-3 malayalam-text">{file.description}</p>
                     )}
-                    <div className="flex items-center gap-2 flex-wrap mt-1.5">
-                      <Badge variant="outline" className="text-xs capitalize">
+                    <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto mt-1.5">
+                      <Badge variant="outline" className="text-xs capitalize shrink-0">
                         {orgCategoryLabels[file.category] || file.category}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{formatOrgFileSize(file.size)}</span>
-                    </div>
-                    <div className="flex gap-2 mt-2">
+                      <span className="text-xs text-muted-foreground shrink-0">{formatOrgFileSize(file.size)}</span>
                       {file.category === "link" && file.link ? (
-                        <a href={file.link} target="_blank" rel="noopener noreferrer">
+                        <a href={file.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
                           <Button size="sm" variant="outline" className="text-xs h-7">
                             <Link2 className="h-3 w-3 mr-1" />Open Link
                           </Button>
                         </a>
                       ) : file.url ? (
                         <>
-                          <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setViewerFile(file)}>
+                          <Button size="sm" variant="outline" className="text-xs h-7 shrink-0" onClick={() => setViewerFile(file)}>
                             <Eye className="h-3 w-3 mr-1" />View
                           </Button>
-                          <a href={file.url} download>
-                            <Button size="sm" variant="ghost" className="text-xs h-7">
-                              <Download className="h-3 w-3 mr-1" />Download
-                            </Button>
-                          </a>
+                          <Button size="sm" variant="ghost" className="text-xs h-7 shrink-0" onClick={() => downloadFile(file.url, file.originalName || file.title)}>
+                            <Download className="h-3 w-3 mr-1" />Download
+                          </Button>
                         </>
                       ) : null}
                     </div>
