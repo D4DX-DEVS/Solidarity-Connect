@@ -7,7 +7,7 @@ import User from '../models/User.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import { authenticate, authorize, requireAreaScope, adminKindQuery } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, adminKindQuery, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 
 // Cache all district names (id -> name) for fallback when populate fails due to stale refs
 let districtNameCache = null;
@@ -201,7 +201,7 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
     }
 
     // Apply role-based access restrictions
-    const accessFilter = buildAccessFilter(req.user, districtId, groupId);
+    const accessFilter = await buildAccessFilter(req.user, districtId, groupId);
 
     let result;
     if (target.isRecurring) {
@@ -232,7 +232,7 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
 });
 
 // Build access filter based on the logged-in user's role
-function buildAccessFilter(user, districtId, groupId) {
+async function buildAccessFilter(user, districtId, groupId) {
   const filter = {};
 
   // state_admin can see everything, optionally filter by district/group
@@ -249,11 +249,22 @@ function buildAccessFilter(user, districtId, groupId) {
     return filter;
   }
 
-  // group_admin limited to own group scope
+  // group_admin: area-level admins roll up their whole area's groups,
+  // unit admins only their own group.
   if (user.role === 'group_admin') {
     const districtFromGroup = user.group?.district?._id || user.group?.district;
     filter.district = districtFromGroup || user.district?._id || user.district;
-    filter.group = user.group?._id || user.group;
+    if (isAreaLevelAdmin(user)) {
+      const areaIds = await areaGroupIdsFor(user);
+      // Honour a requested group only when it belongs to their area
+      if (groupId && groupId !== 'all' && areaIds.some(id => String(id) === String(groupId))) {
+        filter.group = groupId;
+      } else {
+        filter.group = { $in: areaIds };
+      }
+    } else {
+      filter.group = user.group?._id || user.group;
+    }
     return filter;
   }
 
