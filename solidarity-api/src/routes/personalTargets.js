@@ -4,7 +4,7 @@ import MemberTargetProgress from '../models/MemberTargetProgress.js';
 import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import User from '../models/User.js';
-import { authenticate, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin, adminKindQuery } from '../middleware/auth.js';
 import { body, validationResult, query } from 'express-validator';
 
 const router = express.Router();
@@ -106,8 +106,8 @@ router.get('/', authenticate, async (req, res) => {
       ];
       filter.status = 'active';
     } else if (req.user.role === 'group_admin') {
-      const roleTagType = req.user.roleTag?.type;
-      const roleAudience = roleTagType === 'area' ? 'area_admins' : 'group_admins';
+      // Murabi / Coordinator admins are area admins, so they get the area feed too.
+      const roleAudience = isAreaLevelAdmin(req.user) ? 'area_admins' : 'group_admins';
       filter.$and = [
         { $or: [{ targetAudience: 'all_users' }, { targetAudience: roleAudience }, { targetAudience: 'group_and_area_admins' }] },
         // Only show active targets within date range (or those without dates set)
@@ -378,8 +378,7 @@ async function createProgressRecords(personalTarget) {
       } else if (audience === 'district_admins') {
         userFilter.role = 'district_admin';
       } else if (audience === 'area_admins') {
-        userFilter.role = 'group_admin';
-        userFilter['roleTag.type'] = 'area';
+        Object.assign(userFilter, adminKindQuery('area_level'));
       } else if (audience === 'group_admins' || audience === 'group_and_area_admins') {
         userFilter.role = 'group_admin';
       }

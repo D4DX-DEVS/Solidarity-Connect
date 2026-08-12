@@ -7,7 +7,7 @@ import User from '../models/User.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, adminKindQuery } from '../middleware/auth.js';
 
 // Cache all district names (id -> name) for fallback when populate fails due to stale refs
 let districtNameCache = null;
@@ -102,12 +102,27 @@ function resolveDistrictName(entity, districtMap) {
 const router = express.Router();
 
 // Map frontend userType to targetAudience values
+// Murabi and Coordinator admins are area admins with a different badge — same
+// audiences, same area scoping — so they get their own rows in the hierarchy
+// without changing what they are allowed to see.
+const AREA_LEVEL_AUDIENCES = ['area_admins', 'group_and_area_admins', 'all_users'];
+
 const USER_TYPE_TO_AUDIENCES = {
   state_admin: ['state_admins', 'all_users'],
   district_admin: ['district_admins', 'all_users'],
-  area_admin: ['area_admins', 'group_and_area_admins', 'all_users'],
+  area_admin: AREA_LEVEL_AUDIENCES,
+  murabi_admin: AREA_LEVEL_AUDIENCES,
+  coordinator_admin: AREA_LEVEL_AUDIENCES,
   unit_admin: ['group_admins', 'group_and_area_admins', 'all_users'],
   members: ['members_only', 'all_users']
+};
+
+// Consolidation user type → the group_admin slice it selects (see adminKindQuery).
+const USER_TYPE_TO_ADMIN_KIND = {
+  area_admin: 'area',
+  murabi_admin: 'murabi',
+  coordinator_admin: 'coordinator',
+  unit_admin: 'unit'
 };
 
 // @route   GET /api/consolidation/targets
@@ -120,7 +135,7 @@ router.get('/targets', authenticate, authorize(['view_reports']), requireAreaSco
     if (!userType || !USER_TYPE_TO_AUDIENCES[userType]) {
       return res.status(400).json({
         success: false,
-        message: 'Valid userType is required: state_admin, district_admin, area_admin, unit_admin, members'
+        message: 'Valid userType is required: state_admin, district_admin, area_admin, murabi_admin, coordinator_admin, unit_admin, members'
       });
     }
 
@@ -239,7 +254,7 @@ async function getRegularAdminConsolidation(target, userType, accessFilter, date
   // Find users matching the user type
   const userQuery = buildUserQuery(userType, accessFilter);
   const users = await User.find(userQuery)
-    .select('name phone role roleTag district group')
+    .select('name phone role adminKind roleTag district group')
     .populate({ path: 'group', select: 'name district', populate: { path: 'district', select: 'name' } })
     .lean();
 
@@ -276,6 +291,9 @@ async function getRegularAdminConsolidation(target, userType, accessFilter, date
       phone: user.phone,
       role: user.role,
       roleTag: user.roleTag?.type,
+      adminKind: user.adminKind || null,
+      // Area admins (incl. Murabi/Coordinator) are scoped by area name, not group
+      area: user.roleTag?.roleDescription || '',
       district: resolveDistrictName(user, districtMap),
       group: user.group?.name || ''
     };
@@ -417,7 +435,7 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
   } else {
     const userQuery = buildUserQuery(userType, accessFilter);
     entities = await User.find(userQuery)
-      .select('name phone role roleTag district group')
+      .select('name phone role adminKind roleTag district group')
       .populate({ path: 'group', select: 'name district', populate: { path: 'district', select: 'name' } })
       .lean();
   }
@@ -447,12 +465,14 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
 
   const marks = await RecurringMark.find(markQuery).lean();
 
-  // Group marks by user
-  const marksByUser = {};
+  // Group marks by user. Weekly targets store up to 5 marks inside one month, so
+  // dedupe by period — otherwise a single month counts 4-5 times and the monthly
+  // totals overshoot the number of users.
+  const monthsByUser = {};
   for (const mark of marks) {
     const uid = mark.user.toString();
-    if (!marksByUser[uid]) marksByUser[uid] = [];
-    marksByUser[uid].push({ year: mark.year, month: mark.month });
+    if (!monthsByUser[uid]) monthsByUser[uid] = new Set();
+    monthsByUser[uid].add(`${mark.year}-${mark.month}`);
   }
 
   // Categorize users
@@ -468,8 +488,7 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
   }
 
   for (const entity of entities) {
-    const userMarks = marksByUser[entity._id.toString()] || [];
-    const completedMonths = userMarks.map(m => `${m.year}-${m.month}`);
+    const completedMonths = [...(monthsByUser[entity._id.toString()] || [])];
 
     // Update monthly data
     for (const cm of completedMonths) {
@@ -485,6 +504,8 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
       phone: entity.phone,
       role: entity.role || 'member',
       roleTag: entity.roleTag?.type,
+      adminKind: entity.adminKind || null,
+      area: entity.roleTag?.roleDescription || '',
       district: resolveDistrictName(entity, districtMap),
       group: entity.group?.name || '',
       completedMonths,
@@ -532,23 +553,10 @@ async function getRecurringConsolidation(target, userType, accessFilter, dateFro
 function buildUserQuery(userType, accessFilter) {
   const query = { isActive: true };
 
-  switch (userType) {
-    case 'state_admin':
-      query.role = 'state_admin';
-      break;
-    case 'district_admin':
-      query.role = 'district_admin';
-      break;
-    case 'area_admin':
-      query.role = 'group_admin';
-      query['roleTag.type'] = 'area';
-      break;
-    case 'unit_admin':
-      query.role = 'group_admin';
-      query['roleTag.type'] = 'unit';
-      break;
-    default:
-      break;
+  if (userType === 'state_admin' || userType === 'district_admin') {
+    query.role = userType;
+  } else if (USER_TYPE_TO_ADMIN_KIND[userType]) {
+    Object.assign(query, adminKindQuery(USER_TYPE_TO_ADMIN_KIND[userType]));
   }
 
   if (accessFilter.district) query.district = accessFilter.district;

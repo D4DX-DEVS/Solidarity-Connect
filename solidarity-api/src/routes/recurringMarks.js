@@ -5,7 +5,7 @@ import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import User from '../models/User.js';
-import { authenticate, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, isAreaLevelAdmin, adminKindQuery, adminKindOf } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -81,13 +81,14 @@ router.get('/area-members', authenticate, async (req, res) => {
       .sort({ name: 1 })
       .lean();
 
-    // Also include area leader Users (other area admins in same area+district)
+    // Also include area leader Users — every area-level admin in the same area+district,
+    // Area / Murabi / Coordinator alike.
     const areaLeaderUsers = await User.find({
+      ...adminKindQuery('area_level'),
       district: districtId,
-      'roleTag.type': 'area',
       'roleTag.roleDescription': areaRegex,
       isActive: true
-    }).select('name phone roleTag').lean();
+    }).select('name phone roleTag adminKind').lean();
 
     res.status(200).json({
       success: true,
@@ -264,16 +265,16 @@ router.post('/', authenticate, async (req, res) => {
       }));
     }
 
-    // If the acting user is an area admin (group_admin with roleTag.type === 'area'),
-    // propagate the same mark to all co-admins in the same area+district.
+    // If the acting user is an area-level admin, propagate the mark to co-admins of the
+    // SAME kind in the same area+district — Area to Area, Murabi to Murabi, Coordinator
+    // to Coordinator. They share an area but not each other's target sheets.
     if (isAreaAdmin(req.user) && req.user.district && req.user.roleTag?.roleDescription) {
       const areaName = req.user.roleTag.roleDescription;
       const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 
       const coAreaAdmins = await User.find({
+        ...adminKindQuery(adminKindOf(req.user)),
         _id: { $ne: req.user._id },
-        role: 'group_admin',
-        'roleTag.type': 'area',
         'roleTag.roleDescription': areaRegex,
         district: req.user.district,
         isActive: true

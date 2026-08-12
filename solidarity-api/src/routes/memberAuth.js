@@ -1222,6 +1222,29 @@ router.post('/recurring-marks', authenticateMember, async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // Mirror the mark into MemberTargetProgress, the way the admin path mirrors into
+    // UserTargetProgress. Admin-facing member progress views read that collection, and
+    // without this they only catch up on the next server restart.
+    const anyCompleted = await RecurringMark.exists({
+      user: req.member._id,
+      userType: 'Member',
+      personalTarget: targetId,
+      completed: true
+    });
+    await MemberTargetProgress.findOneAndUpdate(
+      { member: req.member._id, personalTarget: targetId },
+      {
+        $set: {
+          status: anyCompleted ? 'completed' : 'not_started',
+          targetValue: target.targetValue,
+          currentProgress: anyCompleted ? target.targetValue : 0,
+          progressPercentage: anyCompleted ? 100 : 0,
+          completedAt: anyCompleted ? new Date() : null
+        }
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
     res.status(200).json({
       success: true,
       data: {
