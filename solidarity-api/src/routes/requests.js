@@ -1,7 +1,7 @@
 import express from 'express';
 import Request from '../models/Request.js';
 import Member from '../models/Member.js';
-import { authenticate, authorize, requireRole } from '../middleware/auth.js';
+import { authenticate, authorize, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   createRequestValidation,
   paginationValidation,
@@ -213,6 +213,22 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       });
     }
 
+    // Enforce district scoping for district_admin
+    if (req.user.role === 'district_admin') {
+      const userDistrictId = req.user.district?._id || req.user.district;
+      const memberDistrictId = request.member?.district?._id || request.member?.district;
+      if (userDistrictId?.toString() !== memberDistrictId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    } else if (isAreaLevelAdmin(req.user)) {
+      // area-level group_admin: must be in own area's groups
+      const areaGroupIds = await areaGroupIdsFor(req.user);
+      const memberGroupId = request.member?.group?._id || request.member?.group;
+      if (!areaGroupIds.map(g => g.toString()).includes(memberGroupId?.toString())) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: request
@@ -337,7 +353,7 @@ router.post('/:id/approve',
   async (req, res) => {
     try {
       const request = await Request.findById(req.params.id)
-        .populate('member');
+        .populate('member', 'district group');
 
       if (!request) {
         return res.status(404).json({
@@ -363,6 +379,22 @@ router.post('/:id/approve',
           success: false,
           message: 'Insufficient permissions to approve this request'
         });
+      }
+
+      // Enforce district scoping for district_admin
+      if (req.user.role === 'district_admin') {
+        const userDistrictId = req.user.district?._id || req.user.district;
+        const memberDistrictId = request.member?.district?._id || request.member?.district;
+        if (userDistrictId?.toString() !== memberDistrictId?.toString()) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      } else if (isAreaLevelAdmin(req.user)) {
+        // area-level group_admin: must be in own area's groups
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        const memberGroupId = request.member?.group?._id || request.member?.group;
+        if (!areaGroupIds.map(g => g.toString()).includes(memberGroupId?.toString())) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
       }
 
       const { comment } = req.body;
@@ -405,7 +437,8 @@ router.post('/:id/reject',
   ],
   async (req, res) => {
     try {
-      const request = await Request.findById(req.params.id);
+      const request = await Request.findById(req.params.id)
+        .populate('member', 'district group');
 
       if (!request) {
         return res.status(404).json({
@@ -431,6 +464,22 @@ router.post('/:id/reject',
           success: false,
           message: 'Insufficient permissions to reject this request'
         });
+      }
+
+      // Enforce district scoping for district_admin
+      if (req.user.role === 'district_admin') {
+        const userDistrictId = req.user.district?._id || req.user.district;
+        const memberDistrictId = request.member?.district?._id || request.member?.district;
+        if (userDistrictId?.toString() !== memberDistrictId?.toString()) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      } else if (isAreaLevelAdmin(req.user)) {
+        // area-level group_admin: must be in own area's groups
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        const memberGroupId = request.member?.group?._id || request.member?.group;
+        if (!areaGroupIds.map(g => g.toString()).includes(memberGroupId?.toString())) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
       }
 
       const { reason } = req.body;
@@ -473,7 +522,8 @@ router.post('/:id/comment',
   ],
   async (req, res) => {
     try {
-      const request = await Request.findById(req.params.id);
+      const request = await Request.findById(req.params.id)
+        .populate('member', 'district group');
 
       if (!request) {
         return res.status(404).json({
@@ -493,6 +543,22 @@ router.post('/:id/comment',
           success: false,
           message: 'Access denied'
         });
+      }
+
+      // Enforce district scoping for district_admin
+      if (req.user.role === 'district_admin') {
+        const userDistrictId = req.user.district?._id || req.user.district;
+        const memberDistrictId = request.member?.district?._id || request.member?.district;
+        if (userDistrictId?.toString() !== memberDistrictId?.toString()) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      } else if (isAreaLevelAdmin(req.user)) {
+        // area-level group_admin: must be in own area's groups
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        const memberGroupId = request.member?.group?._id || request.member?.group;
+        if (!areaGroupIds.map(g => g.toString()).includes(memberGroupId?.toString())) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
       }
 
       const { comment } = req.body;

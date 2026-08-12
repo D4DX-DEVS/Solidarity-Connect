@@ -117,6 +117,37 @@ export const adminKindQuery = (kind) => {
   }
 };
 
+// Groups belonging to an area-level admin's area: same district, group name
+// matching the admin's area name (roleTag.roleDescription). Area admins see
+// exactly these groups' members — never the whole district. Returns [] when
+// the admin has no resolvable area.
+export const areaGroupIdsFor = async (user) => {
+  const areaName = user?.roleTag?.roleDescription;
+  const districtId = user?.district?._id || user?.district;
+  if (!areaName || !districtId) return [];
+  const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  const groups = await Group.find({ district: districtId, name: areaRegex }).select('_id').lean();
+  return groups.map(g => g._id);
+};
+
+// Target audiences whose personal targets this user owns and marks (their
+// "My Targets" feed). members_only is member-app only, never a User audience.
+// A district admin must NOT receive area/unit targets, and vice versa.
+export const targetAudiencesFor = (user) => {
+  switch (user?.role) {
+    case 'state_admin':
+      return ['all_users', 'state_admins'];
+    case 'district_admin':
+      return ['all_users', 'district_admins'];
+    case 'group_admin':
+      return isAreaLevelAdmin(user)
+        ? ['all_users', 'area_admins', 'group_and_area_admins']
+        : ['all_users', 'group_admins', 'group_and_area_admins'];
+    default:
+      return ['all_users'];
+  }
+};
+
 // Check if user has required permission
 export const authorize = (permissions) => {
   return (req, res, next) => {

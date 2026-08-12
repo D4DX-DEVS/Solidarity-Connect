@@ -1,7 +1,7 @@
 import express from 'express';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import Member from '../models/Member.js';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, authorize, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -70,7 +70,7 @@ const updatePaymentValidation = [
 // @route   GET /api/baithul-maal-payments
 // @desc    Get all payments with filtering and pagination
 // @access  Private
-router.get('/', authenticate, paginationValidation, async (req, res) => {
+router.get('/', authenticate, authorize(['manage_baithul_maal']), paginationValidation, async (req, res) => {
   try {
     const {
       page = 1,
@@ -85,18 +85,24 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     } = req.query;
 
     // Build filter based on user role
-    let filter = { 
+    let filter = {
       isActive: true,
       member: { $ne: null } // Exclude payments with null member references
     };
-    
+
     if (req.user.role === 'group_admin') {
       // Group admin can only see payments for their group members
       if (!req.user.group?._id) {
         return res.status(403).json({ success: false, message: 'No group assigned to your account.' });
       }
-      const groupMembers = await Member.find({ group: req.user.group._id }).select('_id');
-      filter.member = { $in: groupMembers.map(m => m._id) };
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        const areaMembers = await Member.find({ group: { $in: areaGroupIds } }).select('_id');
+        filter.member = { $in: areaMembers.map(m => m._id) };
+      } else {
+        const groupMembers = await Member.find({ group: req.user.group._id }).select('_id');
+        filter.member = { $in: groupMembers.map(m => m._id) };
+      }
     } else if (req.user.role === 'district_admin') {
       // District admin can only see payments for their district members
       if (!req.user.district?._id) {
@@ -204,11 +210,21 @@ router.get('/member/:memberId', authenticate, objectIdValidation('memberId'), ha
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString())) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view payments for members in your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only view payments for members in your area.'
+          });
+        }
+      } else if (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view payments for members in your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && (!req.user.district?._id || !member.district?._id || member.district._id.toString() !== req.user.district._id.toString())) {
@@ -280,11 +296,21 @@ router.post('/', authenticate, authorize(['manage_members']), createPaymentValid
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString())) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only add payments for members in your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only add payments for members in your area.'
+          });
+        }
+      } else if (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only add payments for members in your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && (!req.user.district?._id || !member.district?._id || member.district._id.toString() !== req.user.district._id.toString())) {
@@ -374,11 +400,21 @@ router.put('/:id', authenticate, authorize(['manage_members']), updatePaymentVal
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && (!req.user.group?._id || !payment.member.group?._id || payment.member.group._id.toString() !== req.user.group._id.toString())) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only update payments for members in your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === payment.member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only update payments for members in your area.'
+          });
+        }
+      } else if (!req.user.group?._id || !payment.member.group?._id || payment.member.group._id.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update payments for members in your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && (!req.user.district?._id || !payment.member.district?._id || payment.member.district._id.toString() !== req.user.district._id.toString())) {
@@ -462,11 +498,21 @@ router.delete('/:id', authenticate, authorize(['manage_members']), objectIdValid
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && (!req.user.group?._id || !payment.member.group?._id || payment.member.group._id.toString() !== req.user.group._id.toString())) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only delete payments for members in your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === payment.member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only delete payments for members in your area.'
+          });
+        }
+      } else if (!req.user.group?._id || !payment.member.group?._id || payment.member.group._id.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only delete payments for members in your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && (!req.user.district?._id || !payment.member.district?._id || payment.member.district._id.toString() !== req.user.district._id.toString())) {
@@ -513,11 +559,21 @@ router.get('/summary/:memberId', authenticate, objectIdValidation('memberId'), h
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString())) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied'
+          });
+        }
+      } else if (!req.user.group?._id || !member.group?._id || member.group._id.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && (!req.user.district?._id || !member.district?._id || member.district._id.toString() !== req.user.district._id.toString())) {

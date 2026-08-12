@@ -3,7 +3,7 @@ import Meeting from '../models/Meeting.js';
 import MeetingSession from '../models/MeetingSession.js';
 import Attendance from '../models/Attendance.js';
 import GuestAttendance from '../models/GuestAttendance.js';
-import { authenticate as verifyToken, authorize, requireRole, requireAreaScope } from '../middleware/auth.js';
+import { authenticate as verifyToken, authorize, requireRole, requireAreaScope, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 // Every meetings handler assumes req.user.group/district resolve for scoped
 // roles, so run the area-scope guard with authentication on all routes.
 const authenticate = [verifyToken, requireAreaScope];
@@ -923,7 +923,7 @@ router.post('/:id/attendance',
       // Get member details to extract group and district
       const Member = (await import('../models/Member.js')).default;
       const member = await Member.findById(memberId).populate('group district');
-      
+
       if (!member) {
         return res.status(404).json({
           success: false,
@@ -931,13 +931,35 @@ router.post('/:id/attendance',
         });
       }
 
-      // For group admins, verify they can only mark attendance for their group members
-      if (req.user.role === 'group_admin') {
-        if (!req.user.group || member.group._id.toString() !== req.user.group._id.toString()) {
+      // For district admins, verify they can only mark attendance for members in their district
+      if (req.user.role === 'district_admin') {
+        if (!req.user.district || member.district._id.toString() !== req.user.district._id.toString()) {
           return res.status(403).json({
             success: false,
-            message: 'You can only mark attendance for members in your group'
+            message: 'You can only mark attendance for members in your district'
           });
+        }
+      }
+
+      // For group admins, verify they can only mark attendance for their group members
+      // Area-level admins: check member group is in their area; unit: check own group
+      if (req.user.role === 'group_admin') {
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroups = await areaGroupIdsFor(req.user);
+          const isMemberInArea = areaGroups.some(gid => gid.toString() === member.group._id.toString());
+          if (!isMemberInArea) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only mark attendance for members in your area'
+            });
+          }
+        } else {
+          if (!req.user.group || member.group._id.toString() !== req.user.group._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only mark attendance for members in your group'
+            });
+          }
         }
       }
 
@@ -990,10 +1012,21 @@ router.get('/:id/attendance', authenticate, objectIdValidation('id'), handleVali
 
     // Get attendance records from new Attendance model
     let attendanceFilter = { meeting: req.params.id };
-    
-    // For group admins, only show their group's attendance
-    if (req.user.role === 'group_admin' && req.user.group) {
-      attendanceFilter.group = req.user.group._id;
+
+    // For district admins, only show their district's attendance
+    if (req.user.role === 'district_admin' && req.user.district) {
+      attendanceFilter.district = req.user.district._id;
+    }
+    // For group admins, only show their group's attendance (or area if area-level)
+    else if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroups = await areaGroupIdsFor(req.user);
+        if (areaGroups.length > 0) {
+          attendanceFilter.group = { $in: areaGroups };
+        }
+      } else if (req.user.group) {
+        attendanceFilter.group = req.user.group._id;
+      }
     }
 
     const attendance = await Attendance.find(attendanceFilter)
@@ -1003,8 +1036,17 @@ router.get('/:id/attendance', authenticate, objectIdValidation('id'), handleVali
 
     // Get guest attendance
     let guestFilter = { meeting: req.params.id };
-    if (req.user.role === 'group_admin' && req.user.group) {
-      guestFilter.group = req.user.group._id;
+    if (req.user.role === 'district_admin' && req.user.district) {
+      guestFilter.district = req.user.district._id;
+    } else if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroups = await areaGroupIdsFor(req.user);
+        if (areaGroups.length > 0) {
+          guestFilter.group = { $in: areaGroups };
+        }
+      } else if (req.user.group) {
+        guestFilter.group = req.user.group._id;
+      }
     }
 
     const guests = await GuestAttendance.find(guestFilter)
@@ -1340,19 +1382,42 @@ router.post('/:id/sessions/:sessionId/member-attendance',
 
       const { memberId, status, notes } = req.body;
 
-      // Verify member belongs to user's group (for group admins)
-      if (req.user.role === 'group_admin') {
-        const Member = (await import('../models/Member.js')).default;
-        const member = await Member.findOne({ 
-          _id: memberId, 
-          group: req.user.group._id 
-        });
-        
+      const Member = (await import('../models/Member.js')).default;
+      const member = await Member.findById(memberId).populate('group district');
+
+      // For district admins, verify member belongs to their district
+      if (req.user.role === 'district_admin') {
+        if (!member || !req.user.district || member.district._id.toString() !== req.user.district._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'You can only mark attendance for members in your district'
+          });
+        }
+      }
+      // For group admins, verify member belongs to their group/area
+      else if (req.user.role === 'group_admin') {
         if (!member) {
           return res.status(403).json({
             success: false,
-            message: 'You can only mark attendance for members in your group'
+            message: 'Member not found'
           });
+        }
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroups = await areaGroupIdsFor(req.user);
+          const isMemberInArea = areaGroups.some(gid => gid.toString() === member.group._id.toString());
+          if (!isMemberInArea) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only mark attendance for members in your area'
+            });
+          }
+        } else {
+          if (!req.user.group || member.group._id.toString() !== req.user.group._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only mark attendance for members in your group'
+            });
+          }
         }
       }
 
@@ -1405,6 +1470,50 @@ router.post('/:id/sessions/:sessionId/add-guest',
           success: false,
           message: 'Session not found'
         });
+      }
+
+      // Validate scope: district_admin cannot add guests from outside their district
+      // (using user's own group/district, or specified groupId/districtId if provided)
+      let groupId = req.body.groupId || req.user.group?._id;
+      let districtId = req.body.districtId || req.user.district?._id;
+
+      if (req.user.role === 'district_admin') {
+        if (!districtId || districtId.toString() !== req.user.district._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'You can only add guests from your own district'
+          });
+        }
+        // If groupId was specified, verify it belongs to their district
+        if (req.body.groupId) {
+          const Group = (await import('../models/Group.js')).default;
+          const group = await Group.findOne({ _id: req.body.groupId, district: req.user.district._id });
+          if (!group) {
+            return res.status(403).json({
+              success: false,
+              message: 'The specified group does not belong to your district'
+            });
+          }
+        }
+      } else if (req.user.role === 'group_admin') {
+        // Area-level admins: validate against their area groups
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroups = await areaGroupIdsFor(req.user);
+          if (!areaGroups.some(gid => gid.toString() === groupId?.toString())) {
+            return res.status(403).json({
+              success: false,
+              message: 'The specified group does not belong to your area'
+            });
+          }
+        } else {
+          // Unit-level: own group only
+          if (!groupId || groupId.toString() !== req.user.group._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only add guests to your own group'
+            });
+          }
+        }
       }
 
       const guestData = {
@@ -2514,15 +2623,47 @@ router.post('/:id/add-guest',
         });
       }
 
-      // For group admins, use their group and district
-      let groupId = req.user.group?._id;
-      let districtId = req.user.district?._id;
+      // For district admins, validate supplied groupId/districtId belong to their district
+      let groupId = req.body.groupId || req.user.group?._id;
+      let districtId = req.body.districtId || req.user.district?._id;
 
-      // For district/state admins, they might need to specify or we use defaults
-      if (!groupId && req.user.role === 'district_admin') {
-        // Use the first group in their district or handle differently
-        groupId = req.user.district?._id; // This might need adjustment based on your logic
-        districtId = req.user.district?._id;
+      if (req.user.role === 'district_admin') {
+        if (!districtId || districtId.toString() !== req.user.district._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'You can only add guests from your own district'
+          });
+        }
+        // If groupId was specified, verify it belongs to their district
+        if (req.body.groupId) {
+          const Group = (await import('../models/Group.js')).default;
+          const group = await Group.findOne({ _id: req.body.groupId, district: req.user.district._id });
+          if (!group) {
+            return res.status(403).json({
+              success: false,
+              message: 'The specified group does not belong to your district'
+            });
+          }
+        }
+      } else if (req.user.role === 'group_admin') {
+        // Area-level admins: validate against their area groups
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroups = await areaGroupIdsFor(req.user);
+          if (!areaGroups.some(gid => gid.toString() === groupId?.toString())) {
+            return res.status(403).json({
+              success: false,
+              message: 'The specified group does not belong to your area'
+            });
+          }
+        } else {
+          // Unit-level: own group only
+          if (!groupId || groupId.toString() !== req.user.group._id.toString()) {
+            return res.status(403).json({
+              success: false,
+              message: 'You can only add guests to your own group'
+            });
+          }
+        }
       }
 
       if (!groupId || !districtId) {
@@ -2918,9 +3059,33 @@ router.post('/:id/bulk-session-actions',
       }
 
       // Check if user can perform bulk actions
-      const canPerformBulkActions = req.user.role === 'state_admin' || 
-                                   meeting.createdBy.toString() === req.user._id.toString() ||
-                                   (req.user.role === 'group_admin' && meeting.targetAudience === 'group_admins');
+      let canPerformBulkActions = req.user.role === 'state_admin' ||
+                                   meeting.createdBy.toString() === req.user._id.toString();
+
+      // For district admins, also check the meeting targets their district
+      if (req.user.role === 'district_admin' && !canPerformBulkActions) {
+        const meetingTargetsDistrict =
+          meeting.targetAudience === 'all' ||
+          meeting.targetAudience === 'district_admins' ||
+          (meeting.targetDistricts && meeting.targetDistricts.some(d => d.toString() === req.user.district._id.toString()));
+        canPerformBulkActions = meetingTargetsDistrict;
+      }
+
+      // For group admins, check appropriate scope
+      if (req.user.role === 'group_admin' && !canPerformBulkActions) {
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroups = await areaGroupIdsFor(req.user);
+          const meetingInArea =
+            meeting.targetAudience === 'all' ||
+            meeting.targetAudience === 'group_admins' ||
+            (meeting.targetGroups && meeting.targetGroups.some(g => areaGroups.some(ag => ag.toString() === g.toString())));
+          canPerformBulkActions = meetingInArea;
+        } else {
+          canPerformBulkActions =
+            meeting.targetAudience === 'group_admins' ||
+            (meeting.targetGroups && meeting.targetGroups.some(g => g.toString() === req.user.group._id.toString()));
+        }
+      }
 
       if (!canPerformBulkActions) {
         return res.status(403).json({

@@ -7,7 +7,7 @@ import User from '../models/User.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import { authenticate, authorize, requireAreaScope, adminKindQuery } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, adminKindQuery, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 
 // Cache all district names (id -> name) for fallback when populate fails due to stale refs
 let districtNameCache = null;
@@ -125,6 +125,23 @@ const USER_TYPE_TO_ADMIN_KIND = {
   unit_admin: 'unit'
 };
 
+// Hierarchy: each role may only consolidate levels below itself.
+// null = every user type (state admin).
+const ALLOWED_USER_TYPES_BY_ROLE = {
+  state_admin: null,
+  district_admin: ['area_admin', 'murabi_admin', 'coordinator_admin', 'unit_admin', 'members'],
+  group_admin: ['unit_admin', 'members']
+};
+
+function assertUserTypeAllowed(req, res, userType) {
+  const allowed = ALLOWED_USER_TYPES_BY_ROLE[req.user.role];
+  if (allowed && !allowed.includes(userType)) {
+    res.status(403).json({ success: false, message: 'You cannot consolidate this user type' });
+    return false;
+  }
+  return true;
+}
+
 // @route   GET /api/consolidation/targets
 // @desc    Get targets available for a specific user type
 // @access  state_admin, district_admin, group_admin with view_reports
@@ -138,6 +155,8 @@ router.get('/targets', authenticate, authorize(['view_reports']), requireAreaSco
         message: 'Valid userType is required: state_admin, district_admin, area_admin, murabi_admin, coordinator_admin, unit_admin, members'
       });
     }
+
+    if (!assertUserTypeAllowed(req, res, userType)) return;
 
     const audiences = USER_TYPE_TO_AUDIENCES[userType];
 
@@ -170,6 +189,8 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
       });
     }
 
+    if (!assertUserTypeAllowed(req, res, userType)) return;
+
     // Fetch the target
     const target = await PersonalTarget.findById(targetId)
       .select('title category isRecurring recurringFrequency targetValue unit startDate endDate targetAudience')
@@ -180,7 +201,7 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
     }
 
     // Apply role-based access restrictions
-    const accessFilter = buildAccessFilter(req.user, districtId, groupId);
+    const accessFilter = await buildAccessFilter(req.user, districtId, groupId);
 
     let result;
     if (target.isRecurring) {
@@ -211,7 +232,7 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
 });
 
 // Build access filter based on the logged-in user's role
-function buildAccessFilter(user, districtId, groupId) {
+async function buildAccessFilter(user, districtId, groupId) {
   const filter = {};
 
   // state_admin can see everything, optionally filter by district/group
@@ -228,11 +249,22 @@ function buildAccessFilter(user, districtId, groupId) {
     return filter;
   }
 
-  // group_admin limited to own group scope
+  // group_admin: area-level admins roll up their whole area's groups,
+  // unit admins only their own group.
   if (user.role === 'group_admin') {
     const districtFromGroup = user.group?.district?._id || user.group?.district;
     filter.district = districtFromGroup || user.district?._id || user.district;
-    filter.group = user.group?._id || user.group;
+    if (isAreaLevelAdmin(user)) {
+      const areaIds = await areaGroupIdsFor(user);
+      // Honour a requested group only when it belongs to their area
+      if (groupId && groupId !== 'all' && areaIds.some(id => String(id) === String(groupId))) {
+        filter.group = groupId;
+      } else {
+        filter.group = { $in: areaIds };
+      }
+    } else {
+      filter.group = user.group?._id || user.group;
+    }
     return filter;
   }
 

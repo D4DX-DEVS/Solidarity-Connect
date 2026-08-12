@@ -355,12 +355,12 @@ const OrgFiles = () => {
                           {file.description && (
                             <p className="line-clamp-2 text-xs text-muted-foreground mb-1">{file.description}</p>
                           )}
-                          <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className="text-xs capitalize shrink-0">
                               {isMembershipForm ? "Membership Form" : categoryLabels[file.category] || file.category}
                             </Badge>
                             <span className="text-xs text-muted-foreground shrink-0">{file.size ? formatFileSize(file.size) : ""}</span>
-                            {file.originalName && <span className="text-xs text-muted-foreground malayalam-text shrink-0">{decodeFilename(file.originalName)}</span>}
+                            {file.originalName && <span className="text-xs text-muted-foreground malayalam-text truncate max-w-full">{decodeFilename(file.originalName)}</span>}
 
                             {file.category === "link" && file.link ? (
                               <a href={file.link} target="_blank" rel="noopener noreferrer" className="shrink-0">

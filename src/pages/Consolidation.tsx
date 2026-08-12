@@ -33,6 +33,15 @@ const USER_TYPE_OPTIONS: { value: ConsolidationUserType; label: string }[] = [
 
 const AREA_LEVEL_TYPES: ConsolidationUserType[] = ['area_admin', 'murabi_admin', 'coordinator_admin'];
 
+// Hierarchy: each role only consolidates levels below itself (mirrors the API gate).
+const userTypeOptionsForRole = (role?: string) => {
+  if (role === 'state_admin') return USER_TYPE_OPTIONS;
+  if (role === 'district_admin') {
+    return USER_TYPE_OPTIONS.filter(o => o.value !== 'state_admin' && o.value !== 'district_admin');
+  }
+  return USER_TYPE_OPTIONS.filter(o => o.value === 'unit_admin' || o.value === 'members');
+};
+
 // Area-level admins are scoped by their area name, everyone else by their group.
 const scopeOf = (u: { area?: string; group?: string }) => u.area || u.group || '';
 
@@ -518,7 +527,7 @@ export default function Consolidation() {
                   <SelectValue placeholder="User type..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {USER_TYPE_OPTIONS.map(opt => (
+                  {userTypeOptionsForRole(user?.role).map(opt => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
                 </SelectContent>

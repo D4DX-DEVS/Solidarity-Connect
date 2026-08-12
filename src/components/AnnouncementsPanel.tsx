@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { Megaphone, ChevronLeft, Plus, Paperclip, X, Send, FileText, Image, Film, Search, ChevronRight, Filter } from "lucide-react";
+import { Megaphone, ChevronLeft, Plus, X, Send, FileText, Image, Film, Search, ChevronRight, Filter, Check, UploadCloud } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SectionCard } from "@/components/app/AppShell";
@@ -60,12 +59,20 @@ const AnnouncementsPanel = () => {
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isStateAdmin = userRole === 'state_admin';
+  const isDistrictAdmin = userRole === 'district_admin';
   const isGroupAdmin = userRole === 'group_admin';
-  const canCreate = isStateAdmin || isGroupAdmin;
+  const canCreate = isStateAdmin || isDistrictAdmin || isGroupAdmin;
+
+  // District admins only announce downward (area/unit admins, members),
+  // scoped to their own district — the backend enforces both.
+  const audienceOptions = isDistrictAdmin
+    ? AUDIENCE_OPTIONS.filter((o) => o.value === 'group_admins' || o.value === 'members')
+    : AUDIENCE_OPTIONS;
+  const defaultAudiences = isDistrictAdmin ? ['members'] : ['all'];
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedAudiences, setSelectedAudiences] = useState<string[]>(["all"]);
+  const [selectedAudiences, setSelectedAudiences] = useState<string[]>(defaultAudiences);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -94,8 +101,8 @@ const AnnouncementsPanel = () => {
   const fetchAnnouncements = useCallback(async () => {
     setLoadingList(true);
     try {
+      // ponytail: single alerts surface — list every notification type together
       const params: Record<string, any> = {
-        type: "announcement",
         limit: 10,
         page: currentPage,
       };
@@ -245,7 +252,7 @@ const AnnouncementsPanel = () => {
       // Reset form
       setTitle("");
       setDescription("");
-      setSelectedAudiences(["all"]);
+      setSelectedAudiences(defaultAudiences);
       setAttachedFiles([]);
       setShowForm(false);
       fetchAnnouncements();
@@ -277,6 +284,7 @@ const AnnouncementsPanel = () => {
     <div className="space-y-4">
         {/* Create Form */}
         {canCreate && showForm && (
+          <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
           <SectionCard
             title="New Announcement"
             description={isGroupAdmin
@@ -285,7 +293,7 @@ const AnnouncementsPanel = () => {
           >
 
               {/* Title */}
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label htmlFor="ann-title">Title *</Label>
                 <Input
                   id="ann-title"
@@ -293,43 +301,50 @@ const AnnouncementsPanel = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={200}
+                  className="h-11"
                 />
               </div>
 
               {/* Description */}
-              <div className="space-y-1">
-                <Label htmlFor="ann-desc">Description *</Label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="ann-desc">Message *</Label>
+                  <span className={`text-xs tabular-nums ${description.length > 900 ? "text-destructive" : "text-muted-foreground"}`}>
+                    {description.length}/1000
+                  </span>
+                </div>
                 <Textarea
                   id="ann-desc"
                   placeholder="Write your announcement…"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
+                  rows={5}
                   maxLength={1000}
+                  className="resize-none"
                 />
-                <p className="text-xs text-muted-foreground text-right">{description.length}/1000</p>
               </div>
 
               {/* File attachments */}
               <div className="space-y-2">
-                <Label>Attachments (optional)</Label>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="ann-files" className="cursor-pointer">
-                    <div className="flex items-center gap-2 px-3 py-2 border rounded-md text-sm text-muted-foreground hover:bg-accent transition-colors">
-                      <Paperclip className="h-4 w-4" />
-                      Attach files
-                    </div>
-                    <input
-                      id="ann-files"
-                      type="file"
-                      multiple
-                      accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
-                  </label>
-                  <span className="text-xs text-muted-foreground">Max 20 MB per file</span>
-                </div>
+                <Label htmlFor="ann-files">
+                  Attachments <span className="font-normal text-muted-foreground">(optional · max 20 MB each)</span>
+                </Label>
+                <label
+                  htmlFor="ann-files"
+                  className="group flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/80 bg-muted/40 px-4 py-6 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
+                >
+                  <UploadCloud className="h-6 w-6 text-muted-foreground transition-colors group-hover:text-primary" />
+                  <span className="text-sm font-medium">Tap to attach files</span>
+                  <span className="text-xs text-muted-foreground">Images, video, PDF, Word, Excel</span>
+                  <input
+                    id="ann-files"
+                    type="file"
+                    multiple
+                    accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </label>
 
                 {attachedFiles.length > 0 && (
                   <div className="space-y-2">
@@ -338,7 +353,7 @@ const AnnouncementsPanel = () => {
                       return (
                         <div
                           key={i}
-                          className="flex items-center gap-2 p-2 bg-muted rounded-lg text-sm"
+                          className="flex items-center gap-3 rounded-lg border border-border/60 bg-card p-2.5 text-sm shadow-sm animate-in fade-in-0 duration-200"
                         >
                           {af.previewUrl ? (
                             <img
@@ -377,39 +392,50 @@ const AnnouncementsPanel = () => {
                 )}
               </div>
 
-              {/* Target audience (state admin picks; group admin fixed to own area) */}
+              {/* Target audience (state/district admin picks; group admin fixed to own area) */}
               {!isGroupAdmin && (
               <div className="space-y-2">
                 <Label>Send to *</Label>
-                <div className="space-y-2">
-                  {AUDIENCE_OPTIONS.map((opt) => (
-                    <div key={opt.value} className="flex items-start gap-3">
-                      <Checkbox
-                        id={`audience-${opt.value}`}
-                        checked={selectedAudiences.includes(opt.value)}
-                        onCheckedChange={() => toggleAudience(opt.value)}
-                      />
-                      <div>
-                        <Label
-                          htmlFor={`audience-${opt.value}`}
-                          className="font-medium cursor-pointer"
-                        >
-                          {opt.label}
-                        </Label>
-                        <p className="text-xs text-muted-foreground">{opt.description}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  {audienceOptions.map((opt) => {
+                    const selected = selectedAudiences.includes(opt.value);
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => toggleAudience(opt.value)}
+                        aria-pressed={selected}
+                        title={opt.description}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-all duration-200 ${
+                          selected
+                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                            : "border-border/70 bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                        }`}
+                      >
+                        {selected && <Check className="h-3.5 w-3.5" />}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedAudiences.length === 0
+                    ? "Pick at least one audience."
+                    : `Sending to: ${audienceLabel(selectedAudiences)}`}
+                </p>
               </div>
               )}
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button
-                  className="flex-1"
+                  className="h-11 flex-1"
                   onClick={handleSubmit}
-                  disabled={submitting || attachedFiles.some((f) => f.uploading)}
+                  disabled={
+                    submitting ||
+                    attachedFiles.some((f) => f.uploading) ||
+                    (!isGroupAdmin && selectedAudiences.length === 0)
+                  }
                 >
                   {submitting ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
@@ -418,17 +444,18 @@ const AnnouncementsPanel = () => {
                   )}
                   Send Announcement
                 </Button>
-                <Button variant="outline" onClick={() => setShowForm(false)}>
+                <Button variant="outline" className="h-11" onClick={() => setShowForm(false)}>
                   Cancel
                 </Button>
               </div>
           </SectionCard>
+          </div>
         )}
 
         {/* Past Announcements */}
         <SectionCard
-          title="Past Announcements"
-          description="Search and review previously published announcement messages."
+          title="Alerts & Announcements"
+          description="Search and review everything that has been sent."
           action={canCreate ? (
             <Button size="sm" onClick={() => setShowForm((v) => !v)}>
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-1" />}

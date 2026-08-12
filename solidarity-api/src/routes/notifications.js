@@ -71,11 +71,29 @@ router.get('/', authenticate, async (req, res) => {
         audienceValues.push('district_admins');
       }
 
-      filter.$or = [
-        { targetAudience: { $in: audienceValues } },
-        { targetAudiences: { $in: audienceValues } },
-        { createdBy: req.user._id }
-      ];
+      filter.$and = filter.$and || [];
+      // When targetAudiences is set it is authoritative — the legacy targetAudience
+      // field defaults to 'all' and must not leak role-targeted sends to everyone.
+      filter.$and.push({
+        $or: [
+          { targetAudiences: { $in: audienceValues } },
+          { $and: [
+            { $or: [{ targetAudiences: { $exists: false } }, { targetAudiences: { $size: 0 } }] },
+            { targetAudience: { $in: audienceValues } }
+          ] },
+          { createdBy: req.user._id }
+        ]
+      });
+      // District-scoped sends stay inside their district.
+      const userDistrict = req.user.district?._id || req.user.district;
+      filter.$and.push({
+        $or: [
+          { targetDistricts: { $exists: false } },
+          { targetDistricts: { $size: 0 } },
+          ...(userDistrict ? [{ targetDistricts: userDistrict }] : []),
+          { createdBy: req.user._id }
+        ]
+      });
     }
 
     const options = {
@@ -191,7 +209,9 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       : [notification.targetAudience];
 
     // Check access permissions based on target audience
+    const isCreator = notification.createdBy?._id?.toString() === req.user._id.toString();
     let canView = req.user.role === 'state_admin' ||
+      isCreator ||
       targetAudienceValues.includes('all') ||
       notification.targetUsers.some(u => u._id.toString() === req.user._id.toString());
 
@@ -206,6 +226,14 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       } else if (req.user.role === 'member') {
         canView = targetAudienceValues.includes('members');
       }
+    }
+
+    // District-scoped sends stay inside their district.
+    if (canView && !isCreator && req.user.role !== 'state_admin' &&
+        Array.isArray(notification.targetDistricts) && notification.targetDistricts.length > 0) {
+      const userDistrict = (req.user.district?._id || req.user.district)?.toString();
+      canView = !!userDistrict &&
+        notification.targetDistricts.some(d => (d._id || d).toString() === userDistrict);
     }
 
     if (!canView) {
@@ -232,7 +260,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 // @route   POST /api/notifications
 // @desc    Create new notification (State Admins; Group Admins scoped to own group)
 // @access  Private - State Admin / Group Admin
-router.post('/', authenticate, requireRole(['state_admin', 'group_admin']), async (req, res) => {
+router.post('/', authenticate, requireRole(['state_admin', 'district_admin', 'group_admin']), async (req, res) => {
   try {
     const {
       title,
@@ -262,6 +290,7 @@ router.post('/', authenticate, requireRole(['state_admin', 'group_admin']), asyn
     // Group admins can only announce to their own group's members
     let effectiveTargetAudience = targetAudience;
     let targetGroups = [];
+    let targetDistricts = [];
     if (req.user.role === 'group_admin') {
       if (!req.user.group) {
         return res.status(400).json({
@@ -272,6 +301,27 @@ router.post('/', authenticate, requireRole(['state_admin', 'group_admin']), asyn
       effectiveTargetAudience = 'specific_groups';
       normalizedTargetAudiences = [];
       targetGroups = [req.user.group._id || req.user.group];
+    }
+
+    // District admins announce only downward (area/unit admins, members) and
+    // only inside their own district.
+    if (req.user.role === 'district_admin') {
+      if (!req.user.district) {
+        return res.status(400).json({
+          success: false,
+          message: 'No district assigned to your account'
+        });
+      }
+      const allowedAudiences = ['group_admins', 'members'];
+      normalizedTargetAudiences = normalizedTargetAudiences.filter(a => allowedAudiences.includes(a));
+      if (normalizedTargetAudiences.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'District admins can only notify area/unit admins or members'
+        });
+      }
+      effectiveTargetAudience = 'specific_districts';
+      targetDistricts = [req.user.district._id || req.user.district];
     }
 
     const normalizedAttachments = Array.isArray(attachments)
@@ -295,6 +345,7 @@ router.post('/', authenticate, requireRole(['state_admin', 'group_admin']), asyn
       targetAudience: effectiveTargetAudience,
       targetAudiences: normalizedTargetAudiences,
       targetGroups,
+      targetDistricts,
       channels,
       attachments: normalizedAttachments,
       createdBy: req.user._id,

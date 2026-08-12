@@ -1,6 +1,6 @@
 import express from 'express';
 import Member from '../models/Member.js';
-import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -35,7 +35,12 @@ router.get('/', authenticate, authorize(['manage_baithul_maal']), requireAreaSco
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
-      filter.group = req.user.group._id;
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        filter.group = { $in: areaGroupIds };
+      } else {
+        filter.group = req.user.group._id;
+      }
     } else if (req.user.role === 'district_admin') {
       filter.district = req.user.district._id;
     } else if (req.user.role === 'state_admin') {
@@ -140,12 +145,21 @@ router.get('/member/:id', authenticate, authorize(['manage_baithul_maal']), requ
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' &&
-        member.group?._id?.toString() !== req.user.group._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view Baithul Maal data for members in your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        if (!areaGroupIds.some(id => id.toString() === member.group?._id?.toString())) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only view Baithul Maal data for members in your area.'
+          });
+        }
+      } else if (member.group?._id?.toString() !== req.user.group._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view Baithul Maal data for members in your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' &&
@@ -224,12 +238,21 @@ router.put('/member/:id',
       }
 
       // Check access permissions
-      if (req.user.role === 'group_admin' && 
-          member.group?.toString() !== req.user.group._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only update Baithul Maal data for members in your group.'
-        });
+      if (req.user.role === 'group_admin') {
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroupIds = await areaGroupIdsFor(req.user);
+          if (!areaGroupIds.some(id => id.toString() === member.group?.toString())) {
+            return res.status(403).json({
+              success: false,
+              message: 'Access denied. You can only update Baithul Maal data for members in your area.'
+            });
+          }
+        } else if (member.group?.toString() !== req.user.group._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only update Baithul Maal data for members in your group.'
+          });
+        }
       }
 
       if (req.user.role === 'district_admin' && 
@@ -312,12 +335,21 @@ router.post('/member/:id/payment',
       }
 
       // Check access permissions
-      if (req.user.role === 'group_admin' && 
-          member.group?.toString() !== req.user.group._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only record payments for members in your group.'
-        });
+      if (req.user.role === 'group_admin') {
+        if (isAreaLevelAdmin(req.user)) {
+          const areaGroupIds = await areaGroupIdsFor(req.user);
+          if (!areaGroupIds.some(id => id.toString() === member.group?.toString())) {
+            return res.status(403).json({
+              success: false,
+              message: 'Access denied. You can only record payments for members in your area.'
+            });
+          }
+        } else if (member.group?.toString() !== req.user.group._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Access denied. You can only record payments for members in your group.'
+          });
+        }
       }
 
       if (req.user.role === 'district_admin' && 
@@ -375,7 +407,12 @@ router.get('/stats', authenticate, authorize(['manage_baithul_maal']), requireAr
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
-      matchFilter.group = req.user.group._id;
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        matchFilter.group = { $in: areaGroupIds };
+      } else {
+        matchFilter.group = req.user.group._id;
+      }
     } else if (req.user.role === 'district_admin') {
       matchFilter.district = req.user.district._id;
     } else if (req.user.role === 'state_admin') {
@@ -509,7 +546,12 @@ router.get('/defaulters', authenticate, authorize(['manage_baithul_maal']), requ
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
-      matchFilter.group = req.user.group._id;
+      if (isAreaLevelAdmin(req.user)) {
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        matchFilter.group = { $in: areaGroupIds };
+      } else {
+        matchFilter.group = req.user.group._id;
+      }
     } else if (req.user.role === 'district_admin') {
       matchFilter.district = req.user.district._id;
     }

@@ -1,7 +1,7 @@
 import express from 'express';
 import UserTargetProgress from '../models/UserTargetProgress.js';
 import PersonalTarget from '../models/PersonalTarget.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, targetAudiencesFor } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
@@ -11,16 +11,9 @@ const router = express.Router();
 // @access  All authenticated users (non-member)
 router.get('/', authenticate, async (req, res) => {
   try {
-    // Determine which targetAudience values apply to this user
-    const role = req.user.role;
-    let audienceFilter = ['all_users'];
-    if (role === 'state_admin') {
-      audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'];
-    } else if (role === 'district_admin') {
-      audienceFilter = ['all_users', 'district_admins', 'area_admins', 'group_admins', 'group_and_area_admins'];
-    } else if (role === 'group_admin') {
-      audienceFilter = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins'];
-    }
+    // Only the audiences this user actually belongs to — a district admin must
+    // not see (or mark) area/unit targets, and vice versa.
+    const audienceFilter = targetAudiencesFor(req.user);
 
     // Fetch all active targets applicable to this user
     const activeTargets = await PersonalTarget.find({
@@ -92,6 +85,9 @@ router.post('/:targetId', authenticate, [
     const target = await PersonalTarget.findById(req.params.targetId);
     if (!target) {
       return res.status(404).json({ success: false, message: 'Target not found' });
+    }
+    if (!targetAudiencesFor(req.user).includes(target.targetAudience)) {
+      return res.status(403).json({ success: false, message: 'You are not eligible for this target' });
     }
 
     const { status, feedback, fileAttachment } = req.body;

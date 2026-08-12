@@ -2,7 +2,7 @@ import express from 'express';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import Member from '../models/Member.js';
-import { authenticate, requireRole, requireGroupAccess, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, requireRole, requireGroupAccess, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   createGroupValidation,
   paginationValidation,
@@ -360,9 +360,29 @@ router.delete('/:id', authenticate, requireRole(['state_admin', 'district_admin'
 // @access  Private
 router.get('/:id/members', authenticate, requireGroupAccess, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
+    const group = await Group.findById(req.params.id).populate('district', 'name code').lean();
+    if (!group) {
+      return res.status(404).json({ success: false, message: 'Group not found' });
+    }
+
+    // Validate district_admin scope
+    if (req.user.role === 'district_admin') {
+      const userDistrictId = req.user.district?._id || req.user.district;
+      const groupDistrictId = group.district?._id || group.district;
+      if (userDistrictId?.toString() !== groupDistrictId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    } else if (isAreaLevelAdmin(req.user)) {
+      // area-level group_admin: must be in own area's groups
+      const areaGroupIds = await areaGroupIdsFor(req.user);
+      if (!areaGroupIds.map(g => g.toString()).includes(req.params.id)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
+    const {
+      page = 1,
+      limit = 20,
       sort = '-createdAt',
       status,
       isApproved,
@@ -422,12 +442,27 @@ router.get('/:id/members', authenticate, requireGroupAccess, objectIdValidation(
 router.get('/:id/stats', authenticate, requireGroupAccess, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
     const group = await Group.findById(req.params.id).populate('district', 'name code');
-    
+
     if (!group) {
       return res.status(404).json({
         success: false,
         message: 'Group not found'
       });
+    }
+
+    // Validate district_admin scope
+    if (req.user.role === 'district_admin') {
+      const userDistrictId = req.user.district?._id || req.user.district;
+      const groupDistrictId = group.district?._id || group.district;
+      if (userDistrictId?.toString() !== groupDistrictId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    } else if (isAreaLevelAdmin(req.user)) {
+      // area-level group_admin: must be in own area's groups
+      const areaGroupIds = await areaGroupIdsFor(req.user);
+      if (!areaGroupIds.map(g => g.toString()).includes(req.params.id)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
     }
 
     // Get detailed statistics

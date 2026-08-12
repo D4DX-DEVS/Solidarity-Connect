@@ -2,7 +2,7 @@ import express from 'express';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
 import Member from '../models/Member.js';
-import { authenticate, requireRole, requireDistrictAccess } from '../middleware/auth.js';
+import { authenticate, requireRole, requireDistrictAccess, isAreaLevelAdmin } from '../middleware/auth.js';
 import { 
   createDistrictValidation,
   paginationValidation,
@@ -279,6 +279,14 @@ router.delete('/:id', authenticate, requireRole('state_admin'), objectIdValidati
 // @access  Private
 router.get('/:id/groups', authenticate, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
+    // Validate scoping: non-state users can only access their own district
+    if (req.user.role !== 'state_admin') {
+      const userDistrictId = req.user.district?._id || req.user.district;
+      if (req.params.id !== userDistrictId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+    }
+
     const { page = 1, limit = 20, sort = 'name', isActive } = req.query;
 
     let filter = { district: req.params.id };
