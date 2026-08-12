@@ -2,7 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Member from '../models/Member.js';
 import otpService from '../services/otpService.js';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -92,7 +92,7 @@ router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), pa
 
 // @route   GET /api/users/leaders
 // @desc    Get all leaders from both User and Member collections
-// @access  Private
+// @access  Private (authenticated users)
 router.get('/leaders', authenticate, async (req, res) => {
   try {
     const {
@@ -108,11 +108,38 @@ router.get('/leaders', authenticate, async (req, res) => {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
+    // Validate and apply scoping based on user role
+    let scopedDistrictId = districtId;
+    let scopedGroupId = groupId;
+
+    if (req.user.role === 'district_admin') {
+      // district_admin: force/validate districtId to own district
+      const userDistrictId = req.user.district?._id || req.user.district;
+      if (districtId && districtId !== userDistrictId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      scopedDistrictId = userDistrictId;
+    } else if (isAreaLevelAdmin(req.user)) {
+      // area-level group_admin: scope to own area
+      const areaGroupIds = await areaGroupIdsFor(req.user);
+      if (groupId && !areaGroupIds.map(g => g.toString()).includes(groupId)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      scopedGroupId = groupId || (areaGroupIds.length === 1 ? areaGroupIds[0] : undefined);
+    } else if (req.user.role === 'group_admin') {
+      // unit group_admin: scope to own group
+      const userGroupId = req.user.group?._id || req.user.group;
+      if (groupId && groupId !== userGroupId?.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
+      }
+      scopedGroupId = userGroupId;
+    }
+
     // Build filter common to both collections
     const filter = { isLeader: true };
     // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
-    if (districtId) filter.district = districtId;
-    if (groupId) filter.group = groupId;
+    if (scopedDistrictId) filter.district = scopedDistrictId;
+    if (scopedGroupId) filter.group = scopedGroupId;
     if (unitName) filter['roleTag.name'] = unitName;
     if (search) {
       filter.$or = [
@@ -232,10 +259,35 @@ router.patch('/:id/leader',
   async (req, res) => {
     try {
       const { isLeader, roleTag, extraRoles } = req.body;
-      const targetUser = await User.findById(req.params.id);
+      const targetUser = await User.findById(req.params.id)
+        .populate('district', 'name code')
+        .populate('group', 'name code');
 
       if (!targetUser) {
         return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Validate scoping based on user role
+      if (req.user.role === 'district_admin') {
+        const userDistrictId = req.user.district?._id || req.user.district;
+        const targetDistrictId = targetUser.district?._id || targetUser.district;
+        if (userDistrictId?.toString() !== targetDistrictId?.toString()) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      } else if (isAreaLevelAdmin(req.user)) {
+        // area-level group_admin: must target users in own area's groups
+        const areaGroupIds = await areaGroupIdsFor(req.user);
+        const targetGroupId = targetUser.group?._id || targetUser.group;
+        if (!areaGroupIds.map(g => g.toString()).includes(targetGroupId?.toString())) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+      } else if (req.user.role === 'group_admin') {
+        // unit group_admin: must target own group
+        const userGroupId = req.user.group?._id || req.user.group;
+        const targetGroupId = targetUser.group?._id || targetUser.group;
+        if (userGroupId?.toString() !== targetGroupId?.toString()) {
+          return res.status(403).json({ success: false, message: 'Access denied' });
+        }
       }
 
       const allowedRoleTypes = {

@@ -4,7 +4,7 @@ import MemberTargetProgress from '../models/MemberTargetProgress.js';
 import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import User from '../models/User.js';
-import { authenticate, requireRole, isAreaLevelAdmin, adminKindQuery } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin, adminKindQuery, targetAudiencesFor } from '../middleware/auth.js';
 import { body, validationResult, query } from 'express-validator';
 
 const router = express.Router();
@@ -93,23 +93,11 @@ router.get('/', authenticate, async (req, res) => {
     const now = new Date();
     let filter = {};
 
-    // Apply filters based on user role
-    if (req.user.role === 'district_admin') {
+    // Apply filters based on user role. Non-state admins only ever see the
+    // audiences they belong to (district admins must not get area/unit targets).
+    if (req.user.role !== 'state_admin') {
       filter.$and = [
-        { $or: [{ targetAudience: 'all_users' }, { targetAudience: 'district_admins' }, { targetAudience: 'area_admins' }, { targetAudience: 'group_admins' }, { targetAudience: 'group_and_area_admins' }] },
-        // Only show active targets within date range (or those without dates set)
-        { $or: [
-          { startDate: { $lte: now }, endDate: { $gte: now } },
-          { startDate: { $exists: false } },
-          { startDate: null }
-        ]}
-      ];
-      filter.status = 'active';
-    } else if (req.user.role === 'group_admin') {
-      // Murabi / Coordinator admins are area admins, so they get the area feed too.
-      const roleAudience = isAreaLevelAdmin(req.user) ? 'area_admins' : 'group_admins';
-      filter.$and = [
-        { $or: [{ targetAudience: 'all_users' }, { targetAudience: roleAudience }, { targetAudience: 'group_and_area_admins' }] },
+        { targetAudience: { $in: targetAudiencesFor(req.user) } },
         // Only show active targets within date range (or those without dates set)
         { $or: [
           { startDate: { $lte: now }, endDate: { $gte: now } },

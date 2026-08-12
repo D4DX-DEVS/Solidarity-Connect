@@ -861,15 +861,44 @@ router.get('/notifications', authenticateMember, async (req, res) => {
     const { page = 1, limit = 20, isRead, status, type, excludeType } = req.query;
     const member = req.member;
 
+    // Audiences that ever apply to members. targetAudiences is authoritative when
+    // set — the legacy targetAudience field defaults to 'all' on role-targeted
+    // sends and must not leak admin-only notifications to members.
+    const memberAudiences = ['all', 'members'];
+    const notAdminOnly = {
+      $or: [
+        { targetAudiences: { $exists: false } },
+        { targetAudiences: { $size: 0 } },
+        { targetAudiences: { $in: memberAudiences } }
+      ]
+    };
+
     let filter = {
       status: status || 'sent',
-      $or: [
-        { targetAudience: 'all' },
-        { targetAudience: 'members' },
-        { targetAudiences: { $in: ['all', 'members'] } },
-        { targetGroups: member.group },
-        { targetDistricts: member.district },
-        { targetMembers: member._id }
+      $and: [
+        {
+          $or: [
+            { targetAudiences: { $in: memberAudiences } },
+            { $and: [
+              { $or: [{ targetAudiences: { $exists: false } }, { targetAudiences: { $size: 0 } }] },
+              { targetAudience: { $in: memberAudiences } }
+            ] },
+            { targetGroups: member.group },
+            { targetDistricts: member.district },
+            { targetMembers: member._id }
+          ]
+        },
+        // Group/district-targeted sends still exclude admin-only audiences
+        notAdminOnly,
+        // District-scoped sends stay inside the member's district
+        {
+          $or: [
+            { targetDistricts: { $exists: false } },
+            { targetDistricts: { $size: 0 } },
+            { targetDistricts: member.district },
+            { targetMembers: member._id }
+          ]
+        }
       ]
     };
 

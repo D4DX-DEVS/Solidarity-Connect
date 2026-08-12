@@ -164,7 +164,7 @@ const StateAdmin = () => {
     { icon: Wallet, label: "Baithul Maal", path: "/state-admin/baithul-data", color: "text-primary" },
     { icon: BarChart3, label: "Group Reports", path: "/state-admin/group-reports", color: "text-primary" },
     { icon: FileCheck, label: "Transfer Approvals", path: "/state-admin/transfer-approvals", color: "text-orange-500" },
-    { icon: Bell, label: "Send Notifications", path: "/state-admin/send-notification", color: "text-destructive" },
+    { icon: Bell, label: "Announcements", path: "/notifications", color: "text-destructive" },
     { icon: Shield, label: "Role Management", path: "/role-management", color: "text-blue-500" },
     { icon: Star, label: "Leaders", path: "/leaders", color: "text-yellow-500" },
     { icon: Megaphone, label: "Announcements", path: "/announcements", color: "text-green-600" },

@@ -47,8 +47,8 @@ const getS3Client = () => {
 
 // @route   POST /api/uploads
 // @desc    Upload a file to DigitalOcean Spaces
-// @access  Private (Any authenticated admin user)
-router.post('/', authenticate, upload.single('file'), async (req, res) => {
+// @access  Private (State, District, or Group Admin only)
+router.post('/', authenticate, requireRole(['state_admin', 'district_admin', 'group_admin']), upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });

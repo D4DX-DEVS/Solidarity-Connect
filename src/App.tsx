@@ -27,7 +27,6 @@ import BulkImport from "./pages/BulkImport";
 import Meetings from "./pages/Meetings";
 import Requests from "./pages/Requests";
 import Notifications from "./pages/Notifications";
-import SendNotification from "./pages/SendNotification";
 import EditNotification from "./pages/EditNotification";
 import NotificationDetail from "./pages/NotificationDetail";
 import BaithulDataView from "./pages/BaithulDataView";
@@ -92,7 +91,6 @@ const App = () => (
             <Route path="/state-admin/meeting-agenda" element={<Navigate to="/admin/meetings-view" replace />} />
             <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
             <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute>} />
-            <Route path="/state-admin/send-notification" element={<ProtectedRoute requiredRoles={['state_admin']}><SendNotification /></ProtectedRoute>} />
             <Route path="/state-admin/edit-notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><EditNotification /></ProtectedRoute>} />
             <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
             <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><BaithulDataView /></ProtectedRoute>} />

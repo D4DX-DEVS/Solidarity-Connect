@@ -125,6 +125,23 @@ const USER_TYPE_TO_ADMIN_KIND = {
   unit_admin: 'unit'
 };
 
+// Hierarchy: each role may only consolidate levels below itself.
+// null = every user type (state admin).
+const ALLOWED_USER_TYPES_BY_ROLE = {
+  state_admin: null,
+  district_admin: ['area_admin', 'murabi_admin', 'coordinator_admin', 'unit_admin', 'members'],
+  group_admin: ['unit_admin', 'members']
+};
+
+function assertUserTypeAllowed(req, res, userType) {
+  const allowed = ALLOWED_USER_TYPES_BY_ROLE[req.user.role];
+  if (allowed && !allowed.includes(userType)) {
+    res.status(403).json({ success: false, message: 'You cannot consolidate this user type' });
+    return false;
+  }
+  return true;
+}
+
 // @route   GET /api/consolidation/targets
 // @desc    Get targets available for a specific user type
 // @access  state_admin, district_admin, group_admin with view_reports
@@ -138,6 +155,8 @@ router.get('/targets', authenticate, authorize(['view_reports']), requireAreaSco
         message: 'Valid userType is required: state_admin, district_admin, area_admin, murabi_admin, coordinator_admin, unit_admin, members'
       });
     }
+
+    if (!assertUserTypeAllowed(req, res, userType)) return;
 
     const audiences = USER_TYPE_TO_AUDIENCES[userType];
 
@@ -169,6 +188,8 @@ router.get('/report', authenticate, authorize(['view_reports']), requireAreaScop
         message: 'userType and targetId are required'
       });
     }
+
+    if (!assertUserTypeAllowed(req, res, userType)) return;
 
     // Fetch the target
     const target = await PersonalTarget.findById(targetId)

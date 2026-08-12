@@ -8,7 +8,7 @@ import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize, requireAreaScope, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 
@@ -543,14 +543,29 @@ router.get('/activity', authenticate, authorize(['view_reports']), async (req, r
 
     let memberFilter = { createdAt: { $gte: startDate } };
     let requestFilter = { createdAt: { $gte: startDate } };
+    let meetingFilter = { createdAt: { $gte: startDate } };
+    let notificationFilter = { createdAt: { $gte: startDate } };
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
       memberFilter.group = req.user.group._id;
       requestFilter.requestedBy = req.user._id;
+      meetingFilter.group = req.user.group._id;
+      notificationFilter.group = req.user.group._id;
     } else if (req.user.role === 'district_admin') {
       memberFilter.district = req.user.district._id;
       requestFilter.approvalLevel = 'district_admin';
+      meetingFilter.district = req.user.district._id;
+      notificationFilter.district = req.user.district._id;
+    } else if (isAreaLevelAdmin(req.user)) {
+      // area-level group_admin: scope to own area's groups
+      const areaGroupIds = await areaGroupIdsFor(req.user);
+      if (areaGroupIds.length > 0) {
+        memberFilter.group = { $in: areaGroupIds };
+        meetingFilter.group = { $in: areaGroupIds };
+        notificationFilter.group = { $in: areaGroupIds };
+      }
+      requestFilter.requestedBy = req.user._id;
     }
 
     // New member registrations
@@ -590,10 +605,8 @@ router.get('/activity', authenticate, authorize(['view_reports']), async (req, r
 
     // Meeting activity
     const meetingActivity = await Meeting.aggregate([
-      { 
-        $match: { 
-          createdAt: { $gte: startDate }
-        } 
+      {
+        $match: meetingFilter
       },
       {
         $group: {
@@ -613,10 +626,8 @@ router.get('/activity', authenticate, authorize(['view_reports']), async (req, r
 
     // Notification activity
     const notificationActivity = await Notification.aggregate([
-      { 
-        $match: { 
-          createdAt: { $gte: startDate }
-        } 
+      {
+        $match: notificationFilter
       },
       {
         $group: {

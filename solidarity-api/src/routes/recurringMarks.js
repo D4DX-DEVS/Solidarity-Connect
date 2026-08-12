@@ -5,7 +5,7 @@ import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import User from '../models/User.js';
-import { authenticate, isAreaLevelAdmin, adminKindQuery, adminKindOf } from '../middleware/auth.js';
+import { authenticate, isAreaLevelAdmin, adminKindQuery, adminKindOf, targetAudiencesFor } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -169,6 +169,9 @@ router.post('/', authenticate, async (req, res) => {
     }
     if (!target.isRecurring) {
       return res.status(400).json({ success: false, message: 'Target is not recurring' });
+    }
+    if (!targetAudiencesFor(req.user).includes(target.targetAudience)) {
+      return res.status(403).json({ success: false, message: 'You are not eligible for this target' });
     }
 
     const week = normaliseWeek(target, req.body.week);
