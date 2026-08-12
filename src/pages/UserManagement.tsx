@@ -54,12 +54,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { getRoleLabel, ROLE_FILTER_OPTIONS } from "@/lib/adminKinds";
 interface User {
   _id: string;
   name: string;
   phone: string;
   email?: string;
   role: 'state_admin' | 'district_admin' | 'group_admin';
+  // Distinguishes Area / Murabi / Coordinator admins (all role 'group_admin')
+  adminKind?: 'area' | 'murabi' | 'coordinator' | null;
   district?: {
     _id: string;
     name: string;
@@ -227,7 +230,16 @@ const UserManagement = () => {
     init();
   }, []);
 
-  const isMemberView = roleFilter === 'member';
+  // roleFilter is "<role>" or "<role>:<adminKind>" — Murabi/Coordinator admins share
+  // role 'group_admin' and are only told apart by adminKind.
+  const [filterRole, filterAdminKind] = roleFilter.split(':');
+  const isMemberView = filterRole === 'member';
+
+  const applyRoleFilter = (params: Record<string, any>) => {
+    if (roleFilter === 'all') return;
+    params.role = filterRole;
+    if (filterAdminKind) params.adminKind = filterAdminKind;
+  };
 
   // Fetch users/members when page or filters change
   useEffect(() => {
@@ -250,7 +262,7 @@ const UserManagement = () => {
             setHasPrevPage(result.pagination.hasPrevPage || false);
           }
         } else {
-          if (roleFilter !== 'all') params.role = roleFilter;
+          applyRoleFilter(params);
           if (statusFilter === 'active') params.isActive = true;
           else if (statusFilter === 'inactive') params.isActive = false;
           if (districtFilter !== 'all') params.district = districtFilter;
@@ -295,7 +307,7 @@ const UserManagement = () => {
           setHasPrevPage(result.pagination.hasPrevPage || false);
         }
       } else {
-        if (roleFilter !== 'all') params.role = roleFilter;
+        applyRoleFilter(params);
         if (statusFilter === 'active') params.isActive = true;
         else if (statusFilter === 'inactive') params.isActive = false;
         if (districtFilter !== 'all') params.district = districtFilter;
@@ -569,11 +581,11 @@ const UserManagement = () => {
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="state_admin">State Admin</SelectItem>
-                    <SelectItem value="district_admin">District Admin</SelectItem>
-                    <SelectItem value="group_admin">Area Admin</SelectItem>
-                    <SelectItem value="member">Members</SelectItem>
+                    {ROLE_FILTER_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 
@@ -664,7 +676,7 @@ const UserManagement = () => {
                 <div className="flex flex-wrap gap-2">
                   {roleFilter !== "all" && (
                     <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setRoleFilter("all")}>
-                      {roleLabels[roleFilter as keyof typeof roleLabels] ?? roleFilter} ×
+                      {ROLE_FILTER_OPTIONS.find((o) => o.value === roleFilter)?.label ?? roleFilter} ×
                     </Badge>
                   )}
                   {statusFilter !== "all" && (
@@ -790,7 +802,7 @@ const UserManagement = () => {
                     <div className="mb-1.5 flex flex-wrap items-center gap-1.5 [&_.badge-sm]:px-1.5 [&_.badge-sm]:py-0 [&_.badge-sm]:text-[10px] sm:[&_.badge-sm]:px-2.5 sm:[&_.badge-sm]:py-0.5 sm:[&_.badge-sm]:text-xs">
                       <h3 className="min-w-0 truncate text-sm font-semibold sm:text-base">{user.name}</h3>
                       <Badge className={`badge-sm shrink-0 ${roleColors[user.role]}`}>
-                        {roleLabels[user.role]}
+                        {getRoleLabel(user.role, user.adminKind)}
                       </Badge>
                       <Badge className="badge-sm shrink-0" variant={user.isActive ? "default" : "secondary"}>
                         {user.isActive ? "Active" : "Inactive"}

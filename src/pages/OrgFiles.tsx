@@ -28,6 +28,7 @@ import { toast } from "@/hooks/use-toast";
 import { apiCall, multipartApiCall } from "@/utils/api";
 import { downloadFile } from "@/utils/downloadFile";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAreaLevelAdmin } from "@/lib/adminKinds";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
 interface OrgFile {
@@ -84,8 +85,8 @@ const decodeFilename = (name: string): string => {
   }
 };
 
-const isAreaAdmin = (user: any) =>
-  user?.role === "group_admin" && user?.roleTag?.type === "area";
+// Area-level = area proper OR murabi/coordinator (identical permissions by design)
+const isAreaAdmin = isAreaLevelAdmin;
 
 const OrgFiles = () => {
   const navigate = useNavigate();

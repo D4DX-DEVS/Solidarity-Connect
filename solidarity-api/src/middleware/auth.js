@@ -71,6 +71,15 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
+// Area-LEVEL admin: an area admin proper (roleTag.type === 'area'), or a Murabi /
+// Coordinator admin — which by design have identical permissions to Area Admins.
+// NOTE: adminKind === 'area' is deliberately NOT sufficient here. The migration
+// backfilled adminKind='area' onto every legacy user, including unit-scoped
+// group admins; treating it as the area test would silently widen their scope.
+export const isAreaLevelAdmin = (user) =>
+  user?.role === 'group_admin' &&
+  (user.roleTag?.type === 'area' || user.adminKind === 'murabi' || user.adminKind === 'coordinator');
+
 // Check if user has required permission
 export const authorize = (permissions) => {
   return (req, res, next) => {

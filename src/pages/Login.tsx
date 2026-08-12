@@ -1,623 +1,520 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
-  Building2,
-  Clock3,
-  Fingerprint,
+  ChevronRight,
+  Loader2,
   LockKeyhole,
-  MapPinned,
+  MessageCircle,
   ShieldCheck,
   Smartphone,
-  UserRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type LoginAccount } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getRoleDisplay } from "@/lib/adminKinds";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import { cn } from "@/lib/utils";
-import { authAPI, memberAuthAPI } from "@/utils/api";
+import { loginAPI } from "@/utils/api";
 
-type UserType = "state_admin" | "district_admin" | "group_admin" | "member" | "";
+/**
+ * Phone-first sign-in, mobile-first layout.
+ *
+ *   phone → code (WhatsApp) → pick an account
+ *
+ * One code covers the whole number; every account on it is listed to enter.
+ */
+type Step = "phone" | "otp" | "accounts";
 
-const roleOptions = [
-  {
-    value: "state_admin",
-    label: "State Admin",
-    hint: "State level",
-    icon: Building2,
-  },
-  {
-    value: "district_admin",
-    label: "District Admin",
-    hint: "District level",
-    icon: MapPinned,
-  },
-  {
-    value: "group_admin",
-    label: "Area Admin",
-    hint: "Area level",
-    icon: ShieldCheck,
-  },
-  {
-    value: "member",
-    label: "Member",
-    hint: "Personal access",
-    icon: UserRound,
-  },
-] as const satisfies ReadonlyArray<{
-  value: Exclude<UserType, "">;
-  label: string;
-  hint: string;
-  icon: typeof Building2;
-}>;
+const OTP_LENGTH = 4;
+const RESEND_SECONDS = 60;
+
+const serif = { fontFamily: '"Fraunces", Georgia, serif' } as const;
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
+  if (error instanceof Error) return error.message;
   if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") {
-      return message;
-    }
+    if (typeof message === "string") return message;
   }
-
   return "Something went wrong. Please try again.";
 }
 
-function getAvailableRoles(error: unknown): string[] | undefined {
-  if (typeof error === "object" && error !== null && "availableRoles" in error) {
-    const roles = (error as { availableRoles?: unknown }).availableRoles;
-    if (Array.isArray(roles)) {
-      return roles as string[];
-    }
-  }
-  return undefined;
-}
+const STEP_ORDER: Step[] = ["phone", "otp", "accounts"];
 
-const roleLabelMap: Record<string, string> = {
-  state_admin: "State Admin",
-  district_admin: "District Admin",
-  group_admin: "Area Admin",
-  member: "Member",
-};
+const FLOW = [
+  { title: "Enter your number", sub: "The one on WhatsApp" },
+  { title: "Type the code", sub: "It arrives in seconds" },
+  { title: "Pick your account", sub: "Every role, one login" },
+];
 
 const Login = () => {
-  const [userType, setUserType] = useState<UserType>("");
+  const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState(["", "", "", ""]);
-  const [showOtp, setShowOtp] = useState(false);
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [accounts, setAccounts] = useState<LoginAccount[]>([]);
+  const [ticket, setTicket] = useState("");
   const [loading, setLoading] = useState(false);
-  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
-  const [knownRoles, setKnownRoles] = useState<string[] | null>(null);
-  const roleOptionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [enteringId, setEnteringId] = useState<string | null>(null);
+  const [isTestPhone, setIsTestPhone] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
+  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const navigate = useNavigate();
   const { login } = useAuth();
   const { toast } = useToast();
 
-  const handlePhoneChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, "").slice(0, 10);
-    setPhone(cleaned);
+  const phoneIsValid = /^[6-9]\d{9}$/.test(phone);
+  const otpValue = otp.join("");
+  const stepIndex = STEP_ORDER.indexOf(step);
 
-    // Discover this phone's roles so the picker can highlight/auto-select them
-    if (cleaned.length === 10 && /^[6-9]/.test(cleaned)) {
-      authAPI
-        .checkRoles(cleaned)
-        .then((result) => {
-          const roles: string[] = result.data?.roles || [];
-          setKnownRoles(roles);
-          if (roles.length === 1) {
-            setUserType(roles[0] as UserType);
-          }
-        })
-        .catch(() => setKnownRoles(null));
-    } else {
-      setKnownRoles(null);
+  // Resend cooldown ticker.
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const id = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [secondsLeft]);
+
+  // Focus the first code box as soon as the code step opens.
+  useEffect(() => {
+    if (step === "otp") otpRefs.current[0]?.focus();
+  }, [step]);
+
+  const failWith = useCallback(
+    (error: unknown) => {
+      toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
+    },
+    [toast]
+  );
+
+  const sendCode = async (resend = false) => {
+    if (!phoneIsValid || loading) return;
+
+    setLoading(true);
+    try {
+      const result = await loginAPI.sendOTP(phone, resend);
+      setIsTestPhone(Boolean(result.data?.isTestPhone));
+      setOtp(Array(OTP_LENGTH).fill(""));
+      setSecondsLeft(RESEND_SECONDS);
+      setStep("otp");
+      toast({ title: resend ? "Code resent" : "Code sent", description: result.message });
+    } catch (error) {
+      failWith(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRoleSelect = (value: Exclude<UserType, "">) => {
-    setUserType(value);
+  /** Enter a specific account: swap the ticket for a real session and route in. */
+  const enterAccount = useCallback(
+    async (account: LoginAccount, ticketValue: string) => {
+      setEnteringId(account.id);
+      try {
+        const result = await loginAPI.selectAccount(ticketValue, account.id, account.type);
+        const { token, user, member, userType } = result.data;
+        const profile = account.type === "member" ? member : user;
+
+        login(token, profile, userType);
+        navigate(account.type === "member" ? "/member-dashboard" : getHomeRouteByRole(profile?.role));
+      } catch (error) {
+        failWith(error);
+        setEnteringId(null);
+      }
+    },
+    [failWith, login, navigate]
+  );
+
+  const verifyCode = async (code: string) => {
+    if (code.length !== OTP_LENGTH || loading) return;
+
+    setLoading(true);
+    try {
+      const result = await loginAPI.verifyOTP(phone, code);
+      const found = (result.data?.accounts || []) as LoginAccount[];
+      const issuedTicket: string = result.data?.ticket;
+
+      setAccounts(found);
+      setTicket(issuedTicket);
+
+      // Nothing to choose between — go straight in.
+      if (found.length === 1) {
+        await enterAccount(found[0], issuedTicket);
+        return;
+      }
+      setStep("accounts");
+    } catch (error) {
+      failWith(error);
+      setOtp(Array(OTP_LENGTH).fill(""));
+      otpRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRoleKeyDown = (index: number, event: React.KeyboardEvent<HTMLButtonElement>) => {
-    const currentIndex = userType ? roleOptions.findIndex((option) => option.value === userType) : 0;
-
-    if (["ArrowRight", "ArrowDown"].includes(event.key)) {
-      event.preventDefault();
-      const nextIndex = (currentIndex + 1) % roleOptions.length;
-      handleRoleSelect(roleOptions[nextIndex].value);
-      roleOptionRefs.current[nextIndex]?.focus();
+  const handleOtpChange = (index: number, raw: string) => {
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) {
+      setOtp((prev) => prev.map((d, i) => (i === index ? "" : d)));
       return;
     }
 
-    if (["ArrowLeft", "ArrowUp"].includes(event.key)) {
+    // Handles both single keystrokes and a pasted / autofilled full code.
+    const next = [...otp];
+    for (let i = 0; i < digits.length && index + i < OTP_LENGTH; i += 1) {
+      next[index + i] = digits[i];
+    }
+    setOtp(next);
+
+    const filledTo = Math.min(index + digits.length, OTP_LENGTH - 1);
+    otpRefs.current[filledTo]?.focus();
+
+    const joined = next.join("");
+    if (joined.length === OTP_LENGTH && !joined.includes("")) {
+      void verifyCode(joined);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Backspace" && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+    if (event.key === "ArrowLeft" && index > 0) otpRefs.current[index - 1]?.focus();
+    if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) otpRefs.current[index + 1]?.focus();
+    if (event.key === "Enter") {
       event.preventDefault();
-      const previousIndex = (currentIndex - 1 + roleOptions.length) % roleOptions.length;
-      handleRoleSelect(roleOptions[previousIndex].value);
-      roleOptionRefs.current[previousIndex]?.focus();
-      return;
-    }
-
-    if (event.key === " " || event.key === "Enter") {
-      event.preventDefault();
-      handleRoleSelect(roleOptions[index].value);
+      void verifyCode(otpValue);
     }
   };
 
-  const handleSendOtp = async () => {
-    if (phone.length !== 10 || !userType) return;
-
-    setLoading(true);
-    try {
-      let result;
-      if (userType === "member") {
-        result = await memberAuthAPI.sendOTP(phone);
-      } else {
-        result = await authAPI.sendOTP(phone, userType);
-      }
-
-      setShowOtp(true);
-      setOtpExpiry(new Date(result.data.expiresAt));
-
-      toast({
-        title: "OTP Sent",
-        description: result.message,
-      });
-
-      // Show demo OTP in development
-      if (result.data.demoOTP) {
-        toast({
-          title: "Demo OTP",
-          description: `Use OTP: ${result.data.demoOTP}`,
-          duration: 10000,
-        });
-      }
-    } catch (error) {
-      console.error("Send OTP error:", error);
-
-      const availableRoles = getAvailableRoles(
-        typeof error === "object" && error !== null && "data" in error
-          ? (error as { data?: unknown }).data
-          : error
-      );
-
-      if (availableRoles && availableRoles.length > 0) {
-        const selectedLabel = roleLabelMap[userType] || userType;
-        toast({
-          title: "Invalid role",
-          description: `${selectedLabel} is not your role. Please select the correct role to continue.`,
-          variant: "destructive",
-          duration: 8000,
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: getErrorMessage(error),
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
+  const resetToPhone = () => {
+    setStep("phone");
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setAccounts([]);
+    setTicket("");
+    setSecondsLeft(0);
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value.replace(/\D/g, "");
-    setOtp(newOtp);
-
-    if (value && index < 3) {
-      const nextInput = document.getElementById(`otp-${index + 1}`);
-      nextInput?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`);
-      prevInput?.focus();
-    }
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleVerifyOtp();
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const otpValue = otp.join("");
-    if (otpValue.length !== 4 || !userType) return;
-
-    setLoading(true);
-    try {
-      let result;
-      if (userType === "member") {
-        result = await memberAuthAPI.verifyOTP(phone, otpValue);
-      } else {
-        result = await authAPI.verifyOTP(phone, otpValue, userType);
-      }
-
-      const userData = userType === "member" ? result.data.member : result.data.user;
-      login(result.data.token, userData, userType);
-
-      toast({
-        title: "Login Successful",
-        description: result.message,
-      });
-
-      // Navigate to different dashboard based on user type
-      if (userType === "member") {
-        navigate("/member-dashboard");
-      } else {
-        navigate(getHomeRouteByRole(userData?.role));
-      }
-    } catch (error) {
-      console.error("Verify OTP error:", error);
-      toast({
-        title: "Error",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
-
-      setOtp(["", "", "", ""]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setLoading(true);
-    try {
-      let result;
-      if (userType === "member") {
-        result = await memberAuthAPI.resendOTP(phone);
-      } else {
-        result = await authAPI.resendOTP(phone, userType);
-      }
-
-      setOtpExpiry(new Date(result.data.expiresAt));
-      setOtp(["", "", "", ""]);
-
-      toast({
-        title: "OTP Resent",
-        description: result.message,
-      });
-
-      if (result.data.demoOTP) {
-        toast({
-          title: "Demo OTP",
-          description: `Use OTP: ${result.data.demoOTP}`,
-          duration: 10000,
-        });
-      }
-    } catch (error) {
-      console.error("Resend OTP error:", error);
-      toast({
-        title: "Error",
-        description: getErrorMessage(error),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const heading = useMemo(() => {
+    if (step === "phone") return { title: "Sign in", sub: "We'll send a one-time code to your WhatsApp." };
+    if (step === "otp") return { title: "Check WhatsApp", sub: `Code sent to +91 ${phone}.` };
+    return { title: "Choose an account", sub: "This number holds more than one role." };
+  }, [step, phone]);
 
   return (
-    <div className="relative flex min-h-[100dvh] items-start justify-center overflow-x-hidden overflow-y-auto bg-gradient-to-br from-slate-50 via-white to-rose-50/30 px-4 py-4 sm:px-6 sm:py-6 [@media(min-height:860px)]:items-center">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[600px] w-[600px] rounded-full bg-primary/[0.06] blur-[120px]" />
-        <div className="absolute -bottom-32 -right-32 h-[500px] w-[500px] rounded-full bg-violet-500/[0.04] blur-[120px]" />
-      </div>
+    <div className="min-h-[100dvh] bg-[#f6f2ec] text-stone-900 lg:grid lg:grid-cols-[47%_1fr] xl:grid-cols-[44%_1fr]">
+      {/* ————— Brand panel — desktop only ————— */}
+      <aside className="relative hidden overflow-hidden bg-[#191013] lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
+        {/* Atmosphere: red ember glow + fine grid */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -left-32 top-1/3 h-[30rem] w-[30rem] rounded-full bg-[#e23636]/[0.16] blur-[120px]" />
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#e23636]/[0.09] blur-[90px]" />
+          <div
+            className="absolute inset-0 opacity-[0.35]"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
+          {/* Oversized watermark numeral of the current step */}
+          <span
+            aria-hidden
+            className="absolute -bottom-16 -right-6 select-none text-[22rem] font-bold leading-none text-white/[0.035]"
+            style={serif}
+          >
+            {stepIndex + 1}
+          </span>
+        </div>
 
-      <div className="relative w-full max-w-[1100px] overflow-hidden rounded-[28px] border border-border bg-card shadow-sm lg:grid lg:min-h-[700px] lg:grid-cols-[1.05fr_1fr]">
-        {/* Left panel — brand */}
-        <div className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
-          {/* Dark gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
-          {/* Accent glow */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-primary/25 blur-[100px]" />
-            <div className="absolute -bottom-20 -left-20 h-72 w-72 rounded-full bg-primary/20 blur-[80px]" />
-            <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[60px]" />
-          </div>
-          {/* Subtle grid */}
-          <div className="pointer-events-none absolute inset-0 opacity-40 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMC44IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDgpIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2cpIi8+PC9zdmc+')]" />
-
-          {/* Top — Logo */}
-          <div className="relative z-10">
-            <div className="flex items-center justify-center gap-4 rounded-2xl border border-border bg-white/[0.07] px-6 py-5">
-              <img src="/logo.jpg" alt="SOLIDARITY" className="h-28 w-40 rounded-xl object-contain shadow-lg" />
-              <div>
-                <span className="block text-xl font-bold tracking-tight text-white">SOLIDARITY</span>
-                <span className="block text-xs font-medium text-slate-400">Organization Portal</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle — Hero text */}
-          <div className="relative z-10">
-            <h1 className="text-[3.5rem] font-extrabold leading-[1.05] tracking-tight text-white">
-              Welcome<br />Back<span className="text-primary">.</span>
-            </h1>
-            <p className="mt-5 max-w-[20rem] text-base leading-relaxed text-slate-300/90">
-              Secure access to your organization portal with OTP verification.
-            </p>
-          </div>
-
-          {/* Bottom — Trust badges */}
-          <div className="relative z-10 space-y-2.5">
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
-                <ShieldCheck className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold text-white">End-to-end encrypted</p>
-                <p className="text-[11px] text-slate-400">256-bit security protocol</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
-                <Fingerprint className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold text-white">OTP verified access</p>
-                <p className="text-[11px] text-slate-400">One-time password every session</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-5 py-3.5 transition-colors hover:bg-accent/[0.08]">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 shadow-sm">
-                <LockKeyhole className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-[13px] font-semibold text-white">Private & protected</p>
-                <p className="text-[11px] text-slate-400">Your data stays on our servers</p>
-              </div>
-            </div>
+        <div className="relative z-10 flex items-center gap-4">
+          <img src="/logo.jpg" alt="" className="h-14 w-14 rounded-2xl object-contain ring-1 ring-white/10" />
+          <div>
+            <span className="block text-lg font-bold tracking-[0.18em] text-white">SOLIDARITY</span>
+            <span className="block text-[11px] font-medium uppercase tracking-[0.28em] text-stone-400">
+              Organization Portal
+            </span>
           </div>
         </div>
 
-        {/* Right panel — form */}
-        <div className="relative flex flex-col justify-center px-5 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10">
-          <div className="mx-auto w-full max-w-[420px]">
-            {/* Mobile header */}
-            <div className={cn("flex flex-col items-center text-center lg:items-start lg:text-left", showOtp ? "mb-5 lg:mb-6" : "mb-6 lg:mb-8")}>
-              <div className={cn("mb-5 flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm lg:hidden", showOtp && "hidden")}>
-                <img src="/logo.jpg" alt="SOLIDARITY" className="h-12 w-12 rounded-xl object-contain" />
-                <div>
-                  <span className="block text-lg font-bold tracking-tight text-slate-900">SOLIDARITY</span>
-                  <span className="block text-[11px] font-medium text-slate-400">Organization Portal</span>
-                </div>
-              </div>
+        <div className="relative z-10">
+          <h1
+            className="text-[3.4rem] font-semibold leading-[1.04] tracking-tight text-white xl:text-[4rem]"
+            style={serif}
+          >
+            One number.
+            <br />
+            <span className="text-[#f0574f]">Every role.</span>
+          </h1>
 
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/[0.06] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-primary lg:self-start">
-                <LockKeyhole className="h-3 w-3" />
-                Secure Sign In
-              </div>
+          {/* Live flow rail — highlights the step the user is on */}
+          <ol className="mt-10 space-y-0">
+            {FLOW.map((item, i) => {
+              const active = i === stepIndex;
+              const done = i < stepIndex;
+              return (
+                <li key={item.title} className="relative flex gap-4 pb-7 last:pb-0">
+                  {i < FLOW.length - 1 && (
+                    <span
+                      className={cn(
+                        "absolute left-[15px] top-8 h-[calc(100%-1.75rem)] w-px",
+                        done ? "bg-[#f0574f]/60" : "bg-white/10"
+                      )}
+                    />
+                  )}
+                  <span
+                    className={cn(
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[13px] font-semibold transition-colors duration-300",
+                      active
+                        ? "border-[#f0574f] bg-[#f0574f] text-white shadow-[0_0_24px_rgba(240,87,79,0.45)]"
+                        : done
+                          ? "border-[#f0574f]/60 bg-transparent text-[#f0574f]"
+                          : "border-white/15 text-stone-500"
+                    )}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="pt-1">
+                    <span
+                      className={cn(
+                        "block text-[15px] font-semibold transition-colors duration-300",
+                        active ? "text-white" : done ? "text-stone-300" : "text-stone-500"
+                      )}
+                    >
+                      {item.title}
+                    </span>
+                    <span className="mt-0.5 block text-[12.5px] text-stone-500">{item.sub}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
 
-              <h2 className={cn("mt-4 text-[1.65rem] font-bold tracking-tight text-slate-900 sm:text-[1.85rem]", showOtp && "text-xl sm:text-2xl")}>
-                {showOtp ? "Verify your identity" : "Sign in to your account"}
-              </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-slate-500 sm:text-sm">
-                {showOtp
-                  ? "Enter the 4-digit code sent to your phone."
-                  : "Select your role and enter your mobile number."}
-              </p>
+        <div className="relative z-10 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-4 backdrop-blur">
+          <ShieldCheck className="h-5 w-5 shrink-0 text-[#f0574f]" />
+          <p className="text-[13px] leading-relaxed text-stone-400">
+            Codes are single-use and expire shortly after they&rsquo;re sent.
+          </p>
+        </div>
+      </aside>
+
+      {/* ————— Form panel ————— */}
+      <main className="flex min-h-[100dvh] flex-col lg:min-h-0 lg:items-center lg:justify-center">
+        <div className="mx-auto flex w-full max-w-[30rem] flex-1 flex-col px-5 pb-6 pt-6 sm:justify-center sm:py-10 lg:flex-none lg:px-8">
+          {/* Card on tablet+; bare, edge-to-edge form on phones */}
+          <div className="flex flex-1 flex-col sm:flex-none sm:rounded-[1.75rem] sm:border sm:border-stone-200/80 sm:bg-white sm:p-9 sm:shadow-[0_24px_60px_-24px_rgba(28,18,16,0.18)] lg:p-10">
+            {/* Brand row — hidden once the desktop panel shows it */}
+            <div className="mb-8 flex items-center gap-3 lg:hidden">
+              <img src="/logo.jpg" alt="" className="h-11 w-11 rounded-xl object-contain ring-1 ring-stone-200" />
+              <div>
+                <span className="block text-[15px] font-bold tracking-[0.14em] text-stone-900">SOLIDARITY</span>
+                <span className="block text-[10px] font-medium uppercase tracking-[0.24em] text-stone-400">
+                  Organization Portal
+                </span>
+              </div>
+              <span className="ml-auto rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-[11px] font-semibold text-stone-500">
+                {stepIndex + 1} / {FLOW.length}
+              </span>
             </div>
 
-            <div className={cn("space-y-5", showOtp && "space-y-4")}>
-              {/* Role selection */}
-              <div className={cn("space-y-3", showOtp && "space-y-2")}>
-                <label id="user-role" className="text-[13px] font-semibold text-slate-600">
-                  Select your role
-                </label>
-                <div role="radiogroup" aria-labelledby="user-role" className="grid grid-cols-2 gap-2.5">
-                  {roleOptions.map((option, index) => {
-                    const isActive = userType === option.value;
-                    const Icon = option.icon;
-                    const isTabStop = userType ? isActive : index === 0;
-                    const isKnownRole = knownRoles?.includes(option.value) ?? false;
+            {step !== "phone" && (
+              <button
+                type="button"
+                onClick={resetToPhone}
+                disabled={Boolean(enteringId)}
+                className="-ml-2 mb-4 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900 disabled:opacity-50"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {step === "otp" ? "Change number" : "Start over"}
+              </button>
+            )}
 
-                    return (
-                      <button
-                        key={option.value}
-                        ref={(element) => {
-                          roleOptionRefs.current[index] = element;
-                        }}
-                        type="button"
-                        role="radio"
-                        aria-checked={isActive}
-                        aria-label={`${option.label} ${option.hint}`}
-                        tabIndex={isTabStop ? 0 : -1}
-                        onClick={() => handleRoleSelect(option.value)}
-                        onKeyDown={(event) => handleRoleKeyDown(index, event)}
-                        disabled={showOtp}
-                        className={cn(
-                          "group relative flex items-center gap-3 rounded-2xl border px-3.5 py-3.5 text-left transition-all duration-200",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                          isActive
-                            ? "border-primary/30 bg-gradient-to-br from-primary/[0.05] to-primary/[0.02] shadow-sm"
-                            : "border-slate-200/80 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-200",
-                            isActive
-                              ? "bg-primary/12 text-primary shadow-sm"
-                              : "bg-slate-50 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-500",
-                          )}
-                        >
-                          <Icon className="h-[18px] w-[18px]" />
-                        </div>
+            <header className="mb-7">
+              <h2 className="text-[2rem] font-semibold tracking-tight text-stone-900 sm:text-[2.15rem]" style={serif}>
+                {heading.title}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-stone-500">{heading.sub}</p>
+            </header>
 
-                        <div className="min-w-0 flex-1">
-                          <span className={cn("block text-[13px] font-semibold leading-tight", isActive ? "text-slate-900" : "text-slate-700")}>
-                            {option.label}
-                          </span>
-                          <span className="mt-0.5 block text-[11px] text-slate-400">
-                            {isKnownRole ? (
-                              <span className="font-semibold text-primary">Your role</span>
-                            ) : (
-                              option.hint
-                            )}
-                          </span>
-                        </div>
-
-                        <span
-                          className={cn(
-                            "h-[18px] w-[18px] shrink-0 rounded-full border-2 transition-all duration-200",
-                            isActive
-                              ? "border-primary bg-primary shadow-sm"
-                              : "border-slate-300",
-                          )}
-                        >
-                          {isActive && (
-                            <span className="flex h-full w-full items-center justify-center">
-                              <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Phone input */}
-              <div className="space-y-2.5">
-                <label htmlFor="login-phone" className="text-[13px] font-semibold text-slate-600">Mobile Number</label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute left-4 top-1/2 flex -translate-y-1/2 items-center gap-2.5 text-sm text-slate-500">
-                    <Smartphone className="h-4 w-4 text-slate-400" />
-                    <span className="font-semibold">+91</span>
-                    <div className="h-5 w-px bg-slate-200" />
-                  </div>
-                  <Input
-                    id="login-phone"
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="Enter your number"
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && phone.length === 10 && userType && !loading) {
-                        e.preventDefault();
-                        handleSendOtp();
-                      }
-                    }}
-                    maxLength={10}
-                    disabled={showOtp || !userType}
-                    className="h-[52px] rounded-2xl border-slate-200/80 bg-slate-50/60 pl-[7rem] text-[15px] font-medium tracking-wide shadow-sm transition-all duration-200 placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400 focus-visible:border-primary/30 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/10 disabled:opacity-50"
-                  />
-                </div>
-                {phone && phone.length !== 10 && (
-                  <p className="text-xs font-medium text-destructive">Enter a valid 10-digit mobile number</p>
-                )}
-              </div>
-
-              {!showOtp ? (
-                <Button
-                  onClick={handleSendOtp}
-                  className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
-                  disabled={phone.length !== 10 || !userType || loading}
-                >
-                  <span>{loading ? "Sending OTP..." : "Continue"}</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <div className="space-y-4">
-                  {/* OTP info banner */}
-                  <div className="flex items-center gap-3 rounded-2xl border border-primary/10 bg-primary/[0.03] px-4 py-3.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <Smartphone className="h-4 w-4 text-primary" />
-                    </div>
-                    <p className="text-[13px] text-slate-600">
-                      Code sent to <span className="font-semibold text-slate-800">+91 {phone}</span>
-                    </p>
-                  </div>
-
-                  {/* OTP inputs */}
-                  <fieldset className="space-y-3">
-                    <legend className="sr-only">Enter OTP</legend>
-                    <div className="flex justify-center gap-3.5">
-                      {otp.map((digit, index) => (
-                        <Input
-                          key={index}
-                          id={`otp-${index}`}
-                          type="tel"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          aria-label={`OTP digit ${index + 1} of 4`}
-                          className="h-[56px] w-[56px] rounded-2xl border-slate-200/80 bg-slate-50/60 text-center text-xl font-bold text-slate-900 shadow-sm transition-all duration-200 focus-visible:border-primary/40 focus-visible:bg-white focus-visible:ring-2 focus-visible:ring-primary/15"
-                          disabled={loading}
-                        />
-                      ))}
-                    </div>
-                    {otpExpiry && (
-                      <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
-                        <Clock3 className="h-3 w-3" />
-                        <span>
-                          Expires at {otpExpiry.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
+            {/* key={step} restarts the entrance animation on every step change */}
+            <div key={step} className="animate-in fade-in slide-in-from-bottom-3 duration-300">
+              {step === "phone" && (
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <label htmlFor="login-phone" className="text-[13px] font-semibold text-stone-600">
+                      Mobile number
+                    </label>
+                    <div className="relative">
+                      <div className="pointer-events-none absolute left-4 top-1/2 flex -translate-y-1/2 items-center gap-2.5 text-sm text-stone-500">
+                        <Smartphone className="h-4 w-4 text-stone-400" />
+                        <span className="font-semibold">+91</span>
+                        <div className="h-5 w-px bg-stone-200" />
                       </div>
+                      <Input
+                        id="login-phone"
+                        type="tel"
+                        inputMode="numeric"
+                        autoComplete="tel"
+                        autoFocus
+                        placeholder="10-digit number"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void sendCode();
+                          }
+                        }}
+                        maxLength={10}
+                        className="h-14 rounded-2xl border-stone-200 bg-white pl-[6.5rem] text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
+                      />
+                    </div>
+                    {phone.length > 0 && !phoneIsValid && (
+                      <p className="text-xs font-medium text-destructive">Enter a valid 10-digit mobile number.</p>
                     )}
-                  </fieldset>
+                  </div>
 
                   <Button
-                    onClick={handleVerifyOtp}
-                    className="h-[52px] w-full rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-[15px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
-                    disabled={otp.join("").length !== 4 || loading}
+                    onClick={() => void sendCode()}
+                    disabled={!phoneIsValid || loading}
+                    className="h-14 w-full rounded-2xl text-base font-semibold shadow-[0_10px_24px_-10px_rgba(226,54,54,0.55)] transition-all hover:shadow-[0_14px_30px_-10px_rgba(226,54,54,0.6)] active:scale-[0.99] disabled:shadow-none"
                   >
-                    <span>{loading ? "Verifying..." : "Verify & Sign In"}</span>
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {loading ? "Sending code…" : "Send code"}
+                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
 
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowOtp(false);
-                        setOtp(["", "", "", ""]);
-                        setOtpExpiry(null);
-                      }}
-                      className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
-                      disabled={loading}
-                    >
-                      Change number
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResendOtp}
-                      className="text-sm font-medium text-primary transition-colors hover:text-primary/80"
-                      disabled={loading}
-                    >
-                      {loading ? "Sending..." : "Resend code"}
-                    </button>
+                  <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5">
+                    <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                    <p className="text-xs leading-relaxed text-stone-600">
+                      Your code arrives on <span className="font-semibold text-stone-800">WhatsApp</span>. Make sure
+                      this number is active on WhatsApp.
+                    </p>
                   </div>
                 </div>
               )}
 
-              {/* Security note */}
-              <div className={cn("flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 px-4 py-3.5", showOtp && "hidden sm:flex")}>
-                <ShieldCheck className="h-4.5 w-4.5 shrink-0 text-emerald-500" />
-                <p className="text-xs leading-relaxed text-slate-500">
-                  Your connection is secure. OTP will be sent to your registered number only.
-                </p>
+              {step === "otp" && (
+                <div className="space-y-6">
+                  <fieldset>
+                    <legend className="sr-only">Enter the {OTP_LENGTH}-digit code</legend>
+                    <div className="flex justify-between gap-3 sm:justify-start">
+                      {otp.map((digit, index) => (
+                        <Input
+                          key={index}
+                          ref={(el) => {
+                            otpRefs.current[index] = el;
+                          }}
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete={index === 0 ? "one-time-code" : "off"}
+                          value={digit}
+                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
+                          disabled={loading}
+                          className={cn(
+                            "h-[66px] w-full max-w-[76px] flex-1 rounded-2xl border-stone-200 bg-white text-center text-2xl font-bold text-stone-900 shadow-sm transition-all",
+                            "focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10",
+                            digit && "border-primary/40 bg-primary/[0.03]"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  {isTestPhone && (
+                    <p className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
+                      Test number — use code <span className="font-bold">1234</span>.
+                    </p>
+                  )}
+
+                  <Button
+                    onClick={() => void verifyCode(otpValue)}
+                    disabled={otpValue.length !== OTP_LENGTH || loading}
+                    className="h-14 w-full rounded-2xl text-base font-semibold shadow-[0_10px_24px_-10px_rgba(226,54,54,0.55)] transition-all active:scale-[0.99] disabled:shadow-none"
+                  >
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    {loading ? "Verifying…" : "Verify"}
+                  </Button>
+
+                  <div className="text-center text-sm text-stone-500">
+                    {secondsLeft > 0 ? (
+                      <span>
+                        Resend available in{" "}
+                        <span className="font-semibold tabular-nums text-stone-700">{secondsLeft}s</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void sendCode(true)}
+                        disabled={loading}
+                        className="font-semibold text-primary transition-colors hover:text-primary/80 disabled:opacity-50"
+                      >
+                        Resend code
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {step === "accounts" && (
+                <div className="space-y-3">
+                  {accounts.map((account) => {
+                    const { icon: Icon } = getRoleDisplay(account.role, account.adminKind);
+                    const isEntering = enteringId === account.id;
+                    const isBusy = Boolean(enteringId);
+
+                    return (
+                      <button
+                        key={account.id}
+                        type="button"
+                        onClick={() => void enterAccount(account, ticket)}
+                        disabled={isBusy}
+                        className={cn(
+                          "group flex w-full items-center gap-4 rounded-2xl border border-stone-200 bg-white px-4 py-4 text-left shadow-sm transition-all",
+                          "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md active:scale-[0.99]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2",
+                          isBusy && !isEntering && "opacity-50"
+                        )}
+                      >
+                        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Icon className="h-5 w-5" />
+                        </span>
+
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[15px] font-semibold text-stone-900">
+                            {account.label}
+                          </span>
+                          <span className="mt-0.5 block truncate text-[13px] text-stone-500">
+                            {account.scope || account.name}
+                          </span>
+                        </span>
+
+                        {isEntering ? (
+                          <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 shrink-0 text-stone-300 transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-auto pt-8 sm:mt-0 lg:hidden">
+              <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400">
+                <LockKeyhole className="h-3 w-3" />
+                <span>Secure sign-in · codes are single-use</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

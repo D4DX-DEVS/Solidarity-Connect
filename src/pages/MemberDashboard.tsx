@@ -281,7 +281,7 @@ const MemberDashboard = () => {
     skills: ""
   });
 
-  const { token, logout, availableRoles, switchRole } = useAuth();
+  const { token, logout, availableAccounts, switchAccount } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -1814,26 +1814,28 @@ const MemberDashboard = () => {
                     : `${profile.profile.group.name} · ${profile.profile.district.name}`}
                 </p>
               </div>
-              {availableRoles.filter((role) => role !== "member").length > 0 && (
+              {availableAccounts.filter((account) => account.type !== "member").length > 0 && (
                 <>
                   <DropdownMenuSeparator />
                   <div className="px-3 pt-1.5 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Switch role
+                    Switch account
                   </div>
-                  {availableRoles.filter((role) => role !== "member").map((role) => (
+                  {/* Account-based: Area/Murabi/Coordinator admin share role 'group_admin',
+                      so a role-name list would collapse them into one entry. */}
+                  {availableAccounts.filter((account) => account.type !== "member").map((account) => (
                     <DropdownMenuItem
-                      key={role}
+                      key={account.id}
                       onClick={async () => {
                         try {
-                          await switchRole(role);
-                          navigate(getHomeRouteByRole(role));
+                          await switchAccount(account);
+                          navigate(getHomeRouteByRole(account.role));
                         } catch {
-                          toast({ title: "Switch failed", description: "Could not switch role.", variant: "destructive" });
+                          toast({ title: "Switch failed", description: "Could not switch account.", variant: "destructive" });
                         }
                       }}
                     >
                       <Link2 className="mr-2 h-4 w-4" />
-                      {role === "state_admin" ? "State Admin" : role === "district_admin" ? "District Admin" : "Area Admin"}
+                      {account.label}
                     </DropdownMenuItem>
                   ))}
                 </>

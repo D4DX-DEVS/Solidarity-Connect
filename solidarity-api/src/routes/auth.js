@@ -2,6 +2,8 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import otpService from '../services/otpService.js';
+import loginService from '../services/loginService.js';
+import { OTP_DIGITS } from '../services/msghexService.js';
 import { loginValidation, verifyOTPValidation } from '../middleware/validation.js';
 import { authenticate } from '../middleware/auth.js';
 import User from '../models/User.js';
@@ -141,6 +143,8 @@ router.get('/me', authenticate, async (req, res) => {
         phone: user.phone,
         email: user.email,
         role: user.role,
+        adminKind: user.role === 'group_admin' ? (user.adminKind || 'area') : null,
+        label: loginService.accountLabel(user.role, user.adminKind),
         district: user.district,
         group: user.group,
         roleTag: user.roleTag,
@@ -408,12 +412,16 @@ router.post('/switch-role', [
       });
     }
 
-    // Admin target role
+    // Admin target role. (phone, role) can match several rows for group_admin
+    // (area/murabi/coordinator) — this legacy role-name endpoint cannot express
+    // which, so sort to deterministically pick 'area'. Kind-specific switching
+    // goes through /switch-account (account-id based).
     const targetUser = await User.findOne({
       phone: { $in: phoneVariants },
       role: targetRole,
       isActive: true
     })
+      .sort({ adminKind: 1 })
       .populate('district', 'name code')
       .populate('group', 'name code district');
 
@@ -449,6 +457,8 @@ router.post('/switch-role', [
           phone: targetUser.phone,
           email: targetUser.email,
           role: targetUser.role,
+          adminKind: targetUser.role === 'group_admin' ? (targetUser.adminKind || 'area') : null,
+          label: loginService.accountLabel(targetUser.role, targetUser.adminKind),
           district: targetUser.district,
           group: targetUser.group,
           roleTag: targetUser.roleTag,
@@ -464,6 +474,227 @@ router.post('/switch-role', [
       success: false,
       message: 'Failed to switch role'
     });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Phone-first sign-in: one code per number, then pick which account to enter.
+// Replaces the legacy "choose a role, then request a code for it" flow above.
+// ---------------------------------------------------------------------------
+
+const phoneBody = body('phone')
+  .custom((value) => loginService.isValidPhone(value))
+  .withMessage('Enter a valid 10-digit mobile number');
+
+// @route   POST /api/auth/login/send-otp
+// @desc    Send one WhatsApp code covering every account on this number
+// @access  Public
+router.post('/login/send-otp', [phoneBody, body('resend').optional().isBoolean()], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+  }
+
+  try {
+    const result = await loginService.sendLoginOtp(req.body.phone, { isResend: Boolean(req.body.resend) });
+
+    if (!result.success) {
+      return res.status(result.status || 400).json({
+        success: false,
+        message: result.message,
+        retryAfter: result.retryAfter,
+        // The gateway's own words ("Device session offline", bad secret, ...) are the
+        // only thing that makes a delivery failure diagnosable. Kept out of production
+        // responses so provider internals aren't exposed to end users.
+        ...(process.env.NODE_ENV !== 'production' && result.error
+          ? { providerError: result.error }
+          : {}),
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        expiresAt: result.expiresAt,
+        accountsCount: result.accountsCount,
+        isTestPhone: result.isTestPhone,
+      },
+    });
+  } catch (error) {
+    console.error('Login send-otp error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send verification code' });
+  }
+});
+
+// @route   POST /api/auth/login/verify-otp
+// @desc    Verify the code; returns every account on the number + a selection ticket
+// @access  Public
+router.post('/login/verify-otp', [
+  phoneBody,
+  body('otp').isLength({ min: OTP_DIGITS, max: OTP_DIGITS }).isNumeric()
+    .withMessage(`Code must be ${OTP_DIGITS} digits`),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+  }
+
+  try {
+    const result = await loginService.verifyLoginOtp(req.body.phone, req.body.otp);
+
+    if (!result.success) {
+      return res.status(result.status || 400).json({
+        success: false,
+        message: result.message,
+        attemptsRemaining: result.attemptsRemaining,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: { accounts: result.accounts, ticket: result.ticket },
+    });
+  } catch (error) {
+    console.error('Login verify-otp error:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify code' });
+  }
+});
+
+// @route   POST /api/auth/login/select-account
+// @desc    Exchange a verification ticket for a session on one chosen account
+// @access  Public (ticket-gated)
+router.post('/login/select-account', [
+  body('ticket').notEmpty().withMessage('Verification ticket is required'),
+  body('accountId').isMongoId().withMessage('Invalid account'),
+  body('accountType').isIn(['admin', 'member']).withMessage('Invalid account type'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+  }
+
+  let phone;
+  try {
+    phone = loginService.readTicket(req.body.ticket);
+  } catch {
+    return res.status(401).json({
+      success: false,
+      message: 'Your verification expired. Please sign in again.',
+    });
+  }
+
+  try {
+    const result = await loginService.selectAccount(phone, req.body.accountId, req.body.accountType);
+
+    if (!result.success) {
+      return res.status(result.status || 403).json({ success: false, message: result.message });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Signed in successfully',
+      data: {
+        token: result.token,
+        userType: result.userType,
+        ...(result.user ? { user: result.user } : {}),
+        ...(result.member ? { member: result.member } : {}),
+      },
+    });
+  } catch (error) {
+    console.error('Login select-account error:', error);
+    res.status(500).json({ success: false, message: 'Failed to sign in' });
+  }
+});
+
+/** Resolve the phone behind a raw session token, straight from the DB. */
+async function phoneFromToken(token) {
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  if (decoded.userType === 'member') {
+    const memberAuth = await MemberAuth.findById(decoded.id).populate('member', 'phone');
+    if (!memberAuth || !memberAuth.isActive) return null;
+    return memberAuth.phone || memberAuth.member?.phone || null;
+  }
+
+  const user = await User.findById(decoded.id).select('phone isActive');
+  if (!user || !user.isActive) return null;
+  return user.phone;
+}
+
+// @route   GET /api/auth/accounts
+// @desc    Every account on the signed-in user's number, for the in-app switcher
+// @access  Private (admin or member token)
+router.get('/accounts', async (req, res) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+  }
+
+  try {
+    const phone = await phoneFromToken(token);
+    if (!phone) {
+      return res.status(401).json({ success: false, message: 'Session is no longer valid.' });
+    }
+
+    const accounts = await loginService.listAccounts(phone);
+    res.status(200).json({ success: true, data: { accounts } });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
+    }
+    console.error('List accounts error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load accounts' });
+  }
+});
+
+// @route   POST /api/auth/switch-account
+// @desc    Switch to another account on the same number, no new OTP. Account-id based,
+//          so a phone holding two area-level admin accounts (e.g. Area + Murabi) can
+//          switch between them — which role-name-based /switch-role cannot express.
+// @access  Private (admin or member token)
+router.post('/switch-account', [
+  body('accountId').isMongoId().withMessage('Invalid account'),
+  body('accountType').isIn(['admin', 'member']).withMessage('Invalid account type'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+  }
+
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
+  }
+
+  try {
+    const phone = await phoneFromToken(token);
+    if (!phone) {
+      return res.status(401).json({ success: false, message: 'Session is no longer valid.' });
+    }
+
+    const result = await loginService.selectAccount(phone, req.body.accountId, req.body.accountType);
+    if (!result.success) {
+      return res.status(result.status || 403).json({ success: false, message: result.message });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Switched account',
+      data: {
+        token: result.token,
+        userType: result.userType,
+        ...(result.user ? { user: result.user } : {}),
+        ...(result.member ? { member: result.member } : {}),
+      },
+    });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
+    }
+    console.error('Switch account error:', error);
+    res.status(500).json({ success: false, message: 'Failed to switch account' });
   }
 });
 

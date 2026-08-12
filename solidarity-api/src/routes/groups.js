@@ -2,7 +2,7 @@ import express from 'express';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import Member from '../models/Member.js';
-import { authenticate, requireRole, requireGroupAccess } from '../middleware/auth.js';
+import { authenticate, requireRole, requireGroupAccess, isAreaLevelAdmin } from '../middleware/auth.js';
 import { 
   createGroupValidation,
   paginationValidation,
@@ -40,7 +40,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
       // Area admins only see their own group(s)
-      if (req.user.roleTag?.type === 'area' && req.user.district) {
+      if (isAreaLevelAdmin(req.user) && req.user.district) {
         const areaName = req.user.roleTag.roleDescription;
         if (areaName) {
           const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');

@@ -5,13 +5,13 @@ import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import User from '../models/User.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, isAreaLevelAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Helper: is this user an area admin?
-const isAreaAdmin = (user) =>
-  user.role === 'group_admin' && user.roleTag?.type === 'area';
+// Helper: is this user an area-level admin? (area proper, or murabi/coordinator —
+// identical permissions by design; see middleware/auth.js)
+const isAreaAdmin = (user) => isAreaLevelAdmin(user);
 
 // Normalise the week value coming from clients.
 // - weekly targets: 1..5 (defaults to 1 if missing / invalid)

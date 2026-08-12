@@ -182,24 +182,24 @@ const ManageGroups = () => {
           <div className="space-y-3">
             {groups.map((group) => (
               <Card key={group._id} className="surface-card border-border/70">
-                <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-5">
-                  <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex items-start gap-3">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-3">
                       <div className="action-tile-icon shrink-0">
                         <Users className="h-5 w-5 text-primary" />
                       </div>
-                      <div className="min-w-0 space-y-1 sm:space-y-2">
-                        <h3 className="truncate text-base font-semibold text-foreground sm:text-lg">{group.name}</h3>
+                      <div className="min-w-0 space-y-1">
+                        <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">{group.name}</h3>
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm text-muted-foreground">Code: {group.code}</p>
-                          <div className="data-strip inline-flex items-center gap-1.5 px-2.5 py-1 text-xs text-muted-foreground sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm">
-                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <p className="text-xs text-muted-foreground">Code: {group.code}</p>
+                          <div className="data-strip inline-flex items-center gap-1.5 px-2 py-0.5 text-xs text-muted-foreground">
+                            <Users className="h-3.5 w-3.5" />
                             {group.statistics?.totalMembers || 0} Members
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 lg:min-w-[260px]">
+                    <div className="grid grid-cols-2 gap-2 lg:min-w-[220px]">
                       <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(group)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit

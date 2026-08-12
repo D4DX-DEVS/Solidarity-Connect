@@ -2,6 +2,7 @@ import { Users, CheckCircle, Clock, Calendar, Upload, Shield, FileText, BarChart
 import { MetricCard } from "@/components/app/AppShell";
 import UserTargetsSection from "@/components/UserTargetsSection";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRoleLabel } from "@/lib/adminKinds";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -107,7 +108,7 @@ const Dashboard = () => {
     <div className="app-page">
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
-        title="Area Admin Dashboard"
+        title={`${getRoleLabel(userRole, user?.adminKind)} Dashboard`}
       />
 
       <main className="app-main pt-4 pb-28">

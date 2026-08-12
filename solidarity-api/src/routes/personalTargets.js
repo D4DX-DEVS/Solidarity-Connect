@@ -4,7 +4,7 @@ import MemberTargetProgress from '../models/MemberTargetProgress.js';
 import UserTargetProgress from '../models/UserTargetProgress.js';
 import Member from '../models/Member.js';
 import User from '../models/User.js';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
 import { body, validationResult, query } from 'express-validator';
 
 const router = express.Router();
@@ -407,7 +407,7 @@ async function checkTargetAccess(personalTarget, user) {
   const audience = personalTarget.targetAudience;
   if (audience === 'all_users') return true;
   if (audience === 'district_admins' && user.role === 'district_admin') return true;
-  if (audience === 'area_admins' && user.role === 'group_admin' && user.roleTag?.type === 'area') return true;
+  if (audience === 'area_admins' && isAreaLevelAdmin(user)) return true;
   if (audience === 'group_admins' && user.role === 'group_admin') return true;
   if (audience === 'group_and_area_admins' && user.role === 'group_admin') return true;
 

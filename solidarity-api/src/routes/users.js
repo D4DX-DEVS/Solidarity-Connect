@@ -22,6 +22,7 @@ router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), pa
       limit = 20,
       sort = '-createdAt',
       role,
+      adminKind,
       district,
       group,
       isActive,
@@ -30,6 +31,14 @@ router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), pa
 
     let filter = {};
     if (role) filter.role = role;
+    // Area-level admins share role 'group_admin'; adminKind narrows to one flavour
+    // (area / murabi / coordinator). Legacy rows predate the field, so a request for
+    // 'area' must also match documents where it was never set.
+    if (adminKind) {
+      filter.adminKind = adminKind === 'area'
+        ? { $in: ['area', null] }
+        : adminKind;
+    }
     if (district) filter.district = district;
     if (group) filter.group = group;
     if (isActive !== undefined) filter.isActive = isActive === 'true';

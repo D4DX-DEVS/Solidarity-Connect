@@ -8,7 +8,7 @@ import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize, requireAreaScope } from '../middleware/auth.js';
+import { authenticate, authorize, requireAreaScope, isAreaLevelAdmin } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 
@@ -25,8 +25,8 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
 
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
-      // Area admins (roleTag.type === 'area') manage multiple groups in their area
-      const isArea = req.user.roleTag?.type === 'area';
+      // Area-level admins (area/murabi/coordinator) manage multiple groups in their area
+      const isArea = isAreaLevelAdmin(req.user);
       const areaName = req.user.roleTag?.roleDescription;
 
       if (isArea && areaName && req.user.district) {

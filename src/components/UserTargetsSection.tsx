@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { isAreaLevelAdmin } from "@/lib/adminKinds";
 import {
   Target, CheckCircle, Clock, AlertCircle, MessageSquare,
   ChevronDown, ChevronUp, Paperclip, Upload, X, FileText, Image, Film, RefreshCw, Users, Plus, Minus,
@@ -121,7 +122,8 @@ const FREQ_LABELS: Record<string, string> = {
 
 const UserTargetsSection = () => {
   const { user } = useAuth();
-  const isAreaAdmin = user?.role === 'group_admin' && user?.roleTag?.type === 'area';
+  // Area-level = area proper OR murabi/coordinator (identical permissions by design)
+  const isAreaAdmin = isAreaLevelAdmin(user);
 
   const [progressList, setProgressList] = useState<ProgressRecord[]>([]);
   const [loading, setLoading] = useState(true);
