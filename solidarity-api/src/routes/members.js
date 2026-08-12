@@ -5,7 +5,7 @@ import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize, requireRole } from '../middleware/auth.js';
+import { authenticate, authorize, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
 import { 
   createMemberValidation, 
   updateMemberValidation, 
@@ -46,8 +46,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     
     if (!skipScope) {
       if (req.user.role === 'group_admin') {
-        // Area admins (roleTag.type === 'area') manage multiple groups in their area
-        const isArea = req.user.roleTag?.type === 'area';
+        // Area-level admins (area/murabi/coordinator) manage multiple groups in their area
+        const isArea = isAreaLevelAdmin(req.user);
         const areaName = req.user.roleTag?.roleDescription;
 
         if (isArea && areaName && req.user.district) {

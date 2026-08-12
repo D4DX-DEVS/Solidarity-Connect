@@ -71,6 +71,52 @@ export const authenticate = async (req, res, next) => {
   }
 };
 
+// Area-LEVEL admin: an area admin proper (roleTag.type === 'area'), or a Murabi /
+// Coordinator admin — which by design have identical permissions to Area Admins.
+// NOTE: adminKind === 'area' is deliberately NOT sufficient here. The migration
+// backfilled adminKind='area' onto every legacy user, including unit-scoped
+// group admins; treating it as the area test would silently widen their scope.
+export const isAreaLevelAdmin = (user) =>
+  user?.role === 'group_admin' &&
+  (user.roleTag?.type === 'area' || user.adminKind === 'murabi' || user.adminKind === 'coordinator');
+
+// The same rule as a Mongo query fragment, so listings and reports select exactly
+// the users isAreaLevelAdmin() would let through.
+const AREA_LEVEL_CONDITIONS = [
+  { 'roleTag.type': 'area' },
+  { adminKind: 'murabi' },
+  { adminKind: 'coordinator' }
+];
+
+/** Which flavour of group_admin is this? Area proper unless tagged murabi/coordinator. */
+export const adminKindOf = (user) =>
+  user?.adminKind === 'murabi' || user?.adminKind === 'coordinator' ? user.adminKind : 'area';
+
+/**
+ * Query fragment for one slice of group_admin:
+ *   'area'        — area admins proper
+ *   'murabi' /
+ *   'coordinator' — same permissions and area scoping as area admins, own accounts
+ *   'area_level'  — all three of the above
+ *   'unit'        — everything else, i.e. unit-scoped admins. Legacy rows were never
+ *                   tagged roleTag.type 'unit', so this has to be a negation.
+ */
+export const adminKindQuery = (kind) => {
+  switch (kind) {
+    case 'murabi':
+    case 'coordinator':
+      return { role: 'group_admin', adminKind: kind };
+    case 'area':
+      return { role: 'group_admin', 'roleTag.type': 'area', adminKind: { $nin: ['murabi', 'coordinator'] } };
+    case 'area_level':
+      return { role: 'group_admin', $or: AREA_LEVEL_CONDITIONS };
+    case 'unit':
+      return { role: 'group_admin', $nor: AREA_LEVEL_CONDITIONS };
+    default:
+      return { role: 'group_admin' };
+  }
+};
+
 // Check if user has required permission
 export const authorize = (permissions) => {
   return (req, res, next) => {

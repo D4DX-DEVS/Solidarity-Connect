@@ -26,7 +26,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { apiCall, multipartApiCall } from "@/utils/api";
+import { downloadFile } from "@/utils/downloadFile";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAreaLevelAdmin } from "@/lib/adminKinds";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
 interface OrgFile {
@@ -83,8 +85,8 @@ const decodeFilename = (name: string): string => {
   }
 };
 
-const isAreaAdmin = (user: any) =>
-  user?.role === "group_admin" && user?.roleTag?.type === "area";
+// Area-level = area proper OR murabi/coordinator (identical permissions by design)
+const isAreaAdmin = isAreaLevelAdmin;
 
 const OrgFiles = () => {
   const navigate = useNavigate();
@@ -353,65 +355,60 @@ const OrgFiles = () => {
                           {file.description && (
                             <p className="line-clamp-2 text-xs text-muted-foreground mb-1">{file.description}</p>
                           )}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge variant="outline" className="text-xs capitalize">
+                          <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto">
+                            <Badge variant="outline" className="text-xs capitalize shrink-0">
                               {isMembershipForm ? "Membership Form" : categoryLabels[file.category] || file.category}
                             </Badge>
-                            <span className="text-xs text-muted-foreground">{file.size ? formatFileSize(file.size) : ""}</span>
-                            {file.originalName && <span className="text-xs text-muted-foreground malayalam-text">{decodeFilename(file.originalName)}</span>}
-                          </div>
-                        </div>
-                      </div>
+                            <span className="text-xs text-muted-foreground shrink-0">{file.size ? formatFileSize(file.size) : ""}</span>
+                            {file.originalName && <span className="text-xs text-muted-foreground malayalam-text shrink-0">{decodeFilename(file.originalName)}</span>}
 
-                      <div className="flex items-center gap-1.5 mt-2.5 flex-nowrap">
-                        {file.category === "link" && file.link ? (
-                          <a href={file.link} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
-                              <Link2 className="h-3 w-3 mr-1" />Open Link
-                            </Button>
-                          </a>
-                        ) : file.url ? (
-                          <>
-                            <a href={file.url} target="_blank" rel="noopener noreferrer">
-                              <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
-                                {isMembershipForm ? (
-                                  <><Download className="h-3 w-3 mr-1" />Download</>
-                                ) : (
-                                  <><Eye className="h-3 w-3 mr-1" />View</>
-                                )}
-                              </Button>
-                            </a>
-                            {isMembershipForm && (
-                              <a href={file.url} download>
-                                <Button size="sm" variant="default" className="text-xs h-7 px-2.5">
-                                  <Download className="h-3 w-3 mr-1" />Download PDF
+                            {file.category === "link" && file.link ? (
+                              <a href={file.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                                <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
+                                  <Link2 className="h-3 w-3 mr-1" />Open Link
                                 </Button>
                               </a>
+                            ) : file.url ? (
+                              <>
+                                <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                                  <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
+                                    <Eye className="h-3 w-3 mr-1" />View
+                                  </Button>
+                                </a>
+                                <Button
+                                  size="sm"
+                                  variant={isMembershipForm ? "default" : "outline"}
+                                  className="text-xs h-7 px-2.5 shrink-0"
+                                  onClick={() => downloadFile(file.url, file.originalName || file.title)}
+                                >
+                                  <Download className="h-3 w-3 mr-1" />Download
+                                </Button>
+                              </>
+                            ) : null}
+                            {isStateAdmin && (
+                              <>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 shrink-0"
+                                  onClick={() => openEditDialog(file)}
+                                  aria-label="Edit file"
+                                >
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-7 w-7 shrink-0 text-destructive"
+                                  onClick={() => handleDelete(file)}
+                                  aria-label="Delete file"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
                             )}
-                          </>
-                        ) : null}
-                        {isStateAdmin && (
-                          <>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 shrink-0"
-                              onClick={() => openEditDialog(file)}
-                              aria-label="Edit file"
-                            >
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 shrink-0 text-destructive"
-                              onClick={() => handleDelete(file)}
-                              aria-label="Delete file"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

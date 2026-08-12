@@ -1,63 +1,68 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Repeat } from "lucide-react";
 import { DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, type LoginAccount } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getHomeRouteByRole, type AppUserRole } from "@/lib/roleRoutes";
-
-const roleLabels: Record<string, string> = {
-  state_admin: "State Admin",
-  district_admin: "District Admin",
-  group_admin: "Area Admin",
-  member: "Member",
-};
+import { getRoleDisplay } from "@/lib/adminKinds";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
 // ponytail: same switcher block HeaderWithLogout has, extracted so the hand-rolled
 // dashboard menus (StateAdmin, DistrictAdmin) get it without a third copy.
+//
+// Switches by account id rather than role name: Area Admin, Murabi Admin and
+// Coordinator Admin all share role "group_admin", so a role-keyed list would
+// collapse them into one entry and make two of them unreachable.
 export function RoleSwitchMenuItems() {
-  const { availableRoles, userRole, switchRole } = useAuth();
+  const { availableAccounts, user, switchAccount } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [switching, setSwitching] = useState(false);
+  const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-  const otherRoles = availableRoles.filter((role) => role !== userRole);
-  if (otherRoles.length === 0) return null;
+  const others = availableAccounts.filter((account) => account.id !== user?.id);
+  if (others.length === 0) return null;
 
-  const handleSwitchRole = async (targetRole: AppUserRole) => {
-    if (switching) return;
-    setSwitching(true);
+  const handleSwitch = async (account: LoginAccount) => {
+    if (switchingId) return;
+    setSwitchingId(account.id);
     try {
-      await switchRole(targetRole);
-      toast({ title: "Role switched", description: `You are now using ${roleLabels[targetRole] || targetRole}.` });
-      navigate(getHomeRouteByRole(targetRole));
+      await switchAccount(account);
+      toast({ title: "Account switched", description: `You are now using ${account.label}.` });
+      navigate(account.type === "member" ? "/member-dashboard" : getHomeRouteByRole(account.role));
     } catch (error) {
       toast({
         title: "Switch failed",
-        description: error instanceof Error ? error.message : "Could not switch role.",
+        description: error instanceof Error ? error.message : "Could not switch account.",
         variant: "destructive",
       });
     } finally {
-      setSwitching(false);
+      setSwitchingId(null);
     }
   };
 
   return (
     <>
       <DropdownMenuLabel className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Switch role
+        Switch account
       </DropdownMenuLabel>
-      {otherRoles.map((role) => (
-        <DropdownMenuItem
-          key={role}
-          disabled={switching}
-          onClick={() => handleSwitchRole(role)}
-          className="cursor-pointer rounded-xl px-3 py-2.5 font-medium"
-        >
-          <Repeat className="mr-2 h-4 w-4" />
-          {roleLabels[role] || role}
-        </DropdownMenuItem>
-      ))}
+      {others.map((account) => {
+        const { icon: Icon } = getRoleDisplay(account.role, account.adminKind);
+        return (
+          <DropdownMenuItem
+            key={account.id}
+            disabled={Boolean(switchingId)}
+            onClick={() => handleSwitch(account)}
+            className="cursor-pointer rounded-xl px-3 py-2.5 font-medium"
+          >
+            <Icon className="mr-2 h-4 w-4" />
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate">{account.label}</span>
+              {account.scope && (
+                <span className="truncate text-xs font-normal text-muted-foreground">{account.scope}</span>
+              )}
+            </span>
+          </DropdownMenuItem>
+        );
+      })}
       <DropdownMenuSeparator />
     </>
   );

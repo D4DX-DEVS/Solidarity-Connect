@@ -4,7 +4,6 @@ import Member from '../models/Member.js';
 import User from '../models/User.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
-import dxingService from '../services/dxingService.js';
 import { authenticate, authorize, requireRole } from '../middleware/auth.js';
 import { 
   createNotificationValidation,

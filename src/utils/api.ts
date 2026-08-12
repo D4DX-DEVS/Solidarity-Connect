@@ -108,6 +108,41 @@ export const authAPI = {
     }),
 
   getProfile: () => apiCall('/auth/me'),
+
+  // Every account on the signed-in number, for the in-app switcher.
+  listAccounts: () => apiCall('/auth/accounts'),
+
+  // Switch by account id, so two area-level accounts (e.g. Area + Murabi) on the
+  // same number are distinguishable — role-name-based switchRole cannot do that.
+  switchAccount: (accountId: string, accountType: 'admin' | 'member') =>
+    apiCall('/auth/switch-account', {
+      method: 'POST',
+      body: JSON.stringify({ accountId, accountType }),
+    }),
+};
+
+/**
+ * Phone-first sign-in: one WhatsApp code per number, then pick which of that
+ * number's accounts to enter. Replaces the old pick-a-role-then-send-a-code flow.
+ */
+export const loginAPI = {
+  sendOTP: (phone: string, resend = false) =>
+    apiCall('/auth/login/send-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, resend }),
+    }),
+
+  verifyOTP: (phone: string, otp: string) =>
+    apiCall('/auth/login/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phone, otp }),
+    }),
+
+  selectAccount: (ticket: string, accountId: string, accountType: 'admin' | 'member') =>
+    apiCall('/auth/login/select-account', {
+      method: 'POST',
+      body: JSON.stringify({ ticket, accountId, accountType }),
+    }),
 };
 
 // Member Auth API calls

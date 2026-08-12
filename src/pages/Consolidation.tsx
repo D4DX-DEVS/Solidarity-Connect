@@ -18,17 +18,27 @@ import { useDistricts } from '@/hooks/useDistricts';
 import { useGroups } from '@/hooks/useGroups';
 import { consolidationService, type ConsolidationUserType, type ConsolidationTarget, type ConsolidationReport, type ConsolidationUser, type MonthlyBreakdown } from '@/services/consolidationService';import * as XLSX from 'xlsx';
 
+// Ordered state → district → area level → unit → members. Murabi and Coordinator are
+// area-level admins with the same scope as Area Admin, listed separately so each kind
+// can be consolidated on its own.
 const USER_TYPE_OPTIONS: { value: ConsolidationUserType; label: string }[] = [
   { value: 'state_admin', label: 'State Admin' },
   { value: 'district_admin', label: 'District Admin' },
   { value: 'area_admin', label: 'Area Admin' },
+  { value: 'murabi_admin', label: 'Murabi Admin' },
+  { value: 'coordinator_admin', label: 'Coordinator Admin' },
   { value: 'unit_admin', label: 'Unit Admin' },
   { value: 'members', label: 'Members' },
 ];
 
+const AREA_LEVEL_TYPES: ConsolidationUserType[] = ['area_admin', 'murabi_admin', 'coordinator_admin'];
+
+// Area-level admins are scoped by their area name, everyone else by their group.
+const scopeOf = (u: { area?: string; group?: string }) => u.area || u.group || '';
+
 // User types that need region filtering
-const NEEDS_DISTRICT_FILTER: ConsolidationUserType[] = ['district_admin', 'area_admin', 'unit_admin', 'members'];
-const NEEDS_GROUP_FILTER: ConsolidationUserType[] = ['area_admin', 'unit_admin', 'members'];
+const NEEDS_DISTRICT_FILTER: ConsolidationUserType[] = ['district_admin', ...AREA_LEVEL_TYPES, 'unit_admin', 'members'];
+const NEEDS_GROUP_FILTER: ConsolidationUserType[] = [...AREA_LEVEL_TYPES, 'unit_admin', 'members'];
 
 export default function Consolidation() {
   const { user } = useAuth();
@@ -259,7 +269,7 @@ export default function Consolidation() {
           u.name,
           u.phone,
           u.district || 'Not Assigned',
-          u.group || 'Not Assigned',
+          scopeOf(u) || 'Not Assigned',
           u.roleTag || u.role || '-',
           isOverallCompleted ? 'Submitted' : 'Not Submitted',
           ...monthKeys.map(mk => userMonths.includes(mk) ? '✅ Yes' : '❌ No'),
@@ -281,7 +291,7 @@ export default function Consolidation() {
       const dataRows = allUsers.map((u, idx) => {
         const isCompleted = exportCompleted.includes(u);
         return [
-          idx + 1, u.name, u.phone, u.district || 'Not Assigned', u.group || 'Not Assigned',
+          idx + 1, u.name, u.phone, u.district || 'Not Assigned', scopeOf(u) || 'Not Assigned',
           u.roleTag || u.role || '-',
           isCompleted ? '✅ Submitted' : '❌ Not Submitted',
           isCompleted && u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-',
@@ -352,7 +362,7 @@ export default function Consolidation() {
           distDetailData.push(['', 'S.No', 'Name', 'Phone', 'Group', ...(isRecurring ? ['Months Done'] : ['Submitted At'])]);
           data.completedUsers.forEach((u, idx) => {
             distDetailData.push([
-              '', idx + 1, u.name, u.phone, u.group || '-',
+              '', idx + 1, u.name, u.phone, scopeOf(u) || '-',
               ...(isRecurring
                 ? [`${u.completedCount || 0} of ${months.length}`]
                 : [u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-']
@@ -372,9 +382,9 @@ export default function Consolidation() {
               const monthKeys = months.map(m => `${m.year}-${m.month}`);
               const missed = monthKeys.filter(mk => !userMonths.includes(mk));
               const missedLabels = missed.map(formatMonth).join(', ');
-              distDetailData.push(['', idx + 1, u.name, u.phone, u.group || '-', missedLabels || 'All months']);
+              distDetailData.push(['', idx + 1, u.name, u.phone, scopeOf(u) || '-', missedLabels || 'All months']);
             } else {
-              distDetailData.push(['', idx + 1, u.name, u.phone, u.group || '-', 'Not Started']);
+              distDetailData.push(['', idx + 1, u.name, u.phone, scopeOf(u) || '-', 'Not Started']);
             }
           });
           distDetailData.push([]);
@@ -413,7 +423,7 @@ export default function Consolidation() {
           monthlyDetailData.push(['  ✅ SUBMITTED THIS MONTH:']);
           monthlyDetailData.push(['', 'S.No', 'Name', 'Phone', 'District', 'Group']);
           monthSubmitted.forEach((u, idx) => {
-            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', u.group || '-']);
+            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', scopeOf(u) || '-']);
           });
         } else {
           monthlyDetailData.push(['  ✅ SUBMITTED THIS MONTH: Nobody']);
@@ -425,7 +435,7 @@ export default function Consolidation() {
           monthlyDetailData.push(['  ❌ NOT SUBMITTED THIS MONTH:']);
           monthlyDetailData.push(['', 'S.No', 'Name', 'Phone', 'District', 'Group']);
           monthNotSubmitted.forEach((u, idx) => {
-            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', u.group || '-']);
+            monthlyDetailData.push(['', idx + 1, u.name, u.phone, u.district || '-', scopeOf(u) || '-']);
           });
         } else {
           monthlyDetailData.push(['  ❌ NOT SUBMITTED: Everyone has submitted!']);
@@ -446,7 +456,7 @@ export default function Consolidation() {
       ['✅ MEMBERS WHO SUBMITTED (Completed)'],
       ['S.No', 'Name', 'Phone', 'District', 'Group', ...(isRecurring ? ['Times Submitted'] : ['Date'])],
       ...exportCompleted.map((u, idx) => [
-        idx + 1, u.name, u.phone, u.district || '-', u.group || '-',
+        idx + 1, u.name, u.phone, u.district || '-', scopeOf(u) || '-',
         ...(isRecurring ? [`${u.completedCount || 0}/${months.length}`] : [u.completedAt ? new Date(u.completedAt).toLocaleDateString() : '-']),
       ]),
       [],
@@ -458,9 +468,9 @@ export default function Consolidation() {
           const userMonths = u.completedMonths || [];
           const monthKeys = months.map(m => `${m.year}-${m.month}`);
           const missed = monthKeys.filter(mk => !userMonths.includes(mk));
-          return [idx + 1, u.name, u.phone, u.district || '-', u.group || '-', missed.map(formatMonth).join(', ') || 'All'];
+          return [idx + 1, u.name, u.phone, u.district || '-', scopeOf(u) || '-', missed.map(formatMonth).join(', ') || 'All'];
         }
-        return [idx + 1, u.name, u.phone, u.district || '-', u.group || '-', 'Not Started'];
+        return [idx + 1, u.name, u.phone, u.district || '-', scopeOf(u) || '-', 'Not Started'];
       }),
     ];
     const quickSheet = XLSX.utils.aoa_to_sheet(quickData);
@@ -785,7 +795,7 @@ function UserTable({ users, type, isRecurring }: { users: ConsolidationUser[]; t
             <TableHead>Name</TableHead>
             <TableHead className="hidden sm:table-cell">Phone</TableHead>
             <TableHead className="hidden md:table-cell">District</TableHead>
-            <TableHead className="hidden md:table-cell">Group</TableHead>
+            <TableHead className="hidden md:table-cell">Group / Area</TableHead>
             {type === 'completed' && <TableHead>Completed</TableHead>}
             {type === 'pending' && <TableHead>Status</TableHead>}
             {isRecurring && type === 'pending' && <TableHead>Progress</TableHead>}
@@ -808,7 +818,7 @@ function UserTable({ users, type, isRecurring }: { users: ConsolidationUser[]; t
                 </TableCell>
                 <TableCell className="hidden sm:table-cell text-muted-foreground">{user.phone}</TableCell>
                 <TableCell className="hidden md:table-cell">{user.district || '-'}</TableCell>
-                <TableCell className="hidden md:table-cell">{user.group || '-'}</TableCell>
+                <TableCell className="hidden md:table-cell">{scopeOf(user) || '-'}</TableCell>
                 {type === 'completed' && (
                   <TableCell>
                     {isRecurring ? (
@@ -851,7 +861,7 @@ function UserTable({ users, type, isRecurring }: { users: ConsolidationUser[]; t
                         <DetailItem label="Phone" value={user.phone} />
                         <DetailItem label="Role" value={user.roleTag || user.role || '-'} />
                         <DetailItem label="District" value={user.district || '-'} />
-                        <DetailItem label="Group" value={user.group || '-'} />
+                        <DetailItem label="Group / Area" value={scopeOf(user) || '-'} />
                         {type === 'completed' && !isRecurring && (
                           <DetailItem
                             label="Completed At"

@@ -1,11 +1,13 @@
 import User from '../models/User.js';
 import Member from '../models/Member.js';
-import dxingService from './dxingService.js';
+import msghexService from './msghexService.js';
+import { randomInt } from 'node:crypto';
 
 class OTPService {
-  // Generate 4-digit OTP
+  // Generate 4-digit OTP. crypto.randomInt, not Math.random — Math.random is not
+  // cryptographically secure and a predictable login code is a guessable one.
   generateOTP() {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+    return randomInt(1000, 10000).toString();
   }
 
   // Get all available roles for a phone number
@@ -48,8 +50,14 @@ class OTPService {
   // Send OTP to user
   async sendOTP(phone, userType) {
     try {
-      // Check if user exists with this phone and role (match all stored phone formats)
-      let user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType });
+      // Check if user exists with this phone and role (match all stored phone formats).
+      // (phone, role) is no longer unique — a phone can hold area/murabi/coordinator
+      // accounts, all role 'group_admin'. This legacy flow cannot express adminKind,
+      // so sort to deterministically pick the 'area' account; send/verify/resend all
+      // sort the same way, so they always resolve the SAME row. The new /auth/login/*
+      // flow selects by account id and has no such ambiguity.
+      let user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType })
+        .sort({ adminKind: 1 });
       
       if (!user) {
         // Check what roles this phone actually has
@@ -87,7 +95,13 @@ class OTPService {
       await user.save({ validateModifiedOnly: true });
 
       // Send OTP via WhatsApp
-      const result = await dxingService.sendOTP(phone, otp);
+      // Deliver the code we already generated and hashed above, so verification
+      // stays local. (loginService uses MsgHex's own /send/otp generator instead.)
+      const result = await msghexService.sendOTPAsText(
+        phone,
+        otp,
+        parseInt(process.env.OTP_EXPIRY_MINUTES) || 10
+      );
 
       if (result.success) {
         return {
@@ -121,6 +135,7 @@ class OTPService {
   async verifyOTP(phone, otp, userType) {
     try {
       const user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType })
+        .sort({ adminKind: 1 }) // same deterministic pick as sendOTP — see comment there
         .populate('district', 'name code')
         .populate('group', 'name code district');
 
@@ -210,8 +225,9 @@ class OTPService {
   // Resend OTP
   async resendOTP(phone, userType) {
     try {
-      const user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType });
-      
+      const user = await User.findOne({ phone: { $in: this.getPhoneVariants(phone) }, role: userType })
+        .sort({ adminKind: 1 }); // same deterministic pick as sendOTP
+
       if (!user) {
         return {
           success: false,
@@ -261,8 +277,8 @@ class OTPService {
   // Get OTP status for a user
   async getOTPStatus(phone, userType) {
     try {
-      const user = await User.findOne({ phone, role: userType });
-      
+      const user = await User.findOne({ phone, role: userType }).sort({ adminKind: 1 });
+
       if (!user || !user.otp.code) {
         return {
           hasOTP: false,

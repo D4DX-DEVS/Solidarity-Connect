@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { authAPI, memberAuthAPI } from "@/utils/api";
+import type { AdminKind } from "@/lib/adminKinds";
 
 type UserRole = "state_admin" | "district_admin" | "group_admin" | "member";
 
@@ -9,6 +10,9 @@ interface User {
   phone: string;
   email?: string;
   role: UserRole;
+  // Which flavour of area-level admin. Only meaningful when role is "group_admin";
+  // Murabi and Coordinator admins share that role and differ only here.
+  adminKind?: AdminKind | null;
   district?: {
     _id: string;
     name: string;
@@ -20,7 +24,7 @@ interface User {
     code: string;
   };
   roleTag?: {
-    type: "state" | "district" | "area" | "unit";
+    type: "state" | "district" | "area" | "unit" | "murabi" | "coordinator";
     name?: string;
   };
   permissions: string[];
@@ -33,8 +37,21 @@ interface CachedUser {
   name: string;
   phone: string;
   role: UserRole;
+  adminKind?: AdminKind | null;
   district?: { _id: string; name: string; code: string };
   group?: { _id: string; name: string; code: string };
+}
+
+/** One selectable account on the signed-in phone number. Mirrors the API shape. */
+export interface LoginAccount {
+  id: string;
+  type: "admin" | "member";
+  role: UserRole;
+  adminKind: AdminKind | null;
+  label: string;
+  name: string;
+  scope: string | null;
+  lastLogin: string | null;
 }
 
 interface AuthContextType {
@@ -46,10 +63,12 @@ interface AuthContextType {
   userGroup: string | null;
   token: string | null;
   availableRoles: UserRole[];
+  availableAccounts: LoginAccount[];
   login: (token: string, userData: User, userType?: string) => void;
   logout: () => void;
   checkAuth: () => Promise<boolean>;
   switchRole: (targetRole: UserRole) => Promise<void>;
+  switchAccount: (account: LoginAccount) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,19 +82,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userGroup, setUserGroup] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
+  const [availableAccounts, setAvailableAccounts] = useState<LoginAccount[]>([]);
 
-  // Discover all roles this phone holds (admin roles + member) for the switcher
+  // Discover every account this phone holds (admin accounts + member) for the switcher.
+  // Accounts are the richer list — two area-level accounts (Area + Murabi) collapse to
+  // a single entry under `availableRoles`, so prefer `availableAccounts` in new UI.
   const refreshAvailableRoles = useCallback(async (phone: string | undefined) => {
     if (!phone) {
       setAvailableRoles([]);
+      setAvailableAccounts([]);
       return;
     }
     try {
-      const result = await authAPI.checkRoles(phone.replace(/^\+91/, ''));
-      const roles = (result.data?.roles || []) as UserRole[];
-      setAvailableRoles([...new Set(roles)]);
+      const result = await authAPI.listAccounts();
+      const accounts = (result.data?.accounts || []) as LoginAccount[];
+      setAvailableAccounts(accounts);
+      setAvailableRoles([...new Set(accounts.map((a) => a.role))]);
     } catch {
       setAvailableRoles([]);
+      setAvailableAccounts([]);
     }
   }, []);
 
@@ -90,6 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserDistrict(null);
     setUserGroup(null);
     setAvailableRoles([]);
+    setAvailableAccounts([]);
   }, []);
 
   const checkAuth = useCallback(async (): Promise<boolean> => {
@@ -162,6 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           name: userData.name,
           phone: userData.phone,
           role: userData.role,
+          adminKind: userData.adminKind ?? null,
           district: userData.district,
           group: userData.group,
         };
@@ -198,10 +225,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [checkAuth]);
 
   const login = (tokenValue: string, userData: User, userType?: string) => {
+    // Member payloads from login/select-account are raw Member docs — normalize the
+    // fields the admin shape guarantees so downstream reads never hit undefined.
     const normalizedUserData: User = userType === "member"
       ? {
           ...userData,
           role: "member",
+          permissions: userData.permissions ?? [],
+          isActive: userData.isActive ?? true,
         }
       : userData;
 
@@ -215,6 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       name: normalizedUserData.name,
       phone: normalizedUserData.phone,
       role: normalizedUserData.role,
+      adminKind: normalizedUserData.adminKind ?? null,
       district: normalizedUserData.district,
       group: normalizedUserData.group,
     };
@@ -256,6 +288,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Switch to a specific account by id. Unlike switchRole this can tell two
+  // area-level accounts apart (e.g. Area Admin vs Murabi Admin on one number).
+  const switchAccount = async (account: LoginAccount) => {
+    const result = await authAPI.switchAccount(account.id, account.type);
+    const { token: newToken, member, user: adminUser } = result.data;
+
+    if (account.type === 'member') {
+      const memberUser: User = {
+        id: member.id,
+        name: member.name,
+        phone: member.phone,
+        email: member.email,
+        role: 'member',
+        district: member.district,
+        group: member.group,
+        permissions: [],
+        isActive: member.status === 'Active',
+      };
+      login(newToken, memberUser, 'member');
+      return;
+    }
+
+    login(newToken, adminUser, adminUser.role);
+  };
+
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
@@ -266,10 +323,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userGroup,
       token,
       availableRoles,
+      availableAccounts,
       login,
       logout,
       checkAuth,
-      switchRole
+      switchRole,
+      switchAccount
     }}>
       {children}
     </AuthContext.Provider>

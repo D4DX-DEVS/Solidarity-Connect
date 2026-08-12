@@ -31,6 +31,18 @@ const userSchema = new mongoose.Schema({
     enum: ['state_admin', 'district_admin', 'group_admin'],
     required: [true, 'User role is required']
   },
+  // Which flavour of area-level admin this account is. Murabi Admin and
+  // Coordinator Admin have identical permissions to Area Admin, so they stay
+  // role: 'group_admin' and every existing authorization check keeps working —
+  // this field only drives labels, login account pickers, and directory filters.
+  // ponytail: a discriminator, not a new role. Promote to a real `role` enum value
+  // only if their permissions ever actually diverge from Area Admin.
+  adminKind: {
+    type: String,
+    enum: ['area', 'murabi', 'coordinator'],
+    default: 'area',
+    index: true
+  },
   district: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'District',
@@ -128,8 +140,11 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better query performance - compound index for phone + role
-userSchema.index({ phone: 1, role: 1 }, { unique: true });
+// One account per phone per (role, adminKind). adminKind is part of the key so the
+// same person can hold e.g. both an Area Admin and a Murabi Admin account.
+// NOTE: the old { phone, role } unique index must be dropped in Mongo —
+// `node migrate-admin-kinds.js --execute` does that.
+userSchema.index({ phone: 1, role: 1, adminKind: 1 }, { unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ district: 1 });
 userSchema.index({ group: 1 });

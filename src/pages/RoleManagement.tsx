@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";import { useNavigate } from "reac
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { usersAPI, leadersAPI, membersAPI, districtsAPI } from "@/utils/api";
+import { getRoleLabel } from "@/lib/adminKinds";
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
   state: "State",
@@ -54,6 +55,8 @@ interface UserWithLeader {
   name: string;
   phone: string;
   role?: string;
+  // Distinguishes Area / Murabi / Coordinator admins, which all share role 'group_admin'.
+  adminKind?: string | null;
   status?: string; // for members
   isLeader: boolean;
   roleTag?: RoleTagLike;
@@ -174,7 +177,13 @@ const RoleManagement = () => {
         params.forLeaderAssignment = 'true';
         result = await membersAPI.getMembers(params);
       } else {
-        if (roleFilter !== "all") params.role = roleFilter;
+        // Area-level filters arrive as "group_admin:<kind>" — Murabi and Coordinator
+        // admins share the group_admin role and differ only by adminKind.
+        if (roleFilter !== "all") {
+          const [filterRole, filterKind] = roleFilter.split(":");
+          params.role = filterRole;
+          if (filterKind) params.adminKind = filterKind;
+        }
         result = await usersAPI.getUsers(params);
       }
 
@@ -397,14 +406,10 @@ const RoleManagement = () => {
     );
   };
 
-  const roleLabel = (role?: string) => {
-    const map: Record<string, string> = {
-      state_admin: "State Admin",
-      district_admin: "District Admin",
-      group_admin: "Area Admin",
-    };
-    return role ? (map[role] || role) : "Member";
-  };
+  // Area-level admins share role 'group_admin', so the badge needs adminKind to
+  // tell an Area Admin from a Murabi or Coordinator Admin.
+  const roleLabel = (role?: string, adminKind?: string | null) =>
+    role ? getRoleLabel(role, adminKind) : "Member";
 
   const leaderDirectoryCount = leaderGroups.reduce((sum, group) => sum + group.leaders.length, 0);
   const currentViewLabel = isLeadersView
@@ -413,7 +418,7 @@ const RoleManagement = () => {
       ? "Members"
       : roleFilter === "all"
         ? "All Roles"
-        : roleLabel(roleFilter);
+        : getRoleLabel(roleFilter.split(":")[0], roleFilter.split(":")[1]);
   const currentRecordCount = isLeadersView ? leaderDirectoryCount : (totalDocs || users.length);
   const leaderSummaryCount = isLeadersView ? leaderGroups.length : users.filter((user) => user.isLeader).length;
 
@@ -464,7 +469,9 @@ const RoleManagement = () => {
                 {userRole === 'state_admin' && <SelectItem value="all">All Roles</SelectItem>}
                 {userRole === 'state_admin' && <SelectItem value="state_admin">State Admins</SelectItem>}
                 {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="district_admin">District Admins</SelectItem>}
-                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin">Area Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:area">Area Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:murabi">Murabi Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:coordinator">Coordinator Admins</SelectItem>}
                 <SelectItem value="member">Members</SelectItem>
                 <SelectItem value="leaders">
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Leaders Only</span>
@@ -683,7 +690,7 @@ const RoleManagement = () => {
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="px-1.5 py-0.5 text-[10px] sm:px-2.5 sm:py-1 sm:text-xs">
-                                  {roleLabel(user.role)}
+                                  {roleLabel(user.role, user.adminKind)}
                                 </Badge>
                               )}
                               {user.district && (

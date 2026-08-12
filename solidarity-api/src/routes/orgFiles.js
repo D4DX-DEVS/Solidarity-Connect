@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import OrgFile from '../models/OrgFile.js';
-import { authenticate, requireRole } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
 import path from 'path';
 import crypto from 'crypto';
@@ -57,10 +57,9 @@ const getS3Client = () => new S3Client({
   forcePathStyle: false
 });
 
-// Helper: is this user an area admin?
-const isAreaAdmin = (user) => {
-  return user.role === 'group_admin' && user.roleTag?.type === 'area';
-};
+// Helper: is this user an area-level admin? (area proper, or murabi/coordinator —
+// identical permissions by design; see middleware/auth.js)
+const isAreaAdmin = (user) => isAreaLevelAdmin(user);
 
 // @route   POST /api/org-files
 // @desc    Upload and register an organizational file

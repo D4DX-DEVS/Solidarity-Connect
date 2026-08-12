@@ -19,31 +19,32 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { getHomeRouteByRole, type AppUserRole } from "@/lib/roleRoutes";
+import { useAuth, type LoginAccount } from "@/contexts/AuthContext";
+import { getRoleLabel } from "@/lib/adminKinds";
+import { getHomeRouteByRole } from "@/lib/roleRoutes";
 
-const roleTitles: Record<string, string> = {
-  state_admin: "State Admin",
-  district_admin: "District Admin",
-  group_admin: "Area Admin",
-  member: "Member",
-};
+// ponytail: labels live in lib/adminKinds — Area / Murabi / Coordinator Admin all
+// share role "group_admin", so a role-keyed map cannot tell them apart.
+const roleTitles = (role?: string | null, adminKind?: string | null) =>
+  role ? getRoleLabel(role, adminKind) : "";
 
 /** Desktop-only side navigation (lg+). Mobile keeps BottomNav + header menu. */
 function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userRole, user, availableRoles, switchRole, logout } = useAuth();
+  const { userRole, user, availableAccounts, switchAccount, logout } = useAuth();
   const home = getHomeRouteByRole(userRole);
-  const otherRoles = availableRoles.filter((role) => role !== userRole);
+  // Account-based, not role-based: Area/Murabi/Coordinator admin all share role
+  // 'group_admin', so a role-name switcher collapses them into one unreachable entry.
+  const otherAccounts = availableAccounts.filter((account) => account.id !== user?.id);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleSwitchRole = async (targetRole: AppUserRole) => {
+  const handleSwitchAccount = async (account: LoginAccount) => {
     try {
-      await switchRole(targetRole);
-      navigate(targetRole === "member" ? "/member-dashboard" : getHomeRouteByRole(targetRole));
+      await switchAccount(account);
+      navigate(account.type === "member" ? "/member-dashboard" : getHomeRouteByRole(account.role));
     } catch {
-      // switch failed; stay on current role
+      // switch failed; stay on current account
     }
   };
 
@@ -105,22 +106,27 @@ function AppSidebar() {
                 {(user?.name || "U").trim().charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">{user?.name || roleTitles[userRole || ""]}</p>
-                <p className="truncate text-xs text-muted-foreground">{roleTitles[userRole || ""] || ""}</p>
+                <p className="truncate text-sm font-semibold text-foreground">{user?.name || roleTitles(userRole, user?.adminKind)}</p>
+                <p className="truncate text-xs text-muted-foreground">{roleTitles(userRole, user?.adminKind)}</p>
               </div>
               <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-52 rounded-xl p-1.5">
-            {otherRoles.length > 0 && (
+            {otherAccounts.length > 0 && (
               <>
                 <DropdownMenuLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Switch role
+                  Switch account
                 </DropdownMenuLabel>
-                {otherRoles.map((role) => (
-                  <DropdownMenuItem key={role} className="cursor-pointer rounded-lg" onClick={() => handleSwitchRole(role)}>
+                {otherAccounts.map((account) => (
+                  <DropdownMenuItem key={account.id} className="cursor-pointer rounded-lg" onClick={() => handleSwitchAccount(account)}>
                     <Repeat className="mr-2 h-4 w-4" />
-                    {roleTitles[role] || role}
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate">{account.label}</span>
+                      {account.scope && (
+                        <span className="truncate text-xs font-normal text-muted-foreground">{account.scope}</span>
+                      )}
+                    </span>
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
