@@ -513,14 +513,32 @@ router.put('/profile', authenticateMember, async (req, res) => {
     // Name/phone changes go through profile-change-request (admin approval)
     const allowedFields = ['email', 'profession', 'education', 'address', 'bloodGroup', 'age', 'areaOfInterest', 'skills', 'avatar'];
     const updates = {};
+    const clears = {};
 
     for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
+      const value = req.body[field];
+      if (value === undefined) continue;
+
+      // A blank field means "leave it empty", not "store an empty string". Storing ''
+      // trips the enum (bloodGroup) and number (age) validators and fails the whole save.
+      if (value === null || (typeof value === 'string' && value.trim() === '')) {
+        clears[field] = '';
+        continue;
       }
+
+      if (field === 'age') {
+        const age = Number(value);
+        if (!Number.isInteger(age) || age < 0 || age > 120) {
+          return res.status(400).json({ success: false, message: 'Age must be a whole number between 0 and 120' });
+        }
+        updates.age = age;
+        continue;
+      }
+
+      updates[field] = value;
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && Object.keys(clears).length === 0) {
       return res.status(400).json({
         success: false,
         message: 'No valid fields to update'
@@ -529,7 +547,10 @@ router.put('/profile', authenticateMember, async (req, res) => {
 
     const updatedMember = await Member.findByIdAndUpdate(
       member._id,
-      { $set: updates },
+      {
+        ...(Object.keys(updates).length ? { $set: updates } : {}),
+        ...(Object.keys(clears).length ? { $unset: clears } : {})
+      },
       { new: true, runValidators: true }
     );
 
@@ -543,22 +564,32 @@ router.put('/profile', authenticateMember, async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
+      // ?? null so a cleared field is sent back as null instead of being dropped from
+      // the JSON, which would leave the old value on screen.
       data: {
         name: updatedMember.name,
-        email: updatedMember.email,
-        profession: updatedMember.profession,
-        education: updatedMember.education,
-        address: updatedMember.address,
-        bloodGroup: updatedMember.bloodGroup,
-        age: updatedMember.age,
-        areaOfInterest: updatedMember.areaOfInterest,
-        skills: updatedMember.skills,
-        avatar: updatedMember.avatar
+        email: updatedMember.email ?? null,
+        profession: updatedMember.profession ?? null,
+        education: updatedMember.education ?? null,
+        address: updatedMember.address ?? null,
+        bloodGroup: updatedMember.bloodGroup ?? null,
+        age: updatedMember.age ?? null,
+        areaOfInterest: updatedMember.areaOfInterest ?? null,
+        skills: updatedMember.skills ?? null,
+        avatar: updatedMember.avatar ?? null
       }
     });
 
   } catch (error) {
     console.error('Update member profile error:', error);
+    // Tell the member which field is wrong instead of a blanket failure.
+    if (error.name === 'ValidationError') {
+      const first = Object.values(error.errors)[0];
+      return res.status(400).json({ success: false, message: first?.message || 'Invalid profile data' });
+    }
+    if (error.name === 'CastError') {
+      return res.status(400).json({ success: false, message: `Invalid value for ${error.path}` });
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to update profile'
