@@ -217,21 +217,21 @@ const AddMember = () => {
         icon={<UserPlus className="h-6 w-6" />}
         details={
           <>
-            <div className="hidden min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
+            <div className="hidden rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Access</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
                 <span className="min-w-0 break-words leading-5">{roleLabel}</span>
               </div>
             </div>
-            <div className="hidden min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
+            <div className="hidden rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="min-w-0 break-words leading-5">{userContext?.assignedDistrict?.code || "Selectable"}</span>
               </div>
             </div>
-            <div className="hidden min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
+            <div className="hidden rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm md:block">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Group</p>
               <div className="mt-2 flex min-w-0 items-start gap-2 text-sm font-semibold text-foreground">
                 <Users className="h-4 w-4 text-primary" />

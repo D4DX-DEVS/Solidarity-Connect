@@ -81,10 +81,13 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const [selectedUnit, setSelectedUnit] = useState("");
   const [selectedMurabiAreaId, setSelectedMurabiAreaId] = useState("");
 
-  const requiresDistrict = activeTab === "district" || activeTab === "area" || activeTab === "unit";
-  const requiresArea = activeTab === "area" || activeTab === "unit";
-  const requiresUnit = activeTab === "unit";
-  const requiresMurabiArea = activeTab === "murabi";
+  // Members are server-scoped to state leaders + their own district/area,
+  // so the district/area/unit cascade filters are hidden for them.
+  const isMember = userRole === "member";
+  const requiresDistrict = !isMember && (activeTab === "district" || activeTab === "area" || activeTab === "unit");
+  const requiresArea = !isMember && (activeTab === "area" || activeTab === "unit");
+  const requiresUnit = !isMember && activeTab === "unit";
+  const requiresMurabiArea = !isMember && activeTab === "murabi";
 
   // Debounce search
   useEffect(() => {
@@ -387,11 +390,20 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
           </Card>
         ) : (
           <div className="space-y-2">
-            {leaders.map((leader) => (
+            {leaders.map((leader) => {
+              // Fallback for admins never given a role tag in Role Management:
+              // derive the type chip + area name from their role/group instead of showing nothing
+              const tagType =
+                leader.roleTag?.type ||
+                ({ state_admin: "state", district_admin: "district", group_admin: "area" } as Record<string, string>)[leader.role];
+              const tagName =
+                leader.roleTag?.name ||
+                (leader.role === "group_admin" ? leader.group?.name : leader.role === "district_admin" ? leader.district?.name : undefined);
+              return (
               <Card key={leader._id} className="surface-card">
                 <CardContent className="p-3">
                   <div className="flex items-start gap-2.5">
-                    {typeof leader.roleTag?.listingOrder === "number" && (
+                    {userRole === "state_admin" && typeof leader.roleTag?.listingOrder === "number" && (
                       <span className="mt-0.5 text-[11px] font-semibold bg-primary/10 text-primary rounded-full w-5 h-5 inline-flex items-center justify-center flex-shrink-0">
                         {leader.roleTag.listingOrder}
                       </span>
@@ -399,19 +411,19 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold text-sm truncate">{leader.name}</p>
-                        {leader.roleTag?.type && (
+                        {tagType && (
                           <span
                             className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0 ${
-                              ROLE_TYPE_COLORS[leader.roleTag.type] || "bg-gray-100 text-gray-800"
+                              ROLE_TYPE_COLORS[tagType] || "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {leader.roleTag.type.charAt(0).toUpperCase() + leader.roleTag.type.slice(1)}
+                            {tagType.charAt(0).toUpperCase() + tagType.slice(1)}
                           </span>
                         )}
                       </div>
 
-                      {leader.roleTag?.name && (
-                        <p className="text-xs font-medium text-primary">{leader.roleTag.name}</p>
+                      {tagName && (
+                        <p className="text-xs font-medium text-primary">{tagName}</p>
                       )}
 
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -439,7 +451,8 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
 

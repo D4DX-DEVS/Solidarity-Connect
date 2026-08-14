@@ -289,14 +289,28 @@ const MemberDetail = () => {
     }
   };
 
-  const InfoRow = ({ icon: Icon, label, value }: any) => (
-    <div className="data-strip flex items-start gap-3 rounded-xl px-4 py-3">
-      <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
-      <div className="flex-1">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <p className="font-medium">{value || "Not provided"}</p>
+  // Compact mobile-first mini card: icon chip + label row, value under (~70px tall)
+  const InfoCard = ({ icon: Icon, label, value, className = "" }: any) => (
+    <div className={`rounded-xl border border-border/60 bg-card px-3 py-2.5 shadow-sm ${className}`}>
+      <div className="flex items-center gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <p className="truncate text-xs text-muted-foreground">{label}</p>
       </div>
+      <p className="mt-1.5 truncate text-sm font-semibold">{value || "Not provided"}</p>
     </div>
+  );
+
+  // Section = plain title + mini-card grid, not a big white container card
+  const Section = ({ icon: Icon, title, children, cols }: any) => (
+    <section className="space-y-2">
+      <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <Icon className="h-4 w-4 text-primary" />
+        {title}
+      </h3>
+      <div className={`grid gap-2 ${cols}`}>{children}</div>
+    </section>
   );
 
   const renderMemberStatus = (status: string) => {
@@ -393,38 +407,11 @@ const MemberDetail = () => {
         subtitle={`${member.group?.name || "Group not assigned"} • ${member.district?.name || "District not assigned"}`}
         eyebrow="Member Profile"
         icon={<User className="h-6 w-6" />}
-        actions={
-          <>
-            <Button variant="outline" size="sm" onClick={() => navigate(`/member/${member._id}/edit`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Request
-            </Button>
-            
-          </>
-        }
         details={
-          <>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
-              <div className="mt-2">{renderMemberStatus(member.status)}</div>
-            </div>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Phone</p>
-              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
-                <Phone className="h-4 w-4 text-primary" />
-                <span className="min-w-0 break-words leading-5">{member.phone}</span>
-              </div>
-            </div>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Joined</p>
-              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="min-w-0 break-words leading-5">{member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : 'Unknown'}</span>
-              </div>
-            </div>
-            <div className="min-w-[220px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Quick Actions</p>
-              <div className="mt-2 flex flex-wrap gap-2">
+          /* One compact strip: status chip + actions in a single row, no tall twin cards */
+          <div className="col-span-2 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border/60 bg-card px-3 py-2.5 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:col-span-4">
+            <span className="shrink-0">{renderMemberStatus(member.status)}</span>
+            <div className="ml-auto flex shrink-0 items-center gap-2">
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">
                   <Phone className="mr-2 h-4 w-4" />
@@ -443,48 +430,44 @@ const MemberDetail = () => {
                 <Download className="mr-2 h-4 w-4" />
                 {downloadingCert ? "Downloading..." : "Certificate"}
               </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
             </div>
-            </div>
-          </>
+          </div>
         }
       />
 
+      {/* Column rules: 2 = default, 3 = short values, full width = long content */}
       <div className="grid gap-4 xl:grid-cols-2">
-        <SectionCard title="Contact Information" description="Primary ways to reach and identify this member.">
-          <div className="space-y-3">
-            <InfoRow icon={Phone} label="Phone Number" value={member.phone} />
-            <InfoRow icon={Mail} label="Email" value={member.email} />
-            <InfoRow icon={MapPin} label="Address" value={member.address} />
-          </div>
-        </SectionCard>
+        <Section icon={User} title="Contact Information" cols="grid-cols-2 sm:grid-cols-3">
+          <InfoCard icon={Phone} label="Phone" value={member.phone} />
+          <InfoCard icon={Mail} label="Email" value={member.email} />
+          <InfoCard icon={MapPin} label="Address" value={member.address} className="col-span-2 sm:col-span-1" />
+        </Section>
 
-        <SectionCard title="Personal Information" description="Identity and profile details saved for this member.">
-          <div className="space-y-3">
-            <InfoRow icon={Calendar} label="Date of Birth" value={member.dateOfBirth ? format(new Date(member.dateOfBirth), 'MMM dd, yyyy') : 'Not provided'} />
-            <InfoRow icon={User} label="Age" value={member.age ? `${member.age} years` : 'Not provided'} />
-            <InfoRow icon={Droplet} label="Blood Group" value={member.bloodGroup} />
-          </div>
-        </SectionCard>
+        <Section icon={User} title="Personal Information" cols="grid-cols-3">
+          <InfoCard icon={Calendar} label="Date of Birth" value={member.dateOfBirth ? format(new Date(member.dateOfBirth), 'MMM dd, yyyy') : ''} />
+          <InfoCard icon={User} label="Age" value={member.age ? `${member.age} years` : ''} />
+          <InfoCard icon={Droplet} label="Blood Group" value={member.bloodGroup} />
+        </Section>
 
-        <SectionCard title="Professional Information" description="Occupation and education details recorded for the member.">
-          <div className="space-y-3">
-            <InfoRow icon={Briefcase} label="Profession" value={member.profession} />
-            <InfoRow icon={GraduationCap} label="Education" value={member.education} />
-          </div>
-        </SectionCard>
+        <Section icon={Briefcase} title="Professional Information" cols="grid-cols-2">
+          <InfoCard icon={Briefcase} label="Profession" value={member.profession} />
+          <InfoCard icon={GraduationCap} label="Education" value={member.education} />
+        </Section>
 
-        <SectionCard title="Organization Details" description="How this member is mapped into the organization structure.">
-          <div className="space-y-3">
-            <InfoRow icon={MapPin} label="District" value={member.district?.name || 'Not assigned'} />
-            <InfoRow icon={User} label="Group" value={member.group?.name || 'Not assigned'} />
-            <InfoRow icon={Calendar} label="Joined Date" value={member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : 'Not available'} />
-          </div>
-        </SectionCard>
+        <Section icon={MapPin} title="Organization Details" cols="grid-cols-3">
+          <InfoCard icon={MapPin} label="District" value={member.district?.name} />
+          <InfoCard icon={User} label="Group" value={member.group?.name} />
+          <InfoCard icon={Calendar} label="Joined Date" value={member.createdAt ? format(new Date(member.createdAt), 'MMM dd, yyyy') : ''} />
+        </Section>
       </div>
 
       {baithulMaalData ? (
         <SectionCard title="Baithul Maal" description="Contribution summary and monthly payment records.">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 mb-5">
+          <div className="grid grid-cols-2 gap-2 xl:grid-cols-4 mb-4">
             <MetricCard title="Monthly Amount" value={`₹${baithulMaalData.monthlyAmount || 0}`} icon={Wallet} tone="primary" />
             <MetricCard title="Total Collected" value={`₹${baithulMaalData.totalCollected || 0}`} icon={CheckCircle} tone="success" />
             <MetricCard title="Total Paid" value={`₹${baithulMaalData.totalPaid || 0}`} icon={XCircle} tone="danger" />
@@ -545,7 +528,7 @@ const MemberDetail = () => {
 
       {member.meetingAttendance && member.meetingAttendance.length > 0 ? (
         <SectionCard title="Meeting Attendance" description="Full history of recorded meeting participation.">
-          <div className="grid gap-3 md:grid-cols-3 mb-5">
+          <div className="grid grid-cols-3 gap-2 mb-4">
             <MetricCard title="Total Meetings" value={String(member.meetingAttendance.length)} icon={Calendar} tone="primary" />
             <MetricCard title="Present" value={String(member.meetingAttendance.filter((a: any) => a.status === 'present').length)} icon={CheckCircle} tone="success" />
             <MetricCard title="Absent" value={String(member.meetingAttendance.filter((a: any) => a.status === 'absent').length)} icon={XCircle} tone="danger" />

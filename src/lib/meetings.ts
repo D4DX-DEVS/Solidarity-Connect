@@ -98,6 +98,8 @@ export interface CreateMonthlyMeetingData {
   year: number;
   sessions?: SessionData[];
   file?: File;
+  targetAudience?: 'all' | 'district_admins' | 'specific_districts';
+  targetDistricts?: string[];
 }
 
 export interface CreateFormData {
@@ -180,8 +182,6 @@ export const meetingsApi = {
 
   // Create monthly meeting with sessions
   createMonthlyMeeting: async (data: CreateMonthlyMeetingData) => {
-    console.log('API: Creating monthly meeting with data:', data);
-    
     const formData = new FormData();
     
     formData.append('title', data.title);
@@ -189,15 +189,16 @@ export const meetingsApi = {
     formData.append('month', data.month.toString());
     formData.append('year', data.year.toString());
     formData.append('sessions', JSON.stringify(data.sessions || []));
-    
-    if (data.file) {
-      formData.append('file', data.file);
+
+    if (data.targetAudience) {
+      formData.append('targetAudience', data.targetAudience);
+      if (data.targetAudience === 'specific_districts') {
+        formData.append('targetDistricts', JSON.stringify(data.targetDistricts || []));
+      }
     }
 
-    // Debug: Log what's being sent
-    console.log('FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+    if (data.file) {
+      formData.append('file', data.file);
     }
 
     return api.postFormData('/meetings/monthly', formData);

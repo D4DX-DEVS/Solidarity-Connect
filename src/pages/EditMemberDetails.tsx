@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Building2, MapPin, PencilLine, ShieldCheck, User } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -286,18 +286,18 @@ const EditMemberDetails = () => {
         icon={<PencilLine className="h-6 w-6" />}
         details={
           <>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
               <div className="mt-2">{renderMemberStatus(formData.status || member?.status || "Unknown")}</div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
               <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="min-w-0 break-words leading-5">{member?.district?.name} ({member?.district?.code})</span>
               </div>
             </div>
-            <div className="min-w-[180px] flex-1 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Group</p>
               <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
                 <Building2 className="h-4 w-4 text-primary" />

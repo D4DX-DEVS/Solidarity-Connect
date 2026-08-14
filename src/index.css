@@ -172,7 +172,7 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 
   /* Unified brand header: full-bleed gradient bar, same 5rem height as page headers */
   .hero-card {
-    @apply sticky top-0 z-40 -mx-4 -mt-3 flex min-h-20 flex-col justify-center rounded-b-2xl bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 py-3 text-white shadow-md sm:-mx-6 sm:-mt-4 sm:px-6 lg:-mx-8 lg:px-8;
+    @apply sticky top-0 z-40 -mx-4 -mt-3 flex min-h-16 flex-col justify-center rounded-b-2xl border-b-2 border-primary bg-card px-4 py-2.5 text-foreground shadow-md sm:-mx-6 sm:-mt-4 sm:px-6 lg:-mx-8 lg:px-8;
   }
 
   /* Soft staggered entrance for page sections */
@@ -189,12 +189,8 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
     to { opacity: 1; transform: translateY(0); }
   }
 
-  .hero-icon {
-    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white lg:hidden;
-  }
-
   .hero-eyebrow {
-    @apply text-xs font-medium text-white/70;
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   .hero-title {
@@ -202,11 +198,12 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
   }
 
   .hero-subtitle {
-    @apply max-w-2xl text-sm leading-6 text-white/70;
+    @apply max-w-2xl text-sm leading-6 text-muted-foreground;
   }
 
+  /* Mobile: two cards per row instead of a one-by-one stack */
   .hero-details {
-    @apply mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
+    @apply mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4;
   }
 
   .surface-card {

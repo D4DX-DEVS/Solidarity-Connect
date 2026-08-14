@@ -25,6 +25,8 @@ interface PageHeroProps {
   actions?: ReactNode;
   details?: ReactNode;
   className?: string;
+  /** Dashboards keep their title on mobile; every other page shows logo + menu only */
+  showTitleOnMobile?: boolean;
 }
 
 interface SectionCardProps {
@@ -90,15 +92,16 @@ function PageHeroMenu() {
   );
 }
 
-function PageHero({ title, subtitle, eyebrow, icon, actions, details, className }: PageHeroProps) {
+function PageHero({ title, subtitle, eyebrow, icon, actions, details, className, showTitleOnMobile = false }: PageHeroProps) {
   return (
+    <>
     <section className={cn("hero-card", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           {/* ponytail: brand logo everywhere; per-page icon prop kept for API compat but unused */}
-          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-12 w-12 shrink-0 rounded-2xl object-contain lg:hidden" />
+          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-12 w-12 shrink-0 rounded-2xl border-2 border-primary bg-white object-contain p-0.5 lg:hidden" />
           {/* ponytail: eyebrow dropped for uniform h-20 header; prop kept for API compat */}
-          <div className="min-w-0 space-y-0.5">
+          <div className={cn("min-w-0 space-y-0.5", !showTitleOnMobile && "max-lg:hidden")}>
             <h1 className="hero-title truncate">{title}</h1>
             {subtitle ? <p className="hero-subtitle truncate">{subtitle}</p> : null}
           </div>
@@ -108,8 +111,10 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className 
           <PageHeroMenu />
         </div>
       </div>
-      {details ? <div className="hero-details">{details}</div> : null}
     </section>
+    {/* Details flow below the sticky header so it stays the same h-20 bar as every other page */}
+    {details ? <div className="hero-details !mt-0 text-foreground">{details}</div> : null}
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, Megaphone, FolderOpen, CheckCircle, LogOut, Database, Calendar, Menu, ChevronRight } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, FolderOpen, CheckCircle, LogOut, Database, Calendar, Menu, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -167,7 +167,6 @@ const StateAdmin = () => {
     { icon: Bell, label: "Announcements", path: "/notifications", color: "text-destructive" },
     { icon: Shield, label: "Role Management", path: "/role-management", color: "text-blue-500" },
     { icon: Star, label: "Leaders", path: "/leaders", color: "text-yellow-500" },
-    { icon: Megaphone, label: "Announcements", path: "/announcements", color: "text-green-600" },
     { icon: FolderOpen, label: "Files", path: "/org-files", color: "text-teal-500" },
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
@@ -301,23 +300,23 @@ const StateAdmin = () => {
 
   return (
     <div className="app-page">
-      <div className="sticky top-0 z-40 flex h-20 items-center justify-between gap-3 bg-gradient-to-r from-zinc-900 to-zinc-700 px-4 shadow-md sm:px-6 lg:px-8">
+      <div className="sticky top-0 z-40 flex h-16 items-center justify-between gap-3 rounded-b-2xl border-b-2 border-primary bg-card px-4 shadow-md sm:px-6 lg:px-8">
         {/* ponytail: brand logo on mobile only — matches HeaderWithLogout/PageHero */}
-        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain lg:hidden" />
+        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl border-2 border-primary bg-white object-contain p-0.5 lg:hidden" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg md:text-xl font-semibold text-primary-foreground">
+          <h1 className="truncate text-lg md:text-xl font-semibold text-foreground">
             {`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
           </h1>
-          <p className="text-xs text-primary-foreground/80">State Admin Dashboard</p>
+          <p className="text-xs text-muted-foreground">State Admin Dashboard</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button size="icon" className="border-0 bg-white/15 text-primary-foreground hover:bg-white/25" onClick={() => navigate("/notifications")} aria-label="Notifications">
+          <Button size="icon" variant="outline" onClick={() => navigate("/notifications")} aria-label="Notifications">
             <Bell className="h-4 w-4" />
           </Button>
           <span className="lg:hidden">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="icon" className="border-0 bg-white/15 text-primary-foreground hover:bg-white/25">
+                <Button size="icon" variant="outline">
                   <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

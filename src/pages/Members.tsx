@@ -585,7 +585,9 @@ const Members = () => {
                     }}
                   >
                     <Wallet className="h-4 w-4 text-primary" />
-                    <span className="text-xs">Baithul</span>
+                    {/* Full name doesn't fit the 4-col mobile grid — short form there */}
+                    <span className="text-xs sm:hidden">BM</span>
+                    <span className="hidden text-xs sm:inline">Baithul Maal</span>
                   </Button>
                   <Button
                     variant="outline"
