@@ -1054,11 +1054,32 @@ router.get('/leaders', authenticateMember, async (req, res) => {
     }
     if (roleType) expanded = expanded.filter((l) => l.roleTag?.type === roleType);
 
+    // Members only see their own hierarchy: state leaders + leaders in their
+    // own district/area. Keeps the 400+ full admin list out of member view.
+    const idOf = (v) => String(v?._id || v || '');
+    const myDistrict = idOf(req.member?.district);
+    const myGroup = idOf(req.member?.group);
+    expanded = expanded.filter((l) =>
+      l.roleTag?.type === 'state' ||
+      (myDistrict && idOf(l.district) === myDistrict) ||
+      (myGroup && idOf(l.group) === myGroup)
+    );
+
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
     // then by roleTag.type, then by name — so the admin-defined order wins across all dashboards.
     const normalizeOrder = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : Number.POSITIVE_INFINITY);
+    // Member relevance tier: own area first, then own district, then state leaders.
+    const tierOf = (l) => {
+      if (myGroup && idOf(l.group) === myGroup && l.roleTag?.type !== 'state') return 0;
+      if (myDistrict && idOf(l.district) === myDistrict && l.roleTag?.type !== 'state') return 1;
+      return 2;
+    };
     const combined = expanded.sort((a, b) => {
+      const tierA = tierOf(a);
+      const tierB = tierOf(b);
+      if (tierA !== tierB) return tierA - tierB;
+
       const orderA = normalizeOrder(a.roleTag?.listingOrder);
       const orderB = normalizeOrder(b.roleTag?.listingOrder);
       if (orderA !== orderB) return orderA - orderB;

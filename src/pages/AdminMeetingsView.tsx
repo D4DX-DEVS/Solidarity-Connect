@@ -251,7 +251,7 @@ const AdminMeetingsView = () => {
               variant="ghost"
               size="icon"
               aria-label="Back"
-              className="shrink-0 text-white hover:bg-white/15 hover:text-white"
+              className="shrink-0"
               onClick={() => setSelectedMeeting(null)}
             >
               <ArrowLeft className="h-5 w-5" />

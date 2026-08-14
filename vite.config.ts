@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "logo.jpg", "logo.png", "robots.txt"],
+      includeAssets: ["favicon.png", "logo-icon.png", "robots.txt"],
       manifest: {
         name: "SOLIDARITY - Members Management",
         short_name: "SOLIDARITY",
@@ -36,25 +36,25 @@ export default defineConfig(({ mode }) => ({
         categories: ["productivity", "utilities"],
         icons: [
           {
-            src: "/logo.png",
+            src: "/logo-icon.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/logo.png",
+            src: "/logo-icon.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/logo.png",
+            src: "/logo-icon.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "maskable",
           },
           {
-            src: "/logo.png",
+            src: "/logo-icon.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -65,13 +65,13 @@ export default defineConfig(({ mode }) => ({
             name: "Members",
             short_name: "Members",
             url: "/members",
-            icons: [{ src: "/logo.jpg", sizes: "96x96" }],
+            icons: [{ src: "/logo-icon.png", sizes: "96x96" }],
           },
           {
             name: "Dashboard",
             short_name: "Dashboard",
             url: "/",
-            icons: [{ src: "/logo.jpg", sizes: "96x96" }],
+            icons: [{ src: "/logo-icon.png", sizes: "96x96" }],
           },
         ],
       },

@@ -67,7 +67,7 @@ const meetingSchema = new mongoose.Schema({
   },
   targetAudience: {
     type: String,
-    enum: ['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups'],
+    enum: ['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups', 'specific_districts'],
     default: 'all'
   },
   targetGroups: [{

@@ -162,16 +162,19 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     } = req.query;
 
     let filter = {};
+    const andConditions = [];
     if (status) filter.status = status;
     if (meetingType) filter.meetingType = meetingType;
     if (targetAudience) filter.targetAudience = targetAudience;
 
     // Search by title or description
     if (search && search.trim()) {
-      filter.$or = [
-        { title: { $regex: search.trim(), $options: 'i' } },
-        { description: { $regex: search.trim(), $options: 'i' } }
-      ];
+      andConditions.push({
+        $or: [
+          { title: { $regex: search.trim(), $options: 'i' } },
+          { description: { $regex: search.trim(), $options: 'i' } }
+        ]
+      });
     }
 
     // Filter by time
@@ -182,16 +185,33 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       filter.scheduledDate = { $lt: new Date() };
     }
 
-    // Simplified approach: For group admins, show all meetings since they are general
-    // The user-specific data (attendance) will be handled in the response processing
-    
     // Filter for meetings created by current user (if requested)
     if (myMeetings === 'true') {
       filter.createdBy = req.user._id;
     }
-    
-    // For group admins, don't apply any restrictive filters - show all meetings
-    // This is because meetings are general and should be visible to all group admins
+
+    // Target-audience visibility: state admins see everything; district and
+    // group admins only see meetings aimed at them or their district/group.
+    if (req.user.role === 'district_admin') {
+      const scope = [
+        { targetAudience: { $in: ['all', 'district_admins'] } },
+        { createdBy: req.user._id }
+      ];
+      if (req.user.district) scope.push({ targetDistricts: req.user.district._id });
+      andConditions.push({ $or: scope });
+    } else if (req.user.role === 'group_admin') {
+      const scope = [
+        { targetAudience: { $in: ['all', 'group_admins'] } }
+      ];
+      if (req.user.group) scope.push({ targetGroups: req.user.group._id });
+      // District-scoped meetings are visible to that district's area admins
+      if (req.user.district) scope.push({ targetDistricts: req.user.district._id });
+      andConditions.push({ $or: scope });
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
 
     const options = {
       page: parseInt(page),
@@ -571,17 +591,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 // @access  Private (State Admin and District Admin)
 router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admin']), upload.single('file'), async (req, res) => {
   try {
-    const { title, description, month, year, sessions } = req.body;
-
-    // Debug: Log received data
-    console.log('Received form data:', {
-      title,
-      description,
-      month,
-      year,
-      sessions,
-      file: req.file ? req.file.originalname : 'No file'
-    });
+    const { title, description, month, year, sessions, targetAudience, targetDistricts } = req.body;
 
     // Manual validation for FormData
     const errors = [];
@@ -654,6 +664,40 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
       parsedSessions = [];
     }
 
+    // Resolve targeting. District admins always scope to their own district;
+    // state admins may target everyone, district admins only, or specific districts.
+    let audience = 'all';
+    let districts = [];
+    if (req.user.role === 'district_admin') {
+      audience = 'specific_districts';
+      districts = [req.user.district._id];
+    } else if (targetAudience && !['all', 'district_admins', 'specific_districts'].includes(targetAudience)) {
+      // Reject unknown audiences instead of silently broadcasting to everyone
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid target audience for monthly meetings'
+      });
+    } else if (targetAudience) {
+      audience = targetAudience;
+      if (audience === 'specific_districts') {
+        let parsedDistricts = targetDistricts;
+        if (typeof parsedDistricts === 'string') {
+          try {
+            parsedDistricts = JSON.parse(parsedDistricts);
+          } catch (error) {
+            parsedDistricts = [];
+          }
+        }
+        districts = Array.isArray(parsedDistricts) ? parsedDistricts : [];
+        if (districts.length === 0) {
+          return res.status(400).json({
+            success: false,
+            message: 'Select at least one district for a district-specific meeting'
+          });
+        }
+      }
+    }
+
     // Create the main meeting with simplified structure
     const meeting = new Meeting({
       title: title.trim(),
@@ -666,7 +710,8 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
         totalSessions: parsedSessions.length || 0
       },
       scheduledDate: new Date(), // Use current date as default
-      targetAudience: 'all', // Default to all members
+      targetAudience: audience,
+      targetDistricts: districts,
       createdBy: req.user._id
     });
 
@@ -3380,14 +3425,17 @@ router.get('/admin/overview',
       } = req.query;
 
       let filter = {};
-      
+      const andConditions = [];
+
       // Apply basic filters
       if (status) filter.status = status;
       if (search) {
-        filter.$or = [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } }
-        ];
+        andConditions.push({
+          $or: [
+            { title: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } }
+          ]
+        });
       }
 
       // For district admins, filter to their district
@@ -3395,12 +3443,19 @@ router.get('/admin/overview',
         const Group = (await import('../models/Group.js')).default;
         const districtGroups = await Group.find({ district: req.user.district._id }).select('_id');
         const groupIds = districtGroups.map(g => g._id);
-        
-        filter.$or = [
-          { targetAudience: 'all' },
-          { targetDistricts: req.user.district._id },
-          { targetGroups: { $in: groupIds } }
-        ];
+
+        andConditions.push({
+          $or: [
+            { targetAudience: { $in: ['all', 'district_admins'] } },
+            { targetDistricts: req.user.district._id },
+            { targetGroups: { $in: groupIds } },
+            { createdBy: req.user._id }
+          ]
+        });
+      }
+
+      if (andConditions.length > 0) {
+        filter.$and = andConditions;
       }
 
       const options = {
@@ -3467,8 +3522,9 @@ router.get('/admin/overview',
           } else if (meeting.targetGroups && meeting.targetGroups.length > 0) {
             targetGroups = meeting.targetGroups;
           } else if (meeting.targetDistricts && meeting.targetDistricts.length > 0) {
-            const districtIds = meeting.targetDistricts.map(d => d._id);
-            targetGroups = allGroups.filter(g => districtIds.includes(g.district._id));
+            // Compare as strings — ObjectId identity fails Array.includes
+            const districtIds = meeting.targetDistricts.map(d => d._id.toString());
+            targetGroups = allGroups.filter(g => g.district && districtIds.includes(g.district._id.toString()));
           }
 
           // For monthly series meetings, analyze session completion by groups

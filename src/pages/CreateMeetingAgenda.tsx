@@ -6,12 +6,48 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateMonthlyMeeting } from "@/hooks/useMeetings";
+import { useDistricts } from "@/hooks/useDistricts";
+import { District } from "@/lib/districts";
 import { CreateMonthlyMeetingData, SessionData } from "@/lib/meetings";
+
+// Mounted only for state admins so district admins never hit the districts API
+const TargetDistrictsPicker = ({
+  selected,
+  onToggle,
+}: {
+  selected: string[];
+  onToggle: (districtId: string) => void;
+}) => {
+  const { data: districtsResponse, isLoading } = useDistricts({ sort: "name", isActive: true });
+  const districts: District[] = (districtsResponse?.data as District[]) ?? [];
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Loading districts...</p>;
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {districts.map((district) => (
+        <label
+          key={district._id}
+          className="flex cursor-pointer items-center gap-2 rounded-md border p-2 text-sm"
+        >
+          <Checkbox
+            checked={selected.includes(district._id)}
+            onCheckedChange={() => onToggle(district._id)}
+          />
+          <span className="truncate">{district.name}</span>
+        </label>
+      ))}
+    </div>
+  );
+};
 
 const CreateMeetingAgenda = () => {
   const navigate = useNavigate();
@@ -45,7 +81,21 @@ const CreateMeetingAgenda = () => {
     month: new Date().getMonth() + 1,
     year: 2025,
     sessions: [],
+    targetAudience: "all",
+    targetDistricts: [],
   });
+
+  const toggleTargetDistrict = (districtId: string) => {
+    setFormData((prev) => {
+      const current = prev.targetDistricts || [];
+      return {
+        ...prev,
+        targetDistricts: current.includes(districtId)
+          ? current.filter((id) => id !== districtId)
+          : [...current, districtId],
+      };
+    });
+  };
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -137,6 +187,19 @@ const CreateMeetingAgenda = () => {
       return;
     }
 
+    if (
+      userRole === "state_admin" &&
+      formData.targetAudience === "specific_districts" &&
+      (formData.targetDistricts || []).length === 0
+    ) {
+      toast({
+        title: "No Districts Selected",
+        description: "Select at least one district for a district-specific meeting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     for (let index = 0; index < (formData.sessions || []).length; index += 1) {
       const session = (formData.sessions || [])[index];
       if (!session.title) {
@@ -152,6 +215,8 @@ const CreateMeetingAgenda = () => {
     try {
       await createMonthlyMeeting.mutateAsync({
         ...formData,
+        // District admins are force-scoped to their own district by the backend
+        targetAudience: userRole === "state_admin" ? formData.targetAudience : undefined,
         file: selectedFile,
       });
       toast({
@@ -250,6 +315,44 @@ const CreateMeetingAgenda = () => {
               </Select>
             </div>
           </div>
+
+          {userRole === "state_admin" ? (
+            <div className="space-y-3">
+              <div>
+                <label className="mb-2 block text-sm font-medium">Target Audience *</label>
+                <Select
+                  value={formData.targetAudience}
+                  onValueChange={(value) =>
+                    handleInputChange("targetAudience", value as CreateMonthlyMeetingData["targetAudience"])
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Everyone (all districts)</SelectItem>
+                    <SelectItem value="district_admins">District Admins Only</SelectItem>
+                    <SelectItem value="specific_districts">Specific Districts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {formData.targetAudience === "specific_districts" && (
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Districts * ({(formData.targetDistricts || []).length} selected)
+                  </label>
+                  <TargetDistrictsPicker
+                    selected={formData.targetDistricts || []}
+                    onToggle={toggleTargetDistrict}
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              This meeting will be visible only to your district's area admins and members.
+            </p>
+          )}
 
           <div>
             <label className="mb-2 block text-sm font-medium">Upload File (Optional)</label>

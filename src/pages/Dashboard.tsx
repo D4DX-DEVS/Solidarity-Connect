@@ -109,6 +109,7 @@ const Dashboard = () => {
       <HeaderWithLogout
         icon={<Users className="h-6 w-6 text-primary-foreground" />}
         title={`${getRoleLabel(userRole, user?.adminKind)} Dashboard`}
+        showTitleOnMobile
       />
 
       <main className="app-main pt-4 pb-28">

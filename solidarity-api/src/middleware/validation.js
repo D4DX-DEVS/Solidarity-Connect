@@ -208,7 +208,7 @@ export const createMeetingValidation = [
     .withMessage('Invalid meeting type'),
   body('targetAudience')
     .optional()
-    .isIn(['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups'])
+    .isIn(['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups', 'specific_districts'])
     .withMessage('Invalid target audience'),
   handleValidationErrors
 ];
@@ -250,7 +250,7 @@ export const createMonthlyMeetingValidation = [
     .withMessage('Session duration must be between 15 and 480 minutes'),
   body('targetAudience')
     .optional()
-    .isIn(['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups'])
+    .isIn(['all', 'state_admins', 'district_admins', 'group_admins', 'specific_groups', 'specific_districts'])
     .withMessage('Invalid target audience'),
   handleValidationErrors
 ];

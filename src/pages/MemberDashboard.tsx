@@ -1754,23 +1754,23 @@ const MemberDashboard = () => {
       <header className="hero-card">
         <div className="flex items-center gap-3">
           {/* ponytail: brand logo on mobile only — desktop sidebar already shows it */}
-          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain lg:hidden" />
+          <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl border-2 border-primary bg-white object-contain p-0.5 lg:hidden" />
           {activeView === "overview" ? (
             <>
               {profile.profile.avatar ? (
                 <img
                   src={profile.profile.avatar}
                   alt={profile.profile.name}
-                  className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-white/40"
+                  className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-border"
                 />
               ) : (
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
                   {profile.profile.name.charAt(0)}
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-bold leading-tight">{profile.profile.name}</p>
-                <p className="truncate text-xs text-primary-foreground/70">
+                <p className="truncate text-xs text-muted-foreground">
                   {profile.profile.group.name === profile.profile.district.name
                     ? profile.profile.district.name
                     : `${profile.profile.group.name} • ${profile.profile.district.name}`}
@@ -1785,13 +1785,13 @@ const MemberDashboard = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="relative shrink-0 border-0 bg-white/15 text-white hover:bg-white/25 hover:text-white"
+            className="relative shrink-0 border border-border bg-card text-foreground hover:bg-muted"
             onClick={() => setActiveView("notifications")}
             aria-label={`Notifications${unreadNotificationCount > 0 ? `, ${unreadNotificationCount} unread` : ""}`}
           >
             <Bell className="h-5 w-5" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-primary">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                 {unreadNotificationCount}
               </span>
             )}
@@ -1799,7 +1799,7 @@ const MemberDashboard = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {/* ponytail: hamburger hidden on lg — sidebar covers profile/roles/logout there */}
-              <Button variant="ghost" size="icon" className="border-0 bg-white/15 text-white hover:bg-white/25 hover:text-white lg:hidden">
+              <Button variant="outline" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>

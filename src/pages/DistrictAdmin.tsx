@@ -147,6 +147,7 @@ const DistrictAdmin = () => {
     <PageShell contentClassName="pb-28">
       <PageHero
         title={`Welcome back, ${user?.name?.trim().split(' ')[0] || 'Admin'}`}
+        showTitleOnMobile
         icon={<Building2 className="h-6 w-6" />}
         actions={
           <>

@@ -29,6 +29,8 @@ interface HeaderWithLogoutProps {
   title: string;
   subtitle?: string;
   leftAction?: React.ReactNode;
+  /** Dashboards keep their title on mobile; every other page shows logo + menu only */
+  showTitleOnMobile?: boolean;
 }
 
 // ponytail: labels live in lib/adminKinds — Area / Murabi / Coordinator Admin all
@@ -36,7 +38,7 @@ interface HeaderWithLogoutProps {
 const roleLabels = (role?: string | null, adminKind?: string | null) =>
   role ? getRoleLabel(role, adminKind) : "";
 
-const HeaderWithLogout = ({ title, subtitle, leftAction }: HeaderWithLogoutProps) => {
+const HeaderWithLogout = ({ title, subtitle, leftAction, showTitleOnMobile = false }: HeaderWithLogoutProps) => {
   const { logout, userRole, user, availableAccounts, switchAccount } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -77,21 +79,22 @@ const HeaderWithLogout = ({ title, subtitle, leftAction }: HeaderWithLogoutProps
 
   return (
     <>
-    <header className="sticky top-0 z-40 rounded-b-2xl bg-gradient-to-r from-zinc-900 to-zinc-700 text-white shadow-md">
-      <div className="flex h-20 items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 rounded-b-2xl border-b-2 border-primary bg-card text-foreground shadow-md">
+      <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
         {leftAction && <div>{leftAction}</div>}
         {/* ponytail: brand logo on mobile only — desktop sidebar already shows it */}
-        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain lg:hidden" />
-        <div className="flex-1 min-w-0">
+        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl border-2 border-primary bg-white object-contain p-0.5 lg:hidden" />
+        {/* Title div stays as the flex-1 spacer even when its text is hidden on mobile */}
+        <div className={`flex-1 min-w-0 ${showTitleOnMobile ? "" : "max-lg:invisible"}`}>
           <div className="flex items-center gap-2">
             <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">{title}</h1>
-            {userRole ? <span className="hidden rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-white md:inline-flex">{currentRoleLabel()}</span> : null}
+            {userRole ? <span className="hidden rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-foreground md:inline-flex">{currentRoleLabel()}</span> : null}
           </div>
-          {subtitle && <p className="truncate text-xs font-medium text-white/70 sm:text-sm">{subtitle}</p>}
+          {subtitle && <p className="truncate text-xs font-medium text-muted-foreground sm:text-sm">{subtitle}</p>}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" className="shrink-0 border-0 bg-white/15 text-white hover:bg-white/25 lg:hidden">
+            <Button size="icon" variant="outline" className="shrink-0 lg:hidden">
               <Menu className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>

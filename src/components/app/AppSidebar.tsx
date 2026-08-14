@@ -51,7 +51,7 @@ function AppSidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card lg:flex">
       <div className="flex h-20 items-center gap-3 border-b border-border px-5">
-        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl object-contain" />
+        <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl border-2 border-primary bg-white object-contain p-0.5" />
         <div className="min-w-0">
           <p className="truncate text-base font-bold text-foreground">Solidarity</p>
         </div>
