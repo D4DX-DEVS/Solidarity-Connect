@@ -64,8 +64,14 @@ const Login = () => {
 
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, userRole } = useAuth();
   const { toast } = useToast();
+
+  // PWA cold start opens start_url "/" → /login even with a valid stored
+  // session; send signed-in users straight to their home instead.
+  useEffect(() => {
+    if (isAuthenticated) navigate(getHomeRouteByRole(userRole), { replace: true });
+  }, [isAuthenticated, userRole, navigate]);
 
   const phoneIsValid = /^[6-9]\d{9}$/.test(phone);
   const otpValue = otp.join("");
