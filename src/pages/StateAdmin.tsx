@@ -320,7 +320,7 @@ const StateAdmin = () => {
                   <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass w-56 rounded-xl border-border/50 p-1.5 shadow-2xl">
+              <DropdownMenuContent align="end" className="glass max-h-[70vh] w-56 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
                 <div className="px-3 py-2 mb-1 bg-secondary/50 rounded-xl">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                   <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>

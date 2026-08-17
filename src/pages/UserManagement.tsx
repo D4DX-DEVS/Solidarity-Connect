@@ -96,6 +96,8 @@ interface Member {
   createdAt: string;
 }
 
+const MEMBER_STATUSES = ['Active', 'Inactive', 'Abroad', 'Applicant', 'Age over', 'Dismissed'] as const;
+
 interface District {
   _id: string;
   name: string;
@@ -250,7 +252,8 @@ const UserManagement = () => {
         if (debouncedSearch) params.search = debouncedSearch;
 
         if (isMemberView) {
-          if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+          // Member statuses pass through verbatim (Abroad, Applicant, …); legacy lowercase values map to their labels
+        if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : statusFilter === 'inactive' ? 'Inactive' : statusFilter;
           if (districtFilter !== 'all') params.district = districtFilter;
           if (groupFilter !== 'all') params.group = groupFilter;
           const result = await membersAPI.getMembers(params);
@@ -295,7 +298,8 @@ const UserManagement = () => {
       if (debouncedSearch) params.search = debouncedSearch;
 
       if (isMemberView) {
-        if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : 'Inactive';
+        // Member statuses pass through verbatim (Abroad, Applicant, …); legacy lowercase values map to their labels
+        if (statusFilter !== 'all') params.status = statusFilter === 'active' ? 'Active' : statusFilter === 'inactive' ? 'Inactive' : statusFilter;
         if (districtFilter !== 'all') params.district = districtFilter;
         if (groupFilter !== 'all') params.group = groupFilter;
         const result = await membersAPI.getMembers(params);
@@ -546,9 +550,14 @@ const UserManagement = () => {
         icon={<Users className="h-6 w-6" />}
       />
 
-      {/* ponytail: 4-up on mobile via child selectors; icon hidden + text shrunk so 4 cards fit ~360px */}
-      {userStats && (
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-4">
+      {/* ponytail: user-role stats hidden in member view — they count admin users, not members */}
+      {isMemberView ? (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <MetricCard title="Members Found" value={String(totalDocs)} icon={Users} tone="primary" />
+          <MetricCard title="Districts" value={String(districts.length)} icon={Building2} tone="neutral" />
+        </div>
+      ) : userStats && (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
           {topStats.map((item) => (
             <MetricCard
               key={item.title}
@@ -556,7 +565,6 @@ const UserManagement = () => {
               value={item.value}
               icon={item.icon}
               tone={item.tone}
-              className="[&>div]:p-2 sm:[&>div]:p-5 [&_.metric-icon]:hidden sm:[&_.metric-icon]:inline-flex [&_p:first-child]:text-[10px] sm:[&_p:first-child]:text-[13px] [&_p:nth-child(2)]:text-lg sm:[&_p:nth-child(2)]:text-[1.7rem]"
             />
           ))}
         </div>
@@ -576,7 +584,7 @@ const UserManagement = () => {
                   />
                 </div>
 
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setStatusFilter("all"); }}>
                   <SelectTrigger className="w-full lg:w-44 lg:flex-none">
                     <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
@@ -595,8 +603,16 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    {isMemberView ? (
+                      MEMBER_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -664,8 +680,8 @@ const UserManagement = () => {
                   {/* ponytail: icon-only on mobile so filter row stays compact */}
                   <DialogTrigger asChild>
                     <Button className="w-full shrink-0 px-3 sm:px-4 lg:ml-auto lg:w-auto">
-                      <Plus className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Add User</span>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add User
                     </Button>
                   </DialogTrigger>
                 </Dialog>

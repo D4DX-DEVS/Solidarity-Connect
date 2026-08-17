@@ -433,7 +433,7 @@ const PersonalTargets = () => {
                       <span className="sm:hidden">Create</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
+                  <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
                     {/* Header */}
                     <div className="px-6 pt-6 pb-4 border-b border-border/40">
                       <DialogHeader>
@@ -520,7 +520,6 @@ const PersonalTargets = () => {
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
-                              <SelectItem value="state_admins">State Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -711,7 +710,7 @@ const PersonalTargets = () => {
                       <span className="sm:hidden">Create</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col mx-4 sm:mx-auto p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
+                  <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
                     {/* Header */}
                     <div className="px-6 pt-6 pb-4 border-b border-border/40">
                       <DialogHeader>
@@ -779,7 +778,6 @@ const PersonalTargets = () => {
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
-                              <SelectItem value="state_admins">State Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>

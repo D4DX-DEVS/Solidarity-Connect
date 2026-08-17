@@ -345,7 +345,7 @@ const OrgFiles = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <p className="font-medium text-sm">{file.title}</p>
                             {!file.isActive && (
@@ -377,7 +377,7 @@ const OrgFiles = () => {
                                 </a>
                                 <Button
                                   size="sm"
-                                  variant={isMembershipForm ? "default" : "outline"}
+                                  variant="outline"
                                   className="text-xs h-7 px-2.5 shrink-0"
                                   onClick={() => downloadFile(file.url, file.originalName || file.title)}
                                 >
