@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png", "logo-icon.png", "robots.txt"],
+      includeAssets: ["favicon.png", "logo-icon.png", "apple-touch-icon.png", "robots.txt"],
       manifest: {
         name: "SOLIDARITY - Members Management",
         short_name: "SOLIDARITY",
@@ -34,27 +34,29 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#dc2626",
         background_color: "#ffffff",
         categories: ["productivity", "utilities"],
+        // Full-bleed opaque squares — transparent-corner logo-icon.png gets black
+        // corners when iOS/Android apply their own mask
         icons: [
           {
-            src: "/logo-icon.png",
+            src: "/icon-192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/logo-icon.png",
+            src: "/icon-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "/logo-icon.png",
+            src: "/icon-maskable-192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "maskable",
           },
           {
-            src: "/logo-icon.png",
+            src: "/icon-maskable-512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
@@ -65,13 +67,13 @@ export default defineConfig(({ mode }) => ({
             name: "Members",
             short_name: "Members",
             url: "/members",
-            icons: [{ src: "/logo-icon.png", sizes: "96x96" }],
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
           },
           {
             name: "Dashboard",
             short_name: "Dashboard",
             url: "/",
-            icons: [{ src: "/logo-icon.png", sizes: "96x96" }],
+            icons: [{ src: "/icon-192.png", sizes: "192x192" }],
           },
         ],
       },

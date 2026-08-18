@@ -1,4 +1,4 @@
-import { Building2, FileCheck, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut, FolderOpen, Calendar } from "lucide-react";
+import { Building2, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut, FolderOpen, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -132,8 +132,7 @@ const DistrictAdmin = () => {
 
   const districtTools = [
     { label: "Members", path: "/members", icon: Users, color: "text-cyan-600" },
-    { label: "Meetings", path: "/meetings", icon: Calendar, color: "text-amber-600" },
-    { label: "Meeting Agenda", path: "/state-admin/meeting-agenda", icon: FileCheck, color: "text-orange-500" },
+    { label: "Meetings", path: "/admin/meetings-view", icon: Calendar, color: "text-amber-600" },
     { label: "Groups", path: "/state-admin/groups", icon: Building2, color: "text-sky-600" },
     { label: "Role Management", path: "/role-management", icon: Shield, color: "text-blue-500" },
     { label: "Leaders", path: "/leaders", icon: Star, color: "text-yellow-500" },

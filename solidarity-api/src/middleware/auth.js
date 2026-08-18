@@ -136,7 +136,8 @@ export const areaGroupIdsFor = async (user) => {
 export const targetAudiencesFor = (user) => {
   switch (user?.role) {
     case 'state_admin':
-      return ['all_users', 'state_admins'];
+      // State admins assign and review targets — they never receive them.
+      return [];
     case 'district_admin':
       return ['all_users', 'district_admins'];
     case 'group_admin':

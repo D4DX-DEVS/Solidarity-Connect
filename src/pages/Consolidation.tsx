@@ -22,7 +22,6 @@ import { consolidationService, type ConsolidationUserType, type ConsolidationTar
 // area-level admins with the same scope as Area Admin, listed separately so each kind
 // can be consolidated on its own.
 const USER_TYPE_OPTIONS: { value: ConsolidationUserType; label: string }[] = [
-  { value: 'state_admin', label: 'State Admin' },
   { value: 'district_admin', label: 'District Admin' },
   { value: 'area_admin', label: 'Area Admin' },
   { value: 'murabi_admin', label: 'Murabi Admin' },
@@ -37,7 +36,7 @@ const AREA_LEVEL_TYPES: ConsolidationUserType[] = ['area_admin', 'murabi_admin',
 const userTypeOptionsForRole = (role?: string) => {
   if (role === 'state_admin') return USER_TYPE_OPTIONS;
   if (role === 'district_admin') {
-    return USER_TYPE_OPTIONS.filter(o => o.value !== 'state_admin' && o.value !== 'district_admin');
+    return USER_TYPE_OPTIONS.filter(o => o.value !== 'district_admin');
   }
   return USER_TYPE_OPTIONS.filter(o => o.value === 'unit_admin' || o.value === 'members');
 };

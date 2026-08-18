@@ -136,6 +136,30 @@ export interface MeetingAttendanceData {
   }>;
 }
 
+export type EffectiveMeetingStatus = Meeting['status'] | 'overdue';
+
+// Backend never auto-transitions status, so a past-date meeting stays
+// "scheduled" forever. Derive an "overdue" display status client-side.
+// Monthly series cover a whole month — only overdue after that month ends.
+export function getEffectiveStatus(meeting: {
+  status: string;
+  scheduledDate?: string;
+  monthlyDetails?: { month?: number; year?: number };
+}): EffectiveMeetingStatus {
+  if (meeting.status !== 'scheduled') return meeting.status as EffectiveMeetingStatus;
+
+  let end: Date | null = null;
+  if (meeting.monthlyDetails?.month && meeting.monthlyDetails?.year) {
+    // Day 0 of next month = last day of the selected month
+    end = new Date(meeting.monthlyDetails.year, meeting.monthlyDetails.month, 0, 23, 59, 59, 999);
+  } else if (meeting.scheduledDate) {
+    end = new Date(meeting.scheduledDate);
+    end.setHours(23, 59, 59, 999);
+  }
+
+  return end && end.getTime() < Date.now() ? 'overdue' : 'scheduled';
+}
+
 export const meetingsApi = {
   // Get all meetings with optional filters
   getMeetings: async (params?: {

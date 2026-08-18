@@ -20,12 +20,11 @@ import {
 import { MetricCard } from "@/components/app/AppShell";
 import { PageSkeleton } from "@/components/ui/loading-skeletons";import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
 import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
-import { reportsAPI, usersAPI, baithulMaalAPI, apiCall } from "@/utils/api";
+import { reportsAPI, usersAPI, baithulMaalAPI } from "@/utils/api";
 
 interface DashboardData {
   memberStatistics: {
@@ -92,11 +91,9 @@ const CARD_PATHS: Record<string, string> = {
 
 const StateAdmin = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { logout, user } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showAllActions, setShowAllActions] = useState(false);
-  const queryClient = useQueryClient();
 
   // ponytail: cached queries, not useEffect+setState — revisiting the dashboard
   // paints from cache instead of refetching everything.
@@ -115,49 +112,10 @@ const StateAdmin = () => {
     queryFn: async () => (await baithulMaalAPI.getStats()).data as BaithulMaalStats,
   });
 
-  const { data: myRecurringTargets = [] } = useQuery({
-    queryKey: ['state-admin', 'recurring-targets'],
-    queryFn: async () => {
-      const res = await apiCall('/personal-targets?isRecurring=true&targetAudience=state_admins&limit=50');
-      const now = new Date();
-      return (res.data || []).filter((t: any) =>
-        t.isRecurring && t.targetAudience === 'state_admins' &&
-        t.status === 'active' &&
-        new Date(t.startDate) <= now && new Date(t.endDate) >= now
-      );
-    },
-  });
-
-  const { data: myMarks = {} } = useQuery({
-    queryKey: ['state-admin', 'recurring-marks'],
-    queryFn: async () => {
-      const res = await apiCall('/recurring-marks/my');
-      const marksMap: Record<string, Record<string, boolean>> = {};
-      for (const m of (res.data || [])) {
-        if (!marksMap[m.targetId]) marksMap[m.targetId] = {};
-        marksMap[m.targetId][`${m.year}-${m.month}-${m.week || 0}`] = m.completed;
-      }
-      return marksMap;
-    },
-  });
-
-  const [markingLoading, setMarkingLoading] = useState<string | null>(null);
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-  const [selectedRecurringMonth, setSelectedRecurringMonth] = useState(currentMonth);
-  const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const WEEKLY_SLOTS = [1, 2, 3, 4, 5];
-
-  const getWeeksInMonth = (year: number, monthIdx0: number): number => {
-    const firstDay = new Date(year, monthIdx0, 1).getDay();
-    const daysInMonth = new Date(year, monthIdx0 + 1, 0).getDate();
-    return Math.ceil((firstDay + daysInMonth) / 7);
-  };
-
   const adminActions = [
     { icon: Database, label: "Master Data", path: "/state-admin/master-data", color: "text-emerald-600" },
     { icon: UserCog, label: "User Management", path: "/state-admin/users", color: "text-purple-500" },
-    { icon: Target, label: "Personal Targets", path: "/personal-targets", color: "text-purple-500" },
+    { icon: Target, label: "Targets", path: "/personal-targets", color: "text-purple-500" },
     { icon: Building2, label: "Manage Districts", path: "/state-admin/districts", color: "text-sky-600" },
     { icon: Users, label: "Manage Groups", path: "/state-admin/groups", color: "text-cyan-600" },
     { icon: Calendar, label: "Meeting Agenda", path: "/state-admin/meeting-agenda", color: "text-amber-600" },
@@ -170,53 +128,6 @@ const StateAdmin = () => {
     { icon: FolderOpen, label: "Files", path: "/org-files", color: "text-teal-500" },
     { icon: BarChart3, label: "Consolidation", path: "/consolidation", color: "text-indigo-500" },
   ];
-
-  const toggleMark = async (targetId: string, year: number, month: number, week: number = 0) => {
-    const key = `${year}-${month}-${week}`;
-    const current = myMarks[targetId]?.[key] || false;
-    const loadingKey = `${targetId}-${key}`;
-    setMarkingLoading(loadingKey);
-    try {
-      await apiCall('/recurring-marks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetId, year, month, week, completed: !current }) });
-      queryClient.setQueryData(
-        ['state-admin', 'recurring-marks'],
-        (prev: Record<string, Record<string, boolean>> = {}) => ({
-          ...prev,
-          [targetId]: { ...prev[targetId], [key]: !current },
-        })
-      );
-    } catch {
-      toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
-    } finally {
-      setMarkingLoading(null);
-    }
-  };
-
-  const getCompletedRecurringCount = (targetId: string, isWeekly: boolean) => {
-    if (isWeekly) {
-      let total = 0;
-      for (let month = 1; month <= currentMonth; month += 1) {
-        const weeksInMonth = getWeeksInMonth(currentYear, month - 1);
-        for (const week of WEEKLY_SLOTS) {
-          if (week > weeksInMonth) {
-            continue;
-          }
-          if (myMarks[targetId]?.[`${currentYear}-${month}-${week}`]) {
-            total += 1;
-          }
-        }
-      }
-      return total;
-    }
-
-    let total = 0;
-    for (let month = 1; month <= currentMonth; month += 1) {
-      if (myMarks[targetId]?.[`${currentYear}-${month}-0`]) {
-        total += 1;
-      }
-    }
-    return total;
-  };
 
   const formatCurrency = (amount: number) => {
     if (amount >= 100000) {
@@ -320,7 +231,7 @@ const StateAdmin = () => {
                   <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass w-56 rounded-xl border-border/50 p-1.5 shadow-2xl">
+              <DropdownMenuContent align="end" className="glass max-h-[70vh] w-56 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
                 <div className="px-3 py-2 mb-1 bg-secondary/50 rounded-xl">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
                   <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
@@ -402,23 +313,6 @@ const StateAdmin = () => {
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
 
-            {myRecurringTargets.length > 0 && (
-              <button
-                type="button"
-                onClick={() => document.getElementById("my-recurring-targets")?.scrollIntoView({ behavior: "smooth" })}
-                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors hover:bg-accent/60"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
-                  <Target className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">{myRecurringTargets.length} recurring {myRecurringTargets.length === 1 ? "target" : "targets"} active</p>
-                  <p className="truncate text-xs text-muted-foreground">Track your progress below</p>
-                </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </button>
-            )}
-
             {upcomingMeetingsCount > 0 && (
               <button
                 type="button"
@@ -489,120 +383,6 @@ const StateAdmin = () => {
         </div>
       </div>
 
-        {myRecurringTargets.length > 0 && (
-          <div id="my-recurring-targets" className="scroll-mt-20">
-          <h2 className="flex items-center gap-2 text-base font-semibold mb-3">My Recurring Targets</h2>
-          <div>
-              <div className="mb-4 grid grid-cols-6 gap-1.5 sm:flex sm:flex-wrap">
-                {MONTHS_SHORT.map((month, index) => {
-                  const monthNum = index + 1;
-                  const isActive = monthNum === selectedRecurringMonth;
-                  const isFuture = monthNum > currentMonth;
-                  return (
-                    <button
-                      key={month}
-                      type="button"
-                      onClick={() => setSelectedRecurringMonth(monthNum)}
-                      disabled={isFuture}
-                      aria-pressed={isActive}
-                      className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors sm:px-3 ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : isFuture
-                            ? 'cursor-not-allowed bg-muted text-muted-foreground/50'
-                            : 'bg-muted text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {month}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-3">
-                {myRecurringTargets.map((target: any) => {
-                  const freq = target.recurringFrequency || 'monthly';
-                  const isWeekly = freq === 'weekly';
-                  const selectedMonthLabel = MONTHS_SHORT[selectedRecurringMonth - 1];
-                  const selectedMonthIsFuture = selectedRecurringMonth > currentMonth;
-                  const completedCount = getCompletedRecurringCount(target._id, isWeekly);
-                  const weeksInSelectedMonth = getWeeksInMonth(currentYear, selectedRecurringMonth - 1);
-                  const completedInSelectedMonth = isWeekly
-                    ? WEEKLY_SLOTS.filter((w) => w <= weeksInSelectedMonth && myMarks[target._id]?.[`${currentYear}-${selectedRecurringMonth}-${w}`]).length
-                    : 0;
-                  const progressTotal = isWeekly ? weeksInSelectedMonth : 12;
-                  const progressDone = isWeekly ? completedInSelectedMonth : completedCount;
-                  const progressPct = progressTotal ? Math.round((progressDone / progressTotal) * 100) : 0;
-                  const monthKey = `${currentYear}-${selectedRecurringMonth}-0`;
-                  const monthCompleted = myMarks[target._id]?.[monthKey] || false;
-                  const monthLoadingKey = `${target._id}-${monthKey}`;
-                  return (
-                    <div key={target._id} className="rounded-2xl border border-border bg-card p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-foreground">{target.title}</p>
-                          <Badge variant="outline" className="shrink-0 rounded-md px-1.5 py-0 text-[10px] font-medium">
-                            {isWeekly ? 'Weekly' : 'Monthly'}
-                          </Badge>
-                        </div>
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {isWeekly ? `${progressDone} / ${progressTotal} weeks` : `${progressDone} / 12 months`}
-                        </span>
-                      </div>
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className={`h-full rounded-full transition-all ${isWeekly ? 'bg-success' : 'bg-primary/70'}`}
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                        {isWeekly ? (
-                          <div className="flex flex-wrap gap-1.5">
-                            {WEEKLY_SLOTS.filter((w) => w <= weeksInSelectedMonth).map((weekNum) => {
-                              const key = `${currentYear}-${selectedRecurringMonth}-${weekNum}`;
-                              const completed = myMarks[target._id]?.[key] || false;
-                              const loadingKey = `${target._id}-${key}`;
-                              return (
-                                <button
-                                  key={weekNum}
-                                  type="button"
-                                  onClick={() => !selectedMonthIsFuture && toggleMark(target._id, currentYear, selectedRecurringMonth, weekNum)}
-                                  disabled={markingLoading === loadingKey || selectedMonthIsFuture}
-                                  title={selectedMonthIsFuture ? 'Future week' : `${selectedMonthLabel} W${weekNum}`}
-                                  className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-                                    completed
-                                      ? 'bg-success text-success-foreground'
-                                      : selectedMonthIsFuture
-                                        ? 'cursor-not-allowed bg-muted text-muted-foreground/50'
-                                        : 'bg-muted text-muted-foreground hover:text-foreground'
-                                  } ${markingLoading === loadingKey ? 'cursor-wait opacity-60' : ''}`}
-                                >
-                                  W{weekNum}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={markingLoading === monthLoadingKey || selectedMonthIsFuture}
-                            onClick={() => toggleMark(target._id, currentYear, selectedRecurringMonth, 0)}
-                            className={monthCompleted ? 'border-success/40 bg-success/10 text-success hover:bg-success/15' : ''}
-                          >
-                            {monthCompleted ? <CheckCircle className="h-4 w-4" /> : null}
-                            {monthCompleted ? `${selectedMonthLabel} marked` : selectedMonthIsFuture ? 'Locked' : `Mark ${selectedMonthLabel}`}
-                          </Button>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">{selectedMonthLabel} {currentYear}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-          </div>
-          </div>
-        )}
       </main>
       <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
         <DialogContent className="max-w-sm rounded-2xl">

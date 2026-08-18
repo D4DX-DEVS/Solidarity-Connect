@@ -23,6 +23,7 @@ import { SectionCard } from "@/components/app/AppShell";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminMeetingsOverview, useMeetings, useDeleteMeeting } from "@/hooks/useMeetings";
+import { getEffectiveStatus } from "@/lib/meetings";
 import { useDistricts } from "@/hooks/useDistricts";
 
 interface GroupProgress {
@@ -173,6 +174,7 @@ const AdminMeetingsView = () => {
   const getAgendaStatusColor = (status: string) => {
     switch (status) {
       case 'scheduled': return 'bg-blue-100 text-blue-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
       case 'ongoing': return 'bg-green-100 text-green-800';
       case 'completed': return 'bg-gray-100 text-gray-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
@@ -241,6 +243,24 @@ const AdminMeetingsView = () => {
 
   // Detailed view for selected meeting
   if (selectedMeeting) {
+    // Which districts finished: roll group progress up per district
+    const districtRollup = (() => {
+      const map = new Map<string, { name: string; code: string; total: number; completed: number }>();
+      selectedMeeting.groupProgress.forEach((g) => {
+        const key = g.district?._id || g.district?.name || "unknown";
+        const entry = map.get(key) ?? {
+          name: g.district?.name || "Unknown",
+          code: g.district?.code || "",
+          total: 0,
+          completed: 0,
+        };
+        entry.total += 1;
+        if (g.status === "completed") entry.completed += 1;
+        map.set(key, entry);
+      });
+      return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+    })();
+
     return (
       <div className="app-page pb-20">
         <HeaderWithLogout
@@ -329,6 +349,38 @@ const AdminMeetingsView = () => {
 
             </CardContent>
           </Card>
+
+          {/* District Progress rollup */}
+          {districtRollup.length > 1 && (
+            <Card className="surface-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  District Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+                  {districtRollup.map((d) => {
+                    const rate = d.total > 0 ? Math.round((d.completed / d.total) * 100) : 0;
+                    const done = d.completed === d.total && d.total > 0;
+                    return (
+                      <div
+                        key={`${d.name}-${d.code}`}
+                        className={`data-strip p-2.5 text-center sm:p-3 ${done ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}
+                      >
+                        <p className="truncate text-xs font-semibold sm:text-sm">{d.name}</p>
+                        <p className={`text-lg font-bold sm:text-xl ${done ? "text-green-600" : "text-red-600"}`}>
+                          {d.completed}/{d.total}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground sm:text-xs">groups completed • {rate}%</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Group Progress Filters */}
           <SectionCard title="Group Filters" description="Narrow the meeting progress table by status, district, and page size.">
@@ -422,7 +474,11 @@ const AdminMeetingsView = () => {
                               )}
                             </div>
                           </div>
-                          <div className="mt-2 grid grid-cols-5 gap-1 text-center">
+                          <div className="mt-2 grid grid-cols-6 gap-1 text-center">
+                            <div className="rounded-lg bg-muted/60 px-0.5 py-1">
+                              <p className="text-sm font-bold">{group.completedSessions ?? 0}/{group.totalSessions ?? 0}</p>
+                              <p className="text-[10px] text-muted-foreground">Sessions</p>
+                            </div>
                             <div className="rounded-lg bg-muted/60 px-0.5 py-1">
                               <p className="text-sm font-bold text-blue-600">{group.totalMembers || 0}</p>
                               <p className="text-[10px] text-muted-foreground">Total</p>
@@ -452,11 +508,12 @@ const AdminMeetingsView = () => {
 
                     {/* Desktop: table */}
                     <div className="hidden overflow-x-auto md:block">
-                    <Table>
+                    <Table className="[&_th]:h-10 [&_th]:px-3 [&_td]:px-3 [&_td]:py-2.5">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Group</TableHead>
                           <TableHead>District</TableHead>
+                          <TableHead className="text-center">Sessions</TableHead>
                           <TableHead className="text-center">Total Members</TableHead>
                           <TableHead className="text-center">Present</TableHead>
                           <TableHead className="text-center">Absent</TableHead>
@@ -480,6 +537,11 @@ const AdminMeetingsView = () => {
                                 <MapPin className="h-3 w-3 text-muted-foreground" />
                                 <span className="text-sm">{group.district?.name || 'Unknown'}</span>
                               </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <span className="font-semibold">
+                                {group.completedSessions ?? 0}/{group.totalSessions ?? 0}
+                              </span>
                             </TableCell>
                             <TableCell className="text-center">
                               <span className="font-semibold text-blue-600">{group.totalMembers || 0}</span>
@@ -740,7 +802,7 @@ const AdminMeetingsView = () => {
 
               {/* Desktop: table */}
               <div className="hidden overflow-x-auto md:block">
-                <Table>
+                <Table className="[&_th]:h-10 [&_th]:px-3 [&_td]:px-3 [&_td]:py-2.5">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Meeting</TableHead>
@@ -896,9 +958,14 @@ const AdminMeetingsView = () => {
                               </div>
                             </div>
                             <div className="flex shrink-0 items-center gap-1">
-                              <Badge className={getAgendaStatusColor(meeting.status || 'unknown')}>
-                                {meeting.status ? meeting.status.charAt(0).toUpperCase() + meeting.status.slice(1) : 'Unknown'}
-                              </Badge>
+                              {(() => {
+                                const status = meeting.status ? getEffectiveStatus(meeting) : 'unknown';
+                                return (
+                                  <Badge className={getAgendaStatusColor(status)}>
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  </Badge>
+                                );
+                              })()}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>

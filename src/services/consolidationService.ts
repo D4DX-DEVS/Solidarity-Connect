@@ -3,7 +3,6 @@ import { api } from '@/lib/api';
 // Murabi and Coordinator admins sit at the same level as Area Admins — same permissions,
 // same area scoping — but consolidate as their own rows.
 export type ConsolidationUserType =
-  | 'state_admin'
   | 'district_admin'
   | 'area_admin'
   | 'murabi_admin'

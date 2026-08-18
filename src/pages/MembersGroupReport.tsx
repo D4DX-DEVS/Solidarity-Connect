@@ -1,38 +1,48 @@
-import { Users, ArrowLeft, Download, TrendingUp, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Users, Download, TrendingUp, Loader2, ChevronLeft, ChevronRight, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import PageSizeInput from "@/components/app/PageSizeInput";import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import PageSizeInput from "@/components/app/PageSizeInput";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
 
-interface GroupStats {
+interface UnitStats {
   _id: string;
   groupName: string;
   groupCode: string;
   totalMembers: number;
   activeMembers: number;
-  inactiveMembers?: number;
-  abroadMembers?: number;
-  applicantMembers?: number;
+  inactiveMembers: number;
+  abroadMembers: number;
+  applicantMembers: number;
   totalBaithulMaal: number;
 }
 
-interface StatusStats {
+interface DistrictStats {
   _id: string;
-  count: number;
+  districtName: string;
+  districtCode: string;
+  unitCount: number;
+  totalMembers: number;
+  activeMembers: number;
+  inactiveMembers: number;
+  abroadMembers: number;
+  applicantMembers: number;
   totalBaithulMaal: number;
 }
 
-interface ReportsData {
-  statusStatistics: StatusStats[];
-  groupStatistics: GroupStats[];
-  ageDistribution: any[];
-  registrationTrend: any[];
+interface CensusSummary {
+  districtCount: number;
+  unitCount: number;
+  totalMembers: number;
+  activeMembers: number;
+  inactiveMembers: number;
+  abroadMembers: number;
+  applicantMembers: number;
+  totalBaithulMaal: number;
 }
 
 interface PaginationInfo {
@@ -44,199 +54,160 @@ interface PaginationInfo {
   hasPrevPage: boolean;
 }
 
-interface District {
+interface DistrictOption {
   _id: string;
   name: string;
   code: string;
 }
 
-const MembersGroupReport = () => {
-  const navigate = useNavigate();
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedGroup, setSelectedGroup] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reportsData, setReportsData] = useState<ReportsData | null>(null);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [groups, setGroups] = useState<GroupStats[]>([]);
-  const [allGroups, setAllGroups] = useState<GroupStats[]>([]);
-  const [districtGroups, setDistrictGroups] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
-  const [pageSize, setPageSize] = useState(10);
-  const [paginationLoading, setPaginationLoading] = useState(false);
+// ponytail: in-memory cache only, 5 min TTL — a page reload is the refresh button.
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
-  // Fetch districts on mount
+const EMPTY_SUMMARY: CensusSummary = {
+  districtCount: 0, unitCount: 0, totalMembers: 0, activeMembers: 0,
+  inactiveMembers: 0, abroadMembers: 0, applicantMembers: 0, totalBaithulMaal: 0,
+};
+
+const MembersGroupReport = () => {
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [paginationLoading, setPaginationLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [districtOptions, setDistrictOptions] = useState<DistrictOption[]>([]);
+  const [rows, setRows] = useState<DistrictStats[]>([]);
+  const [summary, setSummary] = useState<CensusSummary>(EMPTY_SUMMARY);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const [openDistricts, setOpenDistricts] = useState<string[]>([]);
+  const [units, setUnits] = useState<Record<string, UnitStats[]>>({});
+  const [unitLoading, setUnitLoading] = useState<Record<string, boolean>>({});
+
+  const cache = useRef(new Map<string, { ts: number; data: any }>());
+
+  const readCache = (key: string) => {
+    const hit = cache.current.get(key);
+    if (hit && Date.now() - hit.ts < CACHE_TTL_MS) return hit.data;
+    if (hit) cache.current.delete(key);
+    return null;
+  };
+  const writeCache = (key: string, data: any) => cache.current.set(key, { ts: Date.now(), data });
+
+  // District list for the filter
   useEffect(() => {
-    const fetchDistricts = async () => {
-      try {
-        const districtsResponse = await districtsAPI.getDistricts();
-        if (districtsResponse.success) {
-          setDistricts(districtsResponse.data || []);
-        }
-      } catch (err) {
-        console.error('Error fetching districts:', err);
-      }
-    };
-    fetchDistricts();
+    districtsAPI.getDistricts()
+      .then((res) => { if (res.success) setDistrictOptions(res.data || []); })
+      .catch((err) => console.error("Error fetching districts:", err));
   }, []);
 
-  // Fetch reports data when filters or pagination changes
+  // District census — server-side paginated, cached per page
   useEffect(() => {
-    const fetchReportsData = async () => {
-      try {
-        // Use pagination loading for page changes only
-        if (currentPage > 1 && !selectedDistrict && !selectedGroup) {
-          setPaginationLoading(true);
-        } else {
-          setLoading(true);
-        }
-        setError(null);
+    let cancelled = false;
+    const key = `census|${selectedDistrict}|${currentPage}|${pageSize}`;
 
-        // Build query parameters
-        const params: Record<string, any> = {
-          page: currentPage,
-          limit: pageSize
-        };
-        if (selectedDistrict) params.district = selectedDistrict;
-        if (selectedGroup) params.group = selectedGroup;
-
-        // Fetch reports data
-        const reportsResponse = await reportsAPI.getMembers(params);
-        if (reportsResponse.success) {
-          setReportsData(reportsResponse.data);
-          setGroups(reportsResponse.data.groupStatistics || []);
-          if (reportsResponse.pagination) {
-            setPagination(reportsResponse.pagination);
-          }
-        }
-
-        // If district is selected, fetch groups for that district
-        if (selectedDistrict && !selectedGroup) {
-          try {
-            const districtGroupsResponse = await districtsAPI.getDistrictGroups(selectedDistrict);
-            if (districtGroupsResponse.success) {
-              setDistrictGroups(districtGroupsResponse.data || []);
-            }
-          } catch (err) {
-            console.error('Error fetching district groups:', err);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching reports data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch reports data');
-      } finally {
-        setLoading(false);
-        setPaginationLoading(false);
-      }
+    const apply = (payload: any) => {
+      setRows(payload.data.districts || []);
+      setSummary(payload.data.summary || EMPTY_SUMMARY);
+      setPagination(payload.pagination || null);
     };
 
-    fetchReportsData();
-  }, [selectedDistrict, selectedGroup, currentPage, pageSize]);
-
-  // Reset group selection when district changes
-  useEffect(() => {
-    if (selectedDistrict) {
-      setSelectedGroup("");
+    const cached = readCache(key);
+    if (cached) {
+      apply(cached);
+      setLoading(false);
+      setError(null);
+      return;
     }
-  }, [selectedDistrict]);
 
-  // Handle district selection change
+    const load = async () => {
+      if (currentPage > 1) setPaginationLoading(true); else setLoading(true);
+      setError(null);
+      try {
+        const params: Record<string, any> = { page: currentPage, limit: pageSize };
+        if (selectedDistrict) params.district = selectedDistrict;
+        const res = await reportsAPI.getDistrictCensus(params);
+        if (cancelled) return;
+        if (!res.success) throw new Error(res.message || "Failed to load report");
+        writeCache(key, res);
+        apply(res);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch report");
+      } finally {
+        if (!cancelled) { setLoading(false); setPaginationLoading(false); }
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [selectedDistrict, currentPage, pageSize]);
+
+  // Units are fetched only when a district row is expanded, then cached.
+  const loadUnits = useCallback(async (districtId: string) => {
+    const key = `units|${districtId}`;
+    const cached = readCache(key);
+    if (cached) { setUnits((u) => ({ ...u, [districtId]: cached })); return; }
+
+    setUnitLoading((s) => ({ ...s, [districtId]: true }));
+    try {
+      const res = await reportsAPI.getDistrictUnits(districtId);
+      if (res.success) {
+        writeCache(key, res.data || []);
+        setUnits((u) => ({ ...u, [districtId]: res.data || [] }));
+      }
+    } catch (err) {
+      console.error("Error fetching units:", err);
+    } finally {
+      setUnitLoading((s) => ({ ...s, [districtId]: false }));
+    }
+  }, []);
+
+  const handleOpenChange = (values: string[]) => {
+    setOpenDistricts(values);
+    values.filter((id) => !units[id] && !unitLoading[id]).forEach(loadUnits);
+  };
+
   const handleDistrictChange = (districtId: string) => {
     setSelectedDistrict(districtId);
-    setSelectedGroup(""); // Reset group selection
-    setDistrictGroups([]); // Clear district groups
-    setCurrentPage(1); // Reset to first page
+    setOpenDistricts([]);
+    setCurrentPage(1);
   };
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    setOpenDistricts([]);
   };
 
-  // Handle page size change
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page
-  };
-
-  // Reset all filters
-  const handleResetFilters = () => {
-    setSelectedDistrict("");
-    setSelectedGroup("");
     setCurrentPage(1);
-    setDistrictGroups([]);
   };
 
-  // Calculate statistics from API data
-  const getStatusCount = (status: string): number => {
-    if (!reportsData?.statusStatistics) return 0;
-    const stat = reportsData.statusStatistics.find(s => s._id === status);
-    return stat?.count || 0;
-  };
-
-  const totalActive = getStatusCount('Active');
-  const totalInactive = getStatusCount('Inactive');
-  const totalAbroad = getStatusCount('Abroad');
-  const totalApplicant = getStatusCount('Applicant');
-  // ponytail: Total must be global status sum, not a sum over the current page's 10 groups
-  const totalMembers = totalActive + totalInactive + totalAbroad + totalApplicant;
-
-  // Filter groups based on selection
-  const filteredGroups = groups.filter(group => {
-    if (selectedGroup && group._id !== selectedGroup) return false;
-    return true;
-  });
-
-  // Group by district for display
-  const groupsByDistrict = filteredGroups.reduce((acc, group) => {
-    // For now, we'll group all under "All Districts" since we don't have district info in group stats
-    const districtName = selectedDistrict ? 
-      districts.find(d => d._id === selectedDistrict)?.name || "Unknown District" : 
-      "All Districts";
-    
-    if (!acc[districtName]) {
-      acc[districtName] = [];
-    }
-    acc[districtName].push(group);
-    return acc;
-  }, {} as Record<string, GroupStats[]>);
-
-  // Export functionality
+  // Export always rebuilds server-side from the whole filtered set, never from this page.
   const handleExport = async () => {
     try {
       const params = new URLSearchParams();
-      if (selectedDistrict) params.append('district', selectedDistrict);
-      if (selectedGroup) params.append('group', selectedGroup);
-      // Don't add pagination params for export - we want all data
+      if (selectedDistrict) params.append("district", selectedDistrict);
 
-      const token = localStorage.getItem('token');
-      const apiUrl = import.meta.env.VITE_API_URL || 'https://solidarity-app-api-erv6h.ondigitalocean.app/api';
-      
+      const token = localStorage.getItem("token");
+      const apiUrl = import.meta.env.VITE_API_URL || "https://solidarity-app-api-erv6h.ondigitalocean.app/api";
       const response = await fetch(`${apiUrl}/reports/export/members?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+      if (!response.ok) throw new Error("Export failed");
 
-      if (!response.ok) {
-        throw new Error('Export failed');
-      }
-
-      // Create download link
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `group-reports-${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `group-reports-${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export error:', error);
-      alert('Failed to export data. Please try again.');
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("Failed to export data. Please try again.");
     }
   };
 
@@ -244,300 +215,188 @@ const MembersGroupReport = () => {
     <PageShell contentClassName="pb-24">
       <PageHero
         title="Group Reports"
-        subtitle="Analyze member totals, status distribution, and Baithul Maal coverage across groups."
+        subtitle="District and unit member census with Baithul Maal coverage."
         eyebrow="Reports"
         icon={<Users className="h-6 w-6" />}
         actions={
-          <div className="flex gap-2">
-            
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleExport}
-              disabled={loading}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" onClick={handleExport} disabled={loading}>
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
         }
       />
 
-        {/* Loading State */}
-        {loading && (
-          <SectionCard title="Preparing Report" description="Loading group statistics and active filter options.">
-            <ListSkeleton rows={5} />
-          </SectionCard>
-        )}
+      {loading && (
+        <SectionCard title="Preparing Report" description="Loading district statistics.">
+          <ListSkeleton rows={5} />
+        </SectionCard>
+      )}
 
-        {/* Error State */}
-        {error && (
-          <SectionCard title="Report Error" description="The report could not be loaded with the current filters.">
-            <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-center">
-              <p className="text-destructive text-center">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-2"
-                onClick={() => window.location.reload()}
-              >
-                Retry
-              </Button>
-            </div>
-          </SectionCard>
-        )}
-
-        {/* Filters */}
-        {!loading && !error && (
-          <SectionCard title="Report Filters" description="Limit the report to a district, group, or different page size.">
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-2">
-                <Select
-                  value={selectedDistrict || "all"}
-                  onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
-                >
-                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
-                    <SelectValue placeholder="All Districts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Districts</SelectItem>
-                    {districts.map((district) => (
-                      <SelectItem key={district._id} value={district._id}>
-                        {district.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={selectedGroup || "all"}
-                  onValueChange={(val) => setSelectedGroup(val === "all" ? "" : val)}
-                >
-                  <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
-                    <SelectValue placeholder="All Groups" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
-                    {selectedDistrict ? (
-                      districtGroups.map((group) => (
-                        <SelectItem key={group._id} value={group._id}>
-                          {group.name} ({group.code})
-                        </SelectItem>
-                      ))
-                    ) : (
-                      groups.map((group) => (
-                        <SelectItem key={group._id} value={group._id}>
-                          {group.groupName} ({group.groupCode})
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(selectedDistrict || selectedGroup) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetFilters}
-                  className="w-full"
-                >
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          </SectionCard>
-        )}
-
-        {/* Summary Cards - Status Based Statistics */}
-        {!loading && !error && (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-            <MetricCard title="Total" value={String(totalMembers)} icon={Users} tone="primary" />
-            <MetricCard title="Active" value={String(totalActive)} icon={TrendingUp} tone="success" />
-            <MetricCard title="Inactive" value={String(totalInactive)} icon={Users} tone="neutral" className="hidden sm:block" />
-            <MetricCard title="Abroad" value={String(totalAbroad)} icon={Users} tone="warning" />
-            <MetricCard title="Applicant" value={String(totalApplicant)} icon={Users} tone="danger" />
+      {error && !loading && (
+        <SectionCard title="Report Error" description="The report could not be loaded with the current filters.">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-center">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => handlePageChange(currentPage)}>
+              Retry
+            </Button>
           </div>
-        )}
+        </SectionCard>
+      )}
 
-        {/* Pagination Controls */}
-        {!loading && !error && pagination && pagination.totalDocs > 0 && (
-          <Card className="surface-card border-border/70">
-            <CardContent className="p-3">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-xs text-muted-foreground sm:text-sm">
-                  Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
-                  {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of{" "}
-                  {pagination.totalDocs} groups
-                </span>
+      {!loading && !error && (
+        <>
+          {/* Summary is the whole filtered set, never just this page */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-5">
+            <MetricCard title="Total" value={String(summary.totalMembers)} icon={Users} tone="primary" />
+            <MetricCard title="Active" value={String(summary.activeMembers)} icon={TrendingUp} tone="success" />
+            <MetricCard title="Inactive" value={String(summary.inactiveMembers)} icon={Users} tone="neutral" className="hidden sm:block" />
+            <MetricCard title="Abroad" value={String(summary.abroadMembers)} icon={Users} tone="warning" />
+            <MetricCard title="Applicant" value={String(summary.applicantMembers)} icon={Users} tone="danger" />
+          </div>
 
-                <div className="flex items-center justify-between gap-2 sm:justify-end">
-                  <PageSizeInput value={pageSize} onChange={handlePageSizeChange} />
+          <SectionCard
+            title="District Census"
+            description={`${summary.districtCount} districts · ${summary.unitCount} units. Expand a district to see its units.`}
+            contentClassName="px-0 pb-0 pt-3 sm:px-0 sm:pb-0 sm:pt-4"
+            action={
+              <Select
+                value={selectedDistrict || "all"}
+                onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
+              >
+                <SelectTrigger className="h-9 w-[140px] px-2 text-xs sm:w-[200px] sm:text-sm">
+                  <SelectValue placeholder="All Districts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Districts</SelectItem>
+                  {districtOptions.map((d) => (
+                    <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+          >
+            <div className="hidden grid-cols-[1fr_repeat(4,72px)] gap-2 border-b px-4 pb-2 text-xs font-medium text-muted-foreground sm:grid sm:px-6">
+              <span>District</span>
+              <span className="text-right">Units</span>
+              <span className="text-right">Total</span>
+              <span className="text-right">Active</span>
+              <span className="text-right">Abroad</span>
+            </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(pagination.currentPage - 1)}
-                      disabled={!pagination.hasPrevPage || paginationLoading}
-                    >
-                      {paginationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-4 w-4" />}
-                    </Button>
-
-                    <span className="px-2 py-1 text-xs sm:px-3 sm:text-sm whitespace-nowrap">
-                      {pagination.currentPage} of {pagination.totalPages}
-                    </span>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePageChange(pagination.currentPage + 1)}
-                      disabled={!pagination.hasNextPage || paginationLoading}
-                    >
-                      {paginationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* District-wise Reports - Table View */}
-        {!loading && !error && (
-          <>
-            {Object.entries(groupsByDistrict).map(([districtName, districtGroups]) => (
-              <SectionCard key={districtName} title={districtName} description="Group-level totals and contribution data for the current selection.">
-                <Card className="surface-card border-border/70">
-                  <CardContent className="p-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Group Name</TableHead>
-                          <TableHead>Code</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                          <TableHead className="text-right">Active</TableHead>
-                          <TableHead className="text-right">Inactive</TableHead>
-                          <TableHead className="text-right">Abroad</TableHead>
-                          <TableHead className="text-right">Applicant</TableHead>
-                          <TableHead className="text-right">Baithul Maal</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {districtGroups.map((group) => {
-                          return (
-                            <TableRow key={group._id}>
-                              <TableCell className="font-medium">{group.groupName}</TableCell>
-                              <TableCell className="text-sm text-muted-foreground">{group.groupCode}</TableCell>
-                              <TableCell className="text-right font-semibold text-primary">
-                                {group.totalMembers}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-green-600">
-                                {group.activeMembers || 0}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-gray-600">
-                                {group.inactiveMembers || 0}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-blue-600">
-                                {group.abroadMembers || 0}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-orange-600">
-                                {group.applicantMembers || 0}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-purple-600">
-                                ₹{group.totalBaithulMaal.toLocaleString()}
+            <Accordion type="multiple" value={openDistricts} onValueChange={handleOpenChange}>
+              {rows.map((district) => (
+                <AccordionItem key={district._id} value={district._id} className="border-b last:border-b-0">
+                  <AccordionTrigger className="px-4 py-3 hover:no-underline sm:px-6">
+                    <div className="grid w-full grid-cols-[1fr_auto] items-center gap-2 pr-2 text-left sm:grid-cols-[1fr_repeat(4,72px)]">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate font-semibold">{district.districtName}</span>
+                      </span>
+                      <span className="hidden text-right text-sm text-muted-foreground sm:block">{district.unitCount}</span>
+                      <span className="text-right text-sm font-semibold text-primary">{district.totalMembers}</span>
+                      <span className="hidden text-right text-sm font-semibold text-green-600 sm:block">{district.activeMembers}</span>
+                      <span className="hidden text-right text-sm font-semibold text-blue-600 sm:block">{district.abroadMembers}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="bg-muted/30 pb-0">
+                    {!units[district._id] && unitLoading[district._id] ? (
+                      <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Loading units…
+                      </div>
+                    ) : units[district._id]?.length ? (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Unit</TableHead>
+                              <TableHead>Code</TableHead>
+                              <TableHead className="text-right">Total</TableHead>
+                              <TableHead className="text-right">Active</TableHead>
+                              <TableHead className="text-right">Inactive</TableHead>
+                              <TableHead className="text-right">Abroad</TableHead>
+                              <TableHead className="text-right">Applicant</TableHead>
+                              <TableHead className="text-right">Baithul Maal</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {units[district._id].map((unit) => (
+                              <TableRow key={unit._id}>
+                                <TableCell className="font-medium">{unit.groupName}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{unit.groupCode}</TableCell>
+                                <TableCell className="text-right font-semibold text-primary">{unit.totalMembers}</TableCell>
+                                <TableCell className="text-right font-semibold text-green-600">{unit.activeMembers}</TableCell>
+                                <TableCell className="text-right font-semibold text-gray-600">{unit.inactiveMembers}</TableCell>
+                                <TableCell className="text-right font-semibold text-blue-600">{unit.abroadMembers}</TableCell>
+                                <TableCell className="text-right font-semibold text-orange-600">{unit.applicantMembers}</TableCell>
+                                <TableCell className="text-right font-semibold text-purple-600">
+                                  ₹{unit.totalBaithulMaal.toLocaleString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            <TableRow className="bg-background font-semibold">
+                              <TableCell colSpan={2}>District total</TableCell>
+                              <TableCell className="text-right text-primary">{district.totalMembers}</TableCell>
+                              <TableCell className="text-right text-green-600">{district.activeMembers}</TableCell>
+                              <TableCell className="text-right text-gray-600">{district.inactiveMembers}</TableCell>
+                              <TableCell className="text-right text-blue-600">{district.abroadMembers}</TableCell>
+                              <TableCell className="text-right text-orange-600">{district.applicantMembers}</TableCell>
+                              <TableCell className="text-right text-purple-600">
+                                ₹{district.totalBaithulMaal.toLocaleString()}
                               </TableCell>
                             </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </SectionCard>
-            ))}
-            {Object.keys(groupsByDistrict).length === 0 && (
-              <Card className="surface-card border-border/70">
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No groups found matching the selected filters.</p>
-                </CardContent>
-              </Card>
-            )}
-          </>
-        )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <p className="py-6 text-center text-sm text-muted-foreground">No units in this district.</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
 
-        {/* Bottom Pagination */}
-        {!loading && !error && pagination && pagination.totalPages > 1 && (
-          <Card className="surface-card border-border/70">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(1)}
-                  disabled={pagination.currentPage === 1}
-                >
-                  First
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.currentPage - 1)}
-                  disabled={!pagination.hasPrevPage}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {/* Show page numbers */}
-                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (pagination.totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (pagination.currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                      pageNum = pagination.totalPages - 4 + i;
-                    } else {
-                      pageNum = pagination.currentPage - 2 + i;
-                    }
-                    
-                    return (
+            {rows.length === 0 && (
+              <p className="px-6 py-8 text-center text-muted-foreground">No districts match the selected filter.</p>
+            )}
+
+            {pagination && pagination.totalDocs > 0 && (
+              <div className="flex flex-col gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <span className="text-xs text-muted-foreground sm:text-sm">
+                    Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
+                    {Math.min(pagination.currentPage * pagination.limit, pagination.totalDocs)} of{" "}
+                    {pagination.totalDocs} districts
+                  </span>
+
+                  <div className="flex items-center justify-between gap-2 sm:justify-end">
+                    <PageSizeInput value={pageSize} onChange={handlePageSizeChange} />
+                    <div className="flex items-center gap-1">
                       <Button
-                        key={pageNum}
-                        variant={pageNum === pagination.currentPage ? "default" : "outline"}
+                        variant="outline"
                         size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                        className="w-8 h-8 p-0"
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={!pagination.hasPrevPage || paginationLoading}
                       >
-                        {pageNum}
+                        {paginationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronLeft className="h-4 w-4" />}
                       </Button>
-                    );
-                  })}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.currentPage + 1)}
-                  disabled={!pagination.hasNextPage}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.totalPages)}
-                  disabled={pagination.currentPage === pagination.totalPages}
-                >
-                  Last
-                </Button>
+                      <span className="whitespace-nowrap px-2 py-1 text-xs sm:px-3 sm:text-sm">
+                        {pagination.currentPage} of {pagination.totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={!pagination.hasNextPage || paginationLoading}
+                      >
+                        {paginationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
               </div>
-            </CardContent>
-          </Card>
-        )}    </PageShell>
+            )}
+          </SectionCard>
+        </>
+      )}
+    </PageShell>
   );
 };
 

@@ -19,7 +19,7 @@ const createTargetValidation = [
   body('unit').trim().isLength({ min: 1, max: 50 }).withMessage('Unit is required and must be less than 50 characters'),
   body('startDate').isISO8601().withMessage('Start date must be a valid date'),
   body('endDate').isISO8601().withMessage('End date must be a valid date'),
-  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins', 'state_admins']).withMessage('Invalid target audience')
+  body('targetAudience').isIn(['all_users', 'members_only', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins']).withMessage('Invalid target audience')
 ];
 
 // @route   POST /api/personal-targets
@@ -240,9 +240,12 @@ router.put('/:id', authenticate, requireRole('state_admin'), createTargetValidat
       });
     }
 
+    // Audience is locked after creation — progress/mark records are already
+    // keyed to the original audience, changing it would orphan them.
+    const { targetAudience: _ignored, ...updates } = req.body;
     const updatedTarget = await PersonalTarget.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, updatedBy: req.user._id },
+      { ...updates, updatedBy: req.user._id },
       { new: true, runValidators: true }
     ).populate('createdBy', 'name role');
 
@@ -358,12 +361,11 @@ async function createProgressRecords(personalTarget) {
       }
     }
 
-    // Create UserTargetProgress for admin users
+    // Create UserTargetProgress for admin users (state admins assign targets,
+    // they never receive them — excluded even from all_users)
     if (audience !== 'members_only') {
-      let userFilter = { isActive: true };
-      if (audience === 'state_admins') {
-        userFilter.role = 'state_admin';
-      } else if (audience === 'district_admins') {
+      let userFilter = { isActive: true, role: { $ne: 'state_admin' } };
+      if (audience === 'district_admins') {
         userFilter.role = 'district_admin';
       } else if (audience === 'area_admins') {
         Object.assign(userFilter, adminKindQuery('area_level'));
