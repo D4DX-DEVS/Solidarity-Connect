@@ -65,7 +65,26 @@ const meetingSessionSchema = new mongoose.Schema({
     ref: 'User'
   },
   completedAt: Date,
-  
+
+  // Per-group completion. sessionStatus above stays as a denormalized
+  // "at least one group completed" flag for legacy/global consumers (reports).
+  groupCompletions: [{
+    group: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Group',
+      required: true
+    },
+    completedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    completedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
+
   // Attendance for members
   memberAttendance: [{
     member: {
@@ -219,7 +238,37 @@ meetingSessionSchema.methods.markCompleted = function(completedBy) {
   this.sessionStatus = 'completed';
   this.completedBy = completedBy;
   this.completedAt = new Date();
-  
+
+  return this.save();
+};
+
+// Whether a specific group has completed this session.
+// Legacy fallback: sessions completed before per-group tracking existed
+// (global 'completed' with no groupCompletions) count for every group.
+meetingSessionSchema.methods.isCompletedForGroup = function(groupId) {
+  if (!groupId) return this.sessionStatus === 'completed';
+  const id = groupId.toString();
+  if ((this.groupCompletions || []).some(gc => gc.group && gc.group.toString() === id)) {
+    return true;
+  }
+  return this.sessionStatus === 'completed' && (this.groupCompletions || []).length === 0;
+};
+
+// Record completion for one group. Also flips the global sessionStatus on the
+// first completion so global consumers keep a meaningful "conducted" signal.
+meetingSessionSchema.methods.markCompletedForGroup = function(groupId, completedBy) {
+  if (!this.isCompletedForGroup(groupId)) {
+    this.groupCompletions.push({
+      group: groupId,
+      completedBy,
+      completedAt: new Date()
+    });
+  }
+  if (this.sessionStatus !== 'completed') {
+    this.sessionStatus = 'completed';
+    this.completedBy = completedBy;
+    this.completedAt = new Date();
+  }
   return this.save();
 };
 

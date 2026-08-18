@@ -21,7 +21,7 @@ import { MeetingAttendance } from "@/components/MeetingAttendance";
 import { SectionCard } from "@/components/app/AppShell";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useBulkSessionActions, useCompleteSession } from "@/hooks/useSessionManagement";
-import { meetingsApi } from "@/lib/meetings";
+import { meetingsApi, getEffectiveStatus } from "@/lib/meetings";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -268,17 +268,25 @@ const Meetings = () => {
       />
 
       <main className="app-main space-y-4">
-        {/* Search */}
-        <SectionCard title="Search Meetings" description="Filter the meeting list by title or details.">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search meetings…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
+        {/* Search — input inline with the card header */}
+        <SectionCard
+          title="Search Meetings"
+          description="Filter the meeting list by title or details."
+          className="pb-4 sm:pb-6"
+          contentClassName="hidden"
+          action={
+            <div className="relative w-44 sm:w-64 md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search meetings…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          }
+        >
+          {null}
         </SectionCard>
 
         {meetings.map((meeting) => {
@@ -293,6 +301,7 @@ const Meetings = () => {
           const totalParticipants = (meeting.sessionInfo?.totalMembersAcrossSessions || 0) + (meeting.sessionInfo?.totalGuestsAcrossSessions || 0);
           const totalSessions = meeting.sessionInfo?.totalSessions || 0;
           const completedSessions = meeting.sessionInfo?.completedSessions || 0;
+          const effectiveStatus = getEffectiveStatus(meeting);
 
           return (
             <Card key={meeting._id} className="surface-card overflow-hidden transition-shadow hover:shadow-md">
@@ -303,14 +312,14 @@ const Meetings = () => {
                       <div className="flex justify-between items-start mb-2 gap-2">
                         <h3 className="font-semibold text-base sm:text-lg">{meeting.title}</h3>
                         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                          <Badge 
+                          <Badge
                             variant={
-                              meeting.status === 'scheduled' ? 'default' :
-                              meeting.status === 'completed' ? 'secondary' :
-                              meeting.status === 'ongoing' ? 'destructive' : 'outline'
+                              effectiveStatus === 'scheduled' ? 'default' :
+                              effectiveStatus === 'completed' ? 'secondary' :
+                              effectiveStatus === 'ongoing' || effectiveStatus === 'overdue' ? 'destructive' : 'outline'
                             }
                           >
-                            {meeting.status}
+                            {effectiveStatus}
                           </Badge>
                           
                           {/* Attendance Status Badge */}
@@ -360,7 +369,7 @@ const Meetings = () => {
                       </div>
 
                       {/* Quick Stats */}
-                      {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && (
+                      {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
                         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:mt-3">
                           <span>Sessions: {completedSessions}/{totalSessions}</span>
                           {totalParticipants > 0 && (
@@ -387,8 +396,15 @@ const Meetings = () => {
                   </AccordionTrigger>
                   
                   <AccordionContent className="px-4 pb-4">
+                    {/* Monthly series created without sessions — nothing to track */}
+                    {meeting.meetingType === 'monthly_series' && totalSessions === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        No sessions were added to this meeting, so progress cannot be tracked.
+                      </p>
+                    )}
+
                     {/* Detailed Session Information */}
-                    {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && (
+                    {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
                       <div className="space-y-4">
                         {/* Session Progress */}
                         <div className="data-strip p-3">

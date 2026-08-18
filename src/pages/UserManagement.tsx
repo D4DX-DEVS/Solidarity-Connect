@@ -556,6 +556,16 @@ const UserManagement = () => {
           <MetricCard title="Members Found" value={String(totalDocs)} icon={Users} tone="primary" />
           <MetricCard title="Districts" value={String(districts.length)} icon={Building2} tone="neutral" />
         </div>
+      ) : roleFilter !== "all" ? (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <MetricCard
+            title={`${ROLE_FILTER_OPTIONS.find((o) => o.value === roleFilter)?.label ?? "Users"} Found`}
+            value={String(totalDocs)}
+            icon={Users}
+            tone="primary"
+          />
+          <MetricCard title="Total Users" value={String(userStats?.totalUsers ?? 0)} icon={Shield} tone="neutral" />
+        </div>
       ) : userStats && (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
           {topStats.map((item) => (
@@ -824,9 +834,9 @@ const UserManagement = () => {
                         {user.isActive ? "Active" : "Inactive"}
                       </Badge>
                       {user.isLeader && (
-                        <Badge className="badge-sm shrink-0 bg-yellow-100 text-yellow-800 border border-yellow-300">
+                        <Badge className={`badge-sm shrink-0 ${user.roleTag?.type ? ROLE_TYPE_COLORS[user.roleTag.type] : "bg-yellow-100 text-yellow-800 border border-yellow-300"}`}>
                           <Star className="h-3 w-3 mr-1" />
-                          Leader{user.roleTag?.name ? ` · ${user.roleTag.name}` : ""}
+                          {user.roleTag?.type ? ROLE_TYPE_LABELS[user.roleTag.type] : "Leader"}{user.roleTag?.name ? ` · ${user.roleTag.name}` : ""}
                         </Badge>
                       )}
                     </div>

@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -352,13 +352,12 @@ const PersonalTargets = () => {
     CATEGORY_META[category] ?? { icon: PiTargetFill, color: 'text-orange-600', bg: 'bg-orange-100' };
 
   const AUDIENCE_LABELS: Record<string, string> = {
-    all_users: 'All Users',
+    all_users: 'Everyone',
     members_only: 'Members Only',
     group_admins: 'Area Admins',
     area_admins: 'Area Admins',
     group_and_area_admins: 'Area Admins',
     district_admins: 'District Admins',
-    state_admins: 'State Admins Only',
   };
 
   const FREQ_LABELS: Record<string, string> = {
@@ -372,7 +371,7 @@ const PersonalTargets = () => {
     return (
       <PageShell>
         <PageHero
-          title="Personal Targets"
+          title="Targets"
           subtitle="Loading the current target catalogue and recurring schedules."
           eyebrow="Targets"
           icon={<Target className="h-6 w-6" />}
@@ -387,7 +386,7 @@ const PersonalTargets = () => {
   return (
     <PageShell>
       <PageHero
-        title="Personal Targets"
+        title="Targets"
         subtitle="Create, search, and manage regular or recurring targets without changing the existing workflows."
         eyebrow="Targets"
         icon={<Target className="h-6 w-6" />}
@@ -396,43 +395,49 @@ const PersonalTargets = () => {
       <SectionCard title="Target Workspace" description="Switch between regular and recurring targets, then manage the selected list below.">
       <div className="container mx-auto max-w-7xl space-y-6 px-0 py-0">
 
-        {/* ── Tab Toggle ── */}
-        <div className="flex gap-1 bg-muted/60 p-1.5 rounded-2xl w-fit border border-border/40">
-          <button
-            onClick={() => setActiveTab('regular')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'regular' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <Target className="h-3.5 w-3.5" />
-            Regular Targets
-          </button>
-          <button
-            onClick={() => setActiveTab('recurring')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'recurring' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Recurring Targets
-          </button>
+        {/* ── Tab Toggle + Create (inline) ── */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex gap-1 bg-muted/60 p-1.5 rounded-2xl w-fit border border-border/40">
+            <button
+              onClick={() => setActiveTab('regular')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'regular' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <Target className="h-3.5 w-3.5" />
+              Regular Targets
+            </button>
+            <button
+              onClick={() => setActiveTab('recurring')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'recurring' ? 'bg-white shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Recurring Targets
+            </button>
+          </div>
+          {canManageTargets && (activeTab === 'regular' ? (
+            <Button onClick={() => { resetForm(); setEditingTarget(null); setIsCreateDialogOpen(true); }} className="gap-2 rounded-xl">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Create Target</span>
+              <span className="sm:hidden">Create</span>
+            </Button>
+          ) : (
+            <Button onClick={() => { resetRecurringForm(); setEditingRecurring(null); setIsRecurringDialogOpen(true); }} className="gap-2 rounded-xl bg-primary">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Create Recurring Target</span>
+              <span className="sm:hidden">Create</span>
+            </Button>
+          ))}
         </div>
 
         {/* ══════════════ REGULAR TARGETS TAB ══════════════ */}
         {activeTab === 'regular' && (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              {!canManageTargets && (
-                <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
-                </div>
-              )}
-              {canManageTargets && (
-                <div className="sm:ml-auto">
+            {!canManageTargets && (
+              <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
+              </div>
+            )}
+            {canManageTargets && (
                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => { resetForm(); setEditingTarget(null); }} className="gap-2 rounded-xl">
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">Create Target</span>
-                      <span className="sm:hidden">Create</span>
-                    </Button>
-                  </DialogTrigger>
                   <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
                     {/* Header */}
                     <div className="px-6 pt-6 pb-4 border-b border-border/40">
@@ -513,15 +518,18 @@ const PersonalTargets = () => {
 
                         <div className="space-y-1.5">
                           <Label className="text-sm font-medium">Target Audience *</Label>
-                          <Select value={formData.targetAudience} onValueChange={(value) => setFormData({ ...formData, targetAudience: value })}>
+                          <Select value={formData.targetAudience} onValueChange={(value) => setFormData({ ...formData, targetAudience: value })} disabled={!!editingTarget}>
                             <SelectTrigger className="h-10 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="all_users">All Users</SelectItem>
+                              <SelectItem value="all_users">Everyone</SelectItem>
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
+                          {editingTarget && (
+                            <p className="text-xs text-muted-foreground">Audience is locked after creation — progress is already assigned to these users.</p>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
@@ -572,9 +580,7 @@ const PersonalTargets = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                </div>
-              )}
-            </div>
+            )}
 
             {/* Search and User Type Filter */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -589,11 +595,10 @@ const PersonalTargets = () => {
               </div>
               <Select value={audienceFilter || "all"} onValueChange={(v) => { setAudienceFilter(v === "all" ? "" : v); setCurrentPage(1); }}>
                 <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-card">
-                  <SelectValue placeholder="All User Types" />
+                  <SelectValue placeholder="All Users" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All User Types</SelectItem>
-                  <SelectItem value="all_users">All Users</SelectItem>
+                  <SelectItem value="all">All Users</SelectItem>
                   <SelectItem value="members_only">Members Only</SelectItem>
                   <SelectItem value="group_and_area_admins">Area Admins</SelectItem>
                   <SelectItem value="district_admins">District Admins</SelectItem>
@@ -694,22 +699,13 @@ const PersonalTargets = () => {
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              {!canManageTargets && (
-                <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
-                </div>
-              )}
-              {canManageTargets && (
-                <div className="sm:ml-auto">
+            {!canManageTargets && (
+              <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200/60 px-3 py-2 text-xs text-amber-700 w-fit">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" /> Read-only access. Only State Admins can create/edit targets.
+              </div>
+            )}
+            {canManageTargets && (
                 <Dialog open={isRecurringDialogOpen} onOpenChange={setIsRecurringDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => { resetRecurringForm(); setEditingRecurring(null); }} className="gap-2 rounded-xl bg-primary">
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">Create Recurring Target</span>
-                      <span className="sm:hidden">Create</span>
-                    </Button>
-                  </DialogTrigger>
                   <DialogContent className="w-[calc(100vw-2rem)] sm:w-full sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col p-0 rounded-2xl border border-border/50 shadow-xl bg-background font-sans">
                     {/* Header */}
                     <div className="px-6 pt-6 pb-4 border-b border-border/40">
@@ -771,15 +767,18 @@ const PersonalTargets = () => {
 
                         <div className="space-y-1.5">
                           <Label className="text-sm font-medium">Target Audience *</Label>
-                          <Select value={recurringForm.targetAudience} onValueChange={(value) => setRecurringForm({ ...recurringForm, targetAudience: value })}>
+                          <Select value={recurringForm.targetAudience} onValueChange={(value) => setRecurringForm({ ...recurringForm, targetAudience: value })} disabled={!!editingRecurring}>
                             <SelectTrigger className="h-10 rounded-lg"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="all_users">All Users</SelectItem>
+                              <SelectItem value="all_users">Everyone</SelectItem>
                               <SelectItem value="members_only">Members Only</SelectItem>
                               <SelectItem value="group_and_area_admins">Area Admins Only</SelectItem>
                               <SelectItem value="district_admins">District Admins Only</SelectItem>
                             </SelectContent>
                           </Select>
+                          {editingRecurring && (
+                            <p className="text-xs text-muted-foreground">Audience is locked after creation — completion marks are already tied to these users.</p>
+                          )}
                         </div>
 
                         {/* Toggle group */}
@@ -842,9 +841,7 @@ const PersonalTargets = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-                </div>
-              )}
-            </div>
+            )}
 
             {/* Recurring Search and User Type Filter */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -859,11 +856,10 @@ const PersonalTargets = () => {
               </div>
               <Select value={recurringAudienceFilter || "all"} onValueChange={(v) => { setRecurringAudienceFilter(v === "all" ? "" : v); setRecurringPage(1); }}>
                 <SelectTrigger className="w-full sm:w-[180px] h-10 rounded-xl border-border/50 bg-card">
-                  <SelectValue placeholder="All User Types" />
+                  <SelectValue placeholder="All Users" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All User Types</SelectItem>
-                  <SelectItem value="all_users">All Users</SelectItem>
+                  <SelectItem value="all">All Users</SelectItem>
                   <SelectItem value="members_only">Members Only</SelectItem>
                   <SelectItem value="group_and_area_admins">Area Admins</SelectItem>
                   <SelectItem value="district_admins">District Admins</SelectItem>

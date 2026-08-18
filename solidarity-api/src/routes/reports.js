@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
@@ -1286,19 +1287,218 @@ router.get('/attendance/export',
   }
 );
 
+// ---------------------------------------------------------------------------
+// District -> Unit member census
+// ---------------------------------------------------------------------------
+
+// Status counters reused by both census levels.
+const STATUS_COUNTERS = {
+  totalMembers: { $sum: 1 },
+  activeMembers: { $sum: { $cond: [{ $eq: ['$status', 'Active'] }, 1, 0] } },
+  inactiveMembers: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
+  abroadMembers: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
+  applicantMembers: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
+  totalBaithulMaal: { $sum: '$baithulMaal.monthlyAmount' }
+};
+
+// Role scope for census queries. Area-level group admins see every unit in their
+// area, unit admins only their own group.
+export const censusScopeFor = async (user, { district, group } = {}) => {
+  // Only accept real ids — query params can arrive as objects ({$ne: null}).
+  const asId = (v) => (typeof v === 'string' && mongoose.Types.ObjectId.isValid(v)
+    ? new mongoose.Types.ObjectId(v)
+    : null);
+  district = asId(district);
+  group = asId(group);
+  const filter = {};
+  if (user.role === 'group_admin') {
+    const areaIds = isAreaLevelAdmin(user) ? await areaGroupIdsFor(user) : [];
+    filter.group = areaIds.length > 0 ? { $in: areaIds } : user.group._id;
+  } else if (user.role === 'district_admin') {
+    filter.district = user.district._id;
+    if (group) filter.group = group;
+  } else {
+    if (district) filter.district = district;
+    if (group) filter.group = group;
+  }
+  return filter;
+};
+
+// @route   GET /api/reports/census/districts
+// @desc    Paginated district-level member census + global summary for the same filter
+// @access  Private
+router.get('/census/districts',
+  authenticate,
+  authorize(['view_reports']),
+  requireAreaScope,
+  [
+    query('district').optional().isMongoId(),
+    query('group').optional().isMongoId(),
+    handleValidationErrors
+  ],
+  async (req, res) => {
+    try {
+      const { district, group } = req.query;
+      const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+      const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
+      const filter = await censusScopeFor(req.user, { district, group });
+
+      const [result] = await Member.aggregate([
+        { $match: filter },
+        {
+          $group: {
+            _id: '$district',
+            ...STATUS_COUNTERS,
+            unitIds: { $addToSet: '$group' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'districts',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'districtInfo'
+          }
+        },
+        { $unwind: { path: '$districtInfo', preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 1,
+            districtName: { $ifNull: ['$districtInfo.name', 'Unassigned'] },
+            districtCode: { $ifNull: ['$districtInfo.code', '—'] },
+            unitCount: { $size: '$unitIds' },
+            totalMembers: 1,
+            activeMembers: 1,
+            inactiveMembers: 1,
+            abroadMembers: 1,
+            applicantMembers: 1,
+            totalBaithulMaal: 1
+          }
+        },
+        { $sort: { totalMembers: -1, districtName: 1 } },
+        {
+          $facet: {
+            rows: [{ $skip: (pageNum - 1) * limitNum }, { $limit: limitNum }],
+            meta: [
+              {
+                $group: {
+                  _id: null,
+                  districtCount: { $sum: 1 },
+                  unitCount: { $sum: '$unitCount' },
+                  totalMembers: { $sum: '$totalMembers' },
+                  activeMembers: { $sum: '$activeMembers' },
+                  inactiveMembers: { $sum: '$inactiveMembers' },
+                  abroadMembers: { $sum: '$abroadMembers' },
+                  applicantMembers: { $sum: '$applicantMembers' },
+                  totalBaithulMaal: { $sum: '$totalBaithulMaal' }
+                }
+              }
+            ]
+          }
+        }
+      ]);
+
+      const summary = result?.meta?.[0] || {
+        districtCount: 0, unitCount: 0, totalMembers: 0, activeMembers: 0,
+        inactiveMembers: 0, abroadMembers: 0, applicantMembers: 0, totalBaithulMaal: 0
+      };
+      const totalPages = Math.ceil(summary.districtCount / limitNum) || 1;
+
+      res.status(200).json({
+        success: true,
+        data: {
+          districts: result?.rows || [],
+          summary
+        },
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalDocs: summary.districtCount,
+          limit: limitNum,
+          hasNextPage: pageNum < totalPages,
+          hasPrevPage: pageNum > 1
+        }
+      });
+    } catch (error) {
+      console.error('District census error:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch district census' });
+    }
+  }
+);
+
+// @route   GET /api/reports/census/districts/:districtId/units
+// @desc    Unit-level census inside one district (loaded when a district row expands)
+// @access  Private
+router.get('/census/districts/:districtId/units',
+  authenticate,
+  authorize(['view_reports']),
+  requireAreaScope,
+  async (req, res) => {
+    try {
+      const { districtId } = req.params;
+      if (!mongoose.Types.ObjectId.isValid(districtId)) {
+        return res.status(400).json({ success: false, message: 'Invalid district id' });
+      }
+
+      const filter = await censusScopeFor(req.user, {});
+      // A district/group admin may only drill into their own scope.
+      if (filter.district && String(filter.district) !== String(districtId)) {
+        return res.status(403).json({ success: false, message: 'District outside your scope' });
+      }
+      filter.district = new mongoose.Types.ObjectId(districtId);
+
+      const units = await Member.aggregate([
+        { $match: filter },
+        {
+          $group: {
+            _id: '$group',
+            ...STATUS_COUNTERS
+          }
+        },
+        {
+          $lookup: {
+            from: 'groups',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'groupInfo'
+          }
+        },
+        { $unwind: { path: '$groupInfo', preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 1,
+            groupName: { $ifNull: ['$groupInfo.name', 'Unassigned'] },
+            groupCode: { $ifNull: ['$groupInfo.code', '—'] },
+            totalMembers: 1,
+            activeMembers: 1,
+            inactiveMembers: 1,
+            abroadMembers: 1,
+            applicantMembers: 1,
+            totalBaithulMaal: 1
+          }
+        },
+        { $sort: { totalMembers: -1, groupName: 1 } }
+      ]);
+
+      res.status(200).json({ success: true, data: units });
+    } catch (error) {
+      console.error('Unit census error:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch unit census' });
+    }
+  }
+);
+
 // @route   GET /api/reports/export/members
 // @desc    Export members data as CSV
 // @access  Private
 router.get('/export/members', authenticate, authorize(['view_reports']), async (req, res) => {
   try {
-    let filter = {};
-
-    // Apply role-based filtering
-    if (req.user.role === 'group_admin') {
-      filter.group = req.user.group._id;
-    } else if (req.user.role === 'district_admin') {
-      filter.district = req.user.district._id;
-    }
+    // Same scope rules as the census endpoints, plus the district/group the UI
+    // is currently filtered to — otherwise a filtered screen exports everything.
+    const filter = await censusScopeFor(req.user, {
+      district: req.query.district,
+      group: req.query.group
+    });
 
     const members = await Member.find(filter)
       .populate('district', 'name code')

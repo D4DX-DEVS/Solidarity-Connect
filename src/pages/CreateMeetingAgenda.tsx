@@ -200,6 +200,15 @@ const CreateMeetingAgenda = () => {
       return;
     }
 
+    if ((formData.sessions || []).length === 0) {
+      toast({
+        title: "No Sessions Added",
+        description: "Add at least one session — progress cannot be tracked without sessions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     for (let index = 0; index < (formData.sessions || []).length; index += 1) {
       const session = (formData.sessions || [])[index];
       if (!session.title) {

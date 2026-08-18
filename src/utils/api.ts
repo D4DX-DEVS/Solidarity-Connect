@@ -436,6 +436,12 @@ export const requestsAPI = {
 // Reports API calls
 export const reportsAPI = {
   getDashboard: () => apiCall('/reports/dashboard'),
+  getDistrictCensus: (params?: Record<string, any>) => {
+    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
+    return apiCall(`/reports/census/districts${queryString}`);
+  },
+  getDistrictUnits: (districtId: string) =>
+    apiCall(`/reports/census/districts/${districtId}/units`),
   getMembers: (params?: Record<string, any>) => {
     const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
     return apiCall(`/reports/members${queryString}`);

@@ -237,13 +237,17 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
             .sort({ sessionNumber: 1 })
             .populate('completedBy', 'name role')
             .populate('memberAttendance.member', 'name phone status group')
-            .select('sessionNumber title scheduledDate duration sessionStatus completedBy completedAt memberAttendance guestAttendance');
-          
+            .select('sessionNumber title scheduledDate duration sessionStatus completedBy completedAt memberAttendance guestAttendance groupCompletions');
+
+          // Completion is per-group for group admins; global (any group) otherwise
+          const userGroupId = req.user.role === 'group_admin' && req.user.group ? req.user.group._id : null;
+          const isSessionDone = (s) => userGroupId ? s.isCompletedForGroup(userGroupId) : s.sessionStatus === 'completed';
+
           // Calculate detailed session statistics
           const totalSessions = sessions.length;
-          const completedSessions = sessions.filter(s => s.sessionStatus === 'completed').length;
-          const upcomingSessions = sessions.filter(s => 
-            s.sessionStatus === 'scheduled' && new Date(s.scheduledDate) >= new Date()
+          const completedSessions = sessions.filter(isSessionDone).length;
+          const upcomingSessions = sessions.filter(s =>
+            !isSessionDone(s) && new Date(s.scheduledDate) >= new Date()
           ).length;
           
           // For group admins, filter attendance data to show only their group's data
@@ -301,7 +305,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
               title: session.title,
               scheduledDate: session.scheduledDate,
               duration: session.duration,
-              status: session.sessionStatus,
+              status: isSessionDone(session) ? 'completed' : (session.sessionStatus === 'completed' ? 'scheduled' : session.sessionStatus),
               completedBy: session.completedBy,
               completedAt: session.completedAt,
               attendance: hasGroupSpecificData ? {
@@ -319,8 +323,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
                 overall: { total: 0, present: 0, attendanceRate: 0 },
                 message: 'No attendance data for your group yet'
               },
-              canMarkAttendance: req.user.role === 'group_admin' && session.sessionStatus !== 'completed',
-              canMarkComplete: req.user.role === 'group_admin' && session.sessionStatus === 'scheduled',
+              canMarkAttendance: req.user.role === 'group_admin' && !isSessionDone(session),
+              canMarkComplete: req.user.role === 'group_admin' && !isSessionDone(session),
               hasGroupData: hasGroupSpecificData
             };
           });
@@ -334,8 +338,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
             overallAttendanceRate: totalAttendanceRecords > 0 ? ((totalPresentRecords / totalAttendanceRecords) * 100).toFixed(1) : 0,
             totalMembersAcrossSessions,
             totalGuestsAcrossSessions,
-            nextSession: sessions.find(s => 
-              s.sessionStatus === 'scheduled' && new Date(s.scheduledDate) >= new Date()
+            nextSession: sessions.find(s =>
+              !isSessionDone(s) && new Date(s.scheduledDate) >= new Date()
             ) || null,
             sessions: sessionDetails
           };
@@ -517,11 +521,14 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
         meetingData.sessions = sessions;
       }
 
-      // Calculate overall session statistics
+      // Calculate overall session statistics (per-group for group admins)
+      const userGroupId = req.user.role === 'group_admin' && req.user.group ? req.user.group._id : null;
+      const isSessionDone = (s) => userGroupId ? s.isCompletedForGroup(userGroupId) : s.sessionStatus === 'completed';
+
       const totalSessions = sessions.length;
-      const completedSessions = sessions.filter(s => s.sessionStatus === 'completed').length;
-      const upcomingSessions = sessions.filter(s => 
-        s.sessionStatus === 'scheduled' && new Date(s.scheduledDate) >= new Date()
+      const completedSessions = sessions.filter(isSessionDone).length;
+      const upcomingSessions = sessions.filter(s =>
+        !isSessionDone(s) && new Date(s.scheduledDate) >= new Date()
       ).length;
 
       let totalParticipants = 0;
@@ -540,8 +547,8 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
         pendingSessions: totalSessions - completedSessions,
         completionRate: totalSessions > 0 ? ((completedSessions / totalSessions) * 100).toFixed(1) : 0,
         overallAttendanceRate: totalParticipants > 0 ? ((totalPresent / totalParticipants) * 100).toFixed(1) : 0,
-        nextSession: sessions.find(s => 
-          s.sessionStatus === 'scheduled' && new Date(s.scheduledDate) >= new Date()
+        nextSession: sessions.find(s =>
+          !isSessionDone(s) && new Date(s.scheduledDate) >= new Date()
         ) || null
       };
     }
@@ -664,6 +671,14 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
       parsedSessions = [];
     }
 
+    // A monthly series with no sessions can never be completed — reject it
+    if (parsedSessions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Add at least one session for a monthly meeting'
+      });
+    }
+
     // Resolve targeting. District admins always scope to their own district;
     // state admins may target everyone, district admins only, or specific districts.
     let audience = 'all';
@@ -709,7 +724,7 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
         synopsis: description.trim(),
         totalSessions: parsedSessions.length || 0
       },
-      scheduledDate: new Date(), // Use current date as default
+      scheduledDate: new Date(yearNum, monthNum - 1, 1), // First day of the selected month
       targetAudience: audience,
       targetDistricts: districts,
       createdBy: req.user._id
@@ -739,7 +754,7 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
         sessionNumber: i + 1,
         title: sessionData.title,
         description: sessionData.description || '',
-        scheduledDate: new Date(), // Default to current date
+        scheduledDate: new Date(yearNum, monthNum - 1, 1), // Same month as the meeting
         duration: sessionData.duration || 60,
         createdBy: req.user._id,
         // Add uploaded file to first session if present
@@ -1613,15 +1628,25 @@ router.post('/:id/sessions/:sessionId/complete',
         });
       }
 
-      if (session.sessionStatus === 'completed') {
-        return res.status(400).json({
-          success: false,
-          message: 'Session is already marked as completed'
-        });
+      // Group admins complete a session for THEIR group only — other groups'
+      // completions must not block them, and theirs must not block others.
+      if (req.user.role === 'group_admin' && req.user.group) {
+        if (session.isCompletedForGroup(req.user.group._id)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Session is already marked as completed for your group'
+          });
+        }
+        await session.markCompletedForGroup(req.user.group._id, req.user._id);
+      } else {
+        if (session.sessionStatus === 'completed') {
+          return res.status(400).json({
+            success: false,
+            message: 'Session is already marked as completed'
+          });
+        }
+        await session.markCompleted(req.user._id);
       }
-
-      // Mark session as completed
-      await session.markCompleted(req.user._id);
 
       res.status(200).json({
         success: true,
@@ -3118,16 +3143,23 @@ router.post('/:id/bulk-session-actions',
 
       // For group admins, check appropriate scope
       if (req.user.role === 'group_admin' && !canPerformBulkActions) {
+        const inMyDistrict = meeting.targetDistricts && req.user.district &&
+          meeting.targetDistricts.some(d => d.toString() === req.user.district._id.toString());
         if (isAreaLevelAdmin(req.user)) {
           const areaGroups = await areaGroupIdsFor(req.user);
           const meetingInArea =
             meeting.targetAudience === 'all' ||
             meeting.targetAudience === 'group_admins' ||
+            inMyDistrict ||
             (meeting.targetGroups && meeting.targetGroups.some(g => areaGroups.some(ag => ag.toString() === g.toString())));
           canPerformBulkActions = meetingInArea;
         } else {
+          // 'all' and district-targeted meetings need marking by every group admin
+          // they cover — same audiences the single-session endpoints accept.
           canPerformBulkActions =
+            meeting.targetAudience === 'all' ||
             meeting.targetAudience === 'group_admins' ||
+            inMyDistrict ||
             (meeting.targetGroups && meeting.targetGroups.some(g => g.toString() === req.user.group._id.toString()));
         }
       }
@@ -3196,15 +3228,23 @@ router.post('/:id/bulk-session-actions',
           }
           break;
 
-        case 'complete_ready_sessions':
+        case 'complete_ready_sessions': {
+          const bulkGroupId = req.user.role === 'group_admin' && req.user.group ? req.user.group._id : null;
           for (const session of sessions) {
-            if (session.sessionStatus === 'scheduled') {
-              const hasAttendance = session.memberAttendance.some(a => 
+            const alreadyDone = bulkGroupId
+              ? session.isCompletedForGroup(bulkGroupId)
+              : session.sessionStatus === 'completed';
+            if (!alreadyDone) {
+              const hasAttendance = session.memberAttendance.some(a =>
                 a.status === 'present' || a.status === 'late'
               );
-              
+
               if (hasAttendance) {
-                await session.markCompleted(req.user._id);
+                if (bulkGroupId) {
+                  await session.markCompletedForGroup(bulkGroupId, req.user._id);
+                } else {
+                  await session.markCompleted(req.user._id);
+                }
                 results.push({
                   sessionId: session._id,
                   sessionNumber: session.sessionNumber,
@@ -3223,14 +3263,18 @@ router.post('/:id/bulk-session-actions',
             }
           }
           break;
+        }
       }
 
-      // Get updated meeting statistics
+      // Get updated meeting statistics (per-group for group admins)
       const updatedSessions = await MeetingSession.find({ meeting: meetingId })
         .sort({ sessionNumber: 1 });
-      
+
+      const statsGroupId = req.user.role === 'group_admin' && req.user.group ? req.user.group._id : null;
       const totalSessions = updatedSessions.length;
-      const completedSessions = updatedSessions.filter(s => s.sessionStatus === 'completed').length;
+      const completedSessions = updatedSessions.filter(s =>
+        statsGroupId ? s.isCompletedForGroup(statsGroupId) : s.sessionStatus === 'completed'
+      ).length;
       
       const updatedStats = {
         totalSessions,
@@ -3286,13 +3330,17 @@ router.get('/:id/attendance-summary',
         .populate('memberAttendance.member', 'name phone status')
         .populate('completedBy', 'name role');
 
+      // Completion is per-group for group admins; global otherwise
+      const summaryGroupId = req.user.role === 'group_admin' && req.user.group ? req.user.group._id : null;
+      const isSessionDone = (s) => summaryGroupId ? s.isCompletedForGroup(summaryGroupId) : s.sessionStatus === 'completed';
+
       // Calculate summary statistics
       const summary = {
         meetingTitle: meeting.title,
         meetingType: meeting.meetingType,
         totalSessions: sessions.length,
-        completedSessions: sessions.filter(s => s.sessionStatus === 'completed').length,
-        scheduledSessions: sessions.filter(s => s.sessionStatus === 'scheduled').length,
+        completedSessions: sessions.filter(isSessionDone).length,
+        scheduledSessions: sessions.filter(s => !isSessionDone(s)).length,
         overallStats: {
           totalMembers: 0,
           totalPresent: 0,
@@ -3348,7 +3396,7 @@ router.get('/:id/attendance-summary',
           sessionNumber: session.sessionNumber,
           title: session.title,
           scheduledDate: session.scheduledDate,
-          status: session.sessionStatus,
+          status: isSessionDone(session) ? 'completed' : 'scheduled',
           completedBy: session.completedBy,
           attendance: {
             members: { total: memberTotal, present: memberPresent },
@@ -3646,14 +3694,18 @@ router.get('/admin/overview',
                 }
               });
 
-              // Mark session as completed for groups that have attendance
-              if (session.sessionStatus === 'completed') {
-                groupsWithAttendance.forEach(groupId => {
-                  if (groupProgress[groupId]) {
-                    groupProgress[groupId].completedSessions++;
-                  }
-                });
-              }
+              // Count session completion per group. New data: explicit
+              // groupCompletions entries. Legacy data (completed before
+              // per-group tracking): global 'completed' + attendance recorded.
+              const explicitCompletions = new Set(
+                (session.groupCompletions || []).map(gc => gc.group.toString())
+              );
+              const legacyCompleted = session.sessionStatus === 'completed' && explicitCompletions.size === 0;
+              Object.keys(groupProgress).forEach(groupId => {
+                if (explicitCompletions.has(groupId) || (legacyCompleted && groupsWithAttendance.has(groupId))) {
+                  groupProgress[groupId].completedSessions++;
+                }
+              });
             });
 
             // Calculate status for each group

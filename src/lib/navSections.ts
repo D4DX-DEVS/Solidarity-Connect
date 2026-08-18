@@ -43,14 +43,17 @@ export const SECTIONS: NavSection[] = [
     items: [
       // ponytail: one entry — announcements are a tab on the alerts page
       { label: "Alerts", path: "/notifications", icon: Bell },
-      { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["state_admin", "district_admin", "group_admin"] },
+      // State/district admins get the rich overview (group progress, edit/delete);
+      // group admins keep the attendance-marking list. Matches BottomNav routing.
+      { label: "Meetings", path: "/admin/meetings-view", icon: Calendar, roles: ["state_admin", "district_admin"] },
+      { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["group_admin"] },
     ],
   },
   {
     title: "Targets & Planning",
     items: [
-      { label: "My Targets", path: "/my-targets", icon: Target, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Personal Targets", path: "/personal-targets", icon: Target, roles: ["state_admin"] },
+      { label: "My Targets", path: "/my-targets", icon: Target, roles: ["district_admin", "group_admin"] },
+      { label: "Targets", path: "/personal-targets", icon: Target, roles: ["state_admin"] },
       { label: "Leaders", path: "/leaders", icon: Star },
     ],
   },

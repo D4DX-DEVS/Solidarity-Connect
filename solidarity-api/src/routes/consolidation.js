@@ -108,7 +108,6 @@ const router = express.Router();
 const AREA_LEVEL_AUDIENCES = ['area_admins', 'group_and_area_admins', 'all_users'];
 
 const USER_TYPE_TO_AUDIENCES = {
-  state_admin: ['state_admins', 'all_users'],
   district_admin: ['district_admins', 'all_users'],
   area_admin: AREA_LEVEL_AUDIENCES,
   murabi_admin: AREA_LEVEL_AUDIENCES,
@@ -152,7 +151,7 @@ router.get('/targets', authenticate, authorize(['view_reports']), requireAreaSco
     if (!userType || !USER_TYPE_TO_AUDIENCES[userType]) {
       return res.status(400).json({
         success: false,
-        message: 'Valid userType is required: state_admin, district_admin, area_admin, murabi_admin, coordinator_admin, unit_admin, members'
+        message: 'Valid userType is required: district_admin, area_admin, murabi_admin, coordinator_admin, unit_admin, members'
       });
     }
 
