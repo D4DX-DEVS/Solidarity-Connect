@@ -10,14 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import LogoutConfirmDialog from "@/components/LogoutConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { useAuth, type LoginAccount } from "@/contexts/AuthContext";
 import { getRoleLabel } from "@/lib/adminKinds";
@@ -143,21 +136,11 @@ function AppSidebar() {
         </DropdownMenu>
       </div>
 
-      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Confirm Logout</DialogTitle>
-            <DialogDescription>Are you sure you want to log out?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-row justify-center gap-2">
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LogoutConfirmDialog
+        open={showLogoutConfirm}
+        onOpenChange={setShowLogoutConfirm}
+        onConfirm={() => { logout(); navigate("/login"); }}
+      />
     </aside>
   );
 }

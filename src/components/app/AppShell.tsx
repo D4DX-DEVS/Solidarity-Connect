@@ -1,13 +1,8 @@
 import { type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { LogOut, Menu } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
-import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -64,38 +59,12 @@ function PageShell({ children, className, contentClassName }: PageShellProps) {
   );
 }
 
-// ponytail: every page header carries the same mobile menu — no per-page wiring
-function PageHeroMenu() {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="outline" className="shrink-0 lg:hidden" aria-label="Menu">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass max-h-[70vh] w-56 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
-        <RoleSwitchMenuItems />
-        <MoreNavMenuItems />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => { logout(); navigate("/login"); }}
-          className="cursor-pointer rounded-xl px-3 py-2.5 font-medium text-destructive focus:bg-destructive/10"
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 function PageHero({ title, subtitle, eyebrow, icon, actions, details, className, showTitleOnMobile = false }: PageHeroProps) {
+  const { userRole } = useAuth();
   return (
     <>
-    <section className={cn("hero-card", className)}>
+    {/* ponytail: mobile shows the header only on dashboards; other pages rely on BottomNav */}
+    <section className={cn("hero-card", !showTitleOnMobile && "max-lg:hidden", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
           {/* ponytail: brand logo everywhere; per-page icon prop kept for API compat but unused */}
@@ -108,7 +77,8 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className,
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
           {actions}
-          <PageHeroMenu />
+          {/* ponytail: bell only on dashboards — the mobile menu lives in the BottomNav "More" button */}
+          {showTitleOnMobile && userRole !== "member" && <NotificationBell />}
         </div>
       </div>
     </section>

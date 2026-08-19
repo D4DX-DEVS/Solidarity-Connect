@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Megaphone, ChevronLeft, Plus, X, Send, FileText, Image, Film, Search, ChevronRight, Filter, Check, UploadCloud } from "lucide-react";
+import { Megaphone, ChevronLeft, Plus, X, Send, FileText, Image, Film, Search, ChevronRight, Filter, Check, UploadCloud, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { uploadsAPI, notificationsAPI, memberAuthAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -263,6 +270,23 @@ const AnnouncementsPanel = () => {
     }
   };
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (id: string) => {
+    // ponytail: window.confirm, custom confirm dialog if design demands
+    if (!window.confirm("Delete this announcement? This cannot be undone.")) return;
+    setDeletingId(id);
+    try {
+      await notificationsAPI.deleteNotification(id);
+      toast({ title: "Deleted", description: "Announcement deleted" });
+      fetchAnnouncements();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to delete", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const audienceLabel = (audiences: string[], singleAudience?: string) => {
     const arr = audiences?.length > 0 ? audiences : (singleAudience ? [singleAudience] : []);
     if (arr.includes("all")) return "All Users";
@@ -282,15 +306,19 @@ const AnnouncementsPanel = () => {
 
   return (
     <div className="space-y-4">
-        {/* Create Form */}
-        {canCreate && showForm && (
-          <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <SectionCard
-            title="New Announcement"
-            description={isGroupAdmin
-              ? "Write a message and attach files. It will be sent to your area's members."
-              : "Write a message, attach files, and choose the audience."}
-          >
+        {/* Create Form (popup) */}
+        {canCreate && (
+          <Dialog open={showForm} onOpenChange={setShowForm}>
+            <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-2xl p-5 sm:p-6">
+              <DialogHeader className="text-left">
+                <DialogTitle>New Announcement</DialogTitle>
+                <DialogDescription>
+                  {isGroupAdmin
+                    ? "Write a message and attach files. It will be sent to your area's members."
+                    : "Write a message, attach files, and choose the audience."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
 
               {/* Title */}
               <div className="space-y-1.5">
@@ -396,7 +424,7 @@ const AnnouncementsPanel = () => {
               {!isGroupAdmin && (
               <div className="space-y-2">
                 <Label>Send to *</Label>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {audienceOptions.map((opt) => {
                     const selected = selectedAudiences.includes(opt.value);
                     return (
@@ -406,14 +434,20 @@ const AnnouncementsPanel = () => {
                         onClick={() => toggleAudience(opt.value)}
                         aria-pressed={selected}
                         title={opt.description}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-all duration-200 ${
+                        className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-all duration-200 ${
                           selected
-                            ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                            ? "border-primary bg-primary/10 text-primary"
                             : "border-border/70 bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground"
                         }`}
                       >
-                        {selected && <Check className="h-3.5 w-3.5" />}
-                        {opt.label}
+                        <span
+                          className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border ${
+                            selected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {selected && <Check className="h-3 w-3 text-primary-foreground" />}
+                        </span>
+                        <span className="min-w-0 leading-tight">{opt.label}</span>
                       </button>
                     );
                   })}
@@ -448,8 +482,9 @@ const AnnouncementsPanel = () => {
                   Cancel
                 </Button>
               </div>
-          </SectionCard>
-          </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* Past Announcements */}
@@ -457,19 +492,18 @@ const AnnouncementsPanel = () => {
           title="Alerts & Announcements"
           description="Search and review everything that has been sent."
           action={canCreate ? (
-            <Button size="sm" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4 mr-1" />}
-              {showForm ? "Close" : "New"}
+            <Button size="sm" onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-1" /> New
             </Button>
           ) : undefined}
         >
 
           {/* Search + Filter row */}
-          <div className="flex flex-col gap-2 mb-3 sm:flex-row">
-            <div className="relative flex-1">
+          <div className="flex gap-2 mb-3">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search announcements…"
+                placeholder="Search…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -477,11 +511,11 @@ const AnnouncementsPanel = () => {
             </div>
             {canCreate && (
               <Select value={audienceFilter} onValueChange={setAudienceFilter}>
-                <SelectTrigger className="w-40 flex-shrink-0">
-                  <Filter className="h-4 w-4 mr-1 text-muted-foreground" />
+                <SelectTrigger className="w-auto flex-shrink-0 justify-start gap-1.5 px-2.5 text-xs sm:px-3 sm:text-sm">
+                  <Filter className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground sm:h-4 sm:w-4" />
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent align="end">
                   <SelectItem value="all">All Audiences</SelectItem>
                   <SelectItem value="members">Members Only</SelectItem>
                   <SelectItem value="group_admins">Area Admins</SelectItem>
@@ -515,12 +549,18 @@ const AnnouncementsPanel = () => {
                           {ann.message}
                         </p>
                       </div>
-                      <Badge
-                        variant={ann.status === "sent" ? "default" : "outline"}
-                        className="flex-shrink-0 text-xs"
-                      >
-                        {ann.status}
-                      </Badge>
+                      {isStateAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(ann._id)}
+                          disabled={deletingId === ann._id}
+                          aria-label="Delete announcement"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-1">

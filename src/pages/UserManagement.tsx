@@ -529,7 +529,7 @@ const UserManagement = () => {
   };
 
   const topStats = userStats ? [
-    { title: "Total Users", value: String(userStats.totalUsers), icon: Users, tone: "primary" as const },
+    { title: "Total Admins", value: String(userStats.totalUsers), icon: Users, tone: "primary" as const },
     { title: "Active", value: String(userStats.activeUsers), icon: UserCheck, tone: "success" as const },
     { title: "State Admins", value: String(userStats.stateAdmins), icon: Shield, tone: "neutral" as const },
     { title: "District Admins", value: String(userStats.districtAdmins), icon: Building2, tone: "warning" as const },
@@ -545,8 +545,8 @@ const UserManagement = () => {
     <PageShell>
       <PageHero
         eyebrow="Access Control"
-        title="User Management"
-        subtitle="Manage admin users, filters, and leader assignments with a cleaner responsive control surface."
+        title="Admin Management"
+        subtitle="Manage admin accounts, filters, and leader assignments."
         icon={<Users className="h-6 w-6" />}
       />
 
@@ -564,7 +564,7 @@ const UserManagement = () => {
             icon={Users}
             tone="primary"
           />
-          <MetricCard title="Total Users" value={String(userStats?.totalUsers ?? 0)} icon={Shield} tone="neutral" />
+          <MetricCard title="Total Admins" value={String(userStats?.totalUsers ?? 0)} icon={Shield} tone="neutral" />
         </div>
       ) : userStats && (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
@@ -726,7 +726,7 @@ const UserManagement = () => {
       </SectionCard>
 
       <SectionCard
-        title={isMemberView ? "Members" : "Users"}
+        title={isMemberView ? "Members" : "Admins"}
         description={isMemberView ? "Member records surfaced through the same search and filter controls." : "Admin accounts and their current access status."}
       >
         {searching && (

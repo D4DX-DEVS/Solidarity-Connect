@@ -5,7 +5,7 @@ import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, authorize, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
   createMemberValidation, 
   updateMemberValidation, 
@@ -51,7 +51,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         const areaName = req.user.roleTag?.roleDescription;
 
         if (isArea && areaName && req.user.district) {
-          const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          // Anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA".
+          const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
           const areaGroups = await Group.find({
             district: req.user.district._id,
             name: areaRegex
@@ -125,11 +126,12 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       page: pageNum,
       limit: limitNum,
       sort,
+      // Only fields the list consumers render (Members, UserManagement, RoleManagement,
+      // BaithulEnrollDialog) — keeps DB reads and payloads small
+      select: 'name phone email status district group isApproved createdAt isLeader roleTag extraRoleTags baithulMaal profession',
       populate: [
         { path: 'district', select: 'name code' },
-        { path: 'group', select: 'name code' },
-        { path: 'createdBy', select: 'name phone' },
-        { path: 'approvedBy', select: 'name phone' }
+        { path: 'group', select: 'name code' }
       ],
       lean: false, // Keep as false to maintain mongoose document methods
       leanWithId: false
@@ -290,11 +292,22 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
     }
 
     // Check access permissions
-    if (req.user.role === 'group_admin' && member.group._id.toString() !== req.user.group._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view members from your group.'
-      });
+    if (req.user.role === 'group_admin') {
+      // Area-level admins cover every group in their area, not just their own group
+      const areaName = isAreaLevelAdmin(req.user) ? req.user.roleTag?.roleDescription : null;
+      let allowed = req.user.group && member.group?._id.toString() === req.user.group._id.toString();
+
+      if (!allowed && areaName && req.user.district) {
+        allowed = member.district?._id.toString() === req.user.district._id.toString()
+          && (member.group?.name || '').toLowerCase() === areaName.toLowerCase();
+      }
+
+      if (!allowed) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only view members from your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && member.district._id.toString() !== req.user.district._id.toString()) {
@@ -323,7 +336,10 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 // @access  Private
 // Custom middleware to auto-assign district/group for group admins
 const autoAssignDistrictGroup = (req, res, next) => {
-  if (req.user && req.user.role === 'group_admin') {
+  // ponytail: creation only. On PUT this used to force every edited member into the
+  // admin's own group — which silently transferred members out of the other groups
+  // an area-level admin manages. Updates validate district/group explicitly instead.
+  if (req.method === 'POST' && req.user && req.user.role === 'group_admin') {
     req.body.district = req.user.district._id.toString();
     req.body.group = req.user.group._id.toString();
   }
@@ -469,12 +485,21 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
       });
     }
 
-    // Check access permissions
-    if (req.user.role === 'group_admin' && member.group.toString() !== req.user.group._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only update members from your group.'
-      });
+    // Check access permissions. Area-level admins manage every group in their
+    // area, not just the one on their own account.
+    const manageableGroupIds = [];
+    if (req.user.role === 'group_admin') {
+      if (isAreaLevelAdmin(req.user)) {
+        manageableGroupIds.push(...(await areaGroupIdsFor(req.user)).map(String));
+      }
+      if (req.user.group) manageableGroupIds.push(req.user.group._id.toString());
+
+      if (!manageableGroupIds.includes(member.group.toString())) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update members from your group.'
+        });
+      }
     }
 
     if (req.user.role === 'district_admin' && member.district.toString() !== req.user.district._id.toString()) {
@@ -516,8 +541,8 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
 
       // Check permissions for district/group changes
       if (req.user.role === 'group_admin') {
-        // Group admins can only update members within their own group and district
-        if (newGroup.toString() !== req.user.group._id.toString() || 
+        // Group admins can only update members within the groups they manage
+        if (!manageableGroupIds.includes(newGroup.toString()) ||
             newDistrict.toString() !== req.user.district._id.toString()) {
           return res.status(403).json({
             success: false,

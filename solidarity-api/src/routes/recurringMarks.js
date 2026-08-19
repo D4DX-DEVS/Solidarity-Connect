@@ -70,15 +70,23 @@ router.get('/area-members', authenticate, async (req, res) => {
     }
 
     // Find all groups in this district whose name matches the area name
-    const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    // (anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA")
+    const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
     const groups = await Group.find({ district: districtId, name: areaRegex }).lean();
     const groupIds = groups.map(g => g._id);
 
-    // Get all members in those groups
-    const members = await Member.find({ group: { $in: groupIds } })
+    // Server-side pagination (default 20 per page)
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const memberQuery = { group: { $in: groupIds } };
+    const totalMembers = await Member.countDocuments(memberQuery);
+
+    const members = await Member.find(memberQuery)
       .select('name phone group status isLeader roleTag')
       .populate('group', 'name')
       .sort({ name: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .lean();
 
     // Also include area leader Users — every area-level admin in the same area+district,
@@ -90,14 +98,27 @@ router.get('/area-members', authenticate, async (req, res) => {
       isActive: true
     }).select('name phone roleTag adminKind').lean();
 
+    // One person can hold several role docs (area/murabi/coordinator share login) —
+    // dedupe by phone so they appear once in the leaders list.
+    const seenPhones = new Set();
+    const areaLeaders = areaLeaderUsers.filter(u => {
+      const key = u.phone || String(u._id);
+      if (seenPhones.has(key)) return false;
+      seenPhones.add(key);
+      return true;
+    });
+
     res.status(200).json({
       success: true,
       data: {
         members,
-        areaLeaders: areaLeaderUsers,
+        areaLeaders,
         areaName,
         groupCount: groups.length,
-        memberCount: members.length
+        memberCount: totalMembers,
+        page,
+        limit,
+        hasMore: page * limit < totalMembers
       }
     });
   } catch (error) {
@@ -273,7 +294,8 @@ router.post('/', authenticate, async (req, res) => {
     // to Coordinator. They share an area but not each other's target sheets.
     if (isAreaAdmin(req.user) && req.user.district && req.user.roleTag?.roleDescription) {
       const areaName = req.user.roleTag.roleDescription;
-      const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      // Anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA".
+      const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
 
       const coAreaAdmins = await User.find({
         ...adminKindQuery(adminKindOf(req.user)),

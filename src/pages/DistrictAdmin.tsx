@@ -1,14 +1,7 @@
-import { Building2, Users, CheckCircle, XCircle, Upload, Bell, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, LogOut, FolderOpen, Calendar } from "lucide-react";
+import { Building2, Users, CheckCircle, XCircle, Upload, Menu, Shield, Star, ArrowRightLeft, RefreshCcw, Target, BarChart3, FolderOpen, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -22,8 +15,6 @@ import { MetricCard, PageHero, PageShell } from "@/components/app/AppShell";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";import UserTargetsSection from "@/components/UserTargetsSection";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
-import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
@@ -55,11 +46,10 @@ const PRIMARY_TOOL_LABELS = ["Meeting Agenda", "Groups", "Files", "Group Reports
 
 const DistrictAdmin = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [showAllActions, setShowAllActions] = useState(false);
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Dialog state
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -153,10 +143,7 @@ const DistrictAdmin = () => {
             <Badge className="rounded-full bg-primary/10 text-primary border-primary/20 px-3 py-1 text-sm font-semibold">
               {user?.district?.name || "District"}
             </Badge>
-            <Button variant="outline" size="icon" onClick={() => navigate("/notifications")} aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-            </Button>
-          {/* ponytail: hamburger now lives in PageHero for every page */}
+          {/* ponytail: bell + menu handled by PageHero/BottomNav — no per-page wiring */}
           </>
         }
       />
@@ -330,21 +317,6 @@ const DistrictAdmin = () => {
             <Button variant="outline" className="rounded-xl w-full sm:w-auto h-12 font-medium border-border/50 hover:bg-card" onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
             <Button variant="destructive" className="rounded-xl w-full sm:w-auto h-12 font-medium shadow-lg shadow-destructive/20 active:scale-[0.98] transition-all" onClick={handleReject} disabled={!!processingId || !rejectReason.trim()}>
               {processingId ? "Processing..." : "Confirm Rejection"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Confirm Logout</DialogTitle>
-            <DialogDescription>Are you sure you want to log out?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-row justify-center gap-2">
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
             </Button>
           </DialogFooter>
         </DialogContent>

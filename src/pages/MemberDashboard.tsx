@@ -12,6 +12,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import LogoutConfirmDialog from "@/components/LogoutConfirmDialog";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import {
   DropdownMenu,
@@ -461,6 +462,7 @@ const MemberDashboard = () => {
           subtitle="We couldn’t load the member profile for this workspace yet."
           eyebrow="Member Portal"
           icon={<Home className="h-6 w-6" />}
+          showTitleOnMobile
         />
         <SectionCard title="Profile Unavailable" description="Retry loading the member profile data.">
           <div className="py-12 text-center">
@@ -490,6 +492,15 @@ const MemberDashboard = () => {
     } finally {
       setTargetUploading(null);
     }
+  };
+
+  // ponytail: recurring progress derived from marks (server stores it as binary 0/100)
+  const recurringProgress = (targetId: string, frequency?: string) => {
+    const total = frequency === 'weekly' ? 52 : 12;
+    const done = recurringMarks.filter(
+      m => m.targetId === targetId && m.year === recurringYear && m.completed
+    ).length;
+    return { done, total, pct: Math.round((done / total) * 100) };
   };
 
   const toggleRecurringMark = async (targetId: string, year: number, month: number, week = 0) => {
@@ -662,7 +673,11 @@ const MemberDashboard = () => {
             </p>
           ) : (
             <div className="divide-y">
-              {targets.slice(0, 3).map((target) => (
+              {targets.slice(0, 3).map((target) => {
+                const rec = target.personalTarget.isRecurring
+                  ? recurringProgress(target.personalTarget._id, target.personalTarget.recurringFrequency)
+                  : null;
+                return (
                 <div key={target._id ?? target.personalTarget._id} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
                   <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     {getCategoryIcon(target.personalTarget.category)}
@@ -671,13 +686,14 @@ const MemberDashboard = () => {
                     {target.personalTarget.title}
                   </p>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {target.currentProgress}/{target.targetValue}
+                    {rec ? `${rec.done}/${rec.total}` : `${target.currentProgress}/${target.targetValue}`}
                   </span>
                   <span className="shrink-0 text-sm font-semibold">
-                    {target.progressPercentage.toFixed(0)}%
+                    {rec ? rec.pct : target.progressPercentage.toFixed(0)}%
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -905,11 +921,11 @@ const MemberDashboard = () => {
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Status</label>
-                <p className="text-lg flex items-center">
+                <div className="text-lg flex items-center">
                   <Badge className={`${profile.profile.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                     {profile.profile.status}
                   </Badge>
-                </p>
+                </div>
               </div>
               {profile.profile.address && (
                 <div className="col-span-2">
@@ -1751,7 +1767,8 @@ const MemberDashboard = () => {
   return (
     <>
     <PageShell contentClassName="pb-40 lg:pb-8">
-      <header className="hero-card">
+      {/* ponytail: like every other role, mobile shows the header only on the dashboard view */}
+      <header className={`hero-card ${activeView === "overview" ? "" : "max-lg:hidden"}`}>
         <div className="flex items-center gap-3">
           {/* ponytail: brand logo on mobile only — desktop sidebar already shows it */}
           <img src="/logo-icon.png" alt="Solidarity Connect logo" className="h-10 w-10 shrink-0 rounded-xl border-2 border-primary bg-white object-contain p-0.5 lg:hidden" />
@@ -1796,91 +1813,101 @@ const MemberDashboard = () => {
               </span>
             )}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              {/* ponytail: hamburger hidden on lg — sidebar covers profile/roles/logout there */}
-              <Button variant="outline" size="icon" className="lg:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
-              <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
-                <p className="text-sm font-bold text-foreground mt-0.5">{profile.profile.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{profile.profile.phone}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {profile.profile.group.name === profile.profile.district.name
-                    ? profile.profile.district.name
-                    : `${profile.profile.group.name} · ${profile.profile.district.name}`}
-                </p>
-              </div>
-              {availableAccounts.filter((account) => account.type !== "member").length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <div className="px-3 pt-1.5 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Switch account
-                  </div>
-                  {/* Account-based: Area/Murabi/Coordinator admin share role 'group_admin',
-                      so a role-name list would collapse them into one entry. */}
-                  {availableAccounts.filter((account) => account.type !== "member").map((account) => (
-                    <DropdownMenuItem
-                      key={account.id}
-                      onClick={async () => {
-                        try {
-                          await switchAccount(account);
-                          navigate(getHomeRouteByRole(account.role));
-                        } catch {
-                          toast({ title: "Switch failed", description: "Could not switch account.", variant: "destructive" });
-                        }
-                      }}
-                    >
-                      <Link2 className="mr-2 h-4 w-4" />
-                      {account.label}
-                    </DropdownMenuItem>
-                  ))}
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setActiveView("profile")}>
-                <User className="mr-2 h-4 w-4" />My Profile
-              </DropdownMenuItem>
-              {/* ponytail: Leaders removed — it's a tab in the bottom bar already */}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </header>
 
       {renderContent()}
 
-      <div className="fixed bottom-4 left-4 right-4 z-30 lg:hidden">
-        <div className="mx-auto flex max-w-md items-center justify-around rounded-2xl border border-border/70 bg-background/95 px-3 py-2 shadow-lg">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon;
-            const isActive = activeView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveView(item.id)}
-                aria-pressed={isActive}
-                className={`flex min-w-0 flex-1 flex-col items-center space-y-1 rounded-2xl px-2 py-2 transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
-                }`}
-              >
-                <IconComponent className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className={`text-[11px] font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      {/* ponytail: same shape as BottomNav — tabs plus a "More" menu, no header hamburger */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-3 pb-safe lg:hidden">
+        <nav className="pointer-events-auto w-full max-w-md rounded-2xl border border-border/70 bg-background/95 px-2 py-2 shadow-lg">
+          <div className="grid h-[4.6rem] grid-cols-6 items-center gap-1">
+            {menuItems.map((item) => {
+              const IconComponent = item.icon;
+              const isActive = activeView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveView(item.id)}
+                  aria-pressed={isActive}
+                  className={`flex h-full flex-col items-center justify-center rounded-xl px-1 transition-colors ${
+                    isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                  }`}
+                >
+                  <IconComponent className="h-5 w-5" />
+                  <span className="mt-1 text-[10px] font-semibold tracking-wide">{item.label}</span>
+                </button>
+              );
+            })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex h-full flex-col items-center justify-center rounded-xl px-1 text-muted-foreground transition-colors hover:bg-muted/70 hover:text-foreground data-[state=open]:bg-primary/10 data-[state=open]:text-primary">
+                  <Menu className="h-5 w-5" />
+                  <span className="mt-1 text-[10px] font-semibold tracking-wide">More</span>
+                </button>
+              </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" sideOffset={12} className="glass w-64 rounded-xl border-border/50 p-1.5 shadow-2xl">
+                  <div className="px-3 py-2.5 mb-1 bg-secondary/50 rounded-xl">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{profile.profile.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{profile.profile.phone}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {profile.profile.group.name === profile.profile.district.name
+                        ? profile.profile.district.name
+                        : `${profile.profile.group.name} · ${profile.profile.district.name}`}
+                    </p>
+                  </div>
+                  {availableAccounts.filter((account) => account.type !== "member").length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <div className="px-3 pt-1.5 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Switch account
+                      </div>
+                      {/* Account-based: Area/Murabi/Coordinator admin share role 'group_admin',
+                          so a role-name list would collapse them into one entry. */}
+                      {availableAccounts.filter((account) => account.type !== "member").map((account) => (
+                        <DropdownMenuItem
+                          key={account.id}
+                          onClick={async () => {
+                            try {
+                              await switchAccount(account);
+                              navigate(getHomeRouteByRole(account.role));
+                            } catch {
+                              toast({ title: "Switch failed", description: "Could not switch account.", variant: "destructive" });
+                            }
+                          }}
+                        >
+                          <Link2 className="mr-2 h-4 w-4" />
+                          {account.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveView("notifications")}>
+                  <Bell className="mr-2 h-4 w-4" />Notifications
+                  {unreadNotificationCount > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                      {unreadNotificationCount}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("profile")}>
+                    <User className="mr-2 h-4 w-4" />My Profile
+                  </DropdownMenuItem>
+                  {/* ponytail: Leaders removed — it's a tab in the bottom bar already */}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </nav>
       </div>
+
     </PageShell>
 
     <Dialog open={!!viewerFile} onOpenChange={(o) => !o && setViewerFile(null)}>
@@ -1955,20 +1982,11 @@ const MemberDashboard = () => {
       </DialogContent>
     </Dialog>
 
-    <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-      <DialogContent className="max-w-sm rounded-2xl">
-        <DialogHeader>
-          <DialogTitle>Confirm Logout</DialogTitle>
-          <DialogDescription>Are you sure you want to log out?</DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex flex-row justify-center gap-2">
-          <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
-            Logout
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <LogoutConfirmDialog
+      open={showLogoutConfirm}
+      onOpenChange={setShowLogoutConfirm}
+      onConfirm={() => { logout(); navigate("/login"); }}
+    />
     </>
   );
 };

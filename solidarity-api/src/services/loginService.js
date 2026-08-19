@@ -31,17 +31,12 @@ const ROLE_LABELS = {
   member: 'Member',
 };
 
-const ADMIN_KIND_LABELS = {
-  area: 'Area Admin',
-  murabi: 'Murabi Admin',
-  coordinator: 'Coordinator Admin',
-};
-
-/** Human label for an account — adminKind wins for area-level admins. */
-export function accountLabel(role, adminKind) {
-  if (role === 'group_admin') {
-    return ADMIN_KIND_LABELS[adminKind] || ADMIN_KIND_LABELS.area;
-  }
+/**
+ * Human label for an account. Murabi and Coordinator admins are the same thing
+ * as Area Admin (identical permissions, one login) — everything area-level is
+ * labelled "Area Admin"; adminKind is a legacy data field only.
+ */
+export function accountLabel(role, _adminKind) {
   return ROLE_LABELS[role] || role;
 }
 
@@ -54,13 +49,21 @@ export function normalizePhone(phone) {
   return digits;
 }
 
+/**
+ * India stays strict (10 digits, 6-9 start). Any other country arrives already
+ * country-coded from the sign-in form, so it is checked as plain E.164 digits.
+ */
 export function isValidPhone(phone) {
-  return /^[6-9]\d{9}$/.test(normalizePhone(phone));
+  const bare = normalizePhone(phone);
+  if (bare.length === 10) return /^[6-9]\d{9}$/.test(bare);
+  return /^\d{11,15}$/.test(bare);
 }
 
 /** Admin rows store 10-digit or +91-prefixed numbers; members store +91. Match all. */
 export function phoneVariants(phone) {
   const bare = normalizePhone(phone);
+  // Non-Indian numbers keep their country code; only the +91 aliases are legacy.
+  if (bare.length !== 10) return [...new Set([bare, `+${bare}`])];
   return [...new Set([bare, `+91${bare}`, `91${bare}`])];
 }
 
@@ -80,7 +83,26 @@ export async function listAccounts(phone) {
     .populate('group', 'name code')
     .lean();
 
-  const accounts = users.map((user) => ({
+  // Murabi/Coordinator accounts are duplicates of the Area Admin login — same
+  // person, same permissions, same group. Show one card per (role, group):
+  // prefer the plain 'area' row, else the first found. Legacy rows stay in the
+  // DB but are no longer separately signable-in.
+  const deduped = [];
+  const areaSeen = new Map(); // "group id" -> index in deduped
+  for (const user of users) {
+    if (user.role === 'group_admin') {
+      const key = String(user.group?._id || user.group || '');
+      const existingIdx = areaSeen.get(key);
+      if (existingIdx !== undefined) {
+        if ((user.adminKind || 'area') === 'area') deduped[existingIdx] = user;
+        continue;
+      }
+      areaSeen.set(key, deduped.length);
+    }
+    deduped.push(user);
+  }
+
+  const accounts = deduped.map((user) => ({
     id: String(user._id),
     type: 'admin',
     role: user.role,
@@ -143,7 +165,7 @@ export async function sendLoginOtp(phone, { isResend = false } = {}) {
   const bare = normalizePhone(phone);
 
   if (!isValidPhone(bare)) {
-    return { success: false, status: 400, message: 'Enter a valid 10-digit mobile number.' };
+    return { success: false, status: 400, message: 'Enter a valid mobile number.' };
   }
 
   const accounts = await listAccounts(bare);

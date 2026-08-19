@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,44 +16,22 @@ const MemberDetail = () => {
   const { id } = useParams();
   const { toast } = useToast();
 
-  const [member, setMember] = useState<any>(null);
-  const [baithulMaalData, setBaithulMaalData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [downloadingCert, setDownloadingCert] = useState(false);
 
-  useEffect(() => {
-    const fetchMemberData = async () => {
-      try {
-        setLoading(true);
+  // ponytail: react-query cache — revisits paint instantly from cache, refetch runs in background
+  const { data: memberResult, isPending: loading } = useQuery({
+    queryKey: ["members", "detail", id],
+    queryFn: () => membersAPI.getMember(id!),
+    enabled: !!id,
+  });
+  const member = memberResult?.data ?? null;
 
-        // Fetch member details
-        const memberResult = await membersAPI.getMember(id!);
-        setMember(memberResult.data);
-
-        // Fetch Baithul Maal data
-        try {
-          const baithulResult = await baithulMaalAPI.getMemberPayments(id!);
-          setBaithulMaalData(baithulResult.data);
-        } catch {
-          setBaithulMaalData(null);
-        }
-
-      } catch (error) {
-        console.error('Error fetching member data:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load member details",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchMemberData();
-    }
-  }, [id, toast]);
+  const { data: baithulResult } = useQuery({
+    queryKey: ["baithulMaal", "member", id],
+    queryFn: () => baithulMaalAPI.getMemberPayments(id!).catch(() => null),
+    enabled: !!id,
+  });
+  const baithulMaalData = baithulResult?.data ?? null;
 
   const handleDownloadCertificate = async () => {
     try {
@@ -296,7 +275,7 @@ const MemberDetail = () => {
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <Icon className="h-3.5 w-3.5" />
         </span>
-        <p className="truncate text-xs text-muted-foreground">{label}</p>
+        <p className="min-w-0 text-[11px] leading-tight text-muted-foreground">{label}</p>
       </div>
       <p className="mt-1.5 truncate text-sm font-semibold">{value || "Not provided"}</p>
     </div>
@@ -316,7 +295,7 @@ const MemberDetail = () => {
   const renderMemberStatus = (status: string) => {
     if (status === "Active") {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">
+        <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-emerald-50 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-emerald-700">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
           <span>{status}</span>
         </div>
@@ -325,7 +304,7 @@ const MemberDetail = () => {
 
     if (status === "Applicant") {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-orange-800">
+        <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-orange-100 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-orange-800">
           <span className="h-2.5 w-2.5 rounded-full bg-orange-500" aria-hidden="true" />
           <span>{status}</span>
         </div>
@@ -334,7 +313,7 @@ const MemberDetail = () => {
 
     if (status === "Abroad") {
       return (
-        <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
+        <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-blue-100 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-blue-800">
           <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
           <span>{status}</span>
         </div>
@@ -342,7 +321,7 @@ const MemberDetail = () => {
     }
 
     return (
-      <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800">
+      <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-gray-100 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-gray-800">
         <span className="h-2.5 w-2.5 rounded-full bg-gray-500" aria-hidden="true" />
         <span>{status}</span>
       </div>
@@ -408,10 +387,11 @@ const MemberDetail = () => {
         eyebrow="Member Profile"
         icon={<User className="h-6 w-6" />}
         details={
-          /* One compact strip: status chip + actions in a single row, no tall twin cards */
-          <div className="col-span-2 flex items-center gap-2 overflow-x-auto rounded-2xl border border-border/60 bg-card px-3 py-2.5 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:col-span-4">
+          /* ponytail: one compact strip; buttons shrink on mobile so the row fits with equal padding (no scroll) */
+          <div className="col-span-2 rounded-2xl border border-border/60 bg-card px-3 py-2.5 shadow-sm xl:col-span-4">
+            <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="shrink-0">{renderMemberStatus(member.status)}</span>
-            <div className="ml-auto flex shrink-0 items-center gap-2">
+            <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2 [&_button]:h-8 [&_button]:px-2 [&_button]:text-xs [&_svg]:mr-1 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_button]:h-9 sm:[&_button]:px-3 sm:[&_button]:text-sm sm:[&_svg]:mr-2 sm:[&_svg]:h-4 sm:[&_svg]:w-4">
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">
                   <Phone className="mr-2 h-4 w-4" />
@@ -428,12 +408,13 @@ const MemberDetail = () => {
               ) : null}
               <Button size="sm" variant="outline" onClick={handleDownloadCertificate} disabled={downloadingCert}>
                 <Download className="mr-2 h-4 w-4" />
-                {downloadingCert ? "Downloading..." : "Certificate"}
+                <span className="truncate">{downloadingCert ? "Downloading..." : "Certificate"}</span>
               </Button>
               <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
+            </div>
             </div>
           </div>
         }

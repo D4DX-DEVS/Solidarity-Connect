@@ -102,6 +102,7 @@ const OrgFiles = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [previewFile, setPreviewFile] = useState<OrgFile | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingFile, setEditingFile] = useState<OrgFile | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -370,11 +371,14 @@ const OrgFiles = () => {
                               </a>
                             ) : file.url ? (
                               <>
-                                <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                                  <Button size="sm" variant="outline" className="text-xs h-7 px-2.5">
-                                    <Eye className="h-3 w-3 mr-1" />View
-                                  </Button>
-                                </a>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-7 px-2.5 shrink-0"
+                                  onClick={() => setPreviewFile(file)}
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />View
+                                </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -604,6 +608,50 @@ const OrgFiles = () => {
               {saving ? "Saving..." : <><Save className="h-4 w-4 mr-1" />Save Changes</>}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* In-app file preview */}
+      <Dialog open={!!previewFile} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[85vh] flex flex-col p-4">
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="truncate pr-8 text-base">{previewFile?.title}</DialogTitle>
+          </DialogHeader>
+          {previewFile && (() => {
+            const mime = previewFile.mimetype || "";
+            const url = previewFile.url;
+            if (mime.startsWith("image/")) {
+              return <img src={url} alt={previewFile.title} className="min-h-0 flex-1 object-contain" />;
+            }
+            if (mime.startsWith("video/")) {
+              return <video src={url} controls className="min-h-0 flex-1 w-full" />;
+            }
+            if (mime.startsWith("audio/")) {
+              return <audio src={url} controls className="w-full mt-4" />;
+            }
+            if (mime === "application/pdf") {
+              return <iframe src={url} title={previewFile.title} className="min-h-0 flex-1 w-full rounded-md border border-border" />;
+            }
+            // ponytail: Office docs can't render natively — Microsoft embed viewer for public URLs
+            if (/officedocument|msword|ms-excel|ms-powerpoint/.test(mime) && url.startsWith("https://")) {
+              return (
+                <iframe
+                  src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`}
+                  title={previewFile.title}
+                  className="min-h-0 flex-1 w-full rounded-md border border-border"
+                />
+              );
+            }
+            return (
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+                <File className="h-10 w-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Preview not available for this file type.</p>
+                <Button onClick={() => downloadFile(url, previewFile.originalName || previewFile.title)}>
+                  <Download className="h-4 w-4 mr-1" />Download
+                </Button>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </PageShell>

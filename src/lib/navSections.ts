@@ -25,7 +25,7 @@ export const SECTIONS: NavSection[] = [
     title: "Management",
     items: [
       { label: "Members", path: "/members", icon: Users, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Users", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
+      { label: "Admins", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
       { label: "Districts", path: "/state-admin/districts", icon: Building2, roles: ["state_admin"] },
       { label: "Groups", path: "/state-admin/groups", icon: Users, roles: ["state_admin", "district_admin"] },
       { label: "Transfers", path: "/state-admin/transfer-approvals", icon: ArrowRightLeft, roles: ["state_admin", "district_admin"] },

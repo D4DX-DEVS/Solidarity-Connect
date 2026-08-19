@@ -285,33 +285,35 @@ const EditMemberDetails = () => {
         eyebrow="Members"
         icon={<PencilLine className="h-6 w-6" />}
         details={
-          <>
-            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Status</p>
+          /* All three scope cards on one row on mobile; content shrinks instead of wrapping to a new row */
+          <div className="col-span-2 grid grid-cols-3 gap-2 xl:col-span-4 xl:gap-3">
+            <div className="min-w-0 rounded-2xl border border-border/60 bg-card px-2.5 py-2.5 shadow-sm sm:px-4 sm:py-3">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.18em]">Status</p>
               <div className="mt-2">{renderMemberStatus(formData.status || member?.status || "Unknown")}</div>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">District</p>
-              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="min-w-0 break-words leading-5">{member?.district?.name} ({member?.district?.code})</span>
+            <div className="min-w-0 rounded-2xl border border-border/60 bg-card px-2.5 py-2.5 shadow-sm sm:px-4 sm:py-3">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.18em]">District</p>
+              <div className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-foreground sm:gap-2 sm:text-sm">
+                <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words leading-4 sm:leading-5">{member?.district?.name} ({member?.district?.code})</span>
               </div>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Group</p>
-              <div className="mt-2 flex items-start gap-2 text-sm font-semibold text-foreground">
-                <Building2 className="h-4 w-4 text-primary" />
-                <span className="min-w-0 break-words leading-5">{member?.group?.name} ({member?.group?.code})</span>
+            <div className="min-w-0 rounded-2xl border border-border/60 bg-card px-2.5 py-2.5 shadow-sm sm:px-4 sm:py-3">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.18em]">Group</p>
+              <div className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-foreground sm:gap-2 sm:text-sm">
+                <Building2 className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words leading-4 sm:leading-5">{member?.group?.name} ({member?.group?.code})</span>
               </div>
             </div>
-          </>
+          </div>
         }
       />
 
       <SectionCard title="Editable Profile" description="Update personal details, optional background information, and the current member status.">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
+        {/* Rhythm: 6px label→control, 16px between fields (24px columns on desktop), 20/24px between sections */}
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-x-6 md:gap-y-5">
+            <div className="space-y-1.5 md:col-span-2">
               <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
@@ -322,7 +324,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="phone">Phone Number *</Label>
               <Input
                 id="phone"
@@ -344,7 +346,7 @@ const EditMemberDetails = () => {
               ) : null}
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email (Optional)</Label>
               <Input
                 id="email"
@@ -355,7 +357,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
               <Input
                 id="dateOfBirth"
@@ -365,7 +367,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="bloodGroup">Blood Group (Optional)</Label>
               <Select
                 value={formData.bloodGroup || "none"}
@@ -385,7 +387,7 @@ const EditMemberDetails = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="profession">Profession (Optional)</Label>
               <Input
                 id="profession"
@@ -395,7 +397,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="education">Education (Optional)</Label>
               <Input
                 id="education"
@@ -405,7 +407,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="monthlyBaithulMaal">Monthly Baithul Maal (Optional)</Label>
               <Input
                 id="monthlyBaithulMaal"
@@ -418,7 +420,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1.5 md:col-span-2">
               <Label htmlFor="address">Address (Optional)</Label>
               <Textarea
                 id="address"
@@ -437,8 +439,8 @@ const EditMemberDetails = () => {
                 <h3 className="text-base font-semibold text-foreground">Location (District & Group)</h3>
                 <p className="text-sm text-muted-foreground">Change the member's district and group directly. Only state admins can do this.</p>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-x-6">
+                <div className="space-y-1.5">
                   <Label>District</Label>
                   <Select
                     value={selectedDistrict}
@@ -457,7 +459,7 @@ const EditMemberDetails = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label>Group</Label>
                   <Select
                     value={selectedGroup}
@@ -478,15 +480,15 @@ const EditMemberDetails = () => {
             </div>
           )}
 
-          <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="rounded-2xl border border-border/60 bg-card p-3 sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
               <div>
                 <h3 className="text-base font-semibold text-foreground">Member Status</h3>
                 <p className="text-sm text-muted-foreground">Update the current operating status for this member profile.</p>
               </div>
               {renderMemberStatus(formData.status || "Unknown")}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="status">Status</Label>
               <Select
                 value={formData.status}
@@ -506,7 +508,8 @@ const EditMemberDetails = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row">
+          {/* Inline on all breakpoints — stacked buttons left a tall gap on mobile */}
+          <div className="flex flex-row gap-2 border-t border-border/60 pt-3 sm:gap-3 sm:pt-5">
             <Button
               type="button"
               variant="outline"

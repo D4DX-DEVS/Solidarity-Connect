@@ -37,13 +37,19 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       ];
     }
 
-    // Apply role-based filtering
-    if (req.user.role === 'group_admin') {
+    // ponytail: `directory=true` is the read-only area picker used by the Leaders
+    // page — every admin may browse all areas there, so skip the management-scope
+    // filter below. Management screens omit the flag and stay scoped.
+    const directory = req.query.directory === 'true';
+    if (directory) {
+      if (district) filter.district = district;
+    } else if (req.user.role === 'group_admin') {
       // Area admins only see their own group(s)
       if (isAreaLevelAdmin(req.user) && req.user.district) {
         const areaName = req.user.roleTag.roleDescription;
         if (areaName) {
-          const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+          // Anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA".
+          const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
           const areaGroups = await Group.find({ district: req.user.district._id, name: areaRegex }).select('_id').lean();
           const groupIds = areaGroups.map(g => g._id);
           filter._id = groupIds.length > 0 ? { $in: groupIds } : (req.user.group?._id || null);
@@ -63,7 +69,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     }
 
     // Apply additional district filter if provided (for state_admin selecting a district)
-    if (district && req.user.role === 'state_admin') {
+    if (!directory && district && req.user.role === 'state_admin') {
       filter.district = district;
     }
 

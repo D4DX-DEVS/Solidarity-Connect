@@ -1,29 +1,13 @@
-import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, FolderOpen, CheckCircle, LogOut, Database, Calendar, Menu, ChevronRight } from "lucide-react";
+import { Shield, Users, Building2, FileCheck, Bell, Wallet, BarChart3, Target, UserCog, Star, FolderOpen, CheckCircle, Database, Calendar, Menu, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { MetricCard } from "@/components/app/AppShell";
+import { NotificationBell } from "@/components/NotificationBell";
 import { PageSkeleton } from "@/components/ui/loading-skeletons";import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { RoleSwitchMenuItems } from "@/components/RoleSwitchMenuItems";
-import { MoreNavMenuItems } from "@/components/MoreNavMenuItems";
 import { reportsAPI, usersAPI, baithulMaalAPI } from "@/utils/api";
 
 interface DashboardData {
@@ -82,7 +66,7 @@ const CARD_PATHS: Record<string, string> = {
   "Monthly Collection": "/state-admin/baithul-data",
   "Pending Actions": "/requests",
   "Districts": "/state-admin/districts",
-  "System Users": "/state-admin/users",
+  "Admins": "/state-admin/users",
   "Total Members": "/members",
   "Active Members": "/members",
   "Groups": "/state-admin/groups",
@@ -91,8 +75,7 @@ const CARD_PATHS: Record<string, string> = {
 
 const StateAdmin = () => {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { user } = useAuth();
   const [showAllActions, setShowAllActions] = useState(false);
 
   // ponytail: cached queries, not useEffect+setState — revisiting the dashboard
@@ -161,9 +144,9 @@ const StateAdmin = () => {
       tone: "neutral" as const,
     },
     {
-      title: "System Users",
+      title: "Admins",
       value: userStats?.totalUsers?.toLocaleString() || "0",
-      detail: `${userStats?.activeUsers?.toLocaleString() || "0"} active users`,
+      detail: `${userStats?.activeUsers?.toLocaleString() || "0"} active admins`,
       icon: UserCog,
       tone: "warning" as const,
     },
@@ -220,33 +203,8 @@ const StateAdmin = () => {
           </h1>
           <p className="text-xs text-muted-foreground">State Admin Dashboard</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button size="icon" variant="outline" onClick={() => navigate("/notifications")} aria-label="Notifications">
-            <Bell className="h-4 w-4" />
-          </Button>
-          <span className="lg:hidden">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="outline">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass max-h-[70vh] w-56 overflow-y-auto rounded-xl border-border/50 p-1.5 shadow-2xl">
-                <div className="px-3 py-2 mb-1 bg-secondary/50 rounded-xl">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Logged in as</p>
-                  <p className="text-sm font-bold text-foreground mt-0.5">{user?.name || 'State Admin'}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{user?.phone}</p>
-                </div>
-                <RoleSwitchMenuItems />
-                <MoreNavMenuItems />
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </span>
-        </div>
+        {/* ponytail: menu moved to BottomNav "More" — header keeps only the bell */}
+        <NotificationBell />
       </div>
 
       <main className="app-main pb-28">
@@ -286,6 +244,7 @@ const StateAdmin = () => {
         </div>
       </div>
 
+      {(pendingApprovals > 0 || upcomingMeetingsCount > 0) && (
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="flex items-center gap-2 text-base font-semibold">Needs Attention</h2>
@@ -294,24 +253,22 @@ const StateAdmin = () => {
           </Button>
         </div>
           <div className="space-y-2.5">
+            {pendingApprovals > 0 && (
             <button
               type="button"
-              onClick={() => navigate(pendingApprovals ? "/state-admin/transfer-approvals" : "/requests")}
+              onClick={() => navigate("/state-admin/transfer-approvals")}
               className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left transition-colors hover:bg-accent/60"
             >
-              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pendingApprovals ? "bg-warning/10 text-warning" : "bg-success/10 text-success"}`}>
-                {pendingApprovals ? <FileCheck className="h-5 w-5" /> : <CheckCircle className="h-5 w-5" />}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                <FileCheck className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">
-                  {pendingApprovals ? `${pendingApprovals} pending approvals` : "No pending approvals"}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {pendingApprovals ? "Review requests and transfers" : "Great! You're all caught up."}
-                </p>
+                <p className="text-sm font-semibold text-foreground">{pendingApprovals} pending approvals</p>
+                <p className="truncate text-xs text-muted-foreground">Review requests and transfers</p>
               </div>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>
+            )}
 
             {upcomingMeetingsCount > 0 && (
               <button
@@ -330,17 +287,9 @@ const StateAdmin = () => {
               </button>
             )}
 
-            <div className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground">System health: Good</p>
-                <p className="truncate text-xs text-muted-foreground">All systems operational</p>
-              </div>
-            </div>
           </div>
       </div>
+      )}
 
       <div>
         <h2 className="flex items-center gap-2 text-base font-semibold mb-3">Quick Actions</h2>
@@ -384,21 +333,6 @@ const StateAdmin = () => {
       </div>
 
       </main>
-      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Confirm Logout</DialogTitle>
-            <DialogDescription>Are you sure you want to log out?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-row justify-center gap-2">
-            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={() => { logout(); navigate("/login"); }}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
