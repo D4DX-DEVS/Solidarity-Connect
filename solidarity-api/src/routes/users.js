@@ -108,38 +108,22 @@ router.get('/leaders', authenticate, async (req, res) => {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    // Validate and apply scoping based on user role
-    let scopedDistrictId = districtId;
-    let scopedGroupId = groupId;
-
-    if (req.user.role === 'district_admin') {
-      // district_admin: force/validate districtId to own district
-      const userDistrictId = req.user.district?._id || req.user.district;
-      if (districtId && districtId !== userDistrictId?.toString()) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
-      }
-      scopedDistrictId = userDistrictId;
-    } else if (isAreaLevelAdmin(req.user)) {
-      // area-level group_admin: scope to own area
-      const areaGroupIds = await areaGroupIdsFor(req.user);
-      if (groupId && !areaGroupIds.map(g => g.toString()).includes(groupId)) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
-      }
-      scopedGroupId = groupId || (areaGroupIds.length === 1 ? areaGroupIds[0] : undefined);
-    } else if (req.user.role === 'group_admin') {
-      // unit group_admin: scope to own group
-      const userGroupId = req.user.group?._id || req.user.group;
-      if (groupId && groupId !== userGroupId?.toString()) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
-      }
-      scopedGroupId = userGroupId;
-    }
+    // ponytail: no per-admin scoping here. The leaders list is the org contact
+    // directory — every admin (state/district/area/unit) sees the whole hierarchy
+    // and narrows it with the district/area/unit dropdowns. Only members are
+    // scoped, and they use GET /api/member-auth/leaders instead.
+    const scopedDistrictId = districtId;
+    const scopedGroupId = groupId;
 
     // Build filter common to both collections
     const filter = { isLeader: true };
     // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
-    if (scopedDistrictId) filter.district = scopedDistrictId;
-    if (scopedGroupId) filter.group = scopedGroupId;
+    // State leaders are the shared top of the hierarchy — never scope them out,
+    // otherwise district/area admins get an empty default "State" view.
+    if (roleType !== 'state') {
+      if (scopedDistrictId) filter.district = scopedDistrictId;
+      if (scopedGroupId) filter.group = scopedGroupId;
+    }
     if (unitName) filter['roleTag.name'] = unitName;
     if (search) {
       filter.$or = [
@@ -208,7 +192,11 @@ router.get('/leaders', authenticate, async (req, res) => {
         expanded.push({ ...leader, roleTag: extra, roleSlot: i + 1 });
       });
     }
-    if (roleType) expanded = expanded.filter((l) => l.roleTag?.type === roleType);
+    if (roleType) {
+      // "area" folds in murabi + coordinator — they have no separate filter in the UI
+      const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
+      expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
+    }
 
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),

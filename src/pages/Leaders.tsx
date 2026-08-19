@@ -12,20 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ListSkeleton } from "@/components/ui/loading-skeletons";import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { ListSkeleton } from "@/components/ui/loading-skeletons";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { leadersAPI, districtsAPI, groupsAPI, memberAuthAPI } from "@/utils/api";
+import { leadersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 
+// ponytail: no separate Murabi/Coordinator entries — the Area filter includes them server-side
 const ROLE_TYPES = [
   { value: "all", label: "All" },
   { value: "state", label: "State" },
   { value: "district", label: "District" },
   { value: "area", label: "Area" },
   { value: "unit", label: "Unit" },
-  { value: "murabi", label: "Murabi" },
-  { value: "coordinator", label: "Coordinator" },
 ];
 
 const ROLE_TYPE_COLORS: Record<string, string> = {
@@ -67,7 +67,8 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  // Hierarchy-first: every role opens on State leaders, then narrows via the dropdown
+  const [activeTab, setActiveTab] = useState("state");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
@@ -79,7 +80,6 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
   const [selectedAreaId, setSelectedAreaId] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
-  const [selectedMurabiAreaId, setSelectedMurabiAreaId] = useState("");
 
   // Members are server-scoped to state leaders + their own district/area,
   // so the district/area/unit cascade filters are hidden for them.
@@ -87,7 +87,6 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const requiresDistrict = !isMember && (activeTab === "district" || activeTab === "area" || activeTab === "unit");
   const requiresArea = !isMember && (activeTab === "area" || activeTab === "unit");
   const requiresUnit = !isMember && activeTab === "unit";
-  const requiresMurabiArea = !isMember && activeTab === "murabi";
 
   // Debounce search
   useEffect(() => {
@@ -131,31 +130,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedDistrictId, selectedAreaId, selectedUnit, selectedMurabiAreaId]);
-
-  // Load all area groups for murabi filter
-  useEffect(() => {
-    if (!requiresMurabiArea) {
-      setSelectedMurabiAreaId("");
-      return;
-    }
-    const loadMurabiAreas = async () => {
-      try {
-        const groupsResult = userRole === "member"
-          ? await memberAuthAPI.getGroups({})
-          : await groupsAPI.getGroups({ limit: 100, sort: "name" });
-        const groups = groupsResult.data || [];
-        setAreaOptions(
-          groups
-            .filter((g: any) => g?._id && g?.name)
-            .map((g: any) => ({ id: g._id, label: g.name }))
-        );
-      } catch {
-        setAreaOptions([]);
-      }
-    };
-    loadMurabiAreas();
-  }, [requiresMurabiArea, userRole]);
+  }, [selectedDistrictId, selectedAreaId, selectedUnit]);
 
   const loadDistrictOptions = useCallback(async () => {
     if (!requiresDistrict) {
@@ -166,9 +141,8 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
     }
 
     try {
-      const districtsResult = userRole === "member"
-        ? await memberAuthAPI.getDistricts()
-        : await districtsAPI.getDistricts({ limit: 100, sort: "name" });
+      // requiresDistrict is false for members, so this loader only runs for admins
+      const districtsResult = await districtsAPI.getDistricts({ limit: 100, sort: "name" });
       const districts = districtsResult.data || [];
       const normalized = districts
         .filter((district: any) => district?._id && district?.name)
@@ -191,10 +165,9 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
     const loadAreaOptions = async () => {
       try {
+        // directory=true: read-only area picker, unscoped for every admin role
         const params: Record<string, any> = selectedDistrictId ? { district: selectedDistrictId } : {};
-        const groupsResult = userRole === "member"
-          ? await memberAuthAPI.getGroups(params)
-          : await groupsAPI.getGroups({ limit: 100, sort: "name", ...params });
+        const groupsResult = await groupsAPI.getGroups({ limit: 500, sort: "name", directory: true, ...params });
         const groups = groupsResult.data || [];
         const normalized = groups
           .filter((group: any) => group?._id && group?.name)
@@ -224,10 +197,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
         if (selectedDistrictId) params.districtId = selectedDistrictId;
         if (selectedAreaId) params.groupId = selectedAreaId;
 
-        const result =
-          userRole === "member"
-            ? await leadersAPI.getMemberLeaders(params)
-            : await leadersAPI.getLeaders(params);
+        const result = await leadersAPI.getLeaders(params);
 
         const names = new Set<string>();
         (result.data || []).forEach((leader: Leader) => {
@@ -254,7 +224,6 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
     ...(requiresDistrict && selectedDistrictId ? { districtId: selectedDistrictId } : {}),
     ...(requiresArea && selectedAreaId ? { groupId: selectedAreaId } : {}),
     ...(requiresUnit && selectedUnit ? { unitName: selectedUnit } : {}),
-    ...(requiresMurabiArea && selectedMurabiAreaId ? { groupId: selectedMurabiAreaId } : {}),
   };
 
   const { data: leadersResult, isPending: loading, isError: leadersError } = useQuery({
@@ -352,23 +321,6 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
               )}
             </CardContent>
           </Card>
-        )}
-
-        {/* Murabi area filter */}
-        {requiresMurabiArea && (
-          <div>
-              <Select value={selectedMurabiAreaId || "all"} onValueChange={(value) => setSelectedMurabiAreaId(value === "all" ? "" : value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by Area (Group)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Areas</SelectItem>
-                  {areaOptions.map((area) => (
-                    <SelectItem key={area.id} value={area.id}>{area.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-          </div>
         )}
 
         {/* Leader count */}
@@ -487,7 +439,8 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
       <main className="app-main pt-4 pb-28 lg:pb-8 space-y-3">
         {content}
-      </main>    </div>
+      </main>
+    </div>
   );
 };
 

@@ -1052,7 +1052,11 @@ router.get('/leaders', authenticateMember, async (req, res) => {
         expanded.push({ ...leader, _id: `${leader._id}_r${i + 1}`, roleTag: extra });
       });
     }
-    if (roleType) expanded = expanded.filter((l) => l.roleTag?.type === roleType);
+    if (roleType) {
+      // "area" folds in murabi + coordinator — they have no separate filter in the UI
+      const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
+      expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
+    }
 
     // Members only see their own hierarchy: state leaders + leaders in their
     // own district/area. Keeps the 400+ full admin list out of member view.

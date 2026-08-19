@@ -484,7 +484,7 @@ router.post('/switch-role', [
 
 const phoneBody = body('phone')
   .custom((value) => loginService.isValidPhone(value))
-  .withMessage('Enter a valid 10-digit mobile number');
+  .withMessage('Enter a valid mobile number');
 
 // @route   POST /api/auth/login/send-otp
 // @desc    Send one WhatsApp code covering every account on this number

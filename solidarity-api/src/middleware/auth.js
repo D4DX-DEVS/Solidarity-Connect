@@ -125,7 +125,8 @@ export const areaGroupIdsFor = async (user) => {
   const areaName = user?.roleTag?.roleDescription;
   const districtId = user?.district?._id || user?.district;
   if (!areaName || !districtId) return [];
-  const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  // Anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA".
+  const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
   const groups = await Group.find({ district: districtId, name: areaRegex }).select('_id').lean();
   return groups.map(g => g._id);
 };

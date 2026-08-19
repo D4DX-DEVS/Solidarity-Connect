@@ -469,9 +469,7 @@ const RoleManagement = () => {
                 {userRole === 'state_admin' && <SelectItem value="all">All Roles</SelectItem>}
                 {userRole === 'state_admin' && <SelectItem value="state_admin">State Admins</SelectItem>}
                 {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="district_admin">District Admins</SelectItem>}
-                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:area">Area Admins</SelectItem>}
-                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:murabi">Murabi Admins</SelectItem>}
-                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin:coordinator">Coordinator Admins</SelectItem>}
+                {['state_admin', 'district_admin'].includes(userRole || '') && <SelectItem value="group_admin">Area Admins</SelectItem>}
                 <SelectItem value="member">Members</SelectItem>
                 <SelectItem value="leaders">
                   <span className="flex items-center gap-1"><Star className="h-3 w-3" /> Leaders Only</span>

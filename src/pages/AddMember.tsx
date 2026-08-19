@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
-import { FormSkeleton } from "@/components/ui/loading-skeletons";import { useToast } from "@/hooks/use-toast";
+import { FormSkeleton } from "@/components/ui/loading-skeletons";
+import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 
 interface UserContext {
@@ -459,7 +460,7 @@ const AddMember = () => {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row">
+            <div className="flex gap-3 border-t border-border/60 pt-5">
               <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/members")} disabled={loading}>
                 Cancel
               </Button>
@@ -483,7 +484,8 @@ const AddMember = () => {
             </div>
           </form>
         )}
-      </SectionCard>    </PageShell>
+      </SectionCard>
+    </PageShell>
   );
 };
 

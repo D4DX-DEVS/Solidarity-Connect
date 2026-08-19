@@ -32,7 +32,8 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
 
       if (isArea && areaName && req.user.district) {
         // Find all groups in this district matching the area name
-        const areaRegex = new RegExp(areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        // Anchored — "ALAPPUZHA" must not match "AMBALAPPUZHA".
+        const areaRegex = new RegExp(`^${areaName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
         const areaGroups = await Group.find({
           district: req.user.district._id,
           name: areaRegex

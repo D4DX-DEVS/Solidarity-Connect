@@ -151,6 +151,10 @@ const UserTargetsSection = () => {
   const [areaMembers, setAreaMembers] = useState<AreaMember[]>([]);
   const [areaLeaders, setAreaLeaders] = useState<AreaLeader[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
+  const [memberPage, setMemberPage] = useState(1);
+  const [memberTotal, setMemberTotal] = useState(0);
+  const [memberHasMore, setMemberHasMore] = useState(false);
+  const [loadingMoreMembers, setLoadingMoreMembers] = useState(false);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [savingAttendance, setSavingAttendance] = useState(false);
   const [attendanceIsUnmarking, setAttendanceIsUnmarking] = useState(false);
@@ -220,34 +224,47 @@ const UserTargetsSection = () => {
     setLoadingMembers(true);
 
     try {
-      // Fetch area members and existing attendance in parallel
-      const attendanceQS = `year=${year}&month=${month}${week ? `&week=${week}` : ''}`;
-      const [membersRes, attendanceRes] = await Promise.all([
-        apiCall("/recurring-marks/area-members"),
-        apiCall(`/recurring-marks/attendance/${targetId}?${attendanceQS}`)
-      ]);
+      // First page of area members — everyone starts unmarked
+      const membersRes = await apiCall("/recurring-marks/area-members?page=1&limit=20");
 
       const members: AreaMember[] = membersRes.data?.members || [];
       const leaders: AreaLeader[] = membersRes.data?.areaLeaders || [];
       setAreaMembers(members);
       setAreaLeaders(leaders);
+      setMemberPage(1);
+      setMemberTotal(membersRes.data?.memberCount || members.length);
+      setMemberHasMore(Boolean(membersRes.data?.hasMore));
 
-      // Pre-fill attendance from existing data
-      const existingAttendance = attendanceRes.data?.attendance || [];
       const map: Record<string, boolean> = {};
-      // Default all to false
       members.forEach(m => { map[m._id] = false; });
-      // Override with existing
-      existingAttendance.forEach((a: { member: string | { _id: string }; present: boolean }) => {
-        const id = typeof a.member === 'string' ? a.member : a.member._id;
-        map[id] = a.present;
-      });
       setAttendanceMap(map);
     } catch {
       toast({ title: "Error", description: "Failed to load area members", variant: "destructive" });
       setAttendanceOpen(false);
     } finally {
       setLoadingMembers(false);
+    }
+  };
+
+  const loadMoreMembers = async () => {
+    if (loadingMoreMembers || !memberHasMore) return;
+    setLoadingMoreMembers(true);
+    try {
+      const nextPage = memberPage + 1;
+      const res = await apiCall(`/recurring-marks/area-members?page=${nextPage}&limit=20`);
+      const more: AreaMember[] = res.data?.members || [];
+      setAreaMembers(prev => [...prev, ...more]);
+      setMemberPage(nextPage);
+      setMemberHasMore(Boolean(res.data?.hasMore));
+      setAttendanceMap(prev => {
+        const next = { ...prev };
+        more.forEach(m => { if (!(m._id in next)) next[m._id] = false; });
+        return next;
+      });
+    } catch {
+      toast({ title: "Error", description: "Failed to load more members", variant: "destructive" });
+    } finally {
+      setLoadingMoreMembers(false);
     }
   };
 
@@ -1020,7 +1037,7 @@ const UserTargetsSection = () => {
 
       {/* ══════════ ATTENDANCE DIALOG ══════════ */}
       <Dialog open={attendanceOpen} onOpenChange={setAttendanceOpen}>
-        <DialogContent className="glass sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-2xl border-border/60">
+        <DialogContent aria-describedby={undefined} className="glass sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col rounded-2xl border-border/60">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -1053,21 +1070,12 @@ const UserTargetsSection = () => {
             <ListSkeleton rows={4} />
           ) : (
             <div className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <p className="text-sm text-muted-foreground">
-                  Mark attendance for each member in your area
-                </p>
-                <Badge variant="outline" className="shrink-0">
-                  {presentCount}/{totalAttendance} present
-                </Badge>
-              </div>
-
-              {/* Select All / Deselect All */}
-              <div className="flex gap-2 mb-3 px-1">
+              {/* Compact single-row header: actions + count */}
+              <div className="flex items-center gap-2 mb-2 px-1">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs"
+                  className="text-xs h-7 px-2.5"
                   onClick={() => {
                     const newMap: Record<string, boolean> = {};
                     Object.keys(attendanceMap).forEach(id => { newMap[id] = true; });
@@ -1079,7 +1087,7 @@ const UserTargetsSection = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs"
+                  className="text-xs h-7 px-2.5"
                   onClick={() => {
                     const newMap: Record<string, boolean> = {};
                     Object.keys(attendanceMap).forEach(id => { newMap[id] = false; });
@@ -1088,10 +1096,13 @@ const UserTargetsSection = () => {
                 >
                   Deselect All
                 </Button>
+                <Badge variant="outline" className="shrink-0 ml-auto">
+                  {presentCount}/{totalAttendance} present
+                </Badge>
               </div>
 
               {/* Member list */}
-              <div className="overflow-y-auto flex-1 space-y-1 pr-1">
+              <div className="overflow-y-auto flex-1 space-y-0.5 pr-1">
                 {/* Area Leaders section */}
                 {areaLeaders.length > 0 && (
                   <div className="mb-2">
@@ -1099,13 +1110,13 @@ const UserTargetsSection = () => {
                     {areaLeaders.map(leader => {
                       // Leaders are Users, not Members — show them as info-only (not in attendanceMap)
                       return (
-                        <div key={`leader-${leader._id}`} className="flex items-center gap-3 rounded-2xl bg-blue-50/70 px-3 py-2">
+                        <div key={`leader-${leader._id}`} className="flex items-center gap-2 rounded-xl px-2 py-1">
                           <Users className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{leader.name}</p>
-                            <p className="text-xs text-muted-foreground">{leader.roleTag?.name} - {leader.phone}</p>
+                          <div className="flex-1 min-w-0 leading-tight">
+                            <p className="text-[13px] font-medium truncate leading-tight">{leader.name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate leading-tight">{leader.roleTag?.roleDescription || leader.roleTag?.name || 'Area'} - {leader.phone}</p>
                           </div>
-                          <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">Leader</Badge>
+                          <Badge className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700 shrink-0">Leader</Badge>
                         </div>
                       );
                     })}
@@ -1116,14 +1127,15 @@ const UserTargetsSection = () => {
                 {areaMembers.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 px-1">
-                      Members ({areaMembers.length})
+                      Members ({areaMembers.length}{memberTotal > areaMembers.length ? ` of ${memberTotal}` : ''})
                     </p>
                     {areaMembers.map(member => (
                       <label
                         key={member._id}
-                        className="flex items-center gap-3 rounded-2xl px-3 py-2 hover:bg-muted/60 cursor-pointer"
+                        className="flex items-center gap-2 rounded-xl px-2 py-1 hover:bg-muted/60 cursor-pointer"
                       >
                         <Checkbox
+                          className="h-3.5 w-3.5 shrink-0"
                           checked={attendanceMap[member._id] || false}
                           onCheckedChange={(checked) => {
                             setAttendanceMap(prev => ({
@@ -1132,19 +1144,30 @@ const UserTargetsSection = () => {
                             }));
                           }}
                         />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{member.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="flex-1 min-w-0 leading-tight">
+                          <p className="text-[13px] font-medium truncate leading-tight">{member.name}</p>
+                          <p className="text-[11px] text-muted-foreground truncate leading-tight">
                             {member.group?.name || 'No group'} - {member.phone}
                           </p>
                         </div>
                         {member.isLeader && (
-                          <Badge className="text-xs bg-green-100 text-green-700 shrink-0">
+                          <Badge className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 shrink-0">
                             {member.roleTag?.name || 'Leader'}
                           </Badge>
                         )}
                       </label>
                     ))}
+                    {memberHasMore && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 text-xs"
+                        onClick={loadMoreMembers}
+                        disabled={loadingMoreMembers}
+                      >
+                        {loadingMoreMembers ? "Loading..." : `Load More (${areaMembers.length} of ${memberTotal})`}
+                      </Button>
+                    )}
                   </div>
                 )}
 

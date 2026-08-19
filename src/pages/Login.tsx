@@ -51,9 +51,39 @@ const FLOW = [
   { title: "Pick your account", sub: "Every role, one login" },
 ];
 
+/**
+ * Dial codes we actually serve (India + the Gulf/diaspora corridors). India is
+ * validated strictly; everywhere else just has to look like a real number.
+ */
+const COUNTRIES = [
+  { code: "IN", dial: "91", digits: 10 },
+  { code: "AE", dial: "971", digits: 9 },
+  { code: "SA", dial: "966", digits: 9 },
+  { code: "QA", dial: "974", digits: 8 },
+  { code: "KW", dial: "965", digits: 8 },
+  { code: "OM", dial: "968", digits: 8 },
+  { code: "BH", dial: "973", digits: 8 },
+  { code: "MY", dial: "60", digits: 10 },
+  { code: "SG", dial: "65", digits: 8 },
+  { code: "GB", dial: "44", digits: 10 },
+  { code: "US", dial: "1", digits: 10 },
+  { code: "AU", dial: "61", digits: 9 },
+];
+
+/** Browser locale region -> dial code, so Gulf users don't start on +91. */
+const detectDial = () => {
+  try {
+    const region = new Intl.Locale(navigator.language || "en-IN").maximize().region;
+    return COUNTRIES.find((c) => c.code === region)?.dial ?? "91";
+  } catch {
+    return "91";
+  }
+};
+
 const Login = () => {
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
+  const [dial, setDial] = useState(detectDial);
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [accounts, setAccounts] = useState<LoginAccount[]>([]);
   const [ticket, setTicket] = useState("");
@@ -73,7 +103,9 @@ const Login = () => {
     if (isAuthenticated) navigate(getHomeRouteByRole(userRole), { replace: true });
   }, [isAuthenticated, userRole, navigate]);
 
-  const phoneIsValid = /^[6-9]\d{9}$/.test(phone);
+  const country = COUNTRIES.find((c) => c.dial === dial) ?? COUNTRIES[0];
+  const phoneIsValid = dial === "91" ? /^[6-9]\d{9}$/.test(phone) : phone.length >= 6;
+  const fullPhone = `${dial}${phone}`;
   const otpValue = otp.join("");
   const stepIndex = STEP_ORDER.indexOf(step);
 
@@ -101,7 +133,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const result = await loginAPI.sendOTP(phone, resend);
+      const result = await loginAPI.sendOTP(fullPhone, resend);
       setIsTestPhone(Boolean(result.data?.isTestPhone));
       setOtp(Array(OTP_LENGTH).fill(""));
       setSecondsLeft(RESEND_SECONDS);
@@ -138,7 +170,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const result = await loginAPI.verifyOTP(phone, code);
+      const result = await loginAPI.verifyOTP(fullPhone, code);
       const found = (result.data?.accounts || []) as LoginAccount[];
       const issuedTicket: string = result.data?.ticket;
 
@@ -205,9 +237,9 @@ const Login = () => {
 
   const heading = useMemo(() => {
     if (step === "phone") return { title: "Sign in", sub: "We'll send a one-time code to your WhatsApp." };
-    if (step === "otp") return { title: "Check WhatsApp", sub: `Code sent to +91 ${phone}.` };
+    if (step === "otp") return { title: "Check WhatsApp", sub: `Code sent to +${dial} ${phone}.` };
     return { title: "Choose an account", sub: "This number holds more than one role." };
-  }, [step, phone]);
+  }, [step, phone, dial]);
 
   return (
     <div className="min-h-[100dvh] bg-[#f6f2ec] text-stone-900 lg:grid lg:grid-cols-[47%_1fr] xl:grid-cols-[44%_1fr]">
@@ -309,9 +341,9 @@ const Login = () => {
 
       {/* ————— Form panel ————— */}
       <main className="flex min-h-[100dvh] flex-col lg:min-h-0 lg:items-center lg:justify-center">
-        <div className="mx-auto flex w-full max-w-[30rem] flex-1 flex-col px-5 pb-6 pt-6 sm:justify-center sm:py-10 lg:flex-none lg:px-8">
+        <div className="mx-auto flex w-full max-w-[30rem] flex-1 flex-col justify-center px-5 py-6 sm:py-10 lg:flex-none lg:px-8">
           {/* Card on tablet+; bare, edge-to-edge form on phones */}
-          <div className="flex flex-1 flex-col sm:flex-none sm:rounded-[1.75rem] sm:border sm:border-stone-200/80 sm:bg-white sm:p-9 sm:shadow-[0_24px_60px_-24px_rgba(28,18,16,0.18)] lg:p-10">
+          <div className="flex flex-col sm:flex-none sm:rounded-[1.75rem] sm:border sm:border-stone-200/80 sm:bg-white sm:p-9 sm:shadow-[0_24px_60px_-24px_rgba(28,18,16,0.18)] lg:p-10">
             {/* Brand row — hidden once the desktop panel shows it */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
               <img src="/logo.jpg" alt="" className="h-11 w-11 rounded-xl object-contain ring-1 ring-stone-200" />
@@ -354,10 +386,24 @@ const Login = () => {
                       Mobile number
                     </label>
                     <div className="relative">
-                      <div className="pointer-events-none absolute left-4 top-1/2 flex -translate-y-1/2 items-center gap-2.5 text-sm text-stone-500">
-                        <Smartphone className="h-4 w-4 text-stone-400" />
-                        <span className="font-semibold">+91</span>
-                        <div className="h-5 w-px bg-stone-200" />
+                      <div className="absolute left-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-sm text-stone-600">
+                        <Smartphone className="pointer-events-none h-4 w-4 shrink-0 text-stone-400" />
+                        <select
+                          aria-label="Country code"
+                          value={dial}
+                          onChange={(e) => {
+                            setDial(e.target.value);
+                            setPhone("");
+                          }}
+                          className="cursor-pointer appearance-none rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-stone-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                        >
+                          {COUNTRIES.map((c) => (
+                            <option key={c.code} value={c.dial}>
+                              {c.code} +{c.dial}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none h-5 w-px bg-stone-200" />
                       </div>
                       <Input
                         id="login-phone"
@@ -365,21 +411,37 @@ const Login = () => {
                         inputMode="numeric"
                         autoComplete="tel"
                         autoFocus
-                        placeholder="10-digit number"
+                        placeholder={`${country.digits}-digit number`}
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "");
+                          // A pasted country-coded number picks its own country.
+                          const pasted = COUNTRIES.find(
+                            (c) => digits.length > c.dial.length && digits.startsWith(c.dial)
+                          );
+                          if (e.target.value.trim().startsWith("+") && pasted) {
+                            setDial(pasted.dial);
+                            setPhone(digits.slice(pasted.dial.length).slice(0, 14));
+                            return;
+                          }
+                          setPhone(digits.slice(0, dial === "91" ? 10 : 14));
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
                             void sendCode();
                           }
                         }}
-                        maxLength={10}
-                        className="h-14 rounded-2xl border-stone-200 bg-white pl-[6.5rem] text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
+                        maxLength={dial === "91" ? 10 : 14}
+                        className="h-14 rounded-2xl border-stone-200 bg-white pl-[7.75rem] text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
                       />
                     </div>
                     {phone.length > 0 && !phoneIsValid && (
-                      <p className="text-xs font-medium text-destructive">Enter a valid 10-digit mobile number.</p>
+                      <p className="text-xs font-medium text-destructive">
+                        {dial === "91"
+                          ? "Enter a valid 10-digit mobile number."
+                          : "Enter a valid mobile number."}
+                      </p>
                     )}
                   </div>
 
@@ -512,7 +574,7 @@ const Login = () => {
               )}
             </div>
 
-            <div className="mt-auto pt-8 sm:mt-0 lg:hidden">
+            <div className="pt-8 lg:hidden">
               <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400">
                 <LockKeyhole className="h-3 w-3" />
                 <span>Secure sign-in · codes are single-use</span>

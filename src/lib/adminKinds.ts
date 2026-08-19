@@ -1,4 +1,4 @@
-import { Building2, MapPinned, ShieldCheck, UserRound, HeartHandshake, Users2 } from "lucide-react";
+import { Building2, MapPinned, ShieldCheck, UserRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -19,11 +19,9 @@ interface RoleDisplay {
   icon: LucideIcon;
 }
 
-const ADMIN_KIND_DISPLAY: Record<AdminKind, RoleDisplay> = {
-  area: { label: "Area Admin", hint: "Area level", icon: ShieldCheck },
-  murabi: { label: "Murabi Admin", hint: "Area level", icon: HeartHandshake },
-  coordinator: { label: "Coordinator Admin", hint: "Area level", icon: Users2 },
-};
+// Murabi and Coordinator admins are the same thing as Area Admin — one login,
+// one label. adminKind survives only as a legacy data field on old accounts.
+const AREA_ADMIN_DISPLAY: RoleDisplay = { label: "Area Admin", hint: "Area level", icon: ShieldCheck };
 
 const ROLE_DISPLAY: Record<Exclude<AppRole, "group_admin">, RoleDisplay> = {
   state_admin: { label: "State Admin", hint: "State level", icon: Building2 },
@@ -33,10 +31,10 @@ const ROLE_DISPLAY: Record<Exclude<AppRole, "group_admin">, RoleDisplay> = {
 
 const FALLBACK: RoleDisplay = { label: "Account", hint: "", icon: UserRound };
 
-/** Label, hint and icon for an account. `adminKind` only matters for group_admin. */
-export function getRoleDisplay(role?: string | null, adminKind?: string | null): RoleDisplay {
+/** Label, hint and icon for an account. All area-level kinds display as Area Admin. */
+export function getRoleDisplay(role?: string | null, _adminKind?: string | null): RoleDisplay {
   if (role === "group_admin") {
-    return ADMIN_KIND_DISPLAY[(adminKind as AdminKind) ?? "area"] ?? ADMIN_KIND_DISPLAY.area;
+    return AREA_ADMIN_DISPLAY;
   }
   return ROLE_DISPLAY[role as Exclude<AppRole, "group_admin">] ?? FALLBACK;
 }
@@ -68,8 +66,6 @@ export const ROLE_FILTER_OPTIONS = [
   { value: "all", label: "All Roles", role: null, adminKind: null },
   { value: "state_admin", label: "State Admins", role: "state_admin", adminKind: null },
   { value: "district_admin", label: "District Admins", role: "district_admin", adminKind: null },
-  { value: "group_admin:area", label: "Area Admins", role: "group_admin", adminKind: "area" },
-  { value: "group_admin:murabi", label: "Murabi Admins", role: "group_admin", adminKind: "murabi" },
-  { value: "group_admin:coordinator", label: "Coordinator Admins", role: "group_admin", adminKind: "coordinator" },
+  { value: "group_admin", label: "Area Admins", role: "group_admin", adminKind: null },
   { value: "member", label: "Members", role: "member", adminKind: null },
 ] as const;
