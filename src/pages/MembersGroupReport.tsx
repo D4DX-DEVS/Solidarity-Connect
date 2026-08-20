@@ -8,6 +8,7 @@ import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import PageSizeInput from "@/components/app/PageSizeInput";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UnitStats {
   _id: string;
@@ -69,6 +70,11 @@ const EMPTY_SUMMARY: CensusSummary = {
 };
 
 const MembersGroupReport = () => {
+  const { user } = useAuth();
+  // Backend census is already role-scoped; the district filter/hierarchy is only
+  // meaningful for state admins. Others see just their own slice.
+  const isStateAdmin = user?.role === "state_admin";
+  const isAreaAdmin = user?.role === "group_admin";
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [loading, setLoading] = useState(true);
   const [paginationLoading, setPaginationLoading] = useState(false);
@@ -95,12 +101,13 @@ const MembersGroupReport = () => {
   };
   const writeCache = (key: string, data: any) => cache.current.set(key, { ts: Date.now(), data });
 
-  // District list for the filter
+  // District list for the filter — state admin only; others are locked to their scope.
   useEffect(() => {
+    if (!isStateAdmin) return;
     districtsAPI.getDistricts()
       .then((res) => { if (res.success) setDistrictOptions(res.data || []); })
       .catch((err) => console.error("Error fetching districts:", err));
-  }, []);
+  }, [isStateAdmin]);
 
   // District census — server-side paginated, cached per page
   useEffect(() => {
@@ -161,6 +168,15 @@ const MembersGroupReport = () => {
       setUnitLoading((s) => ({ ...s, [districtId]: false }));
     }
   }, []);
+
+  // Non-state roles are scoped to one district — auto-expand so units show immediately.
+  useEffect(() => {
+    if (isStateAdmin || rows.length === 0) return;
+    const ids = rows.map((d) => d._id);
+    setOpenDistricts(ids);
+    ids.forEach(loadUnits);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, isStateAdmin]);
 
   const handleOpenChange = (values: string[]) => {
     setOpenDistricts(values);
@@ -255,24 +271,32 @@ const MembersGroupReport = () => {
           </div>
 
           <SectionCard
-            title="District Census"
-            description={`${summary.districtCount} districts · ${summary.unitCount} units. Expand a district to see its units.`}
+            title={isAreaAdmin ? "Area Census" : "District Census"}
+            description={
+              isAreaAdmin
+                ? `${summary.unitCount} units in your area.`
+                : isStateAdmin
+                  ? `${summary.districtCount} districts · ${summary.unitCount} units. Expand a district to see its units.`
+                  : `${summary.unitCount} units in your district.`
+            }
             contentClassName="px-0 pb-0 pt-3 sm:px-0 sm:pb-0 sm:pt-4"
             action={
-              <Select
-                value={selectedDistrict || "all"}
-                onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
-              >
-                <SelectTrigger className="h-9 w-[140px] px-2 text-xs sm:w-[200px] sm:text-sm">
-                  <SelectValue placeholder="All Districts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Districts</SelectItem>
-                  {districtOptions.map((d) => (
-                    <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              isStateAdmin ? (
+                <Select
+                  value={selectedDistrict || "all"}
+                  onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
+                >
+                  <SelectTrigger className="h-9 w-[140px] px-2 text-xs sm:w-[200px] sm:text-sm">
+                    <SelectValue placeholder="All Districts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districtOptions.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : undefined
             }
           >
             <div className="hidden grid-cols-[1fr_repeat(4,72px)] gap-2 border-b px-4 pb-2 text-xs font-medium text-muted-foreground sm:grid sm:px-6">
@@ -359,7 +383,7 @@ const MembersGroupReport = () => {
               <p className="px-6 py-8 text-center text-muted-foreground">No districts match the selected filter.</p>
             )}
 
-            {pagination && pagination.totalDocs > 0 && (
+            {pagination && pagination.totalDocs > 0 && (isStateAdmin || pagination.totalPages > 1) && (
               <div className="flex flex-col gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <span className="text-xs text-muted-foreground sm:text-sm">
                     Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}
