@@ -328,7 +328,47 @@ const MembersGroupReport = () => {
                         <Loader2 className="h-4 w-4 animate-spin" /> Loading units…
                       </div>
                     ) : units[district._id]?.length ? (
-                      <div className="overflow-x-auto">
+                      <>
+                      {/* Mobile: flat unit rows — no nested cards */}
+                      <div className="divide-y sm:hidden">
+                        {units[district._id].map((unit) => (
+                          <div key={unit._id} className="px-4 py-3">
+                            <div className="mb-1.5 flex items-center justify-between gap-2">
+                              <span className="truncate text-sm font-semibold">{unit.groupName}</span>
+                              <span className="shrink-0 text-xs text-muted-foreground">{unit.groupCode}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-center">
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Total</p>
+                                <p className="text-sm font-semibold text-primary">{unit.totalMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Active</p>
+                                <p className="text-sm font-semibold text-green-600">{unit.activeMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Inactive</p>
+                                <p className="text-sm font-semibold text-gray-600">{unit.inactiveMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Abroad</p>
+                                <p className="text-sm font-semibold text-blue-600">{unit.abroadMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Applicant</p>
+                                <p className="text-sm font-semibold text-orange-600">{unit.applicantMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">B. Maal</p>
+                                <p className="text-sm font-semibold text-purple-600">₹{unit.totalBaithulMaal.toLocaleString()}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop: table */}
+                      <div className="hidden overflow-x-auto sm:block">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -371,6 +411,7 @@ const MembersGroupReport = () => {
                           </TableBody>
                         </Table>
                       </div>
+                      </>
                     ) : (
                       <p className="py-6 text-center text-sm text-muted-foreground">No units in this district.</p>
                     )}
