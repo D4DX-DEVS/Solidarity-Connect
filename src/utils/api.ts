@@ -41,8 +41,11 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
-      const text = await response.text();
-      data = { message: text || `HTTP ${response.status}` };
+      const text = (await response.text()).trim();
+      // ponytail: gateways (502/504) answer with a whole HTML error page — never
+      // show that to a user; only short plain text is a real message.
+      const usable = text && !text.startsWith('<') && text.length <= 200;
+      data = { message: usable ? text : `Service unavailable (HTTP ${response.status}). Please try again.` };
     }
 
     if (!response.ok) {

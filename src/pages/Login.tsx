@@ -2,17 +2,35 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   ChevronRight,
   Loader2,
   LockKeyhole,
+  ChevronsUpDown,
   MessageCircle,
   ShieldCheck,
   Smartphone,
 } from "lucide-react";
+import {
+  getCountries,
+  getCountryCallingCode,
+  isValidPhoneNumber,
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js/mobile"; // mobile-only metadata: landlines can't receive a WhatsApp code
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth, type LoginAccount } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleDisplay } from "@/lib/adminKinds";
@@ -51,39 +69,37 @@ const FLOW = [
   { title: "Pick your account", sub: "Every role, one login" },
 ];
 
-/**
- * Dial codes we actually serve (India + the Gulf/diaspora corridors). India is
- * validated strictly; everywhere else just has to look like a real number.
- */
-const COUNTRIES = [
-  { code: "IN", dial: "91", digits: 10 },
-  { code: "AE", dial: "971", digits: 9 },
-  { code: "SA", dial: "966", digits: 9 },
-  { code: "QA", dial: "974", digits: 8 },
-  { code: "KW", dial: "965", digits: 8 },
-  { code: "OM", dial: "968", digits: 8 },
-  { code: "BH", dial: "973", digits: 8 },
-  { code: "MY", dial: "60", digits: 10 },
-  { code: "SG", dial: "65", digits: 8 },
-  { code: "GB", dial: "44", digits: 10 },
-  { code: "US", dial: "1", digits: 10 },
-  { code: "AU", dial: "61", digits: 9 },
-];
+/** Corridors we serve most; pinned above the full list so nobody scrolls for them. */
+const PINNED: CountryCode[] = ["IN", "AE", "SA", "QA", "KW", "OM", "BH", "MY", "SG", "GB", "US", "AU"];
 
-/** Browser locale region -> dial code, so Gulf users don't start on +91. */
-const detectDial = () => {
+const regionNames = (() => {
   try {
-    const region = new Intl.Locale(navigator.language || "en-IN").maximize().region;
-    return COUNTRIES.find((c) => c.code === region)?.dial ?? "91";
+    return new Intl.DisplayNames(["en"], { type: "region" });
   } catch {
-    return "91";
+    return null; // ponytail: ancient browser — country code alone still reads fine
   }
-};
+})();
+
+const nameOf = (code: CountryCode) => regionNames?.of(code) ?? code;
+
+/** cmdk matches on `value`, so pack name + ISO code + dial into it. */
+const entry = (code: CountryCode) => ({
+  code,
+  name: nameOf(code),
+  dial: getCountryCallingCode(code),
+  search: `${nameOf(code)} ${code} +${getCountryCallingCode(code)}`,
+});
+
+const PINNED_COUNTRIES = PINNED.map(entry);
+const OTHER_COUNTRIES = getCountries()
+  .filter((code) => !PINNED.includes(code))
+  .map(entry)
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 const Login = () => {
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
-  const [dial, setDial] = useState(detectDial);
+  const [country, setCountry] = useState<CountryCode>("IN"); // ponytail: IN default; locale sniffing guessed wrong on mobile
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [accounts, setAccounts] = useState<LoginAccount[]>([]);
   const [ticket, setTicket] = useState("");
@@ -91,6 +107,7 @@ const Login = () => {
   const [enteringId, setEnteringId] = useState<string | null>(null);
   const [isTestPhone, setIsTestPhone] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [countryOpen, setCountryOpen] = useState(false);
 
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const navigate = useNavigate();
@@ -103,8 +120,8 @@ const Login = () => {
     if (isAuthenticated) navigate(getHomeRouteByRole(userRole), { replace: true });
   }, [isAuthenticated, userRole, navigate]);
 
-  const country = COUNTRIES.find((c) => c.dial === dial) ?? COUNTRIES[0];
-  const phoneIsValid = dial === "91" ? /^[6-9]\d{9}$/.test(phone) : phone.length >= 6;
+  const dial = getCountryCallingCode(country);
+  const phoneIsValid = isValidPhoneNumber(phone, country);
   const fullPhone = `${dial}${phone}`;
   const otpValue = otp.join("");
   const stepIndex = STEP_ORDER.indexOf(step);
@@ -340,20 +357,26 @@ const Login = () => {
       </aside>
 
       {/* ————— Form panel ————— */}
-      <main className="flex min-h-[100dvh] flex-col lg:min-h-0 lg:items-center lg:justify-center">
+      <main className="flex min-h-[100dvh] flex-col items-center justify-center lg:min-h-0">
         <div className="mx-auto flex w-full max-w-[30rem] flex-1 flex-col justify-center px-5 py-6 sm:py-10 lg:flex-none lg:px-8">
           {/* Card on tablet+; bare, edge-to-edge form on phones */}
           <div className="flex flex-col sm:flex-none sm:rounded-[1.75rem] sm:border sm:border-stone-200/80 sm:bg-white sm:p-9 sm:shadow-[0_24px_60px_-24px_rgba(28,18,16,0.18)] lg:p-10">
             {/* Brand row — hidden once the desktop panel shows it */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <img src="/logo.jpg" alt="" className="h-11 w-11 rounded-xl object-contain ring-1 ring-stone-200" />
-              <div>
-                <span className="block text-[15px] font-bold tracking-[0.14em] text-stone-900">SOLIDARITY</span>
-                <span className="block text-[10px] font-medium uppercase tracking-[0.24em] text-stone-400">
+              <img
+                src="/logo.jpg"
+                alt=""
+                className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain ring-1 ring-stone-200"
+              />
+              <div className="min-w-0">
+                <span className="block truncate text-[15px] font-bold tracking-[0.14em] text-stone-900">
+                  SOLIDARITY
+                </span>
+                <span className="block truncate text-[10px] font-medium uppercase tracking-[0.24em] text-stone-400">
                   Organization Portal
                 </span>
               </div>
-              <span className="ml-auto rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-[11px] font-semibold text-stone-500">
+              <span className="ml-auto shrink-0 rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-[11px] font-semibold text-stone-500">
                 {stepIndex + 1} / {FLOW.length}
               </span>
             </div>
@@ -370,7 +393,7 @@ const Login = () => {
               </button>
             )}
 
-            <header className="mb-7">
+            <header className="mb-7 text-center sm:text-left">
               <h2 className="text-[2rem] font-semibold tracking-tight text-stone-900 sm:text-[2.15rem]" style={serif}>
                 {heading.title}
               </h2>
@@ -388,21 +411,50 @@ const Login = () => {
                     <div className="relative">
                       <div className="absolute left-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-sm text-stone-600">
                         <Smartphone className="pointer-events-none h-4 w-4 shrink-0 text-stone-400" />
-                        <select
-                          aria-label="Country code"
-                          value={dial}
-                          onChange={(e) => {
-                            setDial(e.target.value);
-                            setPhone("");
-                          }}
-                          className="cursor-pointer appearance-none rounded-lg bg-transparent py-1 pr-1 text-sm font-semibold text-stone-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                        >
-                          {COUNTRIES.map((c) => (
-                            <option key={c.code} value={c.dial}>
-                              {c.code} +{c.dial}
-                            </option>
-                          ))}
-                        </select>
+                        <Popover open={countryOpen} onOpenChange={setCountryOpen}>
+                          <PopoverTrigger
+                            aria-label="Country code"
+                            className="flex h-8 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-stone-700 transition-colors hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                          >
+                            {country} +{dial}
+                            <ChevronsUpDown className="h-3.5 w-3.5 text-stone-400" />
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-[17rem] p-0">
+                            <Command>
+                              <CommandInput placeholder="Search country or code…" />
+                              <CommandList>
+                                <CommandEmpty>No country found.</CommandEmpty>
+                                {[
+                                  { heading: "Frequent", items: PINNED_COUNTRIES },
+                                  { heading: "All countries", items: OTHER_COUNTRIES },
+                                ].map((group) => (
+                                  <CommandGroup key={group.heading} heading={group.heading}>
+                                    {group.items.map((c) => (
+                                      <CommandItem
+                                        key={c.code}
+                                        value={c.search}
+                                        onSelect={() => {
+                                          setCountry(c.code);
+                                          setPhone("");
+                                          setCountryOpen(false);
+                                        }}
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4 shrink-0",
+                                            c.code === country ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        <span className="truncate">{c.name}</span>
+                                        <span className="ml-auto pl-2 text-stone-400">+{c.dial}</span>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                ))}
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <div className="pointer-events-none h-5 w-px bg-stone-200" />
                       </div>
                       <Input
@@ -411,20 +463,20 @@ const Login = () => {
                         inputMode="numeric"
                         autoComplete="tel"
                         autoFocus
-                        placeholder={`${country.digits}-digit number`}
+                        placeholder="Mobile number"
                         value={phone}
                         onChange={(e) => {
-                          const digits = e.target.value.replace(/\D/g, "");
-                          // A pasted country-coded number picks its own country.
-                          const pasted = COUNTRIES.find(
-                            (c) => digits.length > c.dial.length && digits.startsWith(c.dial)
-                          );
-                          if (e.target.value.trim().startsWith("+") && pasted) {
-                            setDial(pasted.dial);
-                            setPhone(digits.slice(pasted.dial.length).slice(0, 14));
-                            return;
+                          const raw = e.target.value;
+                          // A pasted +country number picks its own country.
+                          if (raw.trim().startsWith("+")) {
+                            const parsed = parsePhoneNumberFromString(raw.trim());
+                            if (parsed?.country) {
+                              setCountry(parsed.country);
+                              setPhone(parsed.nationalNumber);
+                              return;
+                            }
                           }
-                          setPhone(digits.slice(0, dial === "91" ? 10 : 14));
+                          setPhone(raw.replace(/\D/g, "").slice(0, 15));
                         }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -432,15 +484,13 @@ const Login = () => {
                             void sendCode();
                           }
                         }}
-                        maxLength={dial === "91" ? 10 : 14}
+                        maxLength={15}
                         className="h-14 rounded-2xl border-stone-200 bg-white pl-[7.75rem] text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
                       />
                     </div>
                     {phone.length > 0 && !phoneIsValid && (
                       <p className="text-xs font-medium text-destructive">
-                        {dial === "91"
-                          ? "Enter a valid 10-digit mobile number."
-                          : "Enter a valid mobile number."}
+                        Enter a valid mobile number for {regionNames?.of(country) ?? country}.
                       </p>
                     )}
                   </div>
