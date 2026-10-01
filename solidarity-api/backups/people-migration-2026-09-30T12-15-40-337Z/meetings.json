@@ -1,0 +1,194 @@
+[
+ {
+  "_id": {
+   "$oid": "6a3291be0b17fb75ea05662b"
+  },
+  "title": "Secretariat",
+  "description": "District secretariat",
+  "scheduledDate": {
+   "$date": {
+    "$numberLong": "1781703000000"
+   }
+  },
+  "duration": {
+   "$numberInt": "180"
+  },
+  "meetingType": "monthly_series",
+  "monthlyDetails": {
+   "month": {
+    "$numberInt": "6"
+   },
+   "year": {
+    "$numberInt": "2025"
+   },
+   "synopsis": "District secretariat",
+   "totalSessions": {
+    "$numberInt": "0"
+   }
+  },
+  "targetAudience": "all",
+  "targetGroups": [],
+  "targetDistricts": [],
+  "status": "scheduled",
+  "minutes": {
+   "decisions": [],
+   "attachments": [],
+   "actionItems": []
+  },
+  "notifications": {
+   "sent": false,
+   "reminderSent": false
+  },
+  "createdBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "agenda": [],
+  "attendance": [],
+  "guestAttendance": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1781699006193"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1781699081255"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "updatedBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "venue": "TCC"
+ },
+ {
+  "_id": {
+   "$oid": "6a3292500b17fb75ea056656"
+  },
+  "title": "പ്രാദേശിക ജാഥ",
+  "description": "ജില്ല പ്രസിഡൻ്റിൻ്റെ പ്രാദേശിക ജാഥ",
+  "scheduledDate": {
+   "$date": {
+    "$numberLong": "1782534600000"
+   }
+  },
+  "duration": {
+   "$numberInt": "120"
+  },
+  "meetingType": "monthly_series",
+  "monthlyDetails": {
+   "month": {
+    "$numberInt": "6"
+   },
+   "year": {
+    "$numberInt": "2025"
+   },
+   "synopsis": "ജില്ല പ്രസിഡൻ്റിൻ്റെ പ്രാദേശിക ജാഥ",
+   "totalSessions": {
+    "$numberInt": "0"
+   }
+  },
+  "targetAudience": "all",
+  "targetGroups": [],
+  "targetDistricts": [],
+  "status": "scheduled",
+  "minutes": {
+   "decisions": [],
+   "attachments": [],
+   "actionItems": []
+  },
+  "notifications": {
+   "sent": false,
+   "reminderSent": false
+  },
+  "createdBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "agenda": [],
+  "attendance": [],
+  "guestAttendance": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1781699152661"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1781699200004"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "updatedBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "venue": "മുല്ലക്കര"
+ },
+ {
+  "_id": {
+   "$oid": "6a3292e20b17fb75ea05668b"
+  },
+  "title": "പ്രാദേശിക ജാഥ",
+  "description": "ജില്ലാ പ്രസിഡൻ്റിൻ്റെ നേതൃത്വത്തിൽ ജില്ലാ ടീം പ്രാദേശിക തലത്തിൽ പ്രവർത്തകരെയും ജമാഅത്ത് നേതൃത്വത്തെയും സന്ദർശിക്കുന്നു",
+  "scheduledDate": {
+   "$date": {
+    "$numberLong": "1782646200000"
+   }
+  },
+  "duration": {
+   "$numberInt": "180"
+  },
+  "meetingType": "monthly_series",
+  "monthlyDetails": {
+   "month": {
+    "$numberInt": "6"
+   },
+   "year": {
+    "$numberInt": "2025"
+   },
+   "synopsis": "ജില്ലാ പ്രസിഡൻ്റിൻ്റെ നേതൃത്വത്തിൽ ജില്ലാ ടീം പ്രാദേശിക തലത്തിൽ പ്രവർത്തകരെയും ജമാഅത്ത് നേതൃത്വത്തെയും സന്ദർശിക്കുന്നു",
+   "totalSessions": {
+    "$numberInt": "0"
+   }
+  },
+  "targetAudience": "all",
+  "targetGroups": [],
+  "targetDistricts": [],
+  "status": "scheduled",
+  "minutes": {
+   "decisions": [],
+   "attachments": [],
+   "actionItems": []
+  },
+  "notifications": {
+   "sent": false,
+   "reminderSent": false
+  },
+  "createdBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "agenda": [],
+  "attendance": [],
+  "guestAttendance": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1781699298417"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1781699363326"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "updatedBy": {
+   "$oid": "69c27757005f5b5225fb6b62"
+  },
+  "venue": "West koratty, അന്നമനട"
+ }
+]

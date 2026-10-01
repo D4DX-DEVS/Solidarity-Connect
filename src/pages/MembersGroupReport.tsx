@@ -9,6 +9,7 @@ import PageSizeInput from "@/components/app/PageSizeInput";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { FEATURES } from "@/lib/features";
 
 interface UnitStats {
   _id: string;
@@ -231,7 +232,7 @@ const MembersGroupReport = () => {
     <PageShell contentClassName="pb-24">
       <PageHero
         title="Group Reports"
-        subtitle="District and unit member census with Baithul Maal coverage."
+        subtitle={FEATURES.baithulMaal ? "District and unit member census with Baithul Maal coverage." : "District and unit member census."}
         eyebrow="Reports"
         icon={<Users className="h-6 w-6" />}
         actions={
@@ -358,10 +359,12 @@ const MembersGroupReport = () => {
                                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Applicant</p>
                                 <p className="text-sm font-semibold text-orange-600">{unit.applicantMembers}</p>
                               </div>
+                              {FEATURES.baithulMaal && (
                               <div>
                                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground">B. Maal</p>
                                 <p className="text-sm font-semibold text-purple-600">₹{unit.totalBaithulMaal.toLocaleString()}</p>
                               </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -379,7 +382,7 @@ const MembersGroupReport = () => {
                               <TableHead className="text-right">Inactive</TableHead>
                               <TableHead className="text-right">Abroad</TableHead>
                               <TableHead className="text-right">Applicant</TableHead>
-                              <TableHead className="text-right">Baithul Maal</TableHead>
+                              {FEATURES.baithulMaal && <TableHead className="text-right">Baithul Maal</TableHead>}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -392,9 +395,11 @@ const MembersGroupReport = () => {
                                 <TableCell className="text-right font-semibold text-gray-600">{unit.inactiveMembers}</TableCell>
                                 <TableCell className="text-right font-semibold text-blue-600">{unit.abroadMembers}</TableCell>
                                 <TableCell className="text-right font-semibold text-orange-600">{unit.applicantMembers}</TableCell>
+                                {FEATURES.baithulMaal && (
                                 <TableCell className="text-right font-semibold text-purple-600">
                                   ₹{unit.totalBaithulMaal.toLocaleString()}
                                 </TableCell>
+                                )}
                               </TableRow>
                             ))}
                             <TableRow className="bg-background font-semibold">
@@ -404,9 +409,11 @@ const MembersGroupReport = () => {
                               <TableCell className="text-right text-gray-600">{district.inactiveMembers}</TableCell>
                               <TableCell className="text-right text-blue-600">{district.abroadMembers}</TableCell>
                               <TableCell className="text-right text-orange-600">{district.applicantMembers}</TableCell>
+                              {FEATURES.baithulMaal && (
                               <TableCell className="text-right text-purple-600">
                                 ₹{district.totalBaithulMaal.toLocaleString()}
                               </TableCell>
+                              )}
                             </TableRow>
                           </TableBody>
                         </Table>

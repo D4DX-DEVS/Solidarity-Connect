@@ -1,0 +1,4638 @@
+[
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c13"
+  },
+  "name": "CHERTHALA",
+  "code": "CHE",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "20"
+   },
+   "activeMembers": {
+    "$numberInt": "19"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192039"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703424527"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c16"
+  },
+  "name": "AMBALAPPUZHA",
+  "code": "AMB",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192123"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703424835"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c18"
+  },
+  "name": "ALAPPUZHA",
+  "code": "ALA",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780391209161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c1a"
+  },
+  "name": "KAYAMKULAM",
+  "code": "KAY",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192254"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703425539"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c1c"
+  },
+  "name": "HARIPPAD",
+  "code": "HAR",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "3"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192319"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703425931"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c1e"
+  },
+  "name": "ALUVA",
+  "code": "ALU",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "26"
+   },
+   "activeMembers": {
+    "$numberInt": "21"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192376"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703426285"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c20"
+  },
+  "name": "EDATHALA",
+  "code": "EDA",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "4"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192460"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703426661"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c22"
+  },
+  "name": "KALAMASSERY-PANAYIKULAM",
+  "code": "KAL",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192532"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780469834293"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c24"
+  },
+  "name": "KEEZHMAD-NEDUMBASSERY",
+  "code": "KEE",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "16"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192605"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703427373"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c26"
+  },
+  "name": "MUVATTUPUZHA-KOTHAMANGALAM",
+  "code": "MUV",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "15"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192674"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703427793"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c28"
+  },
+  "name": "KUNNATHUNAD",
+  "code": "KUN",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192758"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703428204"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c2a"
+  },
+  "name": "MANNAM",
+  "code": "MAN",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192821"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703428584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c2c"
+  },
+  "name": "PARAVUR",
+  "code": "PAR",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192899"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703428998"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d98a19e59c11ba29c2e"
+  },
+  "name": "PERUMBAVOOR",
+  "code": "PER",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703192971"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703429398"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c30"
+  },
+  "name": "VAZHAKKULAM",
+  "code": "VAZ",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193037"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703429789"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c32"
+  },
+  "name": "CHAKKARAKKAL",
+  "code": "CHA",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193103"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703430177"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c34"
+  },
+  "name": "IRITTY",
+  "code": "IRI",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "20"
+   },
+   "activeMembers": {
+    "$numberInt": "16"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193178"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780469941463"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c36"
+  },
+  "name": "TALIPARAMBA",
+  "code": "TAL",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "3"
+   },
+   "activeMembers": {
+    "$numberInt": "2"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193257"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703430906"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c38"
+  },
+  "name": "THALASSERY",
+  "code": "THA",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193328"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703431293"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c3a"
+  },
+  "name": "MADAYI",
+  "code": "MAD",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "3"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193389"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703431697"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c3c"
+  },
+  "name": "PANOOR",
+  "code": "PAN",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193455"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703432089"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c3e"
+  },
+  "name": "VALAPATTANAM",
+  "code": "VAL",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193559"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703432522"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c40"
+  },
+  "name": "KANNUR",
+  "code": "KAN",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193631"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703432926"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c42"
+  },
+  "name": "KASARAGOD",
+  "code": "KAS",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf1"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193725"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703433238"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c44"
+  },
+  "name": "KANJANGAD",
+  "code": "KAN1",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf1"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "8"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193802"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703433630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c46"
+  },
+  "name": "KUMBLA",
+  "code": "KUM",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf1"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193863"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703468447"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d99a19e59c11ba29c48"
+  },
+  "name": "TRIKKARIPPUR",
+  "code": "TRI",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf1"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703193934"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703468844"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c4a"
+  },
+  "name": "PALLURUTHY",
+  "code": "PAL",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194007"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703434031"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c4c"
+  },
+  "name": "VYPIN",
+  "code": "VYP",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "21"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194087"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703434405"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c4e"
+  },
+  "name": "ERNAKULAM SOUTH-NORTH",
+  "code": "ERNSOU",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "18"
+   },
+   "activeMembers": {
+    "$numberInt": "18"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194204"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703434804"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c50"
+  },
+  "name": "VYTILA",
+  "code": "VYT",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194273"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703435229"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c52"
+  },
+  "name": "KOCHI",
+  "code": "KOC",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194338"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703435605"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c54"
+  },
+  "name": "CHADAYAMANGALAM",
+  "code": "CHA1",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194417"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703435967"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c56"
+  },
+  "name": "KARUNAGAPALLY",
+  "code": "KAR",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194489"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703436368"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c58"
+  },
+  "name": "PATHANAPURAM",
+  "code": "PAT",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "7"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194579"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703436765"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c5a"
+  },
+  "name": "KOLLAM",
+  "code": "KOL",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194668"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703437164"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c5c"
+  },
+  "name": "ANCHAL-KADAKKAL",
+  "code": "ANC",
+  "district": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194755"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703437549"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c5e"
+  },
+  "name": "ERATUPETTA",
+  "code": "ERA",
+  "district": {
+   "$oid": "6a141d95a19e59c11ba29bfc"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194814"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703437937"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9aa19e59c11ba29c60"
+  },
+  "name": "CHANGANASSERY-KOTTAYAM",
+  "code": "CHA2",
+  "district": {
+   "$oid": "6a141d95a19e59c11ba29bfc"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703194937"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703438344"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c62"
+  },
+  "name": "KANJIRAPPALLY",
+  "code": "KAN2",
+  "district": {
+   "$oid": "6a141d95a19e59c11ba29bfc"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "2"
+   },
+   "activeMembers": {
+    "$numberInt": "2"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195035"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703438825"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c64"
+  },
+  "name": "MUNDAKKAYAM",
+  "code": "MUN",
+  "district": {
+   "$oid": "6a141d95a19e59c11ba29bfc"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "3"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195123"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703439160"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c66"
+  },
+  "name": "ALANALLUR",
+  "code": "ALA1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703439542"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c68"
+  },
+  "name": "ALATHUR",
+  "code": "ALA2",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "27"
+   },
+   "activeMembers": {
+    "$numberInt": "22"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195333"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703439966"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c6a"
+  },
+  "name": "PALAKKAD",
+  "code": "PAL1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195420"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703440364"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c6c"
+  },
+  "name": "CHITTUR",
+  "code": "CHI",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195493"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703440718"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c6e"
+  },
+  "name": "PATTAMBI",
+  "code": "PAT1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195573"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703441114"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c70"
+  },
+  "name": "PARALI-THRITHALA",
+  "code": "PAR1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "8"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195644"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703441479"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c72"
+  },
+  "name": "OTTAPALAM",
+  "code": "OTT",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "16"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195724"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703441883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c74"
+  },
+  "name": "MANNARKKAD",
+  "code": "MAN1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703442206"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c76"
+  },
+  "name": "PUTHUKKOD",
+  "code": "PUT",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "0"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195864"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780468532918"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ba19e59c11ba29c78"
+  },
+  "name": "CHERPULASSERY",
+  "code": "CHE1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "8"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703195942"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703442583"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c7a"
+  },
+  "name": "MATHILAKAM",
+  "code": "MAT",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196029"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703442996"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c7c"
+  },
+  "name": "KODUNGALLUR",
+  "code": "KOD",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196099"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703443402"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c7e"
+  },
+  "name": "NATTIKA",
+  "code": "NAT",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196170"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703443795"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c80"
+  },
+  "name": "ERIYAD",
+  "code": "ERI",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "16"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196272"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703444200"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c82"
+  },
+  "name": "MALA",
+  "code": "MAL",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196363"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703444578"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c84"
+  },
+  "name": "KUNNAMKULAM",
+  "code": "KUN1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "4"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196421"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703445004"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c86"
+  },
+  "name": "CHAVAKKAD",
+  "code": "CHA3",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196520"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703445379"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c88"
+  },
+  "name": "WADAKKANCHERY",
+  "code": "WAD",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "3"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196578"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703445776"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c8a"
+  },
+  "name": "THRISSUR",
+  "code": "THR",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "9"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196650"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780468866551"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c8c"
+  },
+  "name": "ALATHIYOOR",
+  "code": "ALA3",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "16"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196737"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703446575"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c8e"
+  },
+  "name": "AR NAGAR",
+  "code": "ARNAG",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196851"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703446984"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ca19e59c11ba29c90"
+  },
+  "name": "VALANCHERY",
+  "code": "VAL1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703196928"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703447373"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c92"
+  },
+  "name": "VENGARA",
+  "code": "VEN",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197018"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703449814"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c94"
+  },
+  "name": "PUTHANATHANI",
+  "code": "PUT1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "19"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197089"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703451794"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c96"
+  },
+  "name": "TIRUR",
+  "code": "TIR",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "21"
+   },
+   "activeMembers": {
+    "$numberInt": "21"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197176"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703452180"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c98"
+  },
+  "name": "TIRURANGADI",
+  "code": "TIR1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "38"
+   },
+   "activeMembers": {
+    "$numberInt": "29"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197254"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703452910"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c9a"
+  },
+  "name": "EDAPPAL-PONNANI",
+  "code": "EDA1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197332"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703453699"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c9c"
+  },
+  "name": "PARAPPUR",
+  "code": "PAR2",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "7"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197391"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703454113"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29c9e"
+  },
+  "name": "KOTTAKKAL",
+  "code": "KOT",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197459"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703454894"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29ca0"
+  },
+  "name": "UNIVERSITY",
+  "code": "UNI",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197536"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703455306"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29ca2"
+  },
+  "name": "PERUMBADAPPU",
+  "code": "PER1",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197629"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703456110"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29ca4"
+  },
+  "name": "TANUR",
+  "code": "TAN",
+  "district": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "34"
+   },
+   "activeMembers": {
+    "$numberInt": "32"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197699"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780469406613"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29ca6"
+  },
+  "name": "PERINTHALMANNA",
+  "code": "PER2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197780"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703447789"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29ca8"
+  },
+  "name": "PADAPPARAMB",
+  "code": "PAD",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "7"
+   },
+   "activeMembers": {
+    "$numberInt": "7"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197857"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703448204"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9da19e59c11ba29caa"
+  },
+  "name": "VALLUVAMBRAM",
+  "code": "VAL2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703197928"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703448594"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cac"
+  },
+  "name": "MANJERI",
+  "code": "MAN2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198022"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703448984"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cae"
+  },
+  "name": "TIRURKAD",
+  "code": "TIR2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "22"
+   },
+   "activeMembers": {
+    "$numberInt": "21"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198097"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703449379"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cb0"
+  },
+  "name": "VAZHAKKAD",
+  "code": "VAZ1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703450199"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cb2"
+  },
+  "name": "KARUVARAKKUND",
+  "code": "KAR1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "4"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198258"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703450578"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cb4"
+  },
+  "name": "CHUNGATHARA",
+  "code": "CHU",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "2"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198341"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703450975"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cb6"
+  },
+  "name": "NILAMBUR",
+  "code": "NIL",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "2"
+   },
+   "activeMembers": {
+    "$numberInt": "2"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198420"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703451395"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "name": "MAKKARAPARAMBA",
+  "code": "MAK",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "16"
+   },
+   "activeMembers": {
+    "$numberInt": "16"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198493"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703452499"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "name": "SANTHAPURAM",
+  "code": "SAN",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "22"
+   },
+   "activeMembers": {
+    "$numberInt": "20"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198581"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703453323"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cbc"
+  },
+  "name": "KONDOTTY",
+  "code": "KON",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "15"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198657"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703454499"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "name": "AREEKODE",
+  "code": "ARE",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "22"
+   },
+   "activeMembers": {
+    "$numberInt": "20"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198721"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703455728"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cc0"
+  },
+  "name": "MAMBAD",
+  "code": "MAM",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "13"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198815"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703456515"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cc2"
+  },
+  "name": "EDAVANNA",
+  "code": "EDA2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198901"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703456884"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "name": "MALAPPURAM",
+  "code": "MAL1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "47"
+   },
+   "activeMembers": {
+    "$numberInt": "43"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703198974"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703457725"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "name": "WANDOOR",
+  "code": "WAN",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "25"
+   },
+   "activeMembers": {
+    "$numberInt": "23"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199078"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703458126"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cc8"
+  },
+  "name": "SULTHAN BATHERY",
+  "code": "SULBAT",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0a"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "10"
+   },
+   "activeMembers": {
+    "$numberInt": "9"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199152"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703458527"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cca"
+  },
+  "name": "KALPETTA",
+  "code": "KAL1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0a"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199246"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703458930"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29ccc"
+  },
+  "name": "AYANCHERY",
+  "code": "AYA",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "7"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199337"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703459300"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cce"
+  },
+  "name": "KODUVALLY",
+  "code": "KOD1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "8"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199415"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703459704"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cd0"
+  },
+  "name": "THAMARASSERY",
+  "code": "THA1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "9"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199479"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703460099"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cd2"
+  },
+  "name": "MUKKAM",
+  "code": "MUK",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "19"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199562"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703460476"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cd4"
+  },
+  "name": "MEPAYYUR-PERAMBRA",
+  "code": "MEP",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "8"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199660"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703460845"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cd6"
+  },
+  "name": "KUNNAMANGALAM",
+  "code": "KUN2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199738"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703461254"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cd8"
+  },
+  "name": "KODIYATHUR-KARASSERY",
+  "code": "KOD2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "23"
+   },
+   "activeMembers": {
+    "$numberInt": "19"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199836"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703461630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cda"
+  },
+  "name": "KUTTIADI",
+  "code": "KUT",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "11"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199907"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703462034"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d9fa19e59c11ba29cdc"
+  },
+  "name": "VADAKARA",
+  "code": "VAD",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703199986"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703462418"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cde"
+  },
+  "name": "KOYILANDI",
+  "code": "KOY",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "3"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200054"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703462806"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29ce0"
+  },
+  "name": "PAYYOLI",
+  "code": "PAY",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "0"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200144"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703463150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29ce2"
+  },
+  "name": "OMASSERY",
+  "code": "OMA",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "16"
+   },
+   "activeMembers": {
+    "$numberInt": "15"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200204"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703463484"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29ce4"
+  },
+  "name": "THIRUVAMBADI-OMASSERY",
+  "code": "THI",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "9"
+   },
+   "activeMembers": {
+    "$numberInt": "9"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200285"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703463883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29ce6"
+  },
+  "name": "CHELANNUR-KAKKODI",
+  "code": "CHE2",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "15"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200350"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703464285"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29ce8"
+  },
+  "name": "KOZHIKKODE SOUTH",
+  "code": "KOZSOU",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "15"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200454"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703464656"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cea"
+  },
+  "name": "KOZHIKKODE NORTH",
+  "code": "KOZNOR",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "10"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200542"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703465059"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "name": "MEDICAL COLLEGE",
+  "code": "MEDCOL",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "34"
+   },
+   "activeMembers": {
+    "$numberInt": "27"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200619"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1781769950691"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cee"
+  },
+  "name": "BALUSSERY",
+  "code": "BAL",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "17"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200704"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703465803"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cf0"
+  },
+  "name": "FEROKE",
+  "code": "FER",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200765"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703466111"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cf2"
+  },
+  "name": "CHANGAROTH",
+  "code": "CHA4",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "11"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200834"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703466460"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cf4"
+  },
+  "name": "CHIRAYANKEEZH",
+  "code": "CHI1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200910"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1781704329645"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da0a19e59c11ba29cf6"
+  },
+  "name": "NEDUMANGAD-PALODE",
+  "code": "NED",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "5"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703200976"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703466814"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29cf8"
+  },
+  "name": "TVM SOUTH",
+  "code": "TVMSOU",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "6"
+   },
+   "activeMembers": {
+    "$numberInt": "6"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201096"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703467229"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29cfa"
+  },
+  "name": "TVM NORTH-WEST",
+  "code": "TVMNOR",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "0"
+   },
+   "activeMembers": {
+    "$numberInt": "0"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201178"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703201178"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29cfc"
+  },
+  "name": "VARKALA-ATTINGAL",
+  "code": "VAR",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "5"
+   },
+   "activeMembers": {
+    "$numberInt": "4"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201252"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780469509794"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29cfe"
+  },
+  "name": "KAZHAKKOOTTAM",
+  "code": "KAZ",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201334"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703468044"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29d02"
+  },
+  "name": "KUMALI",
+  "code": "KUM1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c11"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201496"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703469642"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29d04"
+  },
+  "name": "THODUPUZHA",
+  "code": "THO",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c11"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201566"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703470033"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29d06"
+  },
+  "name": "HIGHRANGE",
+  "code": "HIG",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c11"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "1"
+   },
+   "activeMembers": {
+    "$numberInt": "1"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779703470444"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141da1a19e59c11ba29d08"
+  },
+  "name": "ADIMALY",
+  "code": "ADI1",
+  "district": {
+   "$oid": "6a141d97a19e59c11ba29c11"
+  },
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "4"
+   },
+   "activeMembers": {
+    "$numberInt": "4"
+   },
+   "totalBaithulMaal": {
+    "$numberInt": "0"
+   }
+  },
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703201729"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779704225761"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

@@ -12,7 +12,8 @@ const memberAuthSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: [/^(\+91)?[6-9]\d{9}$/, 'Please enter a valid 10-digit phone number']
+    // Same rule as Member.phone: Indian 10-digit or +country-coded international.
+    match: [/^((\+91)?[6-9]\d{9}|\+(?!91)\d{11,15})$/, 'Please enter a valid phone number']
   },
   isActive: {
     type: Boolean,

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, Home, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +9,41 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, baithulMaalAPI } from "@/utils/api";
+import { FEATURES } from "@/lib/features";
 import { format } from "date-fns";
+
+interface InfoCardProps {
+  icon: LucideIcon;
+  label: string;
+  value?: ReactNode;
+  className?: string;
+}
+
+interface SectionProps {
+  icon: LucideIcon;
+  title: string;
+  children: ReactNode;
+  cols: string;
+}
+
+interface BaithulPayment {
+  month?: string;
+  year?: string | number;
+  amount?: number;
+  status?: string;
+  paymentDate?: string;
+  createdAt?: string;
+}
+
+interface MeetingAttendanceRow {
+  status?: string;
+  meetingTitle?: string;
+  meeting?: { title?: string };
+  sessionTitle?: string;
+  session?: { title?: string };
+  date?: string;
+  scheduledDate?: string;
+}
 
 const MemberDetail = () => {
   const navigate = useNavigate();
@@ -29,7 +63,7 @@ const MemberDetail = () => {
   const { data: baithulResult } = useQuery({
     queryKey: ["baithulMaal", "member", id],
     queryFn: () => baithulMaalAPI.getMemberPayments(id!).catch(() => null),
-    enabled: !!id,
+    enabled: FEATURES.baithulMaal && !!id,
   });
   const baithulMaalData = baithulResult?.data ?? null;
 
@@ -269,7 +303,7 @@ const MemberDetail = () => {
   };
 
   // Compact mobile-first mini card: icon chip + label row, value under (~70px tall)
-  const InfoCard = ({ icon: Icon, label, value, className = "" }: any) => (
+  const InfoCard = ({ icon: Icon, label, value, className = "" }: InfoCardProps) => (
     <div className={`rounded-xl border border-border/60 bg-card px-3 py-2.5 shadow-sm ${className}`}>
       <div className="flex items-center gap-2">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -282,7 +316,7 @@ const MemberDetail = () => {
   );
 
   // Section = plain title + mini-card grid, not a big white container card
-  const Section = ({ icon: Icon, title, children, cols }: any) => (
+  const Section = ({ icon: Icon, title, children, cols }: SectionProps) => (
     <section className="space-y-2">
       <h3 className="flex items-center gap-2 text-sm font-semibold">
         <Icon className="h-4 w-4 text-primary" />
@@ -425,7 +459,7 @@ const MemberDetail = () => {
         <Section icon={User} title="Contact Information" cols="grid-cols-2 sm:grid-cols-3">
           <InfoCard icon={Phone} label="Phone" value={member.phone} />
           <InfoCard icon={Mail} label="Email" value={member.email} />
-          <InfoCard icon={MapPin} label="Address" value={member.address} className="col-span-2 sm:col-span-1" />
+          <InfoCard icon={Home} label="Unit" value={member.address} className="col-span-2 sm:col-span-1" />
         </Section>
 
         <Section icon={User} title="Personal Information" cols="grid-cols-3">
@@ -446,7 +480,7 @@ const MemberDetail = () => {
         </Section>
       </div>
 
-      {baithulMaalData ? (
+      {FEATURES.baithulMaal && baithulMaalData ? (
         <SectionCard title="Baithul Maal" description="Contribution summary and monthly payment records.">
           <div className="grid grid-cols-2 gap-2 xl:grid-cols-4 mb-4">
             <MetricCard title="Monthly Amount" value={`₹${baithulMaalData.monthlyAmount || 0}`} icon={Wallet} tone="primary" />
@@ -470,7 +504,7 @@ const MemberDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {baithulMaalData.payments.map((payment: any, index: number) => (
+                        {baithulMaalData.payments.map((payment: BaithulPayment, index: number) => (
                           <TableRow key={index}>
                             <TableCell className="font-medium">
                               {payment.month || format(new Date(payment.paymentDate || payment.createdAt), 'MMMM')}
@@ -511,8 +545,8 @@ const MemberDetail = () => {
         <SectionCard title="Meeting Attendance" description="Full history of recorded meeting participation.">
           <div className="grid grid-cols-3 gap-2 mb-4">
             <MetricCard title="Total Meetings" value={String(member.meetingAttendance.length)} icon={Calendar} tone="primary" />
-            <MetricCard title="Present" value={String(member.meetingAttendance.filter((a: any) => a.status === 'present').length)} icon={CheckCircle} tone="success" />
-            <MetricCard title="Absent" value={String(member.meetingAttendance.filter((a: any) => a.status === 'absent').length)} icon={XCircle} tone="danger" />
+            <MetricCard title="Present" value={String(member.meetingAttendance.filter((a: MeetingAttendanceRow) => a.status === 'present').length)} icon={CheckCircle} tone="success" />
+            <MetricCard title="Absent" value={String(member.meetingAttendance.filter((a: MeetingAttendanceRow) => a.status === 'absent').length)} icon={XCircle} tone="danger" />
           </div>
 
           <div className="overflow-x-auto rounded-xl border border-border/60 bg-card p-2">
@@ -526,7 +560,7 @@ const MemberDetail = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {member.meetingAttendance.map((attendance: any, index: number) => (
+                    {member.meetingAttendance.map((attendance: MeetingAttendanceRow, index: number) => (
                       <TableRow key={index}>
                         <TableCell className="text-sm font-medium">
                           {attendance.meetingTitle || attendance.meeting?.title || 'N/A'}
@@ -569,7 +603,7 @@ const MemberDetail = () => {
           <div className="mt-3 text-center text-sm text-muted-foreground">
             Total Attendance Records: {member.meetingAttendance.length} |
             {' '}Attendance Rate: {member.meetingAttendance.length > 0
-              ? Math.round((member.meetingAttendance.filter((a: any) => a.status === 'present').length / member.meetingAttendance.length) * 100)
+              ? Math.round((member.meetingAttendance.filter((a: MeetingAttendanceRow) => a.status === 'present').length / member.meetingAttendance.length) * 100)
               : 0}%
           </div>
         </SectionCard>

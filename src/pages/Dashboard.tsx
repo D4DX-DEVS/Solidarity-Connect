@@ -1,187 +1,111 @@
-import { Users, CheckCircle, Clock, Calendar, Upload, Shield, FileText, BarChart3, Menu, Target } from "lucide-react";import HeaderWithLogout from "@/components/HeaderWithLogout";
+import { useEffect } from "react";
+import { ClipboardCheck, ShieldCheck, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MetricCard } from "@/components/app/AppShell";
 import UserTargetsSection from "@/components/UserTargetsSection";
+import { ActionQueue } from "@/components/dashboard/ActionQueue";
+import { ActivityCard } from "@/components/dashboard/ActivityCard";
+import { ChartCard } from "@/components/dashboard/ChartCard";
+import { HierarchyScorecard } from "@/components/dashboard/HierarchyScorecard";
+import { meetingItems, requestItem } from "@/components/dashboard/actionItems";
+import { formatNumber, percent } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRoleLabel } from "@/lib/adminKinds";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { reportsAPI } from "@/utils/api";
+import { useDashboardOverview, useDashboardSummary } from "@/hooks/useDashboardOverview";
 
-interface DashboardData {
-  memberStatistics: {
-    totalMembers: number;
-    activeMembers: number;
-    pendingMembers: number;
-    applicantMembers: number;
-  };
-  upcomingMeetings: Array<{
-    _id: string;
-    title: string;
-    scheduledDate: string;
-  }>;
-  pendingRequestsCount: number;
-}
-
-// Members & Meetings live in bottom nav — keep Quick Actions for actions not already reachable there
-const PRIMARY_AREA_LABELS = ["Bulk Import", "Files", "Group Reports", "Baithul Maal", "My Targets"];
-
+/** Area Admin (group_admin) dashboard. State/district admins are redirected to their own. */
 const Dashboard = () => {
-  const { userRole, userDistrict, userGroup, user } = useAuth();
+  const { userRole, user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+
   useEffect(() => {
-    // Redirect based on role
-    if (userRole === "state_admin") {
-      navigate("/state-admin");
-    } else if (userRole === "district_admin") {
-      navigate("/district-admin");
-    }
+    if (userRole === "state_admin") navigate("/state-admin");
+    else if (userRole === "district_admin") navigate("/district-admin");
   }, [userRole, navigate]);
 
-  // ponytail: cached — only group admins have dashboard data to fetch
-  const { data: dashboardData = null, isPending, isError } = useQuery({
-    queryKey: ['dashboard', 'group-admin'],
-    queryFn: async () => (await reportsAPI.getDashboard()).data as DashboardData,
-    enabled: userRole === 'group_admin',
-  });
-  const loading = userRole === 'group_admin' && isPending;
+  const accountId = userRole === "group_admin" ? user?.id : undefined;
+  const overviewQuery = useDashboardOverview(accountId);
+  const summaryQuery = useDashboardSummary(accountId);
+  const overview = overviewQuery.data;
+  const summary = summaryQuery.data;
 
-  useEffect(() => {
-    if (!isError) return;
-    toast({
-      title: "Error",
-      description: "Failed to load dashboard data",
-      variant: "destructive",
-    });
-  }, [isError, toast]);
+  // A failed load must read as unknown, never as a real zero.
+  const show = (value: string) => (overviewQuery.isPending ? "…" : overviewQuery.isError ? "—" : value);
+  const note = (text: string) => (overviewQuery.isPending ? "Loading…" : overviewQuery.isError ? "Couldn't load" : text);
 
-  const stats = dashboardData ? [
-    {
-      label: "Total Members",
-      value: dashboardData.memberStatistics.totalMembers.toString(),
-      icon: Users,
-      tone: "primary" as const,
-    },
-    {
-      label: "Active Members",
-      value: dashboardData.memberStatistics.activeMembers.toString(),
-      icon: CheckCircle,
-      tone: "success" as const,
-    },
-    {
-      label: "Pending Requests",
-      value: dashboardData.pendingRequestsCount.toString(),
-      icon: Clock,
-      tone: "danger" as const,
-    },
-    {
-      label: "Upcoming Meetings",
-      value: dashboardData.upcomingMeetings.length.toString(),
-      icon: Calendar,
-      tone: "neutral" as const,
-    },
-  ] : [
-    { label: "Total Members", value: "0", icon: Users, tone: "primary" as const },
-    { label: "Active Members", value: "0", icon: CheckCircle, tone: "success" as const },
-    { label: "Pending Requests", value: "0", icon: Clock, tone: "danger" as const },
-    { label: "Upcoming Meetings", value: "0", icon: Calendar, tone: "neutral" as const },
-  ];
+  const members = overview?.members;
+  const profiles = overview?.profiles;
+  const incomplete = (profiles?.total ?? 0) - (profiles?.complete ?? 0);
+  const areaName = overview?.scope.name || user?.group?.name || "Area";
+  const districtName = overview?.scope.parentName || user?.district?.name;
+  // An area spanning several groups gets the same scorecard one level down.
+  const groupRows = overview?.children.rows ?? [];
 
-  const firstName = user?.name?.trim().split(" ")[0] || "Admin";
-  const statPaths = ["/members", "/members", "/requests", "/meetings"];
-  const [showAllActions, setShowAllActions] = useState(false);
-
-  // Members, Meetings, Leaders live in bottom nav — omitted here
-  const areaTools = [
-    { label: "Bulk Import", path: "/bulk-import", Icon: Upload, color: "text-purple" },
-    { label: "Files", path: "/org-files", Icon: FileText, color: "text-success" },
-    { label: "Group Reports", path: "/state-admin/group-reports", Icon: BarChart3, color: "text-info" },
-    { label: "Role Management", path: "/role-management", Icon: Shield, color: "text-purple" },
-    { label: "Consolidation", path: "/consolidation", Icon: BarChart3, color: "text-success" },
-    { label: "Baithul Maal", path: "/state-admin/baithul-data", Icon: BarChart3, color: "text-primary" },
-    { label: "My Targets", path: "/my-targets", Icon: Target, color: "text-info" },
-  ];
+  const actions = [...requestItem(summary), ...meetingItems(summary, "/meetings")];
 
   return (
     <div className="app-page">
       <HeaderWithLogout
-        icon={<Users className="h-6 w-6 text-primary-foreground" />}
-        title={`${getRoleLabel(userRole, user?.adminKind)} Dashboard`}
+        title={`Welcome back, ${user?.name?.trim().split(" ")[0] || "Admin"}`}
+        subtitle={districtName ? `${areaName} area · ${districtName}` : `${areaName} area`}
         showTitleOnMobile
       />
 
-      <main className="app-main pt-4 pb-28">
-        <div className="space-y-4">
-          {/* Compact stat cards */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            {stats.map((stat, index) => (
-              <MetricCard
-                key={index}
-                title={stat.label}
-                value={loading ? "..." : stat.value}
-                icon={stat.icon}
-                tone={stat.tone}
-                onClick={() => navigate(statPaths[index])}
-              />
-            ))}
-          </div>
+      <main className="app-main space-y-4 pb-28 pt-4 sm:space-y-6">
+        <section className="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Key figures">
+          <MetricCard
+            title="Members"
+            value={show(formatNumber(members?.total ?? 0))}
+            detail={note(`${percent(members?.active ?? 0, members?.total ?? 0)}% active`)}
+            icon={Users}
+            tone="primary"
+            onClick={() => navigate("/members")}
+          />
+          <MetricCard
+            // Three tiles share a phone row here, so titles and captions stay short.
+            title="Profiles"
+            value={show(`${percent(profiles?.complete ?? 0, profiles?.total ?? 0)}%`)}
+            detail={note(!profiles?.total ? "No members" : incomplete > 0 ? `${formatNumber(incomplete)} to fix` : "All complete")}
+            icon={ClipboardCheck}
+            tone="success"
+            onClick={() => navigate("/members")}
+          />
+          <MetricCard
+            title="Admins"
+            value={show(formatNumber(overview?.admins.total ?? 0))}
+            detail={note(`${overview?.admins.reporting ?? 0} reported`)}
+            icon={ShieldCheck}
+            tone="warning"
+            onClick={() => navigate("/leaders")}
+          />
+        </section>
 
-          {/* Quick Actions */}
-          <div>
-            <h2 className="mb-2 flex items-center gap-2 text-base font-semibold">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-              {areaTools.map(({ label, path, Icon, color }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => navigate(path)}
-                  className={`${showAllActions || PRIMARY_AREA_LABELS.includes(label) ? "flex" : "hidden"} lg:flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-2.5 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-3`}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-                    <Icon className={`h-5 w-5 ${color}`} />
-                  </div>
-                  <p className="text-xs font-medium leading-tight text-foreground">{label}</p>
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setShowAllActions((v) => !v)}
-                className="lg:hidden flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-card p-2.5 text-center shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-3"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted">
-                  <Menu className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="text-xs font-medium leading-tight text-foreground">{showAllActions ? "Less" : "More"}</p>
-              </button>
-            </div>
-          </div>
-
-          <UserTargetsSection />
-
-          {/* Upcoming Meetings */}
-          {dashboardData?.upcomingMeetings && dashboardData.upcomingMeetings.length > 0 && (
-            <div>
-              <h2 className="mb-2 flex items-center gap-2 text-base font-semibold">
-                Upcoming Meetings
-              </h2>
-              <div className="space-y-2">
-                {dashboardData.upcomingMeetings.slice(0, 3).map((meeting) => (
-                  <div key={meeting._id} className="flex items-center justify-between gap-3 rounded border bg-card p-3">
-                    <span className="font-medium text-sm text-foreground">{meeting.title}</span>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary whitespace-nowrap">
-                      {new Date(meeting.scheduledDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-5">
+          <ActionQueue
+            className="lg:col-span-2"
+            items={actions}
+            loading={summaryQuery.isPending}
+            error={summaryQuery.isError}
+            onRetry={() => summaryQuery.refetch()}
+          />
+          <ActivityCard
+            className="lg:col-span-3"
+            overview={overview}
+            loading={overviewQuery.isPending}
+            error={overviewQuery.isError}
+            onRetry={() => overviewQuery.refetch()}
+          />
         </div>
-      </main>    </div>
+
+        {groupRows.length > 1 ? (
+          <ChartCard title="Groups in your area" contentClassName="p-0 pt-0 sm:p-0 sm:pt-0">
+            <HierarchyScorecard rows={groupRows} level="area" />
+          </ChartCard>
+        ) : null}
+
+        <UserTargetsSection />
+      </main>
+    </div>
   );
 };
 

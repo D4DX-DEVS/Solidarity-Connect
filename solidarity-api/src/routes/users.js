@@ -2,7 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Member from '../models/Member.js';
 import otpService from '../services/otpService.js';
-import { authenticate, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
+import { authenticate, requireRole, isAreaLevelAdmin, areaGroupIdsFor, leaderScopeFor } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -108,12 +108,9 @@ router.get('/leaders', authenticate, async (req, res) => {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    // ponytail: no per-admin scoping here. The leaders list is the org contact
-    // directory — every admin (state/district/area/unit) sees the whole hierarchy
-    // and narrows it with the district/area/unit dropdowns. Only members are
-    // scoped, and they use GET /api/member-auth/leaders instead.
-    const scopedDistrictId = districtId;
-    const scopedGroupId = groupId;
+    // Hierarchy scope (state admin: all; others: state leaders + own chain) is
+    // applied per role row after fan-out. districtId/groupId only narrow further.
+    const inScope = await leaderScopeFor(req.user);
 
     // Build filter common to both collections
     const filter = { isLeader: true };
@@ -121,8 +118,8 @@ router.get('/leaders', authenticate, async (req, res) => {
     // State leaders are the shared top of the hierarchy — never scope them out,
     // otherwise district/area admins get an empty default "State" view.
     if (roleType !== 'state') {
-      if (scopedDistrictId) filter.district = scopedDistrictId;
-      if (scopedGroupId) filter.group = scopedGroupId;
+      if (districtId) filter.district = districtId;
+      if (groupId) filter.group = groupId;
     }
     if (unitName) filter['roleTag.name'] = unitName;
     if (search) {
@@ -197,6 +194,7 @@ router.get('/leaders', authenticate, async (req, res) => {
       const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
       expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
     }
+    expanded = expanded.filter(inScope);
 
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),

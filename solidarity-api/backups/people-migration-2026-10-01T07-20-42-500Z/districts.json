@@ -1,0 +1,542 @@
+[
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29be4"
+  },
+  "name": "ALAPPUZHA",
+  "code": "ALA",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "40"
+   },
+   "activeMembers": {
+    "$numberInt": "34"
+   },
+   "totalGroups": {
+    "$numberInt": "5"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188154"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770578454"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29bea"
+  },
+  "name": "ERANAKULAM",
+  "code": "ERA",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "110"
+   },
+   "activeMembers": {
+    "$numberInt": "91"
+   },
+   "totalGroups": {
+    "$numberInt": "10"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188241"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770578730"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29bec"
+  },
+  "name": "KANNUR",
+  "code": "KAN",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "37"
+   },
+   "activeMembers": {
+    "$numberInt": "27"
+   },
+   "totalGroups": {
+    "$numberInt": "8"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188307"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770578992"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29bf1"
+  },
+  "name": "KASARAGOD",
+  "code": "KAS",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "19"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalGroups": {
+    "$numberInt": "4"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188379"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770579268"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29bf3"
+  },
+  "name": "KOCHI CITY",
+  "code": "KOCCIT",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "33"
+   },
+   "activeMembers": {
+    "$numberInt": "31"
+   },
+   "totalGroups": {
+    "$numberInt": "5"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188483"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770579522"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d94a19e59c11ba29bf8"
+  },
+  "name": "KOLLAM",
+  "code": "KOL",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "37"
+   },
+   "activeMembers": {
+    "$numberInt": "32"
+   },
+   "totalGroups": {
+    "$numberInt": "5"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703188621"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770579772"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d95a19e59c11ba29bfc"
+  },
+  "name": "KOTTAYAM",
+  "code": "KOT",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "12"
+   },
+   "activeMembers": {
+    "$numberInt": "12"
+   },
+   "totalGroups": {
+    "$numberInt": "4"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703189648"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770580029"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d96a19e59c11ba29c00"
+  },
+  "name": "PALAKKAD",
+  "code": "PAL",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "63"
+   },
+   "activeMembers": {
+    "$numberInt": "51"
+   },
+   "totalGroups": {
+    "$numberInt": "10"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703190646"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770580290"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d96a19e59c11ba29c03"
+  },
+  "name": "THRISSUR",
+  "code": "THR",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "80"
+   },
+   "activeMembers": {
+    "$numberInt": "71"
+   },
+   "totalGroups": {
+    "$numberInt": "9"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703190744"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770580570"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d96a19e59c11ba29c05"
+  },
+  "name": "MALAPPURAM WEST",
+  "code": "MALWES",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "213"
+   },
+   "activeMembers": {
+    "$numberInt": "169"
+   },
+   "totalGroups": {
+    "$numberInt": "13"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703190818"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770580835"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d97a19e59c11ba29c07"
+  },
+  "name": "MALAPPURAM EAST",
+  "code": "MALEAS",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "227"
+   },
+   "activeMembers": {
+    "$numberInt": "195"
+   },
+   "totalGroups": {
+    "$numberInt": "17"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703191651"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770581108"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d97a19e59c11ba29c0a"
+  },
+  "name": "WAYANAD",
+  "code": "WAY",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "13"
+   },
+   "activeMembers": {
+    "$numberInt": "9"
+   },
+   "totalGroups": {
+    "$numberInt": "2"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703191735"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770581369"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d97a19e59c11ba29c0c"
+  },
+  "name": "KOZHIKKODE",
+  "code": "KOZ",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "236"
+   },
+   "activeMembers": {
+    "$numberInt": "176"
+   },
+   "totalGroups": {
+    "$numberInt": "20"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703191817"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770581619"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d97a19e59c11ba29c0e"
+  },
+  "name": "THIRUVANANTHAPURAM",
+  "code": "THI",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "14"
+   },
+   "activeMembers": {
+    "$numberInt": "14"
+   },
+   "totalGroups": {
+    "$numberInt": "6"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703191896"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770581912"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a141d97a19e59c11ba29c11"
+  },
+  "name": "IDUKKI",
+  "code": "IDU",
+  "state": "Kerala",
+  "isActive": true,
+  "statistics": {
+   "totalMembers": {
+    "$numberInt": "0"
+   },
+   "activeMembers": {
+    "$numberInt": "0"
+   },
+   "totalGroups": {
+    "$numberInt": "4"
+   }
+  },
+  "createdBy": {
+   "$oid": "6abcfd7a22961a94ee7b9b0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779703191976"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790770582206"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

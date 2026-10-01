@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, ShieldCheck, Download, Loader2 } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -14,6 +14,13 @@ import PageSizeInput from "@/components/app/PageSizeInput";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
+import { FEATURES } from "@/lib/features";
+import {
+  MEMBER_EXPORT_COL_WIDTHS,
+  MEMBER_EXPORT_HEADERS,
+  memberExportRow,
+  type MemberRoleTag,
+} from "@/lib/memberExport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
@@ -47,6 +54,12 @@ interface Member {
     name: string;
     code: string;
   };
+  address?: string; // unit name
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  isLeader?: boolean;
+  roleTag?: MemberRoleTag | null;
+  extraRoleTags?: MemberRoleTag[];
   isApproved: boolean;
   createdAt: string;
   transferRequest?: {
@@ -235,18 +248,6 @@ const Members = () => {
     }
   };
 
-  const EXPORT_HEADERS = ['Name', 'Phone', 'Email', 'Status', 'District', 'Group', 'Approved', 'Joined'];
-  const memberExportRow = (m: Member) => [
-    m.name,
-    m.phone,
-    m.email || '',
-    m.status,
-    m.district ? `${m.district.name} (${m.district.code})` : '',
-    m.group ? `${m.group.name} (${m.group.code})` : '',
-    m.isApproved ? 'Yes' : 'No',
-    m.createdAt ? new Date(m.createdAt).toLocaleDateString() : '',
-  ];
-
   // Fetches every member matching the current filters, not just the visible page.
   // Backend clamps `limit` to 100/request regardless of what we pass, so this
   // pages through in batches of 100 and concatenates the results.
@@ -278,8 +279,8 @@ const Members = () => {
       const filename = `members-${new Date().toISOString().split('T')[0]}`;
 
       if (format === 'excel') {
-        const sheet = XLSX.utils.aoa_to_sheet([EXPORT_HEADERS, ...rows]);
-        sheet['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 24 }, { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 10 }, { wch: 12 }];
+        const sheet = XLSX.utils.aoa_to_sheet([MEMBER_EXPORT_HEADERS, ...rows]);
+        sheet['!cols'] = MEMBER_EXPORT_COL_WIDTHS;
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, sheet, 'Members');
         XLSX.writeFile(wb, `${filename}.xlsx`);
@@ -287,10 +288,10 @@ const Members = () => {
         const doc = new jsPDF({ orientation: 'landscape' });
         doc.text('Members', 14, 12);
         autoTable(doc, {
-          head: [EXPORT_HEADERS],
+          head: [MEMBER_EXPORT_HEADERS],
           body: rows,
           startY: 18,
-          styles: { fontSize: 8 },
+          styles: { fontSize: 7 },
           headStyles: { fillColor: [39, 39, 42] },
         });
         doc.save(`${filename}.pdf`);
@@ -519,7 +520,7 @@ const Members = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-1.5 text-xs text-muted-foreground sm:gap-2 xl:grid-cols-4">
+                <div className="grid grid-cols-2 gap-1.5 text-xs text-muted-foreground sm:gap-2 xl:grid-cols-5">
                   <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5">
                     <Mail className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.email || "No email"}</span>
@@ -536,13 +537,20 @@ const Members = () => {
                     <Users className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.group.name} ({member.group.code})</span>
                   </div>
+                  <div
+                    className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5"
+                    title="Unit"
+                  >
+                    <Home className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                    <span className="truncate">{member.address || "No unit"}</span>
+                  </div>
                   <div className="flex min-w-0 items-center gap-1.5 rounded-xl bg-muted/65 px-2 py-1 sm:gap-2 sm:px-2.5 sm:py-1.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
                     <span className="truncate">{member.district.name} ({member.district.code})</span>
                   </div>
                 </div>
 
-                <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:gap-2">
+                <div className={`mt-1.5 grid ${FEATURES.baithulMaal ? "grid-cols-4" : "grid-cols-3"} gap-1.5 sm:gap-2`}>
                   <Button
                     variant="outline"
                     size="sm"
@@ -574,6 +582,7 @@ const Members = () => {
                       {userRole === 'state_admin' || userRole === 'district_admin' ? 'Move' : 'Transfer'}
                     </span>
                   </Button>
+                  {FEATURES.baithulMaal && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -589,6 +598,7 @@ const Members = () => {
                     <span className="text-xs sm:hidden">BM</span>
                     <span className="hidden text-xs sm:inline">Baithul Maal</span>
                   </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -630,11 +640,13 @@ const Members = () => {
         member={selectedMember}
         onTransferred={() => setRefreshKey((prev) => prev + 1)}
       />
-      <BaithulMaalDialog
-        open={showBaithul}
-        onOpenChange={setShowBaithul}
-        member={selectedMember}
-      />
+      {FEATURES.baithulMaal && (
+        <BaithulMaalDialog
+          open={showBaithul}
+          onOpenChange={setShowBaithul}
+          member={selectedMember}
+        />
+      )}
 
       {/* Floating Add Member Button */}
       <Button

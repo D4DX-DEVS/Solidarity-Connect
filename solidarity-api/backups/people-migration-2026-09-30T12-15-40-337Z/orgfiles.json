@@ -1,0 +1,465 @@
+[
+ {
+  "_id": {
+   "$oid": "69abc1062eb49a4cd546be05"
+  },
+  "title": "Constitution",
+  "description": "Solidarity Constitution PDF",
+  "category": "constitution",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/7584d5d62d130e16ed6c0bbceb8e03e9.pdf",
+  "filename": "org-files/7584d5d62d130e16ed6c0bbceb8e03e9.pdf",
+  "originalName": "Solidarity Constitution .pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "193253"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1772863750557"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1772863774981"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "updatedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69abc1722eb49a4cd546be28"
+  },
+  "title": "Policy Book",
+  "description": "SYM Policy Book 2025-26",
+  "category": "guidelines",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/f215da1a3e2abe1e56050968de0f2af0.pdf",
+  "filename": "org-files/f215da1a3e2abe1e56050968de0f2af0.pdf",
+  "originalName": "SYM_ST_002_Policy Book 2025-26_04.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "38939181"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1772863858925"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1772863858925"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69abc1b62eb49a4cd546be35"
+  },
+  "title": "Memebership Form",
+  "description": "Malayalam",
+  "category": "document",
+  "fileType": "membership_form",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/45bce9704cb79602c8017a510b900339.docx",
+  "filename": "org-files/45bce9704cb79602c8017a510b900339.docx",
+  "originalName": "à´¸àµà´¾à´³à´¿à´¡à´¾à´°à´¿à´±àµà´±à´¿ à´¯àµà´¤àµà´¤àµ_à´®àµà´µàµ_à´®àµàµ»àµà´±àµ  à´à´à´à´¤àµà´µà´¾à´ªàµà´àµà´· (2).docx",
+  "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "size": {
+   "$numberInt": "105539"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1772863926409"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1772863926409"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69abc2002eb49a4cd546be3f"
+  },
+  "title": "Membership Form",
+  "description": "English",
+  "category": "document",
+  "fileType": "membership_form",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/cead86fe6364d48e349ea4cfc459dfc8.docx",
+  "filename": "org-files/cead86fe6364d48e349ea4cfc459dfc8.docx",
+  "originalName": "SOLIDARITY YOUTH MOVEMENT  MEMBERSHIP APPLICATION FORM.docx",
+  "mimetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "size": {
+   "$numberInt": "8002"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1772864000335"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1772864000335"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b42e49c1dbc817b44bc3ee"
+  },
+  "title": "February Synopsis 2026",
+  "description": "",
+  "category": "guidelines",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/fbed72bd6370425d1df85610152f81f5.pdf",
+  "filename": "org-files/fbed72bd6370425d1df85610152f81f5.pdf",
+  "originalName": "February Synopsis 2026.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "813657"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773416009928"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773416009928"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b42ff4c1dbc817b44bc40b"
+  },
+  "title": "March Synopsis 2026",
+  "description": "",
+  "category": "guidelines",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/728cb6c97d4bf4e3ffc3f7ede4463b31.pdf",
+  "filename": "org-files/728cb6c97d4bf4e3ffc3f7ede4463b31.pdf",
+  "originalName": "à´®àµà´®àµà´ªàµà´´àµà´¸àµ à´àµà´°àµà´ªàµà´ªàµ 2026 à´®à´¾àµ¼à´àµà´àµ .pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "17751425"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773416436379"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773416436379"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b43020c1dbc817b44bc40f"
+  },
+  "title": "Islamophobia Notice 2026 March",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/d34aa84de040b63762562851887cc664.pdf",
+  "filename": "org-files/d34aa84de040b63762562851887cc664.pdf",
+  "originalName": "ISLAMOPHOBIA NOTICE.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "3083448"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773416480489"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773416480489"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69ba6a15698809fbc93bdd72"
+  },
+  "title": "വഴികാട്ടി",
+  "description": "",
+  "category": "guidelines",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/a7c58bca2019d8b8d411278938ea296b.pdf",
+  "filename": "org-files/a7c58bca2019d8b8d411278938ea296b.pdf",
+  "originalName": "vazhikatti for printing.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "822585"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773824533410"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780728914111"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "link": "https://drive.google.com/open?id=1n1UrbwbewCU6U5h854CR_YQbqvWOqQuV",
+  "updatedBy": {
+   "$oid": "69997b009ff204898fae1c0b"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69e9ab26121437f5422af58e"
+  },
+  "title": "Members Meet Synopsis",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/b09f1debf64fd35d4e353b052b8f762a.pdf",
+  "filename": "org-files/b09f1debf64fd35d4e353b052b8f762a.pdf",
+  "originalName": "Synopsis.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "11974581"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1776921382382"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776921382382"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69e9ab9b121437f5422af595"
+  },
+  "title": "Youth Meet Synopsis April 2026.pdf",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/0a98d28d985c4f1d430946ee1e682559.pdf",
+  "filename": "org-files/0a98d28d985c4f1d430946ee1e682559.pdf",
+  "originalName": "Youth Meet Synopsis April 2026.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "15180814"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1776921499291"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776921499291"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69e9ac34121437f5422af59c"
+  },
+  "title": "Circular April - June",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/a8acec971e36f69c335750d4063ca187.pdf",
+  "filename": "org-files/a8acec971e36f69c335750d4063ca187.pdf",
+  "originalName": "LETTER PAD.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "14461162"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1776921652509"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776921652509"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a0c2b92664386b208810d7f"
+  },
+  "title": "Solidarity Unit Handbook",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/496762dda56b77673d1a5b3977aedd86.pdf",
+  "filename": "org-files/496762dda56b77673d1a5b3977aedd86.pdf",
+  "originalName": "SOLIDARITY HANDBOOOK.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "4038566"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "69997b009ff204898fae1c0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1779182482733"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1779182482733"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a2020ff1bb9c1c28d84f8af"
+  },
+  "title": "Members Meet synopsis, Jun 2026",
+  "description": "",
+  "category": "document",
+  "fileType": "general",
+  "url": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/org-files/9296f30d4b1507c7affaec66a419c4fc.pdf",
+  "filename": "org-files/9296f30d4b1507c7affaec66a419c4fc.pdf",
+  "originalName": "Members Meet jun  2026 Synopsis.pdf",
+  "mimetype": "application/pdf",
+  "size": {
+   "$numberInt": "10800857"
+  },
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1780490495004"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780490495004"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a23c40f959d7462c898389c"
+  },
+  "title": "വഴികാട്ടി Audio Link",
+  "description": "വഴികാട്ടി \r\n\r\n_സോളിഡാരിറ്റിയുടെ അംഗത്വത്തിനായി അപേക്ഷിക്കുന്നവർ ഗ്രഹിക്കേണ്ട  ഇസ്‌ലാമിന്റെയും പ്രസ്ഥാനത്തിന്റെയും അടിസ്ഥാന കാര്യങ്ങൾ ഉൾക്കൊള്ളുന്ന പുസ്തകം.",
+  "category": "link",
+  "fileType": "general",
+  "link": "https://youtu.be/FxheCV1TDOM?si=FjvSuvw3q3uCaQRi",
+  "isActive": true,
+  "uploadedBy": {
+   "$oid": "69997b009ff204898fae1c0b"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1780728847287"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1780728847287"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

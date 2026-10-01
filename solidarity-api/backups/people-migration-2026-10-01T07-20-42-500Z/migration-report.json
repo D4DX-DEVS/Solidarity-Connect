@@ -1,0 +1,1554 @@
+{
+  "source": "C:\\Users\\moham\\Downloads\\MEMBERS_FINAL_FINAL 01 Oct 26.xlsx",
+  "backupDir": "D:\\Projects\\solidarity\\solidarity-app\\solidarity-api\\backups\\people-migration-2026-10-01T07-20-42-500Z",
+  "created": {
+    "users": 449,
+    "members": 1419,
+    "memberAuths": 1419
+  },
+  "skipped": [
+    {
+      "row": 646,
+      "name": "Muhammed Iqbal T",
+      "phone": "546689075",
+      "reason": "invalid phone \"546689075\": 9 digits starting with 5 — looks like a UAE/Saudi mobile with no country code"
+    },
+    {
+      "row": 876,
+      "name": "Rabeeh Usman K P",
+      "phone": "956774374",
+      "reason": "invalid phone \"956774374\": only 9 digits — missing digit(s) or missing country code"
+    },
+    {
+      "row": 1243,
+      "name": "Nadeer M K",
+      "phone": "557547612",
+      "reason": "invalid phone \"557547612\": 9 digits starting with 5 — looks like a UAE/Saudi mobile with no country code"
+    },
+    {
+      "row": 688,
+      "name": "Naseef Ali K M",
+      "phone": "+919495530456",
+      "reason": "duplicate phone — kept #683 Naseef Ali K M (MALAPPURAM EAST/PADAPPARAMB/Padapparamb); dropped MALAPPURAM EAST/PADAPPARAMB/Cherukulamba"
+    },
+    {
+      "row": 737,
+      "name": "Mehaboob Rahman S M",
+      "phone": "+919809894743",
+      "reason": "duplicate phone — kept #491 Mehaboob Rahman S M (PALAKKAD/PATTAMBI/Pattambi); dropped MALAPPURAM WEST/VENGARA/Vengara"
+    },
+    {
+      "row": 738,
+      "name": "Sajid",
+      "phone": "+919447232928",
+      "reason": "duplicate phone — kept #731 Muhammed Sajid C (MALAPPURAM WEST/VENGARA/Vengara); dropped MALAPPURAM WEST/VENGARA/Pakkadappuraya"
+    },
+    {
+      "row": 1204,
+      "name": "Muhammed Thasneem E",
+      "phone": "+919048811869",
+      "reason": "duplicate phone — kept #1226 Thasneem (KOZHIKKODE/KODIYATHUR-KARASSERY/Kodiyathur); dropped KOZHIKKODE/KODIYATHUR-KARASSERY/Kodiyathur"
+    },
+    {
+      "row": 1312,
+      "name": "Adv Mubashir",
+      "phone": "+919980473375",
+      "reason": "duplicate phone — kept #1234 Mubashir Morangad (KOZHIKKODE/KUTTIADI/Kuttiadi); dropped KOZHIKKODE/KOZHIKKODE NORTH/Kozhikkode Town"
+    },
+    {
+      "row": 1359,
+      "name": "Sirajudeen V A",
+      "phone": "+919400914111",
+      "reason": "duplicate phone — kept #558 Sirajudeen V A (THRISSUR/NATTIKA/Nattika); dropped KOZHIKKODE/MEDICAL COLLEGE/Kanjirathinkal"
+    },
+    {
+      "row": 1392,
+      "name": "Naseef Ali",
+      "phone": "+918606522855",
+      "reason": "duplicate phone — kept #1379 Naseef Ali V (KOZHIKKODE/FEROKE/Feroke); dropped KOZHIKKODE/FEROKE/Petta"
+    }
+  ],
+  "warnings": [
+    {
+      "row": 1,
+      "name": "Binas T A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 10,
+      "name": "Musab",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 13,
+      "name": "Nadeem",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 27,
+      "name": "Siyadudheeen Labba",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 33,
+      "name": "Hidayathulla S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 53,
+      "name": "Raees C A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 58,
+      "name": "Abdul Razak",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 66,
+      "name": "Shihas K K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 77,
+      "name": "Ahammed Jasim",
+      "warning": "role \"Area - Presudent\" read as \"President\""
+    },
+    {
+      "row": 79,
+      "name": "Abdul Basith Ummer",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 117,
+      "name": "Ibrahim Nabeel",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 120,
+      "name": "Saif Bin Aslam",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 135,
+      "name": "Reja Thoufeeque T K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 139,
+      "name": "Sajeer N K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 142,
+      "name": "Ansal N M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 146,
+      "name": "Shameer N K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 150,
+      "name": "Shefrin K M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 153,
+      "name": "Shamrees K M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 184,
+      "name": "Afasal U V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 191,
+      "name": "Sabik K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 197,
+      "name": "Adv Rehman Irikkur",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 201,
+      "name": "Shakir P C",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 204,
+      "name": "Muhammed Shafi M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 208,
+      "name": "Shihab K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 213,
+      "name": "Arshad Chenoth",
+      "warning": "Oman number \"96891258926\" stored as +96891258926"
+    },
+    {
+      "row": 218,
+      "name": "Mufeed Hassan K M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 221,
+      "name": "Rashid Ampali",
+      "warning": "DOB \"01-05_1985\" malformed — read as 01-05-1985"
+    },
+    {
+      "row": 224,
+      "name": "Shinoj T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 227,
+      "name": "Ramshad P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 228,
+      "name": "Hesham Khalid",
+      "warning": "Saudi Arabia number \"966566881606\" stored as +966566881606"
+    },
+    {
+      "row": 241,
+      "name": "Abdul Basith",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 245,
+      "name": "Muhammad Afsal V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 246,
+      "name": "Munavvir K M",
+      "warning": "UAE number \"971542020472\" stored as +971542020472"
+    },
+    {
+      "row": 258,
+      "name": "Muhammed Niyas M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 260,
+      "name": "Mohammed Raneesh P M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 266,
+      "name": "Safarudheen H",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 279,
+      "name": "Muhammed Razi T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 287,
+      "name": "Faseer",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 289,
+      "name": "Umar Farooque",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 299,
+      "name": "Amanullah P M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 302,
+      "name": "Namseer",
+      "warning": "DOB \"15--05-1997\" malformed — read as 15-05-1997"
+    },
+    {
+      "row": 314,
+      "name": "Sajeed P M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 322,
+      "name": "Afnas M Saifuddin",
+      "warning": "Qatar number \"97455638642\" stored as +97455638642"
+    },
+    {
+      "row": 333,
+      "name": "Ahmed Saheer M A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 338,
+      "name": "Sirajul Hugh V M",
+      "warning": "blood group \"0+\" read as O+"
+    },
+    {
+      "row": 339,
+      "name": "Aneesh Mullasery",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 346,
+      "name": "Aleef",
+      "warning": "Qatar number \"97470266502\" stored as +97470266502"
+    },
+    {
+      "row": 348,
+      "name": "Amjad Bin Shareef",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 364,
+      "name": "Aslam Ali S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 374,
+      "name": "Salman N",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 375,
+      "name": "Dileep I",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 381,
+      "name": "Fayad A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 382,
+      "name": "Benshad Salim",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 386,
+      "name": "Anas T K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 395,
+      "name": "Bassam",
+      "warning": "UAE number \"971507133927\" stored as +971507133927"
+    },
+    {
+      "row": 398,
+      "name": "Nadeem A R",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 407,
+      "name": "Siyaul Haque Haque",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 408,
+      "name": "Anwar Haroon",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 411,
+      "name": "Ramees P S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 412,
+      "name": "Asif Ameen",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 413,
+      "name": "Abdul Vahab",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 414,
+      "name": "Noorsameer P A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 415,
+      "name": "Muhammed Hafis",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 416,
+      "name": "Sabir Payyil",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 417,
+      "name": "Althaf Salam",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 418,
+      "name": "Noufal Noushad",
+      "warning": "Saudi Arabia number \"966557810692\" stored as +966557810692"
+    },
+    {
+      "row": 418,
+      "name": "Noufal Noushad",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 419,
+      "name": "Sajeer S J",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 420,
+      "name": "Adif Mon M N",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 421,
+      "name": "Shahabas J A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 429,
+      "name": "Farash T K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 430,
+      "name": "Misfar T K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 431,
+      "name": "Muhammed Shafi",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 432,
+      "name": "Moiduppa K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 433,
+      "name": "Sabiq M",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 434,
+      "name": "Abdul Kalam P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 435,
+      "name": "Faizal P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 437,
+      "name": "Jamaludheen P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 438,
+      "name": "Najad P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 439,
+      "name": "Naseef",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 440,
+      "name": "Shafeeq T K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 443,
+      "name": "Anees Rahman",
+      "warning": "blood group \"0+\" read as O+"
+    },
+    {
+      "row": 445,
+      "name": "Maneh Ummer",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 453,
+      "name": "Anoos",
+      "warning": "unit \"Tb\" looks truncated"
+    },
+    {
+      "row": 454,
+      "name": "Fadhil Kamarudheen",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 467,
+      "name": "Faisal R",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 468,
+      "name": "Noufal B",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 471,
+      "name": "Muhsin V K",
+      "warning": "Qatar number \"97433773266\" stored as +97433773266"
+    },
+    {
+      "row": 492,
+      "name": "Danish Ahammed A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 493,
+      "name": "Nassar A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 494,
+      "name": "Abdul Kayum A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 495,
+      "name": "Fasil M A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 496,
+      "name": "Faisal Muhammed K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 499,
+      "name": "Name",
+      "warning": "DOB \"11-061990\" malformed — read as 11-06-1990"
+    },
+    {
+      "row": 499,
+      "name": "Name",
+      "warning": "name is literally \"Name\" — check source"
+    },
+    {
+      "row": 500,
+      "name": "Muhammed Basheer H",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 501,
+      "name": "Shamseer P A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 502,
+      "name": "Yousuf Ali",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 503,
+      "name": "Meharoof C P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 505,
+      "name": "Muhammed Shuaib",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 506,
+      "name": "Jahfer Sadiq",
+      "warning": "Saudi Arabia number \"966598929751\" stored as +966598929751"
+    },
+    {
+      "row": 506,
+      "name": "Jahfer Sadiq",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 508,
+      "name": "Abdul Gafoor",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 509,
+      "name": "Shameer Muhammed",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 554,
+      "name": "Afsal U S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 564,
+      "name": "Fasil K H",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 566,
+      "name": "Abdul Samad P A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 568,
+      "name": "Mohamed Shafi T T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 571,
+      "name": "Ashfaq Ahmed K A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 572,
+      "name": "Dr Anas P Aboobacker",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 582,
+      "name": "Salih V S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 583,
+      "name": "Afsal K Hussain",
+      "warning": "ambiguous blood group \"B\" — left blank"
+    },
+    {
+      "row": 584,
+      "name": "Naeemuddeen P N",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 590,
+      "name": "Abdul Basith K M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 591,
+      "name": "Ajnas",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 597,
+      "name": "Shameer",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 607,
+      "name": "Yaser Abdulrazak",
+      "warning": "role \"District - Pr\" read as \"President\""
+    },
+    {
+      "row": 615,
+      "name": "Jaseem",
+      "warning": "UAE number \"971555047797\" stored as +971555047797"
+    },
+    {
+      "row": 628,
+      "name": "Ajmal Aslam",
+      "warning": "DOB \"05-041994\" malformed — read as 05-04-1994"
+    },
+    {
+      "row": 628,
+      "name": "Ajmal Aslam",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 645,
+      "name": "Abdulla Muhyudheen",
+      "warning": "blood group \"0+\" read as O+"
+    },
+    {
+      "row": 648,
+      "name": "Anees Miswar Areekan",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 649,
+      "name": "Mohammed Basil M",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 651,
+      "name": "Mansoor Chalil",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 652,
+      "name": "Mubarak Ahamed",
+      "warning": "DOB \"03-01990\" unreadable — left blank"
+    },
+    {
+      "row": 652,
+      "name": "Mubarak Ahamed",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 653,
+      "name": "Ameen A P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 654,
+      "name": "Anas Yaseen M K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 656,
+      "name": "Sajjad Rahman Nalakath",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 657,
+      "name": "Abdul Rahim T U",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 658,
+      "name": "Safeer Zayan P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 660,
+      "name": "Suhaib C T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 661,
+      "name": "Haseeb Ahsan",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 663,
+      "name": "Muneeb Mukhthar K T",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 665,
+      "name": "Niyas V K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 669,
+      "name": "Adil Azeez N K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 671,
+      "name": "Zaki Roshan V P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 673,
+      "name": "Nisar V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 679,
+      "name": "Shajeer V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 707,
+      "name": "Shameem C A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 714,
+      "name": "Nishad",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 721,
+      "name": "Riyas U",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 742,
+      "name": "Fazalul Haque",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 748,
+      "name": "Abdul Irshad M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 753,
+      "name": "Anas Karuvadan",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 760,
+      "name": "Suhaib M K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 767,
+      "name": "Sajad T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 770,
+      "name": "Jabir Ahamed V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 773,
+      "name": "Azhar Mohiyudheen",
+      "warning": "UAE number \"971526504977\" stored as +971526504977"
+    },
+    {
+      "row": 781,
+      "name": "Musadhiq M C",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 782,
+      "name": "Fazalul Haq",
+      "warning": "UAE number \"971509362364\" stored as +971509362364"
+    },
+    {
+      "row": 790,
+      "name": "Fakarudheen Ali Ahmmed T K",
+      "warning": "UAE number \"971507836334\" stored as +971507836334"
+    },
+    {
+      "row": 796,
+      "name": "Mahsoof P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 801,
+      "name": "Husni Mubarack V P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 802,
+      "name": "Rasween A S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 812,
+      "name": "Naseef C H",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 815,
+      "name": "Abdul Jabir P T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 816,
+      "name": "Mohammed Afsal M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 819,
+      "name": "Hadiq N K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 820,
+      "name": "Rabee Hussain P K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 825,
+      "name": "Mubashir K",
+      "warning": "UAE number \"971557901033\" stored as +971557901033"
+    },
+    {
+      "row": 836,
+      "name": "Shafeeh Munees T",
+      "warning": "Qatar number \"97466003946\" stored as +97466003946"
+    },
+    {
+      "row": 838,
+      "name": "Mohammed Ali V K",
+      "warning": "UAE number \"971553189594\" stored as +971553189594"
+    },
+    {
+      "row": 843,
+      "name": "Althaf Ali A M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 844,
+      "name": "Anas M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 846,
+      "name": "Musammil V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 859,
+      "name": "Subeer K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 861,
+      "name": "Shafeeque Hassan P",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 869,
+      "name": "Abdul Salam P K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 870,
+      "name": "Khalid A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 871,
+      "name": "Aboobacker Sidheeq K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 872,
+      "name": "Mohamed Haris A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 879,
+      "name": "Muhsinul Faris P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 881,
+      "name": "Mansoor M M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 890,
+      "name": "Raees T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 891,
+      "name": "Shafeeq T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 894,
+      "name": "Sanoob A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 895,
+      "name": "Shareef P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 899,
+      "name": "Nisamudheen N",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 914,
+      "name": "Basith K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 918,
+      "name": "Ashfaq Ahmed P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 923,
+      "name": "Muhammed Shareef M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 924,
+      "name": "Faiz Hameed V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 925,
+      "name": "Adil K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 944,
+      "name": "Anwar P T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 956,
+      "name": "Thanveer Ahammed K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 958,
+      "name": "Amanullah Karanath",
+      "warning": "Oman number \"96879182194\" stored as +96879182194"
+    },
+    {
+      "row": 959,
+      "name": "Shabeerbabu T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 961,
+      "name": "Kaja Muhinudheen A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 962,
+      "name": "Ajmal Badsha M K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 963,
+      "name": "Irfan C K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 985,
+      "name": "Sahal K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1002,
+      "name": "Dr Safeer A K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1007,
+      "name": "Abdul Malik K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1012,
+      "name": "Mubaris",
+      "warning": "UAE number \"971501536764\" stored as +971501536764"
+    },
+    {
+      "row": 1013,
+      "name": "Jamsheer K U",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1031,
+      "name": "Muthalib",
+      "warning": "UAE number \"971582404828\" stored as +971582404828"
+    },
+    {
+      "row": 1034,
+      "name": "Shabeer P K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1035,
+      "name": "Saeed V T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1036,
+      "name": "Yosufali U",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1038,
+      "name": "Abdulsalam K P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1045,
+      "name": "Adhnan Hamza",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1047,
+      "name": "Muhammed Hashim K P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1051,
+      "name": "Abdul Kabeer U",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1052,
+      "name": "Irfan N K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1060,
+      "name": "Mohammed Jaisal M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1061,
+      "name": "Faiz P",
+      "warning": "DOB \"20-0-1988\" is not a real date — left blank"
+    },
+    {
+      "row": 1064,
+      "name": "Ahamed Nashad V",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1065,
+      "name": "Ali Salim A K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1066,
+      "name": "Shafeeque Rahman M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1069,
+      "name": "Irfanul Haque C H",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1072,
+      "name": "Muhammed Sabah E",
+      "warning": "Qatar number \"97431252580\" stored as +97431252580"
+    },
+    {
+      "row": 1075,
+      "name": "Jaseem C P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1084,
+      "name": "Yasir M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1085,
+      "name": "Adhil Aboobacker",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1090,
+      "name": "Raees N",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1092,
+      "name": "Al Ameen N",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1093,
+      "name": "Abdul Jamal T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1095,
+      "name": "Asif P P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1097,
+      "name": "Samad T K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1105,
+      "name": "Umair P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1106,
+      "name": "Rehmathulla",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1113,
+      "name": "Naseem Dilas",
+      "warning": "Qatar number \"97450665419\" stored as +97450665419"
+    },
+    {
+      "row": 1114,
+      "name": "Nabeel M K",
+      "warning": "Oman number \"96891025126\" stored as +96891025126"
+    },
+    {
+      "row": 1115,
+      "name": "Abid Mashood K A",
+      "warning": "Qatar number \"97433121059\" stored as +97433121059"
+    },
+    {
+      "row": 1118,
+      "name": "Sahal Rahman",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1125,
+      "name": "Binshad P",
+      "warning": "Qatar number \"97459976166\" stored as +97459976166"
+    },
+    {
+      "row": 1131,
+      "name": "Naseeph P",
+      "warning": "Oman number \"96877591110\" stored as +96877591110"
+    },
+    {
+      "row": 1133,
+      "name": "Shaheer V",
+      "warning": "UAE number \"971551049042\" stored as +971551049042"
+    },
+    {
+      "row": 1138,
+      "name": "Muhammed Saeed T K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1142,
+      "name": "Fairoos Banna",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1144,
+      "name": "Muhammed Fasil K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1145,
+      "name": "Azharudheen K A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1152,
+      "name": "Nubail P K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1157,
+      "name": "Jamsheer A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1171,
+      "name": "Munawar Khasim E K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1203,
+      "name": "Shihab N K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1206,
+      "name": "Fasal Habeeb O M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1216,
+      "name": "Mansoor Ali K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1220,
+      "name": "Ahammed Adil E N",
+      "warning": "Qatar number \"97455474578\" stored as +97455474578"
+    },
+    {
+      "row": 1227,
+      "name": "Naseem K",
+      "warning": "role \"State - Joint Secratary\" read as \"Joint Secretary\""
+    },
+    {
+      "row": 1232,
+      "name": "Nabeel M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1233,
+      "name": "Shafeek E M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1236,
+      "name": "Asif Abdussalam",
+      "warning": "Qatar number \"97430365034\" stored as +97430365034"
+    },
+    {
+      "row": 1237,
+      "name": "Navas A",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1255,
+      "name": "Yunus K C",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1266,
+      "name": "Naeem P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1273,
+      "name": "Nishad V K",
+      "warning": "DOB \"1989\" is not a full date (year only?) — left blank"
+    },
+    {
+      "row": 1280,
+      "name": "Jaisal M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1281,
+      "name": "Raheesh T M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1284,
+      "name": "Faseeh Ahmad E K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1286,
+      "name": "Bahas K P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1322,
+      "name": "Abdul Basith P V",
+      "warning": "UAE number \"971525077769\" stored as +971525077769"
+    },
+    {
+      "row": 1323,
+      "name": "Amjad Ali E M",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1326,
+      "name": "Nabeel P T",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1330,
+      "name": "Fuad P K",
+      "warning": "blood group \"0+\" read as O+"
+    },
+    {
+      "row": 1330,
+      "name": "Fuad P K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1332,
+      "name": "Abdul Rauf C",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1334,
+      "name": "Muhammed Iqbal C K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1336,
+      "name": "Hashir Ahammed",
+      "warning": "blood group \"0+\" read as O+"
+    },
+    {
+      "row": 1337,
+      "name": "Inam N M",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1340,
+      "name": "Mubasheer T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1344,
+      "name": "Shad T S",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1347,
+      "name": "Hamdan P P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1353,
+      "name": "Ishfaq Habeeb",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1355,
+      "name": "Ali Nabeel V P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1356,
+      "name": "Shuhaib C K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1358,
+      "name": "Roshan Rahman",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1360,
+      "name": "Habeeb K P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1363,
+      "name": "Rashad T K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1375,
+      "name": "Jaseem K",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1393,
+      "name": "Areeb M",
+      "warning": "Saudi Arabia number \"966546654785\" stored as +966546654785"
+    },
+    {
+      "row": 1394,
+      "name": "Rijad",
+      "warning": "Qatar number \"97430148708\" stored as +97430148708"
+    },
+    {
+      "row": 1400,
+      "name": "Saifudheen V P",
+      "warning": "Qatar number \"97433581118\" stored as +97433581118"
+    },
+    {
+      "row": 1404,
+      "name": "Ajnas T P",
+      "warning": "Leader column disagrees with Roles — roles win"
+    },
+    {
+      "row": 1409,
+      "name": "Muhammed Anwar S",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1410,
+      "name": "Aslam M",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1411,
+      "name": "Ashkar",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1412,
+      "name": "Sajin Abdul Salam",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1413,
+      "name": "Jazeem S",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1414,
+      "name": "Aleem A K",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1415,
+      "name": "Mohammed Seyyaf S",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1416,
+      "name": "Afzal Muhammed S",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1417,
+      "name": "Arif Muhammed S",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1418,
+      "name": "Fazil",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1419,
+      "name": "Yahya",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1420,
+      "name": "Noorsha",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1421,
+      "name": "Hakeem T",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1422,
+      "name": "Nadeer A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1423,
+      "name": "Haris Ansar",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1424,
+      "name": "Abdul Haseeb",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1425,
+      "name": "Noufal K N",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1426,
+      "name": "Adil Muhammed A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1427,
+      "name": "Shihabudeen M A",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1428,
+      "name": "Muhammed Zinan",
+      "warning": "blank status — imported as Active"
+    },
+    {
+      "row": 1429,
+      "name": "Ajmal Shah",
+      "warning": "blank status — imported as Active"
+    }
+  ],
+  "failures": []
+}

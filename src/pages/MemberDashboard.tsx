@@ -28,6 +28,7 @@ import { downloadFile } from "@/utils/downloadFile";
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
+import { FEATURES } from "@/lib/features";
 import Leaders from "@/pages/Leaders";
 import {
   User,
@@ -233,7 +234,9 @@ const MemberDashboard = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeView = searchParams.get("view") || "overview";
+  const requestedView = searchParams.get("view") || "overview";
+  // Baithul Maal is switched off (lib/features): old ?view=baithul links show the overview.
+  const activeView = requestedView === "baithul" && !FEATURES.baithulMaal ? "overview" : requestedView;
   const setActiveView = (view: string) =>
     setSearchParams(view === "overview" ? {} : { view }, { replace: true });
   // Target interaction state
@@ -628,7 +631,7 @@ const MemberDashboard = () => {
       </div>
 
       {/* Baithul Maal summary — opens Baithul Maal view */}
-      <Card
+      {FEATURES.baithulMaal && <Card
         role="button"
         tabIndex={0}
         onClick={() => setActiveView("baithul")}
@@ -653,7 +656,7 @@ const MemberDashboard = () => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Recent Targets */}
       <Card>
@@ -743,8 +746,8 @@ const MemberDashboard = () => {
       setShowChangeRequest(false);
       setChangeRequestForm({ name: "", phone: "", note: "" });
       toast({ title: "Request Sent", description: "Your area admin will review the change." });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to send request", variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error instanceof Error && error.message) || "Failed to send request", variant: "destructive" });
     } finally {
       setChangeRequestSending(false);
     }
@@ -767,7 +770,7 @@ const MemberDashboard = () => {
   const saveProfile = async () => {
     try {
       setProfileSaving(true);
-      const payload: Record<string, any> = { ...editProfileForm };
+      const payload: Record<string, string | number> = { ...editProfileForm };
       if (payload.age) payload.age = Number(payload.age);
       else delete payload.age;
       const result = await memberAuthAPI.updateProfile(payload);
@@ -778,8 +781,8 @@ const MemberDashboard = () => {
       } : prev);
       setIsEditingProfile(false);
       toast({ title: "Profile Updated", description: "Your profile has been updated successfully." });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to update profile", variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error instanceof Error && error.message) || "Failed to update profile", variant: "destructive" });
     } finally {
       setProfileSaving(false);
     }
@@ -929,7 +932,7 @@ const MemberDashboard = () => {
               </div>
               {profile.profile.address && (
                 <div className="col-span-2">
-                  <label className="text-sm font-medium text-muted-foreground">Address</label>
+                  <label className="text-sm font-medium text-muted-foreground">Unit</label>
                   <p className="text-lg">{profile.profile.address}</p>
                 </div>
               )}
@@ -1018,12 +1021,12 @@ const MemberDashboard = () => {
                 />
               </div>
               <div className="md:col-span-2">
-                <label htmlFor="member-profile-address" className="text-sm font-medium">Address</label>
+                <label htmlFor="member-profile-address" className="text-sm font-medium">Unit</label>
                 <Input
                   id="member-profile-address"
                   value={editProfileForm.address}
                   onChange={e => setEditProfileForm(p => ({ ...p, address: e.target.value }))}
-                  placeholder="Home address"
+                  placeholder="e.g. Vaduthala"
                   className="mt-1"
                 />
               </div>
@@ -1038,7 +1041,7 @@ const MemberDashboard = () => {
         </CardContent>
       </Card>
 
-      {baithulDetailsCard}
+      {FEATURES.baithulMaal && baithulDetailsCard}
     </div>
   );
 

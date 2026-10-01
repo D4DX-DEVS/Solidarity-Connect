@@ -126,9 +126,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       page: pageNum,
       limit: limitNum,
       sort,
-      // Only fields the list consumers render (Members, UserManagement, RoleManagement,
-      // BaithulEnrollDialog) — keeps DB reads and payloads small
-      select: 'name phone email status district group isApproved createdAt isLeader roleTag extraRoleTags baithulMaal profession',
+      // Only fields the list consumers render (Members card + Excel/PDF export,
+      // UserManagement, RoleManagement, BaithulEnrollDialog) — keeps DB reads and payloads small.
+      // address = unit name.
+      select: 'name phone email status district group address dateOfBirth bloodGroup isApproved createdAt isLeader roleTag extraRoleTags baithulMaal profession',
       populate: [
         { path: 'district', select: 'name code' },
         { path: 'group', select: 'name code' }

@@ -18,6 +18,7 @@ import Group from '../models/Group.js';
 import OrgFile from '../models/OrgFile.js';
 import Request from '../models/Request.js';
 import { body, validationResult } from 'express-validator';
+import { leaderScopeFor } from '../middleware/auth.js';
 
 // Multer in-memory storage for file uploads
 const memberUpload = multer({
@@ -1058,16 +1059,13 @@ router.get('/leaders', authenticateMember, async (req, res) => {
       expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
     }
 
-    // Members only see their own hierarchy: state leaders + leaders in their
-    // own district/area. Keeps the 400+ full admin list out of member view.
+    // Members only see their own hierarchy: state leaders + their district's
+    // district leaders + their own area's leaders (same rule as admins).
+    const inScope = await leaderScopeFor(req.member);
+    expanded = expanded.filter(inScope);
     const idOf = (v) => String(v?._id || v || '');
     const myDistrict = idOf(req.member?.district);
     const myGroup = idOf(req.member?.group);
-    expanded = expanded.filter((l) =>
-      l.roleTag?.type === 'state' ||
-      (myDistrict && idOf(l.district) === myDistrict) ||
-      (myGroup && idOf(l.group) === myGroup)
-    );
 
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { FEATURES } from "./lib/features";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppSidebar from "./components/app/AppSidebar";
 import BottomNav from "./components/BottomNav";
@@ -93,7 +94,8 @@ const App = () => (
             <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute>} />
             <Route path="/state-admin/edit-notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><EditNotification /></ProtectedRoute>} />
             <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
-            <Route path="/state-admin/baithul-data" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><BaithulDataView /></ProtectedRoute>} />
+            {/* Baithul Maal is switched off app-wide (lib/features) — old links land on the dashboard */}
+            <Route path="/state-admin/baithul-data" element={FEATURES.baithulMaal ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><BaithulDataView /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><MembersGroupReport /></ProtectedRoute>} />
 
             <Route path="/admin/meetings-view" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute>} />

@@ -60,10 +60,20 @@ interface FilterOption {
   label: string;
 }
 
+interface NamedRef {
+  _id?: string;
+  name?: string;
+}
+
+const toOptions = (items: NamedRef[]): FilterOption[] =>
+  items
+    .filter((item): item is Required<NamedRef> => Boolean(item?._id && item?.name))
+    .map((item) => ({ id: item._id, label: item.name }));
+
 const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole } = useAuth();
+  const { userRole, user } = useAuth();
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -81,12 +91,17 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const [selectedAreaId, setSelectedAreaId] = useState("");
   const [selectedUnit, setSelectedUnit] = useState("");
 
-  // Members are server-scoped to state leaders + their own district/area,
-  // so the district/area/unit cascade filters are hidden for them.
+  // Everyone but state admins is server-scoped to state leaders + their own chain,
+  // so a picker only shows where it can still narrow: district for state admins,
+  // area for state/district admins, unit section for every admin.
   const isMember = userRole === "member";
-  const requiresDistrict = !isMember && (activeTab === "district" || activeTab === "area" || activeTab === "unit");
-  const requiresArea = !isMember && (activeTab === "area" || activeTab === "unit");
+  const canPickDistrict = userRole === "state_admin";
+  const canPickArea = canPickDistrict || userRole === "district_admin";
+  const requiresDistrict = canPickDistrict && (activeTab === "district" || activeTab === "area" || activeTab === "unit");
+  const requiresArea = canPickArea && (activeTab === "area" || activeTab === "unit");
   const requiresUnit = !isMember && activeTab === "unit";
+  // District admins' area list is their own district's areas
+  const areaDistrictId = canPickDistrict ? selectedDistrictId : user?.district?._id || "";
 
   // Debounce search
   useEffect(() => {
@@ -101,22 +116,9 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
   // Reset cascading filters when role type changes
   useEffect(() => {
-    if (!requiresDistrict) {
-      setSelectedDistrictId("");
-      setSelectedAreaId("");
-      setSelectedUnit("");
-      return;
-    }
-
-    if (!requiresArea) {
-      setSelectedAreaId("");
-      setSelectedUnit("");
-      return;
-    }
-
-    if (!requiresUnit) {
-      setSelectedUnit("");
-    }
+    if (!requiresDistrict) setSelectedDistrictId("");
+    if (!requiresArea) setSelectedAreaId("");
+    if (!requiresUnit) setSelectedUnit("");
   }, [activeTab, requiresDistrict, requiresArea, requiresUnit]);
 
   useEffect(() => {
@@ -135,23 +137,17 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
   const loadDistrictOptions = useCallback(async () => {
     if (!requiresDistrict) {
       setDistrictOptions([]);
-      setAreaOptions([]);
-      setUnitOptions([]);
       return;
     }
 
     try {
-      // requiresDistrict is false for members, so this loader only runs for admins
+      // requiresDistrict is true only for state admins
       const districtsResult = await districtsAPI.getDistricts({ limit: 100, sort: "name" });
-      const districts = districtsResult.data || [];
-      const normalized = districts
-        .filter((district: any) => district?._id && district?.name)
-        .map((district: any) => ({ id: district._id, label: district.name }));
-      setDistrictOptions(normalized);
+      setDistrictOptions(toOptions(districtsResult.data || []));
     } catch {
       setDistrictOptions([]);
     }
-  }, [requiresDistrict, userRole]);
+  }, [requiresDistrict]);
 
   useEffect(() => {
     loadDistrictOptions();
@@ -166,20 +162,16 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
     const loadAreaOptions = async () => {
       try {
         // directory=true: read-only area picker, unscoped for every admin role
-        const params: Record<string, any> = selectedDistrictId ? { district: selectedDistrictId } : {};
+        const params: Record<string, string> = areaDistrictId ? { district: areaDistrictId } : {};
         const groupsResult = await groupsAPI.getGroups({ limit: 500, sort: "name", directory: true, ...params });
-        const groups = groupsResult.data || [];
-        const normalized = groups
-          .filter((group: any) => group?._id && group?.name)
-          .map((group: any) => ({ id: group._id, label: group.name }));
-        setAreaOptions(normalized);
+        setAreaOptions(toOptions(groupsResult.data || []));
       } catch {
         setAreaOptions([]);
       }
     };
 
     loadAreaOptions();
-  }, [requiresArea, selectedDistrictId, userRole]);
+  }, [requiresArea, areaDistrictId, userRole]);
 
   useEffect(() => {
     if (!requiresUnit) {
@@ -189,7 +181,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
     const loadUnitOptions = async () => {
       try {
-        const params: Record<string, any> = {
+        const params: Record<string, string | number> = {
           page: 1,
           limit: 500,
           roleType: "unit",
@@ -216,7 +208,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
   // ponytail: the list is cached; the cascading filter-option loaders above stay as-is —
   // two effects share areaOptions, and untangling that buys no user-visible speed.
-  const leaderParams: Record<string, any> = {
+  const leaderParams: Record<string, string | number> = {
     page: currentPage,
     limit: 10,
     ...(activeTab !== "all" ? { roleType: activeTab } : {}),
@@ -277,20 +269,22 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
         </div>
 
         {/* Hierarchy filters */}
-        {requiresDistrict && (
+        {(requiresDistrict || requiresArea || requiresUnit) && (
           <Card className="shadow-sm">
             <CardContent className="p-3 space-y-3">
-              <Select value={selectedDistrictId || "all"} onValueChange={(value) => setSelectedDistrictId(value === "all" ? "" : value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select district" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Districts</SelectItem>
-                  {districtOptions.map((district) => (
-                    <SelectItem key={district.id} value={district.id}>{district.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {requiresDistrict && (
+                <Select value={selectedDistrictId || "all"} onValueChange={(value) => setSelectedDistrictId(value === "all" ? "" : value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select district" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districtOptions.map((district) => (
+                      <SelectItem key={district.id} value={district.id}>{district.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               {requiresArea && (
                 <Select value={selectedAreaId || "all"} onValueChange={(value) => setSelectedAreaId(value === "all" ? "" : value)}>
@@ -434,7 +428,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
       <HeaderWithLogout
         icon={<Star className="h-6 w-6 text-primary-foreground" />}
         title="Leaders"
-        subtitle="All designated leaders"
+        subtitle={userRole === "state_admin" ? "All designated leaders" : "Leaders in your hierarchy"}
       />
 
       <main className="app-main pt-4 pb-28 lg:pb-8 space-y-3">

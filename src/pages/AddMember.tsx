@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Building2, MapPin, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
+import { FEATURES } from "@/lib/features";
 
 interface UserContext {
   userRole: string;
@@ -418,6 +418,7 @@ const AddMember = () => {
                 />
               </div>
 
+              {FEATURES.baithulMaal && (
               <div className="space-y-2">
                 <label htmlFor="member-baithul" className="text-sm font-medium text-foreground">Monthly Baithul Maal (Optional)</label>
                 <Input
@@ -430,16 +431,17 @@ const AddMember = () => {
                   onChange={(e) => setFormData({ ...formData, monthlyBaithulMaal: e.target.value })}
                 />
               </div>
+              )}
 
               <div className="space-y-2 md:col-span-2">
-                <label htmlFor="member-address" className="text-sm font-medium text-foreground">Address (Optional)</label>
-                <Textarea
+                {/* Stored in member.address — the org uses it for the unit name */}
+                <label htmlFor="member-address" className="text-sm font-medium text-foreground">Unit (Optional)</label>
+                <Input
                   id="member-address"
-                  placeholder="Enter full address"
+                  placeholder="e.g. Vaduthala"
+                  maxLength={100}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  rows={4}
-                  className="min-h-[110px] resize-y"
                 />
               </div>
 

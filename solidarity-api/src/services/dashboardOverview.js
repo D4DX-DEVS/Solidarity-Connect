@@ -1,0 +1,313 @@
+import Member from '../models/Member.js';
+import Group from '../models/Group.js';
+import District from '../models/District.js';
+import User from '../models/User.js';
+import RecurringMark from '../models/RecurringMark.js';
+import { isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
+
+/**
+ * Data for the three admin dashboards, scoped down the hierarchy:
+ *
+ *   state    → every member; children are districts
+ *   district → one district; children are its areas (groups)
+ *   area     → the admin's area groups; children only when the area spans >1 group
+ *
+ * A state admin may drill into one district (`districtId`) and gets exactly the
+ * district-level view. Other roles can never widen their scope.
+ *
+ * "Reporting" = completed recurring-target marks (secretariat / samithi / meets)
+ * by admins in scope. "Complete profile" = DOB, blood group, profession and
+ * education all filled in.
+ */
+
+const ACTIVITY_MONTHS = 6;
+// An admin counts as "reporting" if they completed a mark this month or last.
+const REPORTING_MONTHS = 2;
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+const PROFILE_FIELDS = [
+  { field: 'dateOfBirth', label: 'Date of birth' },
+  { field: 'bloodGroup', label: 'Blood group' },
+  { field: 'profession', label: 'Profession' },
+  { field: 'education', label: 'Education' },
+];
+
+// Marks carry the year/month the (Kerala) client was in, so windows follow IST,
+// not the server clock — otherwise the first hours of a month fall in the last one.
+const ORG_TIME_ZONE = 'Asia/Kolkata';
+
+/** Calendar year and 0-based month of `now` in the org's time zone. */
+export function orgYearMonth(now) {
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: ORG_TIME_ZONE, year: 'numeric', month: 'numeric' }).formatToParts(now);
+  const get = (type) => Number(parts.find((p) => p.type === type).value);
+  return { year: get('year'), month: get('month') - 1 };
+}
+
+/** The last `count` calendar months ending with `now`'s (IST) month, oldest first. */
+export function lastMonths(now, count) {
+  const { year: nowYear, month: nowMonth } = orgYearMonth(now);
+  const months = [];
+  for (let i = count - 1; i >= 0; i -= 1) {
+    const d = new Date(Date.UTC(nowYear, nowMonth - i, 1));
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth() + 1;
+    months.push({
+      key: `${year}-${String(month).padStart(2, '0')}`,
+      // Full year — "Sep 26" reads as 26 September.
+      label: `${MONTH_LABELS[month - 1]} ${year}`,
+      year,
+      month,
+    });
+  }
+  return months;
+}
+
+/** Month series zero-filled from aggregate rows shaped { _id: { year, month }, count }. */
+export function fillMonthSeries(months, rows) {
+  const byKey = new Map(rows.map((r) => [`${r._id.year}-${r._id.month}`, r.count]));
+  return months.map(({ key, label, year, month }) => ({ key, label, completed: byKey.get(`${year}-${month}`) || 0 }));
+}
+
+const OBJECT_ID = /^[a-f\d]{24}$/i;
+
+/** Bad drill-down request; `status` is the HTTP code to answer with. */
+export class ScopeError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function districtScope(district) {
+  return {
+    level: 'district',
+    name: district.name,
+    parentName: null,
+    memberFilter: { district: district._id },
+    adminFilter: { district: district._id, role: { $in: ['district_admin', 'group_admin'] } },
+    groupFilter: { district: district._id },
+    childKey: 'group',
+  };
+}
+
+/** Where this admin sits in the hierarchy and which Mongo filters that implies. */
+export async function resolveScope(user, { districtId } = {}) {
+  if (user.role === 'state_admin') {
+    if (districtId !== undefined) {
+      // Only a plain 24-hex string — query params can arrive as objects ({$ne: null}).
+      if (typeof districtId !== 'string' || !OBJECT_ID.test(districtId)) throw new ScopeError('Invalid district', 400);
+      const district = await District.findById(districtId).select('name').lean();
+      if (!district) throw new ScopeError('District not found', 404);
+      return districtScope(district);
+    }
+    return {
+      level: 'state',
+      name: 'State',
+      parentName: null,
+      memberFilter: {},
+      adminFilter: { role: { $in: ['district_admin', 'group_admin'] } },
+      groupFilter: {},
+      childKey: 'district',
+    };
+  }
+
+  if (user.role === 'district_admin') {
+    return districtScope(user.district);
+  }
+
+  const areaIds = isAreaLevelAdmin(user) ? await areaGroupIdsFor(user) : [];
+  const groupIds = areaIds.length > 0 ? areaIds : [user.group._id];
+  return {
+    level: 'area',
+    name: user.roleTag?.roleDescription || user.group.name,
+    parentName: user.district?.name || null,
+    memberFilter: { group: { $in: groupIds } },
+    adminFilter: { group: { $in: groupIds }, role: 'group_admin' },
+    groupFilter: { _id: { $in: groupIds } },
+    childKey: groupIds.length > 1 ? 'group' : null,
+  };
+}
+
+const countWhen = (cond) => ({ $sum: { $cond: [cond, 1, 0] } });
+const isFilled = (field) => ({ $gt: [{ $strLenCP: { $trim: { input: { $toString: { $ifNull: [`$${field}`, ''] } } } } }, 0] });
+const hasDob = { $eq: [{ $type: '$dateOfBirth' }, 'date'] };
+const IS_COMPLETE = { $and: [hasDob, isFilled('bloodGroup'), isFilled('profession'), isFilled('education')] };
+
+const MEMBER_COUNTERS = {
+  total: { $sum: 1 },
+  active: countWhen({ $eq: ['$status', 'Active'] }),
+  abroad: countWhen({ $eq: ['$status', 'Abroad'] }),
+  complete: countWhen(IS_COMPLETE),
+};
+
+async function memberFacets(scope) {
+  const [result] = await Member.aggregate([
+    { $match: scope.memberFilter },
+    {
+      $facet: {
+        totals: [{
+          $group: {
+            _id: null,
+            ...MEMBER_COUNTERS,
+            dateOfBirth: countWhen(hasDob),
+            bloodGroup: countWhen(isFilled('bloodGroup')),
+            profession: countWhen(isFilled('profession')),
+            education: countWhen(isFilled('education')),
+          },
+        }],
+        children: scope.childKey
+          ? [{ $group: { _id: `$${scope.childKey}`, ...MEMBER_COUNTERS } }]
+          : [{ $match: { $expr: false } }],
+      },
+    },
+  ]);
+  return result;
+}
+
+async function adminActivity(scope, now) {
+  const admins = await User.find({ ...scope.adminFilter, isActive: true }).select('_id role district group').lean();
+  const adminIds = admins.map((a) => a._id);
+
+  const months = lastMonths(now, ACTIVITY_MONTHS);
+  const reportingMonths = months.slice(-REPORTING_MONTHS);
+  const marksMatch = { userType: 'User', completed: true, user: { $in: adminIds } };
+
+  const [trendRows, reportingUserIds] = adminIds.length === 0
+    ? [[], []]
+    : await Promise.all([
+      RecurringMark.aggregate([
+        { $match: { ...marksMatch, $or: months.map(({ year, month }) => ({ year, month })) } },
+        { $group: { _id: { year: '$year', month: '$month' }, count: { $sum: 1 } } },
+      ]),
+      RecurringMark.distinct('user', { ...marksMatch, $or: reportingMonths.map(({ year, month }) => ({ year, month })) }),
+    ]);
+
+  return {
+    admins,
+    reporting: new Set(reportingUserIds.map(String)),
+    trend: fillMonthSeries(months, trendRows),
+    window: { from: reportingMonths[0].label, to: reportingMonths[reportingMonths.length - 1].label },
+  };
+}
+
+/**
+ * Admin headcount per child. District rows count district + area admins; area
+ * rows count only that area's admins.
+ */
+export function adminsByChild(childKey, admins, reporting) {
+  const byChild = new Map();
+  if (!childKey) return byChild;
+  for (const admin of admins) {
+    if (childKey === 'group' && admin.role !== 'group_admin') continue;
+    const key = admin[childKey] ? String(admin[childKey]) : null;
+    if (!key) continue;
+    const entry = byChild.get(key) || { admins: 0, reporting: 0 };
+    entry.admins += 1;
+    if (reporting.has(String(admin._id))) entry.reporting += 1;
+    byChild.set(key, entry);
+  }
+  return byChild;
+}
+
+/**
+ * Areas (groups) in scope, and which of them have no active area admin. Same-named
+ * groups in one district are one area (see areaGroupIdsFor), so an admin on any of
+ * them staffs all of them.
+ */
+export function areaCoverage(groups, admins) {
+  const areaKey = (g) => `${g.district}|${String(g.name ?? '').trim().toLowerCase()}`;
+  const byId = new Map(groups.map((g) => [String(g._id), g]));
+  const staffedAreas = new Set(
+    admins
+      .filter((a) => a.role === 'group_admin' && a.group && byId.has(String(a.group)))
+      .map((a) => areaKey(byId.get(String(a.group)))),
+  );
+  const isStaffed = (g) => staffedAreas.has(areaKey(g));
+  const byDistrict = new Map();
+  let withoutAdmin = 0;
+  for (const g of groups) {
+    const key = String(g.district);
+    const entry = byDistrict.get(key) || { areas: 0, withoutAdmin: 0 };
+    entry.areas += 1;
+    if (!isStaffed(g)) {
+      entry.withoutAdmin += 1;
+      withoutAdmin += 1;
+    }
+    byDistrict.set(key, entry);
+  }
+  return { total: groups.length, withoutAdmin, byDistrict, isStaffed };
+}
+
+export async function buildDashboardOverview(user, { districtId, now = new Date() } = {}) {
+  const scope = await resolveScope(user, { districtId });
+  const [facets, groups, districts, activity] = await Promise.all([
+    memberFacets(scope),
+    // Deactivated units drop out, as in the district/group listings.
+    Group.find({ ...scope.groupFilter, isActive: { $ne: false } }).select('name district').lean(),
+    scope.childKey === 'district' ? District.find({ isActive: { $ne: false } }).select('name').lean() : Promise.resolve([]),
+    adminActivity(scope, now),
+  ]);
+
+  const totals = facets.totals[0] || { total: 0, active: 0, abroad: 0, complete: 0 };
+  const coverage = areaCoverage(groups, activity.admins);
+  const memberRows = new Map(facets.children.map((c) => [String(c._id), c]));
+  const adminRows = adminsByChild(scope.childKey, activity.admins, activity.reporting);
+
+  const children = scope.childKey === 'district' ? districts : scope.childKey === 'group' ? groups : [];
+  const childRows = children
+    .map((c) => {
+      const id = String(c._id);
+      const m = memberRows.get(id) || { total: 0, active: 0, abroad: 0, complete: 0 };
+      const a = adminRows.get(id) || { admins: 0, reporting: 0 };
+      const areaStats = scope.childKey === 'district'
+        ? coverage.byDistrict.get(id) || { areas: 0, withoutAdmin: 0 }
+        : { areas: 1, withoutAdmin: coverage.isStaffed(c) ? 0 : 1 };
+      return {
+        id,
+        name: c.name,
+        total: m.total,
+        active: m.active,
+        abroad: m.abroad,
+        other: m.total - m.active - m.abroad,
+        completeProfiles: m.complete,
+        areas: areaStats.areas,
+        areasWithoutAdmin: areaStats.withoutAdmin,
+        admins: a.admins,
+        reportingAdmins: a.reporting,
+      };
+    })
+    .sort((x, y) => y.total - x.total || x.name.localeCompare(y.name));
+
+  const adminCounts = { district: 0, area: 0, reportingArea: 0 };
+  for (const admin of activity.admins) {
+    if (admin.role === 'district_admin') {
+      adminCounts.district += 1;
+    } else {
+      adminCounts.area += 1;
+      if (activity.reporting.has(String(admin._id))) adminCounts.reportingArea += 1;
+    }
+  }
+
+  return {
+    scope: { level: scope.level, name: scope.name, parentName: scope.parentName },
+    generatedAt: now.toISOString(),
+    members: {
+      total: totals.total,
+      active: totals.active,
+      abroad: totals.abroad,
+      other: totals.total - totals.active - totals.abroad,
+    },
+    admins: { ...adminCounts, total: activity.admins.length, reporting: activity.reporting.size },
+    areas: { total: coverage.total, withoutAdmin: coverage.withoutAdmin },
+    profiles: {
+      total: totals.total,
+      complete: totals.complete,
+      fields: PROFILE_FIELDS.map(({ field, label }) => ({ field, label, filled: totals[field] || 0 })),
+    },
+    children: {
+      level: scope.childKey === 'district' ? 'district' : scope.childKey === 'group' ? 'area' : null,
+      rows: childRows,
+    },
+    activity: { months: activity.trend, reportingWindow: activity.window },
+  };
+}

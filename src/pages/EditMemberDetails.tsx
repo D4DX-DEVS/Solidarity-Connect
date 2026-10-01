@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Building2, MapPin, PencilLine, ShieldCheck, User } from "lucide-react";
+import { ArrowLeft, Building2, Home, MapPin, PencilLine, ShieldCheck, User } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { FEATURES } from "@/lib/features";
 
 interface Member {
   _id: string;
@@ -163,6 +163,11 @@ const EditMemberDetails = () => {
     }
   }, [id, navigate, toast]);
 
+  // Members abroad are stored with a foreign country code (+971…, +974…). The
+  // 10-digit Indian input can't represent those, so the number is shown read-only
+  // and left out of the update instead of blocking every other edit.
+  const intlPhone = !!member?.phone && !/^(\+91)?[6-9]\d{9}$/.test(member.phone);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -175,7 +180,7 @@ const EditMemberDetails = () => {
       return;
     }
 
-    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    if (!intlPhone && !/^[6-9]\d{9}$/.test(formData.phone)) {
       toast({
         title: "Invalid Phone Number",
         description: "Phone number must be 10 digits starting with 6, 7, 8, or 9",
@@ -188,7 +193,8 @@ const EditMemberDetails = () => {
 
     try {
       // Clean the form data - remove empty optional fields
-      const cleanedData: any = { ...formData };
+      const cleanedData: Partial<typeof formData> & { district?: string; group?: string } = { ...formData };
+      if (intlPhone) delete cleanedData.phone;
       if (!cleanedData.email) delete cleanedData.email;
       // Only forward a DOB that is a valid YYYY-MM-DD; anything else (including
       // corrupted stored values the input couldn't render) is dropped so the
@@ -285,8 +291,8 @@ const EditMemberDetails = () => {
         eyebrow="Members"
         icon={<PencilLine className="h-6 w-6" />}
         details={
-          /* All three scope cards on one row on mobile; content shrinks instead of wrapping to a new row */
-          <div className="col-span-2 grid grid-cols-3 gap-2 xl:col-span-4 xl:gap-3">
+          /* Four scope cards: 2×2 on mobile, one row from sm up */
+          <div className="col-span-2 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:col-span-4 xl:gap-3">
             <div className="min-w-0 rounded-2xl border border-border/60 bg-card px-2.5 py-2.5 shadow-sm sm:px-4 sm:py-3">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.18em]">Status</p>
               <div className="mt-2">{renderMemberStatus(formData.status || member?.status || "Unknown")}</div>
@@ -303,6 +309,13 @@ const EditMemberDetails = () => {
               <div className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-foreground sm:gap-2 sm:text-sm">
                 <Building2 className="h-4 w-4 shrink-0 text-primary" />
                 <span className="min-w-0 break-words leading-4 sm:leading-5">{member?.group?.name} ({member?.group?.code})</span>
+              </div>
+            </div>
+            <div className="min-w-0 rounded-2xl border border-border/60 bg-card px-2.5 py-2.5 shadow-sm sm:px-4 sm:py-3">
+              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:text-[0.7rem] sm:tracking-[0.18em]">Unit</p>
+              <div className="mt-2 flex items-start gap-1.5 text-xs font-semibold text-foreground sm:gap-2 sm:text-sm">
+                <Home className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 break-words leading-4 sm:leading-5">{member?.address || "No unit"}</span>
               </div>
             </div>
           </div>
@@ -330,18 +343,22 @@ const EditMemberDetails = () => {
                 id="phone"
                 type="tel"
                 placeholder="9876543210"
-                maxLength={10}
+                maxLength={intlPhone ? undefined : 10}
                 value={formData.phone}
+                disabled={intlPhone}
                 onChange={(e) => {
                   const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
                   setFormData({ ...formData, phone: cleaned });
                 }}
                 required
               />
-              {formData.phone && formData.phone.length !== 10 ? (
+              {intlPhone ? (
+                <p className="text-xs text-muted-foreground">International number — can't be changed here.</p>
+              ) : null}
+              {!intlPhone && formData.phone && formData.phone.length !== 10 ? (
                 <p className="text-xs text-destructive">Please enter 10 digits.</p>
               ) : null}
-              {formData.phone && formData.phone.length === 10 && !/^[6-9]/.test(formData.phone) ? (
+              {!intlPhone && formData.phone && formData.phone.length === 10 && !/^[6-9]/.test(formData.phone) ? (
                 <p className="text-xs text-destructive">Phone number must start with 6, 7, 8, or 9.</p>
               ) : null}
             </div>
@@ -407,6 +424,7 @@ const EditMemberDetails = () => {
               />
             </div>
 
+            {FEATURES.baithulMaal && (
             <div className="space-y-1.5">
               <Label htmlFor="monthlyBaithulMaal">Monthly Baithul Maal (Optional)</Label>
               <Input
@@ -419,16 +437,17 @@ const EditMemberDetails = () => {
                 onChange={(e) => setFormData({ ...formData, monthlyBaithulMaal: e.target.value })}
               />
             </div>
+            )}
 
             <div className="space-y-1.5 md:col-span-2">
-              <Label htmlFor="address">Address (Optional)</Label>
-              <Textarea
+              {/* Stored in member.address — the org uses it for the unit name */}
+              <Label htmlFor="address">Unit (Optional)</Label>
+              <Input
                 id="address"
-                placeholder="Enter full address"
+                placeholder="e.g. Vaduthala"
+                maxLength={100}
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                rows={4}
-                className="min-h-[110px] resize-y"
               />
             </div>
           </div>
