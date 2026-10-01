@@ -12,6 +12,8 @@ import TransferRequest from '../models/TransferRequest.js';
 import { authenticate, authorize, requireAreaScope, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
+import { buildDashboardOverview, ScopeError } from '../services/dashboardOverview.js';
+import { BAITHUL_MAAL_ENABLED } from '../config/features.js';
 
 const router = express.Router();
 
@@ -223,6 +225,23 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
       success: false,
       message: 'Failed to fetch dashboard report'
     });
+  }
+});
+
+// @route   GET /api/reports/overview
+// @desc    Hierarchy-scoped analytics for the admin dashboards (charts)
+// @access  Private
+router.get('/overview', authenticate, authorize(['view_reports']), requireAreaScope, async (req, res) => {
+  try {
+    // ?district= is a state-admin drill-down; every other role stays pinned to its own scope.
+    const data = await buildDashboardOverview(req.user, { districtId: req.query.district });
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    if (error instanceof ScopeError) {
+      return res.status(error.status).json({ success: false, message: error.message });
+    }
+    console.error('Dashboard overview error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch dashboard overview' });
   }
 });
 
@@ -1511,7 +1530,8 @@ router.get('/export/members', authenticate, authorize(['view_reports']), async (
     const csvHeaders = [
       'Name', 'Phone', 'Email', 'Date of Birth', 'Age', 'Blood Group',
       'Profession', 'Education', 'Address', 'District', 'Group', 'Status',
-      'Monthly Baithul Maal', 'Total Paid', 'Joined Date', 'Approved'
+      ...(BAITHUL_MAAL_ENABLED ? ['Monthly Baithul Maal', 'Total Paid'] : []),
+      'Joined Date', 'Approved'
     ];
 
     const csvRows = members.map(member => [
@@ -1527,8 +1547,7 @@ router.get('/export/members', authenticate, authorize(['view_reports']), async (
       member.district?.name || '',
       member.group?.name || '',
       member.status,
-      member.baithulMaal?.monthlyAmount || 0,
-      member.baithulMaal?.totalPaid || 0,
+      ...(BAITHUL_MAAL_ENABLED ? [member.baithulMaal?.monthlyAmount || 0, member.baithulMaal?.totalPaid || 0] : []),
       member.joinedDate ? member.joinedDate.toISOString().split('T')[0] : '',
       member.isApproved ? 'Yes' : 'No'
     ]);

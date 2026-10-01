@@ -1,0 +1,602 @@
+[
+ {
+  "_id": {
+   "$oid": "69b79dc7d4c37c5f7736d974"
+  },
+  "title": "ജില്ലാ സെക്രട്ടേറിയറ്റ്",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "8"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "district_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773641159453"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1786971994876"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": false,
+  "updatedBy": {
+   "$oid": "6a757b16228bc0865b0d82c3"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7acb2efd41a67006ab987"
+  },
+  "title": "⁠യൂണിറ്റ് മീറ്റിംഗ്",
+  "description": "Recurring weekly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "4"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "members_only",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "weekly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773644978175"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776699642031"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": false,
+  "updatedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7c9741555122202c0b21f"
+  },
+  "title": "⁠ഏരിയ സെക്രട്ടേറിയേറ്റ്",
+  "description": "Recurring weekly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "4"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "group_and_area_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "weekly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652340432"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776699624425"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": true,
+  "updatedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7c9841555122202c0b37a"
+  },
+  "title": "ഏരിയ സമിതി",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "group_and_area_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652356369"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1774593186501"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": true,
+  "updatedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7c99a1555122202c0b474"
+  },
+  "title": "⁠മെമ്പേഴ്‌സ് മീറ്റ്",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "group_and_area_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652378614"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1774592551090"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": true,
+  "updatedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7c9aa1555122202c0b5cf"
+  },
+  "title": "യൂത്ത് മീറ്റ്",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "group_and_area_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652394112"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1774593181201"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "updatedBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "attendanceNeeded": true
+ },
+ {
+  "_id": {
+   "$oid": "69b7c9bc1555122202c0b6c9"
+  },
+  "title": "⁠യൂത്ത് മീറ്റ്",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "members_only",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652412554"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773652412554"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7c9e11555122202c0bc1d"
+  },
+  "title": "യൂത്ത് ആക്റ്റിവിറ്റി",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "members_only",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652449223"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773652449223"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69b7ca151555122202c0c6c5"
+  },
+  "title": "ജില്ലാ സമിതി",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "district_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773652501999"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773652501999"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69ba47c4698809fbc93bdc57"
+  },
+  "title": "DPDGS",
+  "description": "Recurring monthly target",
+  "category": "community",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "3"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "state_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "monthly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773815748677"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1773815748677"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "69ba47ff698809fbc93bdc94"
+  },
+  "title": "സംസ്ഥാന സെക്രട്ടറിയേറ്റ്",
+  "description": "Recurring weekly target",
+  "category": "other",
+  "targetType": "monthly",
+  "targetValue": {
+   "$numberInt": "1"
+  },
+  "unit": "times",
+  "month": {
+   "$numberInt": "4"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "targetAudience": "state_admins",
+  "status": "active",
+  "startDate": {
+   "$date": {
+    "$numberLong": "1767205800000"
+   }
+  },
+  "endDate": {
+   "$date": {
+    "$numberLong": "4102424999000"
+   }
+  },
+  "instructions": "",
+  "rewards": "",
+  "createdBy": {
+   "$oid": "68ff77a812b2d0dfa44d18bb"
+  },
+  "isRecurring": true,
+  "recurringFrequency": "weekly",
+  "isTemplate": false,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1773815807458"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1776699552552"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendanceNeeded": false,
+  "updatedBy": {
+   "$oid": "68ff7ae37c270b64686c6d6c"
+  }
+ }
+]

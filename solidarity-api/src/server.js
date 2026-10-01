@@ -30,7 +30,6 @@ import uploadRoutes from './routes/uploads.js';
 import orgFilesRoutes from './routes/orgFiles.js';
 import userTargetProgressRoutes from './routes/userTargetProgress.js';
 import recurringMarksRoutes from './routes/recurringMarks.js';
-import Member from './models/Member.js';
 import RecurringMark from './models/RecurringMark.js';
 import UserTargetProgress from './models/UserTargetProgress.js';
 import MemberTargetProgress from './models/MemberTargetProgress.js';
@@ -146,18 +145,13 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// One-time migration: fix approved members stuck in Inactive/Applicant status
+// Startup data fixes. Every step here runs on EVERY boot, so each must be idempotent
+// and must never overwrite data an admin can legitimately set.
+// (Removed 2026-09-30: a step that forced every Inactive/Applicant member to Active
+// and approved on each restart — it silently undid admins' status changes and the
+// source statuses from the people migration.)
 async function runMigrations() {
   try {
-    // Fix members that are not approved or not active (all migrated members should be active)
-    const result = await Member.updateMany(
-      { $or: [{ isApproved: false }, { isApproved: { $exists: false } }, { status: { $in: ['Inactive', 'Applicant'] } }] },
-      { $set: { isApproved: true, status: 'Active' } }
-    );
-    if (result.modifiedCount > 0) {
-      console.log(`✅ Migration: approved and activated ${result.modifiedCount} member(s)`);
-    }
-
     // Backfill UserTargetProgress from RecurringMarks for admin users
     const adminMarks = await RecurringMark.find({ userType: 'User', completed: true }).lean();
     const adminMarksByUserTarget = {};

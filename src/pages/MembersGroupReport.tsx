@@ -8,6 +8,8 @@ import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import PageSizeInput from "@/components/app/PageSizeInput";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { reportsAPI, districtsAPI } from "@/utils/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { FEATURES } from "@/lib/features";
 
 interface UnitStats {
   _id: string;
@@ -69,6 +71,11 @@ const EMPTY_SUMMARY: CensusSummary = {
 };
 
 const MembersGroupReport = () => {
+  const { user } = useAuth();
+  // Backend census is already role-scoped; the district filter/hierarchy is only
+  // meaningful for state admins. Others see just their own slice.
+  const isStateAdmin = user?.role === "state_admin";
+  const isAreaAdmin = user?.role === "group_admin";
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [loading, setLoading] = useState(true);
   const [paginationLoading, setPaginationLoading] = useState(false);
@@ -95,12 +102,13 @@ const MembersGroupReport = () => {
   };
   const writeCache = (key: string, data: any) => cache.current.set(key, { ts: Date.now(), data });
 
-  // District list for the filter
+  // District list for the filter — state admin only; others are locked to their scope.
   useEffect(() => {
+    if (!isStateAdmin) return;
     districtsAPI.getDistricts()
       .then((res) => { if (res.success) setDistrictOptions(res.data || []); })
       .catch((err) => console.error("Error fetching districts:", err));
-  }, []);
+  }, [isStateAdmin]);
 
   // District census — server-side paginated, cached per page
   useEffect(() => {
@@ -162,6 +170,15 @@ const MembersGroupReport = () => {
     }
   }, []);
 
+  // Non-state roles are scoped to one district — auto-expand so units show immediately.
+  useEffect(() => {
+    if (isStateAdmin || rows.length === 0) return;
+    const ids = rows.map((d) => d._id);
+    setOpenDistricts(ids);
+    ids.forEach(loadUnits);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, isStateAdmin]);
+
   const handleOpenChange = (values: string[]) => {
     setOpenDistricts(values);
     values.filter((id) => !units[id] && !unitLoading[id]).forEach(loadUnits);
@@ -215,7 +232,7 @@ const MembersGroupReport = () => {
     <PageShell contentClassName="pb-24">
       <PageHero
         title="Group Reports"
-        subtitle="District and unit member census with Baithul Maal coverage."
+        subtitle={FEATURES.baithulMaal ? "District and unit member census with Baithul Maal coverage." : "District and unit member census."}
         eyebrow="Reports"
         icon={<Users className="h-6 w-6" />}
         actions={
@@ -255,24 +272,32 @@ const MembersGroupReport = () => {
           </div>
 
           <SectionCard
-            title="District Census"
-            description={`${summary.districtCount} districts · ${summary.unitCount} units. Expand a district to see its units.`}
+            title={isAreaAdmin ? "Area Census" : "District Census"}
+            description={
+              isAreaAdmin
+                ? `${summary.unitCount} units in your area.`
+                : isStateAdmin
+                  ? `${summary.districtCount} districts · ${summary.unitCount} units. Expand a district to see its units.`
+                  : `${summary.unitCount} units in your district.`
+            }
             contentClassName="px-0 pb-0 pt-3 sm:px-0 sm:pb-0 sm:pt-4"
             action={
-              <Select
-                value={selectedDistrict || "all"}
-                onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
-              >
-                <SelectTrigger className="h-9 w-[140px] px-2 text-xs sm:w-[200px] sm:text-sm">
-                  <SelectValue placeholder="All Districts" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Districts</SelectItem>
-                  {districtOptions.map((d) => (
-                    <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              isStateAdmin ? (
+                <Select
+                  value={selectedDistrict || "all"}
+                  onValueChange={(val) => handleDistrictChange(val === "all" ? "" : val)}
+                >
+                  <SelectTrigger className="h-9 w-[140px] px-2 text-xs sm:w-[200px] sm:text-sm">
+                    <SelectValue placeholder="All Districts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {districtOptions.map((d) => (
+                      <SelectItem key={d._id} value={d._id}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : undefined
             }
           >
             <div className="hidden grid-cols-[1fr_repeat(4,72px)] gap-2 border-b px-4 pb-2 text-xs font-medium text-muted-foreground sm:grid sm:px-6">
@@ -304,7 +329,49 @@ const MembersGroupReport = () => {
                         <Loader2 className="h-4 w-4 animate-spin" /> Loading units…
                       </div>
                     ) : units[district._id]?.length ? (
-                      <div className="overflow-x-auto">
+                      <>
+                      {/* Mobile: flat unit rows — no nested cards */}
+                      <div className="divide-y sm:hidden">
+                        {units[district._id].map((unit) => (
+                          <div key={unit._id} className="px-4 py-3">
+                            <div className="mb-1.5 flex items-center justify-between gap-2">
+                              <span className="truncate text-sm font-semibold">{unit.groupName}</span>
+                              <span className="shrink-0 text-xs text-muted-foreground">{unit.groupCode}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-center">
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Total</p>
+                                <p className="text-sm font-semibold text-primary">{unit.totalMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Active</p>
+                                <p className="text-sm font-semibold text-green-600">{unit.activeMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Inactive</p>
+                                <p className="text-sm font-semibold text-gray-600">{unit.inactiveMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Abroad</p>
+                                <p className="text-sm font-semibold text-blue-600">{unit.abroadMembers}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Applicant</p>
+                                <p className="text-sm font-semibold text-orange-600">{unit.applicantMembers}</p>
+                              </div>
+                              {FEATURES.baithulMaal && (
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">B. Maal</p>
+                                <p className="text-sm font-semibold text-purple-600">₹{unit.totalBaithulMaal.toLocaleString()}</p>
+                              </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop: table */}
+                      <div className="hidden overflow-x-auto sm:block">
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -315,7 +382,7 @@ const MembersGroupReport = () => {
                               <TableHead className="text-right">Inactive</TableHead>
                               <TableHead className="text-right">Abroad</TableHead>
                               <TableHead className="text-right">Applicant</TableHead>
-                              <TableHead className="text-right">Baithul Maal</TableHead>
+                              {FEATURES.baithulMaal && <TableHead className="text-right">Baithul Maal</TableHead>}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -328,9 +395,11 @@ const MembersGroupReport = () => {
                                 <TableCell className="text-right font-semibold text-gray-600">{unit.inactiveMembers}</TableCell>
                                 <TableCell className="text-right font-semibold text-blue-600">{unit.abroadMembers}</TableCell>
                                 <TableCell className="text-right font-semibold text-orange-600">{unit.applicantMembers}</TableCell>
+                                {FEATURES.baithulMaal && (
                                 <TableCell className="text-right font-semibold text-purple-600">
                                   ₹{unit.totalBaithulMaal.toLocaleString()}
                                 </TableCell>
+                                )}
                               </TableRow>
                             ))}
                             <TableRow className="bg-background font-semibold">
@@ -340,13 +409,16 @@ const MembersGroupReport = () => {
                               <TableCell className="text-right text-gray-600">{district.inactiveMembers}</TableCell>
                               <TableCell className="text-right text-blue-600">{district.abroadMembers}</TableCell>
                               <TableCell className="text-right text-orange-600">{district.applicantMembers}</TableCell>
+                              {FEATURES.baithulMaal && (
                               <TableCell className="text-right text-purple-600">
                                 ₹{district.totalBaithulMaal.toLocaleString()}
                               </TableCell>
+                              )}
                             </TableRow>
                           </TableBody>
                         </Table>
                       </div>
+                      </>
                     ) : (
                       <p className="py-6 text-center text-sm text-muted-foreground">No units in this district.</p>
                     )}
@@ -359,7 +431,7 @@ const MembersGroupReport = () => {
               <p className="px-6 py-8 text-center text-muted-foreground">No districts match the selected filter.</p>
             )}
 
-            {pagination && pagination.totalDocs > 0 && (
+            {pagination && pagination.totalDocs > 0 && (isStateAdmin || pagination.totalPages > 1) && (
               <div className="flex flex-col gap-2 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <span className="text-xs text-muted-foreground sm:text-sm">
                     Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to{" "}

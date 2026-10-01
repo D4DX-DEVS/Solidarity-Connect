@@ -1,8 +1,9 @@
 import type { LucideIcon } from "lucide-react";
+import { FEATURES } from "@/lib/features";
 import {
   LayoutDashboard, Users, UserCog, Building2, ArrowRightLeft, Shield, FileCheck,
   BarChart3, FolderOpen, Database, Wallet, Bell, Calendar,
-  Target, Star, Landmark,
+  Target, Star, Landmark, Upload,
 } from "lucide-react";
 
 export interface NavItem {
@@ -25,6 +26,7 @@ export const SECTIONS: NavSection[] = [
     title: "Management",
     items: [
       { label: "Members", path: "/members", icon: Users, roles: ["state_admin", "district_admin", "group_admin"] },
+      { label: "Bulk Import", path: "/bulk-import", icon: Upload, roles: ["group_admin"] },
       { label: "Admins", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
       { label: "Districts", path: "/state-admin/districts", icon: Building2, roles: ["state_admin"] },
       { label: "Groups", path: "/state-admin/groups", icon: Users, roles: ["state_admin", "district_admin"] },
@@ -33,7 +35,9 @@ export const SECTIONS: NavSection[] = [
       { label: "Requests", path: "/requests", icon: FileCheck, roles: ["group_admin"] },
       { label: "Reports", path: "/state-admin/group-reports", icon: BarChart3, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Consolidation", path: "/consolidation", icon: Landmark, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] },
+      ...(FEATURES.baithulMaal
+        ? [{ label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] }]
+        : []),
       { label: "Master Data", path: "/state-admin/master-data", icon: Database, roles: ["state_admin"] },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
     ],
@@ -66,7 +70,7 @@ export const MEMBER_SECTIONS: NavSection[] = [
       { label: "Dashboard", path: "__home__", icon: LayoutDashboard },
       { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target },
       { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar },
-      { label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet },
+      ...(FEATURES.baithulMaal ? [{ label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet }] : []),
       { label: "Alerts", path: "/notifications", icon: Bell },
       { label: "Leaders", path: "/leaders", icon: Star },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },

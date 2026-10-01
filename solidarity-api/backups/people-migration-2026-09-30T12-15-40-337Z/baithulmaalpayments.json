@@ -1,0 +1,74 @@
+[
+ {
+  "_id": {
+   "$oid": "6a6345a3b4db96a665e39014"
+  },
+  "member": {
+   "$oid": "6a141e4ea19e59c11ba2ae9c"
+  },
+  "amount": {
+   "$numberInt": "100"
+  },
+  "paymentDate": {
+   "$date": {
+    "$numberLong": "1784851200000"
+   }
+  },
+  "paymentMonth": "2026-06",
+  "paymentType": "monthly",
+  "paymentMethod": "cash",
+  "recordedBy": {
+   "$oid": "6a30e2a4c7b2f415ba0f3b41"
+  },
+  "isActive": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1784890787965"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1784890787965"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6a6345b6b4db96a665e39098"
+  },
+  "member": {
+   "$oid": "6a141e4ea19e59c11ba2ae9c"
+  },
+  "amount": {
+   "$numberInt": "100"
+  },
+  "paymentDate": {
+   "$date": {
+    "$numberLong": "1784851200000"
+   }
+  },
+  "paymentMonth": "2026-07",
+  "paymentType": "monthly",
+  "paymentMethod": "cash",
+  "recordedBy": {
+   "$oid": "6a30e2a4c7b2f415ba0f3b41"
+  },
+  "isActive": true,
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1784890806836"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1784890806836"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

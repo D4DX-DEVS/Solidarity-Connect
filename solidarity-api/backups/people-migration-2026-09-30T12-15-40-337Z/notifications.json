@@ -1,0 +1,71 @@
+[
+ {
+  "_id": {
+   "$oid": "69d0f82ef753c6e8921512e3"
+  },
+  "title": "DPDGS Meeting",
+  "message": "നാളെ (05 - 04- 2026) രാവിലെ 10 മുതൽ ഹിറ സെൻററിൽ ആരംഭിക്കും",
+  "type": "announcement",
+  "priority": "high",
+  "targetAudience": "district_admins",
+  "targetAudiences": [
+   "district_admins"
+  ],
+  "targetGroups": [],
+  "targetDistricts": [],
+  "targetUsers": [],
+  "targetMembers": [],
+  "channels": [
+   "in_app"
+  ],
+  "scheduledFor": {
+   "$date": {
+    "$numberLong": "1775302702659"
+   }
+  },
+  "status": "sent",
+  "deliveryStats": {
+   "total": {
+    "$numberInt": "0"
+   },
+   "sent": {
+    "$numberInt": "0"
+   },
+   "delivered": {
+    "$numberInt": "0"
+   },
+   "failed": {
+    "$numberInt": "0"
+   },
+   "read": {
+    "$numberInt": "0"
+   }
+  },
+  "attachments": [],
+  "metadata": {
+   "tags": []
+  },
+  "createdBy": {
+   "$oid": "69003fe7da7e2b4102b71997"
+  },
+  "sentAt": {
+   "$date": {
+    "$numberLong": "1775302702659"
+   }
+  },
+  "recipients": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1775302702662"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1775302702662"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

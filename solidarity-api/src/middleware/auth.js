@@ -131,6 +131,38 @@ export const areaGroupIdsFor = async (user) => {
   return groups.map(g => g._id);
 };
 
+// Leader directory scope. Everyone sees the state leaders (shared top of the
+// hierarchy) plus their own chain — never peers in another district or area:
+//   state_admin    — everything
+//   district_admin — own district, every level
+//   group_admin /  — own district's district leaders + own area's area /
+//   member           murabi / unit leaders (unit admins, members: own group)
+// Takes a User or a Member. Returns a predicate over fanned-out leader rows
+// (row.roleTag = that row's role).
+const LEADER_LEVEL_BY_ROLE = { state_admin: 'state', district_admin: 'district' };
+
+export const leaderScopeFor = async (viewer) => {
+  if (viewer?.role === 'state_admin') return () => true;
+
+  const idOf = (v) => String(v?._id || v || '');
+  const levelOf = (l) => l.roleTag?.type || LEADER_LEVEL_BY_ROLE[l.role];
+  const myDistrict = idOf(viewer?.district);
+  const inMyDistrict = (l) => !!myDistrict && idOf(l.district) === myDistrict;
+
+  if (viewer?.role === 'district_admin') {
+    return (l) => levelOf(l) === 'state' || inMyDistrict(l);
+  }
+
+  const areaIds = isAreaLevelAdmin(viewer) ? (await areaGroupIdsFor(viewer)).map(String) : [];
+  const myGroups = new Set(areaIds.length > 0 ? areaIds : [idOf(viewer?.group)].filter(Boolean));
+  return (l) => {
+    const level = levelOf(l);
+    if (level === 'state') return true;
+    if (level === 'district') return inMyDistrict(l);
+    return myGroups.has(idOf(l.group));
+  };
+};
+
 // Target audiences whose personal targets this user owns and marks (their
 // "My Targets" feed). members_only is member-app only, never a User audience.
 // A district admin must NOT receive area/unit targets, and vice versa.
