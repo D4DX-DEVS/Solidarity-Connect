@@ -268,7 +268,10 @@ router.get('/members',
 
       // Apply role-based filtering
       if (req.user.role === 'group_admin') {
-        filter.group = req.user.group._id;
+        // Area-level admins span every group of their area — same scope as /overview,
+        // so the dashboard trend ends at the same total as its KPI tile.
+        const areaIds = isAreaLevelAdmin(req.user) ? await areaGroupIdsFor(req.user) : [];
+        filter.group = areaIds.length > 0 ? { $in: areaIds } : req.user.group._id;
       } else if (req.user.role === 'district_admin') {
         filter.district = req.user.district._id;
       } else if (req.user.role === 'state_admin') {

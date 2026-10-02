@@ -7,7 +7,7 @@ import type { HierarchyRow } from "@/hooks/useDashboardOverview";
 import { cn } from "@/lib/utils";
 import { formatNumber, percent, STATUS_LABEL, STATUS_SWATCH, type MemberStatusKey } from "./chartTheme";
 
-type SortKey = "name" | "total" | "activePct" | "coverage" | "reportingPct" | "profilesPct";
+type SortKey = "name" | "total" | "activePct" | "coverage" | "reportingPct";
 
 interface HierarchyScorecardProps {
   rows: HierarchyRow[];
@@ -16,20 +16,21 @@ interface HierarchyScorecardProps {
   loading?: boolean;
   /** Makes rows drillable (state → district). */
   onSelect?: (row: HierarchyRow) => void;
+  /** False when no recurring targets exist: the column counts admins instead of flagging 0/N as silent. */
+  reporting?: boolean;
 }
 
 const MOBILE_ROWS = 6;
 const SEGMENTS: MemberStatusKey[] = ["active", "abroad", "other"];
 
-const sortValue = (r: HierarchyRow, key: SortKey): number | string => {
+const sortValue = (r: HierarchyRow, key: SortKey, reporting: boolean): number | string => {
   switch (key) {
     case "name": return r.name;
     case "total": return r.total;
     case "activePct": return percent(r.active, r.total);
     case "coverage": return r.areas;
     // Units with nobody to report sort below 0% — "No admin" is worse than silent admins.
-    case "reportingPct": return r.admins > 0 ? percent(r.reportingAdmins, r.admins) : -1;
-    case "profilesPct": return percent(r.completeProfiles, r.total);
+    case "reportingPct": return r.admins > 0 ? (reporting ? percent(r.reportingAdmins, r.admins) : r.admins) : -1;
   }
 };
 
@@ -61,15 +62,6 @@ function Bar({ value, total, label }: { value: number; total: number; label: str
   );
 }
 
-function Meter({ value, total, label }: { value: number; total: number; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <Bar value={value} total={total} label={label} />
-      <span className="w-9 text-right text-xs font-semibold tabular-nums text-foreground">{total > 0 ? `${percent(value, total)}%` : "—"}</span>
-    </div>
-  );
-}
-
 function NoAdmin() {
   return (
     <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold leading-4 text-amber-700 dark:text-amber-400">
@@ -79,8 +71,9 @@ function NoAdmin() {
 }
 
 /** "3/15" + bar — the fraction already carries the admin count, so no separate admins column. */
-function Reporting({ row }: { row: HierarchyRow }) {
+function Reporting({ row, reporting }: { row: HierarchyRow; reporting: boolean }) {
   if (row.admins === 0) return <NoAdmin />;
+  if (!reporting) return <span className="text-xs font-semibold tabular-nums text-foreground">{row.admins}</span>;
   return (
     <div className="flex items-center gap-2">
       <span className="w-12 text-xs font-semibold tabular-nums text-foreground">{row.reportingAdmins}/{row.admins}</span>
@@ -128,9 +121,9 @@ function SortHeader({ label, sortKey, sort, onSort, align = "left" }: {
 
 /**
  * One row per child unit — the main hierarchy view. Every figure appears once:
- * members (bar), active share, area cover (districts only), admin reporting, profile completeness.
+ * members (bar), active share, area cover (districts only), admin reporting.
  */
-export function HierarchyScorecard({ rows, level, loading, onSelect }: HierarchyScorecardProps) {
+export function HierarchyScorecard({ rows, level, loading, onSelect, reporting = true }: HierarchyScorecardProps) {
   const isMobile = useIsMobile();
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "total", dir: "desc" });
   const [expanded, setExpanded] = useState(false);
@@ -155,8 +148,8 @@ export function HierarchyScorecard({ rows, level, loading, onSelect }: Hierarchy
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: key === "name" ? "asc" : "desc" }));
 
   const sorted = [...rows].sort((a, b) => {
-    const av = sortValue(a, sort.key);
-    const bv = sortValue(b, sort.key);
+    const av = sortValue(a, sort.key, reporting);
+    const bv = sortValue(b, sort.key, reporting);
     const cmp = typeof av === "string" ? av.localeCompare(String(bv)) : av - Number(bv);
     return (sort.dir === "asc" ? cmp : -cmp) || b.total - a.total;
   });
@@ -193,11 +186,12 @@ export function HierarchyScorecard({ rows, level, loading, onSelect }: Hierarchy
                   </span>
                 </div>
                 <div className="my-2"><MemberBar row={r} max={max} /></div>
-                <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="grid grid-cols-2 gap-2 text-center">
                   {[
                     { label: "Active", value: r.total ? `${percent(r.active, r.total)}%` : "—" },
-                    { label: "Reporting", value: r.admins ? `${r.reportingAdmins}/${r.admins}` : "—" },
-                    { label: "Profiles", value: r.total ? `${percent(r.completeProfiles, r.total)}%` : "—" },
+                    reporting
+                      ? { label: "Reporting", value: r.admins ? `${r.reportingAdmins}/${r.admins}` : "—" }
+                      : { label: "Admins", value: r.admins ? String(r.admins) : "—" },
                   ].map((s) => (
                     <div key={s.label} className="rounded-lg bg-muted/50 px-1 py-1.5">
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{s.label}</p>
@@ -240,15 +234,14 @@ export function HierarchyScorecard({ rows, level, loading, onSelect }: Hierarchy
     <div>
       {legend}
       <div className="overflow-x-auto">
-        <table className={cn("w-full border-collapse text-sm", showAreas ? "min-w-[720px]" : "min-w-[600px]")}>
+        <table className={cn("w-full border-collapse text-sm", showAreas ? "min-w-[620px]" : "min-w-[500px]")}>
           <thead className="border-y bg-muted/40">
             <tr className="text-left">
               <SortHeader label={noun} sortKey="name" sort={sort} onSort={onSort} />
               <SortHeader label="Members" sortKey="total" sort={sort} onSort={onSort} />
               <SortHeader label="Active" sortKey="activePct" sort={sort} onSort={onSort} align="right" />
               {showAreas ? <SortHeader label="Areas" sortKey="coverage" sort={sort} onSort={onSort} /> : null}
-              <SortHeader label="Admins reporting" sortKey="reportingPct" sort={sort} onSort={onSort} />
-              <SortHeader label="Profiles complete" sortKey="profilesPct" sort={sort} onSort={onSort} />
+              <SortHeader label={reporting ? "Admins reporting" : "Admins"} sortKey="reportingPct" sort={sort} onSort={onSort} />
               {onSelect ? <th scope="col" className="w-8" aria-label="Open" /> : null}
             </tr>
           </thead>
@@ -281,8 +274,7 @@ export function HierarchyScorecard({ rows, level, loading, onSelect }: Hierarchy
                 </td>
                 <td className="px-3 py-2.5 text-right text-xs font-semibold tabular-nums">{r.total ? `${percent(r.active, r.total)}%` : "—"}</td>
                 {showAreas ? <td className="px-3 py-2.5"><Coverage row={r} /></td> : null}
-                <td className="px-3 py-2.5"><Reporting row={r} /></td>
-                <td className="px-3 py-2.5"><Meter value={r.completeProfiles} total={r.total} label={`${r.name} complete profiles`} /></td>
+                <td className="px-3 py-2.5"><Reporting row={r} reporting={reporting} /></td>
                 {onSelect ? <td className="pr-3"><ChevronRight className="size-4 text-muted-foreground" aria-hidden /></td> : null}
               </tr>
             ))}

@@ -3,6 +3,7 @@ import Group from '../models/Group.js';
 import District from '../models/District.js';
 import User from '../models/User.js';
 import RecurringMark from '../models/RecurringMark.js';
+import PersonalTarget from '../models/PersonalTarget.js';
 import { isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 
 /**
@@ -66,6 +67,27 @@ export function lastMonths(now, count) {
 export function fillMonthSeries(months, rows) {
   const byKey = new Map(rows.map((r) => [`${r._id.year}-${r._id.month}`, r.count]));
   return months.map(({ key, label, year, month }) => ({ key, label, completed: byKey.get(`${year}-${month}`) || 0 }));
+}
+
+// Growth badges compare against the trailing 30 days ("from last month").
+// Counts reuse the exact scope filters as the totals they sit under, so a
+// badge of 0% is a real measured zero, never a placeholder.
+const DELTA_WINDOW_DAYS = 30;
+
+// Audiences that put a recurring target in front of admins. With none active,
+// "0 reporting" means nothing was asked of them yet, not that they are silent.
+const ADMIN_TARGET_AUDIENCES = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'];
+
+/**
+ * Month-over-month growth percent: added-in-window over the prior total.
+ * 0 added → 0 (genuine "No change"); no prior total to compare against →
+ * null (badge hidden, never a fake number).
+ */
+export function growthPct(added, total) {
+  if (added === 0) return 0;
+  const prior = total - added;
+  if (prior <= 0) return null;
+  return Math.round((added / prior) * 100);
 }
 
 const OBJECT_ID = /^[a-f\d]{24}$/i;
@@ -240,12 +262,18 @@ export function areaCoverage(groups, admins) {
 
 export async function buildDashboardOverview(user, { districtId, now = new Date() } = {}) {
   const scope = await resolveScope(user, { districtId });
-  const [facets, groups, districts, activity] = await Promise.all([
+  const since = new Date(now.getTime() - DELTA_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+  const [facets, groups, districts, activity, membersAdded, areasAdded, adminsAdded, recurringTargets] = await Promise.all([
     memberFacets(scope),
     // Deactivated units drop out, as in the district/group listings.
     Group.find({ ...scope.groupFilter, isActive: { $ne: false } }).select('name district').lean(),
     scope.childKey === 'district' ? District.find({ isActive: { $ne: false } }).select('name').lean() : Promise.resolve([]),
     adminActivity(scope, now),
+    // Same scope filters as the totals above, plus the trailing window.
+    Member.countDocuments({ ...scope.memberFilter, createdAt: { $gte: since } }),
+    Group.countDocuments({ ...scope.groupFilter, isActive: { $ne: false }, createdAt: { $gte: since } }),
+    User.countDocuments({ ...scope.adminFilter, isActive: true, createdAt: { $gte: since } }),
+    PersonalTarget.countDocuments({ isRecurring: true, status: 'active', targetAudience: { $in: ADMIN_TARGET_AUDIENCES } }),
   ]);
 
   const totals = facets.totals[0] || { total: 0, active: 0, abroad: 0, complete: 0 };
@@ -308,6 +336,12 @@ export async function buildDashboardOverview(user, { districtId, now = new Date(
       level: scope.childKey === 'district' ? 'district' : scope.childKey === 'group' ? 'area' : null,
       rows: childRows,
     },
-    activity: { months: activity.trend, reportingWindow: activity.window },
+    activity: { months: activity.trend, reportingWindow: activity.window, recurringTargets },
+    deltas: {
+      windowDays: DELTA_WINDOW_DAYS,
+      members: { added: membersAdded, pct: growthPct(membersAdded, totals.total) },
+      areas: { added: areasAdded, pct: growthPct(areasAdded, coverage.total) },
+      admins: { added: adminsAdded, pct: growthPct(adminsAdded, activity.admins.length) },
+    },
   };
 }

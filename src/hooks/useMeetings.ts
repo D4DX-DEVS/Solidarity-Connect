@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { meetingsApi, Meeting, CreateMeetingData, CreateMonthlyMeetingData, CreateFormData } from '@/lib/meetings';
 import { meetingsAPI } from '@/utils/api';
 
@@ -35,10 +36,11 @@ export const useMeetings = (params?: {
   upcoming?: boolean;
   past?: boolean;
   search?: string;
-}) => {
+}, options?: { keepPrevious?: KeepPrevious }) => {
   return useQuery({
     queryKey: meetingKeys.list(params || {}),
     queryFn: () => meetingsApi.getMeetings(params),
+    placeholderData: listPlaceholder(options?.keepPrevious, params),
   });
 };
 

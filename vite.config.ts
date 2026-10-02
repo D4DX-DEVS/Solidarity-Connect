@@ -21,7 +21,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      // New SW waits until the user taps "Update now" in PWAUpdatePrompt
+      registerType: "prompt",
       includeAssets: ["favicon.png", "logo-icon.png", "apple-touch-icon.png", "robots.txt"],
       manifest: {
         name: "SOLIDARITY - Members Management",
@@ -140,8 +141,6 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/api\//],
         cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
       },
       devOptions: {
         // Enable SW in dev so you can test locally

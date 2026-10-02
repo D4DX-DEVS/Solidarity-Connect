@@ -24,7 +24,7 @@ const TargetDistrictsPicker = ({
   selected: string[];
   onToggle: (districtId: string) => void;
 }) => {
-  const { data: districtsResponse, isLoading } = useDistricts({ sort: "name", isActive: true });
+  const { data: districtsResponse, isLoading } = useDistricts({ sort: "name", isActive: true, limit: 100 });
   const districts: District[] = (districtsResponse?.data as District[]) ?? [];
 
   if (isLoading) {

@@ -2,18 +2,33 @@ import { useRegisterSW } from "virtual:pwa-register/react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
+const UPDATE_CHECK_INTERVAL_MS = 30 * 60 * 1000;
+
 /**
  * Shows a toast-style bar when a new SW version is ready.
  * User taps "Update" to reload with the new version.
+ *
+ * An installed PWA resumes from memory without navigating, so the browser never
+ * re-checks sw.js by itself — check on resume, on reconnect and on a timer.
  */
 export function PWAUpdatePrompt() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      // Check for updates every hour in the background
-      if (r) setInterval(() => r.update(), 60 * 60 * 1000);
+    onRegisteredSW(_swUrl, r) {
+      if (!r) return;
+      const checkForUpdate = () => {
+        if (r.installing || !navigator.onLine) return;
+        r.update().catch(() => {
+          // Server unreachable — next resume/interval retries
+        });
+      };
+      setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") checkForUpdate();
+      });
+      window.addEventListener("online", checkForUpdate);
     },
     onRegisterError(error) {
       console.error("SW registration error", error);

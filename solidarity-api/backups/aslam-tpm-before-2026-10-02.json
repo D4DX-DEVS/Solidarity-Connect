@@ -1,0 +1,66 @@
+{
+  "user": {
+    "_id": "6abe09d5da3ab8ed95741c65",
+    "name": "Mohamed Aslam Tpm",
+    "phone": "9645802478",
+    "role": "district_admin",
+    "adminKind": "area",
+    "district": "6a141d96a19e59c11ba29c05",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_members",
+      "manage_groups",
+      "approve_transfers",
+      "send_notifications",
+      "view_reports",
+      "bulk_import",
+      "manage_meetings",
+      "manage_baithul_maal"
+    ],
+    "isLeader": true,
+    "extraRoleTags": [],
+    "createdAt": "2026-10-01T07:20:53.779Z",
+    "updatedAt": "2026-10-02T05:58:12.376Z",
+    "__v": 0,
+    "roleTag": {
+      "listingOrder": null
+    }
+  },
+  "member": {
+    "_id": "6abe09e2da3ab8ed95742604",
+    "name": "Mohamed Aslam Tpm",
+    "phone": "+919645802478",
+    "dateOfBirth": "1985-06-30T00:00:00.000Z",
+    "bloodGroup": "O+",
+    "address": "Tanur",
+    "district": "6a141d96a19e59c11ba29c05",
+    "group": "6a141d9da19e59c11ba29ca4",
+    "status": "Active",
+    "baithulMaal": {
+      "monthlyAmount": 0,
+      "totalPaid": 0
+    },
+    "isLeader": true,
+    "roleTag": {
+      "type": "district",
+      "name": "President",
+      "roleDescription": "WAYANAD",
+      "listingOrder": null
+    },
+    "extraRoleTags": [],
+    "isApproved": true,
+    "approvedBy": "6abe09d5da3ab8ed95741c00",
+    "approvedAt": "2026-10-01T07:20:54.897Z",
+    "createdBy": "6abe09d5da3ab8ed95741c00",
+    "joinedDate": "2026-10-01T07:21:06.503Z",
+    "lastActive": "2026-10-01T07:21:06.503Z",
+    "createdAt": "2026-10-01T07:21:06.504Z",
+    "updatedAt": "2026-10-01T13:06:11.985Z",
+    "age": 41,
+    "__v": 0,
+    "updatedBy": "6abce6075b42aeb46973c999"
+  }
+}

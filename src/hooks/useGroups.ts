@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { groupsApi, Group, CreateGroupData, GroupFilters } from '@/lib/groups';
 
 // Query keys
@@ -12,11 +13,12 @@ const groupKeys = {
   members: (id: string) => [...groupKeys.detail(id), 'members'] as const,
 };
 
-// Get groups list
-export const useGroups = (params?: GroupFilters) => {
+// Get groups list. `keepPrevious` holds the current rows on screen while the next page loads.
+export const useGroups = (params?: GroupFilters, options?: { keepPrevious?: KeepPrevious }) => {
   return useQuery({
     queryKey: groupKeys.list(params || {}),
     queryFn: () => groupsApi.getGroups(params),
+    placeholderData: listPlaceholder(options?.keepPrevious, params),
   });
 };
 

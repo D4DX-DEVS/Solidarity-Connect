@@ -68,13 +68,13 @@ export default function Consolidation() {
   const [loadingTargets, setLoadingTargets] = useState(false);
   const [loadingReport, setLoadingReport] = useState(false);
 
-  // Fetch districts and groups for region filters
-  const { data: districtsData } = useDistricts();
-  const { data: groupsData } = useGroups(
-    selectedDistrictId && selectedDistrictId !== 'all'
-      ? { district: selectedDistrictId }
-      : undefined
-  );
+  // Fetch districts and groups for region filters — explicit limits, the API defaults to 20
+  const { data: districtsData } = useDistricts({ sort: 'name', limit: 100 });
+  const { data: groupsData } = useGroups({
+    sort: 'name',
+    limit: 500,
+    ...(selectedDistrictId && selectedDistrictId !== 'all' ? { district: selectedDistrictId } : {}),
+  });
 
   const districts = districtsData?.data || [];
   const groups = groupsData?.data || [];
