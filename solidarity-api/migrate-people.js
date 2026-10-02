@@ -45,10 +45,11 @@ const XLSX_PATH = fileIdx !== -1 && process.argv[fileIdx + 1] ? process.argv[fil
 const ACTIVITY_COLLECTIONS = [
   'membertargetprogresses', 'usertargetprogresses', 'recurringmarks', 'personaltargets',
   'meetings', 'meetingsessions', 'attendances', 'guestattendances', 'baithulmaalpayments',
-  'transferrequests', 'requests', 'notifications', 'orgfiles', 'loginotps',
+  'transferrequests', 'requests', 'notifications', 'loginotps',
 ];
 const PEOPLE_COLLECTIONS = ['members', 'memberauths', 'users'];
-const BACKUP_COLLECTIONS = [...PEOPLE_COLLECTIONS, 'districts', 'groups', ...ACTIVITY_COLLECTIONS];
+// orgfiles is the shared document library (files live in DO Spaces) — back it up, never wipe it.
+const BACKUP_COLLECTIONS = [...PEOPLE_COLLECTIONS, 'districts', 'groups', ...ACTIVITY_COLLECTIONS, 'orgfiles'];
 
 const keepFilter = { phone: { $in: TEST_PHONE_VARIANTS } };
 const dropFilter = { phone: { $nin: TEST_PHONE_VARIANTS } };

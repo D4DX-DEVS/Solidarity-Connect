@@ -47,14 +47,18 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (failureCount, error: any) => {
+      retry: (failureCount, error) => {
         // Never retry on 4xx client errors (401, 403, 404, 429, etc.)
-        if (error?.status >= 400 && error?.status < 500) return false;
+        const status = (error as { status?: number } | null)?.status ?? 0;
+        if (status >= 400 && status < 500) return false;
         return failureCount < 3;
       },
       // ponytail: one global cache policy instead of per-hook staleTime.
       // Cached data paints instantly on revisit; refetch runs in background.
-      staleTime: 5 * 60 * 1000,
+      // staleTime must stay 0 for that background refetch to happen: edits go
+      // through direct API calls that never invalidate these caches, so a
+      // non-zero value shows pre-edit Members/Leaders lists after saving.
+      staleTime: 0,
       gcTime: 30 * 60 * 1000,
       refetchOnWindowFocus: false,
     },

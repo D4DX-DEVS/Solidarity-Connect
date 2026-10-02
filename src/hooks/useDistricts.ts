@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { districtsApi, District, CreateDistrictData, DistrictFilters } from '@/lib/districts';
 
 // Query keys
@@ -13,11 +14,12 @@ const districtKeys = {
   members: (id: string) => [...districtKeys.detail(id), 'members'] as const,
 };
 
-// Get districts list
-export const useDistricts = (params?: DistrictFilters) => {
+// Get districts list. `keepPrevious` holds the current rows on screen while the next page loads.
+export const useDistricts = (params?: DistrictFilters, options?: { keepPrevious?: KeepPrevious }) => {
   return useQuery({
     queryKey: districtKeys.list(params || {}),
     queryFn: () => districtsApi.getDistricts(params),
+    placeholderData: listPlaceholder(options?.keepPrevious, params),
   });
 };
 

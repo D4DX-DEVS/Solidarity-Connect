@@ -20,11 +20,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import PageSizeInput from "@/components/app/PageSizeInput";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
+import DataPagination from "@/components/app/DataPagination";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminMeetingsOverview, useMeetings, useDeleteMeeting } from "@/hooks/useMeetings";
 import { getEffectiveStatus } from "@/lib/meetings";
 import { useDistricts } from "@/hooks/useDistricts";
+import { useListParams } from "@/hooks/useListParams";
 
 interface GroupProgress {
   groupId: string;
@@ -153,12 +155,17 @@ const AdminMeetingsView = () => {
     hasPrevPage: false,
   };
 
-  const { data: districtsResponse } = useDistricts();
+  const { data: districtsResponse } = useDistricts({ limit: 100 });
   const districts: District[] = (districtsResponse?.data as District[]) ?? [];
 
-  // Agendas tab: full list + edit/delete
-  const { data: agendaResponse, isPending: agendasLoading } = useMeetings();
+  // Agendas tab: paged list + edit/delete; page and size live in the URL (agendas_*)
+  const agendaList = useListParams("agendas");
+  const { data: agendaResponse, isPending: agendasLoading, isPlaceholderData: agendasStale } = useMeetings(
+    { page: agendaList.page, limit: agendaList.pageSize },
+    { keepPrevious: "page" }
+  );
   const agendas = agendaResponse?.data || [];
+  const agendaTotal = agendaResponse?.pagination?.totalDocs ?? agendas.length;
   const deleteMeeting = useDeleteMeeting();
 
   const handleDeleteMeeting = async (meetingId: string, meetingTitle: string) => {
@@ -926,7 +933,7 @@ const AdminMeetingsView = () => {
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
                 </div>
-              ) : agendas.length === 0 ? (
+              ) : agendaTotal === 0 ? (
                 <Card className="surface-card p-8 text-center shadow-sm">
                   <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                   <h2 className="font-semibold text-lg mb-2">No Meetings Scheduled</h2>
@@ -934,77 +941,89 @@ const AdminMeetingsView = () => {
                 </Card>
               ) : (
                 <div className="space-y-2 sm:space-y-3">
-                  {agendas.map((meeting: any) => {
-                    const isExpanded = expandedId === meeting._id;
-                    return (
-                      <Card
-                        key={meeting._id}
-                        className="surface-card cursor-pointer shadow-sm"
-                        onClick={() => setExpandedId(isExpanded ? null : meeting._id)}
-                      >
-                        <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="truncate font-semibold text-base sm:text-lg">{meeting.title || 'Untitled Meeting'}</h3>
-                              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-                                <span className="flex items-center gap-1 whitespace-nowrap">
-                                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                                  {meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a') : 'No date set'}
-                                </span>
-                                <span className="flex items-center gap-1 whitespace-nowrap">
-                                  <Users className="h-3.5 w-3.5 shrink-0" />
-                                  {getTargetAudienceText(meeting)}
-                                </span>
+                  <div className={`space-y-2 sm:space-y-3 transition-opacity ${agendasStale ? "opacity-60" : ""}`}>
+                    {agendas.map((meeting: any) => {
+                      const isExpanded = expandedId === meeting._id;
+                      return (
+                        <Card
+                          key={meeting._id}
+                          className="surface-card cursor-pointer shadow-sm"
+                          onClick={() => setExpandedId(isExpanded ? null : meeting._id)}
+                        >
+                          <CardHeader className="p-3 pb-2 sm:p-4 sm:pb-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="truncate font-semibold text-base sm:text-lg">{meeting.title || 'Untitled Meeting'}</h3>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                                  <span className="flex items-center gap-1 whitespace-nowrap">
+                                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                                    {meeting.scheduledDate ? format(new Date(meeting.scheduledDate), 'MMM dd, yyyy • h:mm a') : 'No date set'}
+                                  </span>
+                                  <span className="flex items-center gap-1 whitespace-nowrap">
+                                    <Users className="h-3.5 w-3.5 shrink-0" />
+                                    {getTargetAudienceText(meeting)}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1">
+                                {(() => {
+                                  const status = meeting.status ? getEffectiveStatus(meeting) : 'unknown';
+                                  return (
+                                    <Badge className={getAgendaStatusColor(status)}>
+                                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                                    </Badge>
+                                  );
+                                })()}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => navigate(`/state-admin/meeting/${meeting._id}`)}>
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteMeeting(meeting._id, meeting.title || 'Untitled Meeting')}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                               </div>
                             </div>
-                            <div className="flex shrink-0 items-center gap-1">
-                              {(() => {
-                                const status = meeting.status ? getEffectiveStatus(meeting) : 'unknown';
-                                return (
-                                  <Badge className={getAgendaStatusColor(status)}>
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                  </Badge>
-                                );
-                              })()}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => navigate(`/state-admin/meeting/${meeting._id}`)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeleteMeeting(meeting._id, meeting.title || 'Untitled Meeting')}
-                                    className="text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                            </div>
-                          </div>
-                        </CardHeader>
-                        {isExpanded && (
-                          <CardContent className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-                            {meeting.description && (
-                              <p className="mb-2 text-sm text-muted-foreground">{meeting.description}</p>
-                            )}
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
-                              <span>Duration: {meeting.duration || 0} min</span>
-                              <span>Type: {meeting.meetingType ? meeting.meetingType.replace(/_/g, ' ') : 'Unknown'}</span>
-                              <span>Created by {meeting.createdBy?.name || 'Unknown'}</span>
-                            </div>
-                          </CardContent>
-                        )}
-                      </Card>
-                    );
-                  })}
+                          </CardHeader>
+                          {isExpanded && (
+                            <CardContent className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
+                              {meeting.description && (
+                                <p className="mb-2 text-sm text-muted-foreground">{meeting.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:text-sm">
+                                <span>Duration: {meeting.duration || 0} min</span>
+                                <span>Type: {meeting.meetingType ? meeting.meetingType.replace(/_/g, ' ') : 'Unknown'}</span>
+                                <span>Created by {meeting.createdBy?.name || 'Unknown'}</span>
+                              </div>
+                            </CardContent>
+                          )}
+                        </Card>
+                      );
+                    })}
+                  </div>
+                  <DataPagination
+                    page={agendaList.page}
+                    pageSize={agendaList.pageSize}
+                    totalPages={agendaResponse?.pagination?.totalPages ?? 1}
+                    totalDocs={agendaTotal}
+                    onPageChange={agendaList.setPage}
+                    onPageSizeChange={agendaList.setPageSize}
+                    itemLabel="meetings"
+                    disabled={agendasStale}
+                  />
                 </div>
               )}
             </SectionCard>

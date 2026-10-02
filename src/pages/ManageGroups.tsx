@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
+import DataPagination from "@/components/app/DataPagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { toast } from "@/hooks/use-toast";
@@ -12,11 +13,16 @@ import GroupDialog from "@/components/GroupDialog";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
 import { useDistricts } from "@/hooks/useDistricts";
+import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { Group } from "@/lib/groups";
 
 const ManageGroups = () => {
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("");
+  // District, search, page and size live in the URL
+  const list = useListParams();
+  const selectedDistrictId = list.getParam("district");
+  const { setParam } = list;
+  const [searchQuery, setSearchQuery] = useDebouncedParam(list, "q");
+  const committedSearch = list.getParam("q").trim();
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -24,31 +30,40 @@ const ManageGroups = () => {
   const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
 
   // Fetch districts for the dropdown
-  const { data: districtsResponse, isLoading: districtsLoading } = useDistricts({ 
+  const { data: districtsResponse, isLoading: districtsLoading } = useDistricts({
     sort: 'name',
-    isActive: true 
+    isActive: true,
+    limit: 100
   });
   const districts = districtsResponse?.data || [];
   const selectedDistrict = districts.find((district) => district._id === selectedDistrictId) || null;
 
-  // Set default district if not selected and districts are loaded
+  // Default to the first district when none is selected, or when the URL names
+  // one that no longer exists (deleted district, old bookmark)
   useEffect(() => {
-    if (!selectedDistrictId && districts.length > 0) {
-      setSelectedDistrictId(districts[0]._id);
+    if (districts.length > 0 && !districts.some((district) => district._id === selectedDistrictId)) {
+      setParam("district", districts[0]._id);
     }
-  }, [districts, selectedDistrictId]);
+  }, [districts, selectedDistrictId, setParam]);
 
-  // Fetch groups for selected district
-  const { data: groupsResponse, isLoading: groupsLoading, error } = useGroups({ 
-    district: selectedDistrictId,
-    sort: 'name',
-    isActive: true,
-    ...(searchQuery.trim() ? { search: searchQuery.trim() } : {})
-  });
+  // Fetch one page of groups for the selected district
+  const { data: groupsResponse, isLoading: groupsLoading, error, isPlaceholderData, refetch } = useGroups(
+    {
+      district: selectedDistrictId,
+      sort: 'name',
+      isActive: true,
+      page: list.page,
+      limit: list.pageSize,
+      ...(committedSearch ? { search: committedSearch } : {})
+    },
+    { keepPrevious: "page" }
+  );
   const deleteGroupMutation = useDeleteGroup();
 
   const groups = groupsResponse?.data || [];
-  const totalMembers = groups.reduce((sum, group) => sum + (group.statistics?.totalMembers || 0), 0);
+  const groupTotal = groupsResponse?.pagination?.totalDocs ?? groups.length;
+  // District-wide total, so the card doesn't shrink to the visible page
+  const totalMembers = selectedDistrict?.statistics?.totalMembers ?? 0;
 
   const handleAdd = () => {
     setDialogMode("add");
@@ -78,10 +93,10 @@ const ManageGroups = () => {
       });
       setShowDeleteDialog(false);
       setGroupToDelete(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete group",
+        description: (error instanceof Error && error.message) || "Failed to delete group",
         variant: "destructive",
       });
     }
@@ -98,7 +113,7 @@ const ManageGroups = () => {
 
       <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
         <MetricCard title="Selected District" value={selectedDistrict?.name || "None"} icon={Users} tone="primary" />
-        <MetricCard title="Active Groups" value={String(groups.length)} icon={Users} tone="warning" />
+        <MetricCard title="Active Groups" value={String(groupTotal)} icon={Users} tone="warning" />
         <MetricCard title="Mapped Members" value={String(totalMembers)} icon={Users} tone="success" />
       </div>
 
@@ -124,7 +139,7 @@ const ManageGroups = () => {
             ) : (
               <Select
                 value={selectedDistrictId}
-                onValueChange={(val) => setSelectedDistrictId(val)}
+                onValueChange={(val) => setParam("district", val)}
                 disabled={districts.length === 0}
               >
                 <SelectTrigger>
@@ -163,7 +178,7 @@ const ManageGroups = () => {
         ) : error ? (
           <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center">
             <p className="font-medium text-destructive">Failed to load groups</p>
-            <Button variant="outline" onClick={() => window.location.reload()} className="mt-3">
+            <Button variant="outline" onClick={() => refetch()} className="mt-3">
               Retry
             </Button>
           </div>
@@ -172,57 +187,75 @@ const ManageGroups = () => {
             <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="font-medium text-foreground">Select a district to view groups</p>
           </div>
-        ) : groups.length === 0 ? (
+        ) : groupTotal === 0 ? (
           <div className="rounded-2xl border border-border/60 bg-card p-8 text-center">
             <Users className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="font-medium text-foreground">No groups found in this district</p>
-            <p className="mt-1 text-sm text-muted-foreground">Add your first group to get started.</p>
+            {committedSearch ? (
+              <Button variant="outline" className="mt-3" onClick={() => { setSearchQuery(""); setParam("q", ""); }}>
+                Clear search
+              </Button>
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">Add your first group to get started.</p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
-            {groups.map((group) => (
-              <Card key={group._id} className="surface-card border-border/70">
-                <CardContent className="p-3 sm:p-4">
-                  <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="action-tile-icon shrink-0">
-                        <Users className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="min-w-0 space-y-1">
-                        <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">{group.name}</h3>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-xs text-muted-foreground">Code: {group.code}</p>
-                          <div className="data-strip inline-flex items-center gap-1.5 px-2 py-0.5 text-xs text-muted-foreground">
-                            <Users className="h-3.5 w-3.5" />
-                            {group.statistics?.totalMembers || 0} Members
+            <div className={`space-y-3 transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}>
+              {groups.map((group) => (
+                <Card key={group._id} className="surface-card border-border/70">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="action-tile-icon shrink-0">
+                          <Users className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                          <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">{group.name}</h3>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs text-muted-foreground">Code: {group.code}</p>
+                            <div className="data-strip inline-flex items-center gap-1.5 px-2 py-0.5 text-xs text-muted-foreground">
+                              <Users className="h-3.5 w-3.5" />
+                              {group.statistics?.totalMembers || 0} Members
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <div className="grid grid-cols-2 gap-2 lg:min-w-[220px]">
+                        <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(group)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-destructive"
+                          onClick={() => handleDeleteClick(group)}
+                          disabled={deleteGroupMutation.isPending}
+                        >
+                          {deleteGroupMutation.isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                          )}
+                          Delete
+                        </Button>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 lg:min-w-[220px]">
-                      <Button size="sm" variant="outline" className="w-full" onClick={() => handleEdit(group)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full text-destructive"
-                        onClick={() => handleDeleteClick(group)}
-                        disabled={deleteGroupMutation.isPending}
-                      >
-                        {deleteGroupMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="mr-2 h-4 w-4" />
-                        )}
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <DataPagination
+              page={list.page}
+              pageSize={list.pageSize}
+              totalPages={groupsResponse?.pagination?.totalPages ?? 1}
+              totalDocs={groupTotal}
+              onPageChange={list.setPage}
+              onPageSizeChange={list.setPageSize}
+              itemLabel="groups"
+              disabled={isPlaceholderData}
+            />
           </div>
         )}
       </SectionCard>

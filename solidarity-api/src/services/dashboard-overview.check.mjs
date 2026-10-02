@@ -1,7 +1,7 @@
 // Self-check for the dashboard overview helpers. Run: node src/services/dashboard-overview.check.mjs
 import assert from 'node:assert/strict';
 import mongoose from 'mongoose';
-import { lastMonths, fillMonthSeries, resolveScope, areaCoverage, adminsByChild, ScopeError } from './dashboardOverview.js';
+import { lastMonths, fillMonthSeries, resolveScope, areaCoverage, adminsByChild, growthPct, ScopeError } from './dashboardOverview.js';
 
 const id = (h) => new mongoose.Types.ObjectId(h);
 
@@ -71,6 +71,13 @@ const byGroup = adminsByChild('group', [
   { _id: id('ddddddddddddddddddddddd3'), role: 'district_admin', group: GROUP },
 ], new Set([String(A1)]));
 assert.deepEqual(byGroup.get(String(GROUP)), { admins: 1, reporting: 1 });
+
+// growthPct: no additions is a real 0%; nothing prior to compare → null
+assert.equal(growthPct(0, 108), 0);
+assert.equal(growthPct(8, 108), 8);
+assert.equal(growthPct(1, 11), 10);
+assert.equal(growthPct(3, 3), null);
+assert.equal(growthPct(5, 0), null);
 
 console.log('dashboard-overview check: OK');
 process.exit(0);

@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback } from "react";
 import { FileText, Check, X, MessageSquare, Clock, AlertCircle } from "lucide-react";
 import { SectionCard } from "@/components/app/AppShell";
+import DataPagination from "@/components/app/DataPagination";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { requestsAPI } from "@/utils/api";
+import { useListParams } from "@/hooks/useListParams";
 
 interface RequestItem {
   _id: string;
@@ -17,13 +19,20 @@ interface RequestItem {
   approvalLevel: string;
   member?: { name: string; phone: string };
   requestedBy?: { name: string; role: string };
-  changes?: Array<{ field: string; oldValue: any; newValue: any }>;
+  changes?: Array<{ field: string; oldValue: unknown; newValue: unknown }>;
   createdAt: string;
+}
+
+interface PaginationInfo {
+  totalPages: number;
+  totalDocs: number;
 }
 
 const Requests = () => {
   const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo>({ totalPages: 1, totalDocs: 0 });
   const [loading, setLoading] = useState(true);
+  const { page, pageSize, setPage, setPageSize } = useListParams();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -31,14 +40,19 @@ const Requests = () => {
   const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await requestsAPI.getRequests({ status: 'pending', limit: '50' });
-      setRequests(result.data || []);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to fetch requests", variant: "destructive" });
+      const result = await requestsAPI.getRequests({ status: 'pending', page: String(page), limit: String(pageSize) });
+      const items: RequestItem[] = result.data || [];
+      setRequests(items);
+      setPagination({
+        totalPages: result.pagination?.totalPages ?? 1,
+        totalDocs: result.pagination?.totalDocs ?? items.length,
+      });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error instanceof Error && error.message) || "Failed to fetch requests", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, page, pageSize]);
 
   useEffect(() => {
     fetchRequests();
@@ -50,8 +64,8 @@ const Requests = () => {
       await requestsAPI.approveRequest(id);
       toast({ title: "Approved", description: "Request approved successfully." });
       fetchRequests();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to approve", variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error instanceof Error && error.message) || "Failed to approve", variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -65,8 +79,8 @@ const Requests = () => {
       await requestsAPI.rejectRequest(id, reason);
       toast({ title: "Rejected", description: "Request rejected." });
       fetchRequests();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to reject", variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error instanceof Error && error.message) || "Failed to reject", variant: "destructive" });
     } finally {
       setActionLoading(null);
     }
@@ -104,7 +118,7 @@ const Requests = () => {
       <SectionCard title="Pending Queue" description="Requests awaiting your action.">
         {loading ? (
           <ListSkeleton rows={4} />
-        ) : requests.length === 0 ? (
+        ) : pagination.totalDocs === 0 ? (
           <div className="rounded-2xl border border-border/60 bg-card p-10 text-center shadow-sm">
             <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h2 className="font-semibold text-lg mb-2">No Pending Requests</h2>
@@ -162,6 +176,15 @@ const Requests = () => {
                 </CardContent>
               </Card>
             ))}
+            <DataPagination
+              page={page}
+              pageSize={pageSize}
+              totalPages={pagination.totalPages}
+              totalDocs={pagination.totalDocs}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="requests"
+            />
           </div>
         )}
       </SectionCard>

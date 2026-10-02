@@ -1,6 +1,7 @@
 import { ArrowRightLeft, CalendarDays, FileCheck, MapPinOff, TrendingDown } from "lucide-react";
 import type { DashboardOverview, DashboardSummary, HierarchyRow } from "@/hooks/useDashboardOverview";
 import type { ActionItem } from "./ActionQueue";
+import { reportingLive } from "./chartTheme";
 
 // The title already carries the count; the row truncates with an ellipsis, so no "+N more"
 // suffix that the truncation could cut into a wrong number ("+13 more" → "+1…").
@@ -41,7 +42,8 @@ export function requestItem(summary: DashboardSummary | undefined): ActionItem[]
 
 /** Children whose admins have marked nothing in the reporting window. */
 export function silentChildrenItem(overview: DashboardOverview | undefined, onView: () => void): ActionItem[] {
-  if (!overview?.children.level) return [];
+  // With no recurring targets set, nobody was asked to report — not an alarm.
+  if (!overview?.children.level || !reportingLive(overview)) return [];
   const silent = overview.children.rows.filter((r) => r.admins > 0 && r.reportingAdmins === 0);
   if (silent.length === 0) return [];
   const noun = overview.children.level === "district" ? "district" : "area";

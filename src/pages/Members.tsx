@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -98,7 +98,9 @@ const Members = () => {
     pending: 0
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // Dashboards hand a search over as /members?search=…
+  const [searchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") ?? "");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -147,7 +149,8 @@ const Members = () => {
   const { data: groups = [] } = useQuery({
     queryKey: ['members', 'groups', groupDistrictId ?? null],
     queryFn: async () => {
-      const params: Record<string, string | number> = { limit: 100 };
+      // Unfiltered there are 120+ areas — fetch them all, not the first 100
+      const params: Record<string, string | number> = { limit: 500 };
       if (groupDistrictId) params.district = groupDistrictId;
       return ((await groupsAPI.getGroups(params)).data || []) as Group[];
     },

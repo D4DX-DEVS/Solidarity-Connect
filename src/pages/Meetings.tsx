@@ -19,26 +19,30 @@ import {
 } from "@/components/ui/accordion";import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MeetingAttendance } from "@/components/MeetingAttendance";
 import { SectionCard } from "@/components/app/AppShell";
+import DataPagination from "@/components/app/DataPagination";
 import { useMeetings } from "@/hooks/useMeetings";
+import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { useBulkSessionActions, useCompleteSession } from "@/hooks/useSessionManagement";
 import { meetingsApi, getEffectiveStatus } from "@/lib/meetings";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const Meetings = () => {
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Search, page and size live in the URL. Rows stay on screen across searches
+  // because the loading view below replaces the whole page, search box included.
+  const list = useListParams();
+  const [searchQuery, setSearchQuery] = useDebouncedParam(list, "q", 400);
+  const debouncedSearch = list.getParam("q").trim();
 
-  // Debounce search
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
-    return () => clearTimeout(t);
-  }, [searchQuery]);
-
-  const { data: meetingsResponse, isLoading, error, refetch } = useMeetings(
-    debouncedSearch ? { search: debouncedSearch } : undefined
+  const { data: meetingsResponse, isLoading, error, refetch, isPlaceholderData } = useMeetings(
+    {
+      page: list.page,
+      limit: list.pageSize,
+      ...(debouncedSearch ? { search: debouncedSearch } : {})
+    },
+    { keepPrevious: "always" }
   );
   const { user } = useAuth();
   const { toast } = useToast();
@@ -47,6 +51,7 @@ const Meetings = () => {
   const [expandedMeetings, setExpandedMeetings] = useState<Record<string, boolean>>({});
 
   const meetings = meetingsResponse?.data || [];
+  const meetingTotal = meetingsResponse?.pagination?.totalDocs ?? meetings.length;
   
   // Get user info from auth context
   const userInfo = { role: user?.role };
@@ -241,7 +246,7 @@ const Meetings = () => {
     );
   }
 
-  if (meetings.length === 0) {
+  if (meetingTotal === 0 && !debouncedSearch && !isPlaceholderData) {
     return (
       <div className="app-page pb-20">
         <HeaderWithLogout
@@ -279,6 +284,7 @@ const Meetings = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search meetings…"
+                aria-label="Search meetings"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
@@ -289,177 +295,216 @@ const Meetings = () => {
           {null}
         </SectionCard>
 
-        {meetings.map((meeting) => {
-          // Calculate attendance status - check if any attendance has been recorded
-          const hasAttendanceData = meeting.sessionInfo?.totalMembersAcrossSessions > 0 || 
-                                   meeting.sessionInfo?.totalGuestsAcrossSessions > 0 ||
-                                   (meeting.sessionInfo?.sessions && meeting.sessionInfo.sessions.some((s: any) => 
-                                     s.attendance?.overall?.total > 0 || s.attendance?.members?.total > 0 || s.attendance?.guests?.total > 0
-                                   ));
-          
-          const attendanceRate = parseFloat(meeting.sessionInfo?.overallAttendanceRate) || 0;
-          const totalParticipants = (meeting.sessionInfo?.totalMembersAcrossSessions || 0) + (meeting.sessionInfo?.totalGuestsAcrossSessions || 0);
-          const totalSessions = meeting.sessionInfo?.totalSessions || 0;
-          const completedSessions = meeting.sessionInfo?.completedSessions || 0;
-          const effectiveStatus = getEffectiveStatus(meeting);
+        {meetingTotal === 0 && !isPlaceholderData && (
+          <Card className="surface-card p-8 shadow-sm text-center">
+            <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="font-semibold text-lg mb-2">No meetings match "{debouncedSearch}"</h2>
+            <Button variant="outline" onClick={() => { setSearchQuery(""); list.setParam("q", ""); }}>
+              Clear search
+            </Button>
+          </Card>
+        )}
 
-          return (
-            <Card key={meeting._id} className="surface-card overflow-hidden transition-shadow hover:shadow-md">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value={meeting._id} className="border-none">
-                  <AccordionTrigger className="px-4 pt-4 pb-2 hover:no-underline">
-                    <div className="flex-1 text-left">
-                      <div className="flex justify-between items-start mb-2 gap-2">
-                        <h3 className="font-semibold text-base sm:text-lg">{meeting.title}</h3>
-                        <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-                          <Badge
-                            variant={
-                              effectiveStatus === 'scheduled' ? 'default' :
-                              effectiveStatus === 'completed' ? 'secondary' :
-                              effectiveStatus === 'ongoing' || effectiveStatus === 'overdue' ? 'destructive' : 'outline'
-                            }
-                          >
-                            {effectiveStatus}
-                          </Badge>
-                          
-                          {/* Attendance Status Badge */}
-                          {userInfo?.role === 'group_admin' && (
-                            <Badge 
-                              variant={hasAttendanceData ? 'default' : 'outline'}
-                              className={`text-xs ${
-                                hasAttendanceData 
-                                  ? attendanceRate >= 80 ? 'bg-green-500 hover:bg-green-600 text-white' :
-                                    attendanceRate >= 60 ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
-                                    attendanceRate >= 0 ? 'bg-red-500 hover:bg-red-600 text-white' :
-                                    'bg-gray-500 hover:bg-gray-600 text-white'
-                                  : 'text-gray-500 border-gray-300'
-                              }`}
-                            >
-                              <Users className="h-3 w-3 mr-1" />
-                              {hasAttendanceData 
-                                ? `${attendanceRate.toFixed(0)}% Attendance` 
-                                : totalParticipants > 0 
-                                  ? 'Attendance Pending'
-                                  : 'No Data Yet'
+        <div className={`space-y-4 transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}>
+          {meetings.map((meeting) => {
+            // Calculate attendance status - check if any attendance has been recorded
+            const hasAttendanceData = meeting.sessionInfo?.totalMembersAcrossSessions > 0 || 
+                                     meeting.sessionInfo?.totalGuestsAcrossSessions > 0 ||
+                                     (meeting.sessionInfo?.sessions && meeting.sessionInfo.sessions.some((s: any) => 
+                                       s.attendance?.overall?.total > 0 || s.attendance?.members?.total > 0 || s.attendance?.guests?.total > 0
+                                     ));
+            
+            const attendanceRate = parseFloat(meeting.sessionInfo?.overallAttendanceRate) || 0;
+            const totalParticipants = (meeting.sessionInfo?.totalMembersAcrossSessions || 0) + (meeting.sessionInfo?.totalGuestsAcrossSessions || 0);
+            const totalSessions = meeting.sessionInfo?.totalSessions || 0;
+            const completedSessions = meeting.sessionInfo?.completedSessions || 0;
+            const effectiveStatus = getEffectiveStatus(meeting);
+
+            return (
+              <Card key={meeting._id} className="surface-card overflow-hidden transition-shadow hover:shadow-md">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value={meeting._id} className="border-none">
+                    <AccordionTrigger className="px-4 pt-4 pb-2 hover:no-underline">
+                      <div className="flex-1 text-left">
+                        <div className="flex justify-between items-start mb-2 gap-2">
+                          <h3 className="font-semibold text-base sm:text-lg">{meeting.title}</h3>
+                          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                            <Badge
+                              variant={
+                                effectiveStatus === 'scheduled' ? 'default' :
+                                effectiveStatus === 'completed' ? 'secondary' :
+                                effectiveStatus === 'ongoing' || effectiveStatus === 'overdue' ? 'destructive' : 'outline'
                               }
+                            >
+                              {effectiveStatus}
                             </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {meeting.description && (
-                        <p className="mb-2 line-clamp-2 text-xs text-muted-foreground sm:mb-3 sm:text-sm">
-                          {meeting.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          {format(new Date(meeting.scheduledDate), 'MMM dd, yyyy')}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          {meeting.duration} min
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          {meeting.targetAudience.replace('_', ' ')}
-                        </div>
-                      </div>
-
-                      {/* Quick Stats */}
-                      {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:mt-3">
-                          <span>Sessions: {completedSessions}/{totalSessions}</span>
-                          {totalParticipants > 0 && (
-                            <span>Participants: {totalParticipants}</span>
-                          )}
-                          {hasAttendanceData && (
-                            <span className={`font-medium ${
-                              attendanceRate >= 80 ? 'text-green-600' :
-                              attendanceRate >= 60 ? 'text-yellow-600' :
-                              attendanceRate >= 0 ? 'text-red-600' :
-                              'text-gray-600'
-                            }`}>
-                              Attendance: {attendanceRate.toFixed(0)}%
-                            </span>
-                          )}
-                          {!hasAttendanceData && totalParticipants > 0 && (
-                            <span className="font-medium text-orange-600">
-                              Attendance: Pending
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </AccordionTrigger>
-                  
-                  <AccordionContent className="px-4 pb-4">
-                    {/* Monthly series created without sessions — nothing to track */}
-                    {meeting.meetingType === 'monthly_series' && totalSessions === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        No sessions were added to this meeting, so progress cannot be tracked.
-                      </p>
-                    )}
-
-                    {/* Detailed Session Information */}
-                    {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
-                      <div className="space-y-4">
-                        {/* Session Progress */}
-                        <div className="data-strip p-3">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-medium">Session Progress</span>
-                            <span className="text-xs text-muted-foreground">
-                              {completedSessions}/{totalSessions} completed
-                            </span>
-                          </div>
-                          
-                          <Progress 
-                            value={parseFloat(meeting.sessionInfo.completionRate)} 
-                            className="mb-2" 
-                          />
-                          
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>Completion: {meeting.sessionInfo.completionRate}%</span>
-                            {hasAttendanceData && (
-                              <span>Attendance: {attendanceRate}%</span>
+                            
+                            {/* Attendance Status Badge */}
+                            {userInfo?.role === 'group_admin' && (
+                              <Badge 
+                                variant={hasAttendanceData ? 'default' : 'outline'}
+                                className={`text-xs ${
+                                  hasAttendanceData 
+                                    ? attendanceRate >= 80 ? 'bg-green-500 hover:bg-green-600 text-white' :
+                                      attendanceRate >= 60 ? 'bg-yellow-500 hover:bg-yellow-600 text-white' :
+                                      attendanceRate >= 0 ? 'bg-red-500 hover:bg-red-600 text-white' :
+                                      'bg-gray-500 hover:bg-gray-600 text-white'
+                                    : 'text-gray-500 border-gray-300'
+                                }`}
+                              >
+                                <Users className="h-3 w-3 mr-1" />
+                                {hasAttendanceData 
+                                  ? `${attendanceRate.toFixed(0)}% Attendance` 
+                                  : totalParticipants > 0 
+                                    ? 'Attendance Pending'
+                                    : 'No Data Yet'
+                                }
+                              </Badge>
                             )}
                           </div>
                         </div>
-
-                        {/* Attendance Summary */}
-                        {hasAttendanceData && userInfo?.role === 'group_admin' && (
-                          <div className="data-strip border-blue-200 bg-blue-50 p-3">
-                            <h4 className="mb-2 text-sm font-medium text-blue-800">
-                              Attendance Summary
-                            </h4>
-                            <div className="grid grid-cols-3 gap-2 text-xs">
-                              <div className="text-center">
-                                <div className="font-semibold text-blue-700">
-                                  {totalParticipants}
-                                </div>
-                                <div className="text-blue-600">Total</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="font-semibold text-green-700">
-                                  {Math.round((attendanceRate / 100) * totalParticipants)}
-                                </div>
-                                <div className="text-green-600">Present</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="font-semibold text-red-700">
-                                  {Math.max(0, totalParticipants - Math.round((attendanceRate / 100) * totalParticipants))}
-                                </div>
-                                <div className="text-red-600">Absent</div>
-                              </div>
-                            </div>
-                          </div>
+                        
+                        {meeting.description && (
+                          <p className="mb-2 line-clamp-2 text-xs text-muted-foreground sm:mb-3 sm:text-sm">
+                            {meeting.description}
+                          </p>
                         )}
 
-                        {/* Action Button */}
-                        {userInfo?.role === 'group_admin' && (
-                          <div className="flex justify-center">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground sm:gap-4 sm:text-sm">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            {format(new Date(meeting.scheduledDate), 'MMM dd, yyyy')}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            {meeting.duration} min
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            {meeting.targetAudience.replace('_', ' ')}
+                          </div>
+                        </div>
+
+                        {/* Quick Stats */}
+                        {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground sm:mt-3">
+                            <span>Sessions: {completedSessions}/{totalSessions}</span>
+                            {totalParticipants > 0 && (
+                              <span>Participants: {totalParticipants}</span>
+                            )}
+                            {hasAttendanceData && (
+                              <span className={`font-medium ${
+                                attendanceRate >= 80 ? 'text-green-600' :
+                                attendanceRate >= 60 ? 'text-yellow-600' :
+                                attendanceRate >= 0 ? 'text-red-600' :
+                                'text-gray-600'
+                              }`}>
+                                Attendance: {attendanceRate.toFixed(0)}%
+                              </span>
+                            )}
+                            {!hasAttendanceData && totalParticipants > 0 && (
+                              <span className="font-medium text-orange-600">
+                                Attendance: Pending
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    
+                    <AccordionContent className="px-4 pb-4">
+                      {/* Monthly series created without sessions — nothing to track */}
+                      {meeting.meetingType === 'monthly_series' && totalSessions === 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          No sessions were added to this meeting, so progress cannot be tracked.
+                        </p>
+                      )}
+
+                      {/* Detailed Session Information */}
+                      {meeting.meetingType === 'monthly_series' && meeting.sessionInfo && totalSessions > 0 && (
+                        <div className="space-y-4">
+                          {/* Session Progress */}
+                          <div className="data-strip p-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm font-medium">Session Progress</span>
+                              <span className="text-xs text-muted-foreground">
+                                {completedSessions}/{totalSessions} completed
+                              </span>
+                            </div>
+                            
+                            <Progress 
+                              value={parseFloat(meeting.sessionInfo.completionRate)} 
+                              className="mb-2" 
+                            />
+                            
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Completion: {meeting.sessionInfo.completionRate}%</span>
+                              {hasAttendanceData && (
+                                <span>Attendance: {attendanceRate}%</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Attendance Summary */}
+                          {hasAttendanceData && userInfo?.role === 'group_admin' && (
+                            <div className="data-strip border-blue-200 bg-blue-50 p-3">
+                              <h4 className="mb-2 text-sm font-medium text-blue-800">
+                                Attendance Summary
+                              </h4>
+                              <div className="grid grid-cols-3 gap-2 text-xs">
+                                <div className="text-center">
+                                  <div className="font-semibold text-blue-700">
+                                    {totalParticipants}
+                                  </div>
+                                  <div className="text-blue-600">Total</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-green-700">
+                                    {Math.round((attendanceRate / 100) * totalParticipants)}
+                                  </div>
+                                  <div className="text-green-600">Present</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="font-semibold text-red-700">
+                                    {Math.max(0, totalParticipants - Math.round((attendanceRate / 100) * totalParticipants))}
+                                  </div>
+                                  <div className="text-red-600">Absent</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action Button */}
+                          {userInfo?.role === 'group_admin' && (
+                            <div className="flex justify-center">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedMeeting(meeting);
+                                }}
+                                className="w-full"
+                              >
+                                <Users className="h-4 w-4 mr-2" />
+                                Manage Attendance
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Non-monthly series meetings */}
+                      {meeting.meetingType !== 'monthly_series' && (
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <Badge variant="outline" className="text-xs">
+                              {meeting.meetingType.replace('_', ' ')}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              by {meeting.createdBy.name}
+                            </span>
+                          </div>
+                          
+                          {userInfo?.role === 'group_admin' && (
                             <Button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -468,46 +513,31 @@ const Meetings = () => {
                               className="w-full"
                             >
                               <Users className="h-4 w-4 mr-2" />
-                              Manage Attendance
+                              View Details
                             </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Non-monthly series meetings */}
-                    {meeting.meetingType !== 'monthly_series' && (
-                      <div className="space-y-4">
-                        <div className="flex justify-between items-center">
-                          <Badge variant="outline" className="text-xs">
-                            {meeting.meetingType.replace('_', ' ')}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            by {meeting.createdBy.name}
-                          </span>
+                          )}
                         </div>
-                        
-                        {userInfo?.role === 'group_admin' && (
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedMeeting(meeting);
-                            }}
-                            className="w-full"
-                          >
-                            <Users className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </Card>
-          );
-        })}
-      </main>    </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </Card>
+            );
+          })}
+        </div>
+
+        <DataPagination
+          page={list.page}
+          pageSize={list.pageSize}
+          totalPages={meetingsResponse?.pagination?.totalPages ?? 1}
+          totalDocs={meetingTotal}
+          onPageChange={list.setPage}
+          onPageSizeChange={list.setPageSize}
+          itemLabel="meetings"
+          disabled={isPlaceholderData}
+        />
+      </main>
+    </div>
   );
 };
 
