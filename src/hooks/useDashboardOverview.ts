@@ -21,15 +21,16 @@ export interface HierarchyRow {
 export interface DashboardOverview {
   scope: { level: ScopeLevel; name: string; parentName: string | null };
   generatedAt: string;
-  members: { total: number; active: number; abroad: number; other: number };
+  /** Current members only. archived = age-over members, set on the state admin's state-wide view, else null. */
+  members: { total: number; active: number; abroad: number; other: number; archived?: number | null };
   /** reporting = every admin in scope; reportingArea = area-level admins only. */
   admins: { district: number; area: number; total: number; reporting: number; reportingArea: number };
   areas: { total: number; withoutAdmin: number };
   profiles: { total: number; complete: number; fields: { field: string; label: string; filled: number }[] };
   children: { level: "district" | "area" | null; rows: HierarchyRow[] };
-  /** recurringTargets: active recurring targets aimed at admins. 0 → nobody has been asked to
+  /** reportForms: published district/area monthly report forms. 0 → nobody has been asked to
    * report yet, so "0 reporting" is not a failure. Missing on older APIs → treat as live. */
-  activity: { months: { key: string; label: string; completed: number }[]; reportingWindow: { from: string; to: string }; recurringTargets?: number };
+  activity: { months: { key: string; label: string; completed: number }[]; reportingWindow: { from: string; to: string }; reportForms?: number };
   /** Trailing-30-day growth vs the prior total. pct is null when there is no
    * prior total to compare against (badge hidden); 0 is a real measured zero. */
   deltas: {
@@ -96,6 +97,12 @@ const TREND_MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Au
  * tile even when the overview refetches and this cache does not.
  * Never fabricates — returns [] when the endpoint has no data.
  */
+/**
+ * Two months or more. A single month is the import baseline — just the member
+ * total the Members tile already shows — so the trend card waits for a second.
+ */
+export const hasTrend = (points: MembershipTrendPoint[] | undefined): boolean => (points?.length ?? 0) > 1;
+
 export function useMembershipTrend(accountId: string | undefined, currentTotal: number | undefined) {
   return useQuery({
     queryKey: ["dashboard", "membership-trend", accountId],
@@ -124,7 +131,16 @@ export function useMembershipTrend(accountId: string | undefined, currentTotal: 
         totals[i] = Math.max(0, (currentTotal ?? 0) - after);
         after += months[i].added;
       }
-      return months.map((m, i) => ({ ...m, total: totals[i] }));
+      const points = months.map((m, i) => ({ ...m, total: totals[i] }));
+      // A bulk import (the 1 Oct 2026 full re-import: 1,419 of 1,421) lands in one month and
+      // drew a flat line with a fake spike. Start at the latest month whose joins are >= 80% of
+      // the total so far — that month is the baseline; earlier months (a few QA accounts) are noise.
+      let start = points.findIndex((p) => p.total > 0);
+      if (start === -1) return [];
+      for (let i = points.length - 1; i > start; i -= 1) {
+        if (points[i].added >= points[i].total * 0.8) { start = i; break; }
+      }
+      return points.slice(start);
     },
     enabled: !!accountId && currentTotal !== undefined,
     staleTime: 5 * 60 * 1000,

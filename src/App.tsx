@@ -21,27 +21,24 @@ import TransferApprovals from "./pages/TransferApprovals";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
 import MeetingDetail from "./pages/MeetingDetail";
 import Members from "./pages/Members";
+import Archives from "./pages/Archives";
 import MemberDetail from "./pages/MemberDetail";
 import EditMemberDetails from "./pages/EditMemberDetails";
 import AddMember from "./pages/AddMember";
-import BulkImport from "./pages/BulkImport";
 import Meetings from "./pages/Meetings";
 import Requests from "./pages/Requests";
 import Notifications from "./pages/Notifications";
 import EditNotification from "./pages/EditNotification";
 import NotificationDetail from "./pages/NotificationDetail";
 import BaithulDataView from "./pages/BaithulDataView";
-import MembersGroupReport from "./pages/MembersGroupReport";
+import Reports from "./pages/Reports";
 
 import AdminMeetingsView from "./pages/AdminMeetingsView";
 import MemberDashboard from "./pages/MemberDashboard";
-import PersonalTargets from "./pages/PersonalTargets";
 import UserManagement from "./pages/UserManagement";
 import RoleManagement from "./pages/RoleManagement";
 import Leaders from "./pages/Leaders";
 import OrgFiles from "./pages/OrgFiles";
-import Consolidation from "./pages/Consolidation";
-import MyTargets from "./pages/MyTargets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -93,35 +90,38 @@ const App = () => (
             <Route path="/state-admin/master-data" element={<ProtectedRoute requiredRoles={['state_admin']}><MasterData /></ProtectedRoute>} />
             <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
             {/* ponytail: agenda list folded into the single meetings workspace */}
-            <Route path="/state-admin/meeting-agenda" element={<Navigate to="/admin/meetings-view" replace />} />
-            <Route path="/state-admin/create-meeting" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute>} />
-            <Route path="/state-admin/meeting/:id" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute>} />
+            <Route path="/state-admin/meeting-agenda" element={<Navigate to={FEATURES.meetings ? "/admin/meetings-view" : "/"} replace />} />
+            <Route path="/state-admin/create-meeting" element={FEATURES.meetings ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><CreateMeetingAgenda /></ProtectedRoute> : <Navigate to="/" replace />} />
+            <Route path="/state-admin/meeting/:id" element={FEATURES.meetings ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MeetingDetail /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/state-admin/edit-notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><EditNotification /></ProtectedRoute>} />
             <Route path="/state-admin/notification/:id" element={<ProtectedRoute requiredRoles={['state_admin']}><NotificationDetail /></ProtectedRoute>} />
             {/* Baithul Maal is switched off app-wide (lib/features) — old links land on the dashboard */}
             <Route path="/state-admin/baithul-data" element={FEATURES.baithulMaal ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><BaithulDataView /></ProtectedRoute> : <Navigate to="/" replace />} />
-            <Route path="/state-admin/group-reports" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><MembersGroupReport /></ProtectedRoute>} />
+            <Route path="/reports" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><Reports /></ProtectedRoute>} />
 
-            <Route path="/admin/meetings-view" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute>} />
+            <Route path="/admin/meetings-view" element={FEATURES.meetings ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            {/* Age-over (38 and above) members, moved out of Members — state admin only */}
+            <Route path="/archives" element={<ProtectedRoute requiredRoles={['state_admin']}><Archives /></ProtectedRoute>} />
             <Route path="/member/:id" element={<ProtectedRoute><MemberDetail /></ProtectedRoute>} />
-            <Route path="/member/:id/edit" element={<ProtectedRoute><EditMemberDetails /></ProtectedRoute>} />
-            <Route path="/add-member" element={<ProtectedRoute><AddMember /></ProtectedRoute>} />
-            <Route path="/bulk-import" element={<ProtectedRoute><BulkImport /></ProtectedRoute>} />
-            <Route path="/meetings" element={<ProtectedRoute><Meetings /></ProtectedRoute>} />
+            {/* Adding/editing members is state-admin only; district and area admins view */}
+            <Route path="/member/:id/edit" element={<ProtectedRoute requiredRoles={['state_admin']}><EditMemberDetails /></ProtectedRoute>} />
+            <Route path="/add-member" element={<ProtectedRoute requiredRoles={['state_admin']}><AddMember /></ProtectedRoute>} />
+            <Route path="/meetings" element={FEATURES.meetings ? <ProtectedRoute><Meetings /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/member-dashboard" element={<ProtectedRoute requiredRoles={['member']}><MemberDashboard /></ProtectedRoute>} />
-            <Route path="/personal-targets" element={<ProtectedRoute requiredRoles={['state_admin']}><PersonalTargets /></ProtectedRoute>} />
-            <Route path="/my-targets" element={<ProtectedRoute requiredRoles={['district_admin', 'group_admin']}><MyTargets /></ProtectedRoute>} />
             <Route path="/state-admin/users" element={<ProtectedRoute requiredRoles={['state_admin']}><UserManagement /></ProtectedRoute>} />
             <Route path="/role-management" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><RoleManagement /></ProtectedRoute>} />
             <Route path="/leaders" element={<ProtectedRoute><Leaders /></ProtectedRoute>} />
             {/* ponytail: announcements are a tab on the merged alerts page */}
             <Route path="/announcements" element={<Navigate to="/notifications" replace />} />
+            {/* Targets, Consolidation and the member census were replaced by monthly Reports. */}
+            {["/consolidation", "/my-targets", "/personal-targets", "/state-admin/group-reports"].map(path => (
+              <Route key={path} path={path} element={<Navigate to="/reports" replace />} />
+            ))}
             <Route path="/org-files" element={<ProtectedRoute><OrgFiles /></ProtectedRoute>} />
-            <Route path="/consolidation" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><Consolidation /></ProtectedRoute>} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

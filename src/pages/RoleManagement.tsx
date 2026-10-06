@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Shield, Search, ChevronLeft, ChevronRight, ChevronDown, Users, Tag, Save, X, ListOrdered, Star, Filter, Plus, Trash2 } from "lucide-react";
+import { Shield, Search, ChevronLeft, ChevronRight, ChevronDown, Users, Tag, Save, X, ListOrdered, Star, Filter, Plus, Trash2, Lock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { usersAPI, leadersAPI, membersAPI, districtsAPI } from "@/utils/api";
 import { getRoleLabel } from "@/lib/adminKinds";
+import { LEADER_ROLE_TYPES, canManageLeaderTarget, canManageRoleType } from "@/lib/roleHierarchy";
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
   state: "State",
@@ -38,12 +39,6 @@ const ROLE_TYPE_COLORS: Record<string, string> = {
   coordinator: "bg-indigo-100 text-indigo-800",
 };
 
-const ALLOWED_ROLE_TYPES: Record<string, string[]> = {
-  state_admin: ["state", "district", "area", "unit", "murabi", "coordinator"],
-  district_admin: ["district", "area", "unit", "murabi", "coordinator"],
-  group_admin: ["area", "unit", "murabi", "coordinator"],
-};
-
 interface RoleTagLike {
   type?: string;
   name?: string;
@@ -61,6 +56,7 @@ interface UserWithLeader {
   isLeader: boolean;
   roleTag?: RoleTagLike;
   extraRoleTags?: RoleTagLike[];
+  canEdit?: boolean; // leaders view: server-decided (scope + hierarchy) for the whole person
   roleSlot?: number; // leaders view fan-out: 0 = primary role, N = extraRoleTags[N-1]
   district?: { name: string };
   group?: { name: string };
@@ -114,7 +110,7 @@ const hasPendingEditState = (state: EditState | undefined, user: UserWithLeader)
 const RoleManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole } = useAuth();
+  const { userRole, user: authUser } = useAuth();
 
   const [users, setUsers] = useState<UserWithLeader[]>([]);
   const [loading, setLoading] = useState(true);   // initial full-screen load
@@ -132,7 +128,8 @@ const RoleManagement = () => {
   const [hasPrevPage, setHasPrevPage] = useState(false);
   const isInitialLoad = loading && users.length === 0;
 
-  const allowedRoleTypes = ALLOWED_ROLE_TYPES[userRole || "group_admin"] || ["area", "unit"];
+  // Hierarchy: district admins manage area-level roles, area admins area-level + unit (state admin: all).
+  const allowedRoleTypes = LEADER_ROLE_TYPES.filter((t) => canManageRoleType(authUser, t));
   const isMemberView = roleFilter === "member";
   const isLeadersView = roleFilter === "leaders";
 
@@ -551,7 +548,10 @@ const RoleManagement = () => {
                       const key = rowKey(leader);
                       const state = editStates[key];
                       if (!state) return null;
-                      const changed = hasChanges(leader, state);
+                      // Rows here are fanned out per role and span every district, so
+                      // the server decides (scope + hierarchy) for the whole person.
+                      const editable = leader.canEdit ?? canManageLeaderTarget(authUser, leader);
+                      const changed = editable && hasChanges(leader, state);
                       return (
                         <Card key={key} className={`shadow-sm ${leadersLoading ? "opacity-60" : ""}`}>
                           <CardContent className="space-y-2 p-3">
@@ -588,6 +588,7 @@ const RoleManagement = () => {
                               </div>
                             </div>
 
+                            {editable ? (
                             <div className="flex items-center gap-2">
                               <Tag className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                               <Input
@@ -610,6 +611,11 @@ const RoleManagement = () => {
                                 className="h-7 w-20 text-xs"
                               />
                             </div>
+                            ) : (
+                              <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <Lock className="h-3 w-3" /> View only — outside what you manage
+                              </p>
+                            )}
 
                             {changed && (
                               <div className="flex gap-2">
@@ -665,8 +671,11 @@ const RoleManagement = () => {
                 {users.map((user) => {
                   const state = editStates[user._id];
                   if (!state) return null;
-                  const changed = hasChanges(user, state);
-                  const isExpanded = !!expandedCards[user._id];
+                  const editable = canManageLeaderTarget(authUser, user);
+                  const changed = editable && hasChanges(user, state);
+                  const isExpanded = editable && !!expandedCards[user._id];
+                  // An admin account's primary role also sets its access — state admin only.
+                  const lockPrimaryType = userRole !== "state_admin" && !!user.role && user.role !== "member";
                   const toggleExpanded = () =>
                     setExpandedCards((prev) => ({ ...prev, [user._id]: !prev[user._id] }));
                   return (
@@ -674,8 +683,8 @@ const RoleManagement = () => {
                       <CardContent className="space-y-2 p-3 sm:space-y-3 sm:p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div
-                            className={`min-w-0 flex-1 ${state.isLeader ? "cursor-pointer" : ""}`}
-                            onClick={state.isLeader ? toggleExpanded : undefined}
+                            className={`min-w-0 flex-1 ${editable && state.isLeader ? "cursor-pointer" : ""}`}
+                            onClick={editable && state.isLeader ? toggleExpanded : undefined}
                           >
                             <div className="flex flex-wrap items-baseline gap-x-2">
                               <p className="truncate font-semibold">{user.name}</p>
@@ -711,6 +720,7 @@ const RoleManagement = () => {
                               <Switch
                                 id={`leader-${user._id}`}
                                 checked={state.isLeader}
+                                disabled={!editable}
                                 onCheckedChange={(checked) =>
                                   updateEditState(user._id, {
                                     isLeader: checked,
@@ -721,7 +731,7 @@ const RoleManagement = () => {
                                   })
                                 }
                               />
-                              {state.isLeader && (
+                              {editable && state.isLeader && (
                                 <button
                                   type="button"
                                   aria-label={isExpanded ? `Collapse leader role details for ${user.name}` : `Expand leader role details for ${user.name}`}
@@ -748,6 +758,11 @@ const RoleManagement = () => {
                                 )}
                               </>
                             )}
+                            {!editable && (
+                              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                                <Lock className="h-3 w-3" /> View only
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -758,6 +773,7 @@ const RoleManagement = () => {
                               <Select
                                 value={state.roleTagType}
                                 onValueChange={(val) => updateEditState(user._id, { roleTagType: val })}
+                                disabled={lockPrimaryType}
                               >
                                 <SelectTrigger className="h-8 text-sm" aria-label={`Leader role type for ${user.name}`}>
                                   <SelectValue placeholder="Role type" />

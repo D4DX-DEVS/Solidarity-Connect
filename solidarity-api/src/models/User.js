@@ -83,6 +83,8 @@ const userSchema = new mongoose.Schema({
       'approve_transfers',
       'send_notifications',
       'view_reports',
+      // Legacy: bulk import was removed, but existing user docs still carry this
+      // value and Mongoose validates loaded paths on save — keep it accepted.
       'bulk_import',
       'manage_meetings',
       'manage_baithul_maal'
@@ -196,7 +198,6 @@ userSchema.pre('save', function(next) {
         'approve_transfers',
         'send_notifications',
         'view_reports',
-        'bulk_import',
         'manage_meetings',
         'manage_baithul_maal'
       ];
@@ -208,7 +209,6 @@ userSchema.pre('save', function(next) {
         'approve_transfers',
         'send_notifications',
         'view_reports',
-        'bulk_import',
         'manage_meetings',
         'manage_baithul_maal'
       ];
@@ -217,7 +217,6 @@ userSchema.pre('save', function(next) {
       this.permissions = [
         'manage_members',
         'view_reports',
-        'bulk_import',
         'manage_baithul_maal'
       ];
       break;

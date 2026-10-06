@@ -1,17 +1,17 @@
 import { Building2, UserCog, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
-import UserTargetsSection from "@/components/UserTargetsSection";
 import { ActionQueue } from "@/components/dashboard/ActionQueue";
 import { ChartCard } from "@/components/dashboard/ChartCard";
 import { HierarchyScorecard } from "@/components/dashboard/HierarchyScorecard";
 import {
-  AreaStatusCard, DashboardToolbar, KpiSparkCard, MembersByUnitCard, MembershipTrendCard, MemberStatusCard, RecentActivityCard,
+  DashboardToolbar, KpiSparkCard, MembersByUnitCard, MembershipTrendCard, MemberStatusCard, QueueTrendLayout,
+  RecentActivityCard,
 } from "@/components/dashboard/DashboardWidgets";
 import { meetingItems, requestItem, silentChildrenItem, transferItem, uncoveredAreasItem } from "@/components/dashboard/actionItems";
 import { adminsDetail, formatNumber, percent, reportingLive } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
+import { hasTrend, useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
 
 const SCORECARD_ID = "area-scorecard";
 
@@ -24,6 +24,7 @@ const DistrictAdmin = () => {
   const overview = overviewQuery.data;
   const summary = summaryQuery.data;
   const trendQuery = useMembershipTrend(user?.id, overview?.members.total);
+  const showTrend = hasTrend(trendQuery.data) || trendQuery.isError;
   const recentQuery = useRecentActivity(user?.id, "group");
 
   // A failed load must read as unknown, never as a real zero.
@@ -94,30 +95,27 @@ const DistrictAdmin = () => {
           />
         </section>
 
-        {/* Queue is first in the DOM so it leads on phones; on desktop it sits right of the trend (3:2) */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-5">
-          <ActionQueue
-            className="lg:order-last lg:col-span-2"
-            items={actions}
-            loading={summaryQuery.isPending || overviewQuery.isPending}
-            error={summaryQuery.isError || overviewQuery.isError}
-            onRetry={() => { summaryQuery.refetch(); overviewQuery.refetch(); }}
-          />
-          <MembershipTrendCard
-            className="lg:col-span-3"
-            points={trendQuery.data ?? []}
-            // The trend waits on the overview total; if that fails it never starts, so show the error, not a skeleton.
-            loading={overviewQuery.isPending || (trendQuery.isPending && !overviewQuery.isError)}
-            error={trendQuery.isError || overviewQuery.isError}
-            onRetry={() => { trendQuery.refetch(); overviewQuery.refetch(); }}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <MembersByUnitCard {...overviewState} unit="Area" stackAtLg />
-          <MemberStatusCard {...overviewState} stackAtLg />
-          <AreaStatusCard {...overviewState} stackAtLg className="md:col-span-2 lg:col-span-1" />
-        </div>
+        {/* Admin cover and reporting gaps live in the queue only (no separate coverage card) */}
+        <QueueTrendLayout
+          queue={(
+            <ActionQueue
+              items={actions}
+              loading={summaryQuery.isPending || overviewQuery.isPending}
+              error={summaryQuery.isError || overviewQuery.isError}
+              onRetry={() => { summaryQuery.refetch(); overviewQuery.refetch(); }}
+            />
+          )}
+          trend={showTrend ? (
+            <MembershipTrendCard
+              points={trendQuery.data ?? []}
+              error={trendQuery.isError}
+              onRetry={() => trendQuery.refetch()}
+            />
+          ) : null}
+        >
+          <MembersByUnitCard {...overviewState} unit="Area" stackAtLg={!showTrend} />
+          <MemberStatusCard {...overviewState} stackAtLg={!showTrend} />
+        </QueueTrendLayout>
 
         <section id={SCORECARD_ID} className="scroll-mt-20">
           <ChartCard
@@ -138,8 +136,6 @@ const DistrictAdmin = () => {
           onRetry={() => recentQuery.refetch()}
           onViewAll={() => navigate("/members")}
         />
-
-        <UserTargetsSection />
       </main>
     </div>
   );

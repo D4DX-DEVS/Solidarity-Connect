@@ -2,7 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Member from '../models/Member.js';
 import otpService from '../services/otpService.js';
-import { authenticate, requireRole, isAreaLevelAdmin, areaGroupIdsFor, leaderScopeFor } from '../middleware/auth.js';
+import { authenticate, requireRole, matchesLeaderRoleType, canManageLeaderTarget, leaderEditScopeFor, leaderEditError } from '../middleware/auth.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -108,10 +108,8 @@ router.get('/leaders', authenticate, async (req, res) => {
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
-    // Hierarchy scope (state admin: all; others: state leaders + own chain) is
-    // applied per role row after fan-out. districtId/groupId only narrow further.
-    const inScope = await leaderScopeFor(req.user);
-
+    // Org-wide directory for every role: the page opens on State leaders and
+    // the district/area/unit filters narrow from there.
     // Build filter common to both collections
     const filter = { isLeader: true };
     // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
@@ -134,7 +132,7 @@ router.get('/leaders', authenticate, async (req, res) => {
     // Query both collections in parallel
     const [users, members, userCount, memberCount] = await Promise.all([
       User.find(filter)
-        .select('name phone role roleTag extraRoleTags isLeader district group')
+        .select('name phone role adminKind roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .populate('roleTag.areaId', 'name code')
@@ -181,6 +179,12 @@ router.get('/leaders', authenticate, async (req, res) => {
     // Multi-role fan-out: one row per role. roleSlot 0 = primary roleTag,
     // roleSlot N = extraRoleTags[N-1]. Rows carry the full extraRoleTags array
     // so the client can save slot-level edits back as a full replace.
+    // canEdit: may this viewer change this person's leader roles (scope + hierarchy)?
+    // Decided per person before fan-out, so every row of a person agrees.
+    const inEditScope = await leaderEditScopeFor(req.user);
+    for (const leader of deduped) {
+      leader.canEdit = inEditScope(leader) && canManageLeaderTarget(req.user, leader);
+    }
     let expanded = [];
     for (const leader of deduped) {
       expanded.push({ ...leader, roleSlot: 0 });
@@ -189,12 +193,7 @@ router.get('/leaders', authenticate, async (req, res) => {
         expanded.push({ ...leader, roleTag: extra, roleSlot: i + 1 });
       });
     }
-    if (roleType) {
-      // "area" folds in murabi + coordinator — they have no separate filter in the UI
-      const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
-      expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
-    }
-    expanded = expanded.filter(inScope);
+    if (roleType) expanded = expanded.filter(matchesLeaderRoleType(roleType));
 
     // Merge, sort, and paginate.
     // Primary sort: roleTag.listingOrder ASC (leaders without a listing order sink to the bottom),
@@ -253,52 +252,15 @@ router.patch('/:id/leader',
         return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      // Validate scoping based on user role
-      if (req.user.role === 'district_admin') {
-        const userDistrictId = req.user.district?._id || req.user.district;
-        const targetDistrictId = targetUser.district?._id || targetUser.district;
-        if (userDistrictId?.toString() !== targetDistrictId?.toString()) {
-          return res.status(403).json({ success: false, message: 'Access denied' });
-        }
-      } else if (isAreaLevelAdmin(req.user)) {
-        // area-level group_admin: must target users in own area's groups
-        const areaGroupIds = await areaGroupIdsFor(req.user);
-        const targetGroupId = targetUser.group?._id || targetUser.group;
-        if (!areaGroupIds.map(g => g.toString()).includes(targetGroupId?.toString())) {
-          return res.status(403).json({ success: false, message: 'Access denied' });
-        }
-      } else if (req.user.role === 'group_admin') {
-        // unit group_admin: must target own group
-        const userGroupId = req.user.group?._id || req.user.group;
-        const targetGroupId = targetUser.group?._id || targetUser.group;
-        if (userGroupId?.toString() !== targetGroupId?.toString()) {
-          return res.status(403).json({ success: false, message: 'Access denied' });
-        }
+      const inScope = await leaderEditScopeFor(req.user);
+      if (!inScope(targetUser)) {
+        return res.status(403).json({ success: false, message: 'Access denied' });
       }
-
-      const allowedRoleTypes = {
-        state_admin: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
-        district_admin: ['district', 'area', 'unit', 'murabi', 'coordinator'],
-        group_admin: ['area', 'unit', 'murabi', 'coordinator']
-      };
-
-      const allowed = allowedRoleTypes[req.user.role] || [];
-      if (roleTag && roleTag.type && !allowed.includes(roleTag.type)) {
-        return res.status(403).json({
-          success: false,
-          message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
-        });
+      const denied = leaderEditError(req.user, targetUser, req.body);
+      if (denied) {
+        return res.status(denied.status).json({ success: false, message: denied.message });
       }
-      if (Array.isArray(extraRoles)) {
-        for (const r of extraRoles) {
-          if (r && r.type && !allowed.includes(r.type)) {
-            return res.status(403).json({
-              success: false,
-              message: `Your role does not have permission to assign roleTag type: ${r.type}`
-            });
-          }
-        }
-      }
+      const isStateAdmin = req.user.role === 'state_admin';
 
       targetUser.isLeader = isLeader !== undefined ? isLeader : targetUser.isLeader;
 
@@ -317,7 +279,9 @@ router.patch('/:id/leader',
       }
 
       if (isLeader === false) {
-        targetUser.roleTag = undefined;
+        // An area/unit admin's roleTag is also their access scope (isAreaLevelAdmin,
+        // areaGroupIdsFor) — dropping leader status must not strip it.
+        if (targetUser.role !== 'group_admin') targetUser.roleTag = undefined;
       } else if (roleTag) {
         // Normalise listingOrder: allow null/"" to clear it, cast strings to numbers.
         let nextListingOrder = targetUser.roleTag && targetUser.roleTag.listingOrder;
@@ -333,8 +297,9 @@ router.patch('/:id/leader',
         targetUser.roleTag = {
           type: roleTag.type || (targetUser.roleTag && targetUser.roleTag.type),
           name: roleTag.name || (targetUser.roleTag && targetUser.roleTag.name),
-          areaId: roleTag.areaId !== undefined ? (roleTag.areaId || null) : (targetUser.roleTag && targetUser.roleTag.areaId),
-          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (targetUser.roleTag && targetUser.roleTag.roleDescription),
+          // areaId / roleDescription bind an admin to an area — state admin only.
+          areaId: roleTag.areaId !== undefined && isStateAdmin ? (roleTag.areaId || null) : (targetUser.roleTag && targetUser.roleTag.areaId),
+          roleDescription: roleTag.roleDescription !== undefined && isStateAdmin ? roleTag.roleDescription : (targetUser.roleTag && targetUser.roleTag.roleDescription),
           listingOrder: nextListingOrder
         };
       }
@@ -485,7 +450,11 @@ router.put('/:id',
         });
       }
 
-      const updateData = req.body;
+      // Non-state admins may only edit their own name and email. A blacklist let
+      // roleTag / adminKind / isLeader / phone through, which set access scope.
+      const updateData = isStateAdmin
+        ? req.body
+        : Object.fromEntries(Object.entries(req.body).filter(([key]) => ['name', 'email'].includes(key)));
 
       // Clean up empty string values that should be undefined for ObjectId fields
       if (updateData.district === '') {
@@ -496,15 +465,6 @@ router.put('/:id',
       }
       if (updateData.email === '') {
         delete updateData.email;
-      }
-
-      // Only state admin can change role, district, group, and isActive
-      if (!isStateAdmin) {
-        delete updateData.role;
-        delete updateData.district;
-        delete updateData.group;
-        delete updateData.isActive;
-        delete updateData.permissions;
       }
 
       // Multi-role: same phone may hold other role docs. Changing role to one

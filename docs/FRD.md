@@ -85,7 +85,7 @@ Out of scope: payment gateways (payments are recorded manually by admins), SMS/e
 |---|---|
 | Frontend | React 18, TypeScript, Vite, Tailwind + shadcn/ui, TanStack Query, React Router. Installable PWA (vite-plugin-pwa). Hosted on Netlify. |
 | Backend | Node.js, Express, Mongoose (MongoDB). JWT authentication. Helmet, CORS allow-list, rate limiting (1,000 requests / 15 min per IP outside development). |
-| File storage | DigitalOcean Spaces (S3-compatible) with public CDN URLs. Bulk-import CSVs are stored temporarily on local disk. |
+| File storage | DigitalOcean Spaces (S3-compatible) with public CDN URLs. |
 | Messaging | MsgHex WhatsApp gateway for login OTPs and WhatsApp notifications. |
 | Exports | Client-side Excel (xlsx), PDF (jsPDF) and CSV; server-side CSV for some reports. |
 
@@ -178,7 +178,7 @@ The system has **four login roles**. The third role (`group_admin`) has two scop
 All four variants have identical permissions and are all labelled "Area Admin" in the UI. Murabi and Coordinator accounts exist so the same person can hold more than one area-level account on one phone number. The kinds matter only for target audiences, consolidation rows and account pickers.
 
 **Can (limited to own area or unit):**
-- View and add members (new members are **pending approval**); edit member details directly; bulk-import members from CSV.
+- View and add members (new members are **pending approval**); edit member details directly.
 - Raise **transfer requests** to move a member to another area or district (only Area Admins can raise them).
 - Approve or reject member **profile-change requests** (name/phone) on the Requests page.
 - Enrol members in Baithul Maal, set monthly amounts, and record, edit or remove monthly payments.
@@ -220,7 +220,6 @@ Permission flags are set automatically by role and checked by the API:
 | approve_transfers | ✔ | ✔ | |
 | send_notifications | ✔ | ✔ | |
 | view_reports | ✔ | ✔ | ✔ |
-| bulk_import | ✔ | ✔ | ✔ |
 | manage_meetings | ✔ | ✔ | |
 | manage_baithul_maal | ✔ | ✔ | ✔ |
 
@@ -241,7 +240,6 @@ Legend: **All** = state-wide · **Dist** = own district · **Area** = own area/u
 | Edit member | All | Dist | Area | Self (limited fields) |
 | Approve member | All | Dist (API) | — | — |
 | Delete member | All | — | — | — |
-| Bulk import members (CSV) | All | Dist | Area | — |
 | Export member list (Excel/PDF) | All | Dist | Area | — |
 | Move member directly | All | Within Dist | — | — |
 | Raise transfer request | — | — | Area | — |
@@ -294,7 +292,7 @@ Each requirement has an ID (`FR-<module>-<nn>`). "Shall" states current system b
 |---|---|
 | FR-DASH-01 | **State Admin dashboard** shall show KPI cards: Monthly Baithul Maal collection (with contributing count), Pending Actions (pending requests), Districts (total/active), Admins (total/active); an analysis row (Total Members, Active Members with %, Groups, Baithul Maal); a "Needs attention" block (pending approvals, upcoming meetings); and quick-action tiles to every admin module. Cards link to their modules. |
 | FR-DASH-02 | **District Admin dashboard** shall show Groups, Total Members, Active Members and Pending Transfers for the district; quick actions; the admin's own targets; and the list of transfers awaiting this district's approval with Approve (optional comment) and Reject (required reason) actions. |
-| FR-DASH-03 | **Area Admin dashboard** shall show Total Members, Active Members, Pending Requests and Upcoming Meetings for the scope; quick actions (Bulk Import, Files, Group Reports, Role Management, Consolidation, Baithul Maal, My Targets); own targets; and the next three meetings. |
+| FR-DASH-03 | **Area Admin dashboard** shall show Total Members, Active Members, Pending Requests and Upcoming Meetings for the scope; quick actions (Files, Group Reports, Role Management, Consolidation, Baithul Maal, My Targets); own targets; and the next three meetings. |
 | FR-DASH-04 | Dashboard figures shall be scoped by the role rules in §3. |
 | FR-DASH-05 | **Member dashboard** — see §6.16. |
 
@@ -338,9 +336,6 @@ Each requirement has an ID (`FR-<module>-<nn>`). "Shall" states current system b
 | FR-MEM-08 | **Delete member**: State Admin only. |
 | FR-MEM-09 | **Member detail** shall show contact, personal, professional and organisation details, Baithul Maal summary with monthly payment table, and meeting-attendance summary; and offer Call, Email, Edit and "Download Certificate" (printable HTML). |
 | FR-MEM-10 | **Export** shall download all filtered members (across pages) as Excel or PDF with Name, Phone, Email, Status, District, Group, Approved, Joined. |
-| FR-MEM-11 | **Bulk import** (CSV, max 5 MB) into a chosen district and area. Columns: Name*, Phone Number*, Email, Date of Birth, Blood Group, Profession, Education, Status. A template is downloadable. |
-| FR-MEM-12 | Bulk import shall validate each row, skip duplicates (inside the file and against existing members in any phone format), insert valid rows, and report totals, successes, failures and duplicates. Imported members are pending approval. |
-| FR-MEM-13 | Scope for bulk import: Area Admins into their own group, District Admins into their district, State Admins anywhere. |
 
 ### 6.6 Member Change Requests
 
@@ -375,14 +370,15 @@ Area Admin raises request (reason ≥ 10 chars)
 
 | ID | Requirement |
 |---|---|
-| FR-TRF-01 | Only an **Area Admin** shall raise a transfer request, only for a member of their own group, only to a different group, and only if the member has no open request. |
+| FR-TRF-01 | An **Area Admin** shall raise a transfer request only for a member of their own group, only to a different group, and only if the member has no open request. A **District Admin** may raise one only for a member of their own district, only to a different district, and only if the member has no open request; it skips district approval (both sides auto-approved) and goes straight to the State Admin. |
 | FR-TRF-02 | Within-district transfers shall need the district approval once; cross-district transfers need both the source and target District Admins, in any order. |
 | FR-TRF-03 | The State Admin's approval shall complete the transfer and move the member. |
 | FR-TRF-04 | A rejection (5–500 character reason) by any eligible admin shall end the request. |
-| FR-TRF-05 | In-app notifications shall be generated: on creation (District Admins), when one district side approves and the other is waiting (District Admins), when both districts approve (State Admins), on completion (Area Admins), and on rejection (Area Admins, with the reason). |
+| FR-TRF-05 | In-app notifications shall be generated: on creation (District Admins; State Admins for a District Admin's request), when one district side approves and the other is waiting (District Admins), when both districts approve (State Admins), on completion (the requester's role: Area or District Admins), and on rejection (the requester's role, with the reason). |
 | FR-TRF-06 | The **Transfer Approvals** page (State and District Admins) shall show counts (pending, cross-district, waiting on state) and, per request: member, from/to district and area, reason, requester, and the status of each approval step. |
 | FR-TRF-07 | Queues: District Admins see requests waiting for their district's decision; the State Admin sees requests in `district_approved`; Area Admins see their own open requests. A pending-count badge is shown in navigation. |
-| FR-TRF-08 | State and District Admins may instead **move** a member directly from the member list (District Admins only within their district). This skips the approval workflow. |
+| FR-TRF-08 | State and District Admins may instead **move** a member directly from the member list (District Admins only within their district, and not while the member has an open request; choosing another district raises a request per FR-TRF-01). This skips the approval workflow. A District Admin's move changes only the group and unit — the one member change open to them while member editing is State-Admin-only. |
+| FR-TRF-09 | A move or transfer request may set a new **unit** (up to 100 characters); blank keeps the current unit. On a request, the unit is applied when the State Admin approves. |
 
 ### 6.8 Baithul Maal
 
@@ -692,7 +688,7 @@ Views: **Overview, Targets, Meetings, Baithul Maal, Alerts, Leaders, Files, Prof
 |---|---|---|
 | NFR-01 | Security | All API routes except login and health require a valid JWT; role and permission checks are enforced on the server for every scoped action. |
 | NFR-02 | Security | OTPs are hashed (bcrypt) and single-use; login attempts are limited; CORS allows only configured origins; security headers via Helmet. |
-| NFR-03 | Security | Uploads are restricted by MIME type and size (5 MB CSV, 10 MB meeting files, 20 MB target files, 50 MB documents). |
+| NFR-03 | Security | Uploads are restricted by MIME type and size (10 MB meeting files, 20 MB target files, 50 MB documents). |
 | NFR-04 | Performance | Lists are paginated on the server (default 20, max 100). Client caching keeps data fresh for 5 minutes and repaints instantly on revisit. |
 | NFR-05 | Availability | API rate limit 1,000 requests per 15 minutes per IP (configurable). Health endpoint at `/health`. |
 | NFR-06 | Usability | Mobile-first responsive layout; installable PWA; Malayalam font bundled and Malayalam file names supported. UI text is English. |
@@ -757,7 +753,6 @@ Base path `/api`. Guards in brackets.
 | Groups | `GET/POST groups`, `GET/PUT/DELETE groups/:id`, `GET groups/:id/members`, `GET groups/:id/stats` |
 | Requests | `GET requests`, `GET requests/pending`, `GET requests/stats`, `GET requests/:id`, `POST requests`, `POST requests/:id/approve`, `POST requests/:id/reject`, `POST requests/:id/comment` |
 | Transfers | `GET/POST transfer-requests`, `GET transfer-requests/pending-count`, `GET transfer-requests/:id`, `POST transfer-requests/:id/approve`, `POST transfer-requests/:id/reject` |
-| Bulk import | `POST bulk-import/members`, `POST bulk-import/validate`, `GET bulk-import/template`, `GET bulk-import/history` |
 | Baithul Maal | `GET baithul-maal`, `GET/PUT baithul-maal/member/:id`, `POST baithul-maal/member/:id/payment` (legacy), `GET baithul-maal/stats`, `GET baithul-maal/defaulters` |
 | Payments | `GET/POST baithul-maal-payments`, `PUT/DELETE baithul-maal-payments/:id`, `GET baithul-maal-payments/member/:memberId`, `GET baithul-maal-payments/summary/:memberId` |
 | Targets | `GET/POST personal-targets`, `GET/PUT/DELETE personal-targets/:id`, `GET personal-targets/:id/progress`; `GET/POST user-target-progress…`; `member-target-progress/*`; `GET recurring-marks/my`, `GET recurring-marks/area-members`, `GET recurring-marks/attendance/:targetId`, `POST recurring-marks` |

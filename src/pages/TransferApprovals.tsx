@@ -24,6 +24,7 @@ interface TransferRequest {
   currentGroup: { _id: string; name: string; code: string };
   targetDistrict: { _id: string; name: string; code: string };
   targetGroup: { _id: string; name: string; code: string };
+  targetUnit?: string;
   requestedBy: { _id: string; name: string; role: string };
   reason: string;
   status: "pending" | "district_approved" | "completed" | "rejected";
@@ -220,6 +221,7 @@ const TransferApprovals = () => {
                       <p className="text-xs text-muted-foreground">To</p>
                       <p className="font-medium">{request.targetDistrict.name}</p>
                       <p className="text-xs">{request.targetGroup.name}</p>
+                      {request.targetUnit && <p className="text-xs">Unit: {request.targetUnit}</p>}
                     </div>
                   </div>
 

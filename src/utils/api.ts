@@ -8,8 +8,23 @@ console.log('🔧 API Configuration:', {
   NODE_ENV: import.meta.env.NODE_ENV,
 });
 
+/**
+ * Parsed JSON body of an API response. Left loose on purpose: dozens of pages
+ * read fields straight off it, and each endpoint's shape is typed where it is
+ * used (e.g. `as DashboardOverview`). Narrow at the call site, don't widen here.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- the one untyped boundary; see above
+export type ApiJson = any;
+
+/** Query-string values as callers pass them. */
+export type QueryParams = Record<string, string | number | boolean | null | undefined>;
+
+/** "?a=1&b=x" — each value stringified exactly as URLSearchParams always did; "" without params. */
+const toQuery = (params?: QueryParams): string =>
+  params ? '?' + new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString() : '';
+
 // Generic API call function
-export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+export const apiCall = async (endpoint: string, options: RequestInit = {}): Promise<ApiJson> => {
   const url = `${API_BASE_URL}${endpoint}`;
   
   const defaultHeaders = {
@@ -37,7 +52,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
     
     // Handle non-JSON responses (e.g. 429 rate limit plain text)
     const contentType = response.headers.get('content-type');
-    let data: any;
+    let data: ApiJson;
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
@@ -50,7 +65,7 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}) => {
 
     if (!response.ok) {
       console.error(`❌ API Error: ${response.status}`, data);
-      const error = new Error(data.message || `HTTP ${response.status}`) as Error & { data?: any; status?: number };
+      const error = new Error(data.message || `HTTP ${response.status}`) as Error & { data?: unknown; status?: number };
       error.data = data;
       error.status = response.status;
       throw error;
@@ -170,38 +185,23 @@ export const memberAuthAPI = {
 
   getProfile: () => apiCall('/member-auth/profile'),
 
-  getTargets: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/targets${queryString}`);
-  },
+  getMeetings: (params?: QueryParams) =>
+    apiCall(`/member-auth/meetings${toQuery(params)}`),
 
-  getMeetings: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/meetings${queryString}`);
-  },
+  getNotifications: (params?: QueryParams) =>
+    apiCall(`/member-auth/notifications${toQuery(params)}`),
 
-  getNotifications: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/notifications${queryString}`);
-  },
-
-  getBaithulMaal: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/baithul-maal${queryString}`);
-  },
+  getBaithulMaal: (params?: QueryParams) =>
+    apiCall(`/member-auth/baithul-maal${toQuery(params)}`),
 
   getDistricts: () => apiCall('/member-auth/districts'),
 
-  getGroups: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/groups${queryString}`);
-  },
+  getGroups: (params?: QueryParams) =>
+    apiCall(`/member-auth/groups${toQuery(params)}`),
 
-  updateTargetProgress: (targetId: string, data: { status: string; feedback?: string; fileAttachment?: object }) =>
-    apiCall(`/member-auth/targets/${targetId}/progress`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  /** The member's own area's monthly report totals. */
+  getAreaReport: (params: { year: number; month: number }) =>
+    apiCall(`/member-auth/area-report${toQuery(params)}`),
 
   uploadFile: (file: File) => {
     const formData = new FormData();
@@ -209,12 +209,10 @@ export const memberAuthAPI = {
     return multipartApiCall('/member-auth/uploads', formData);
   },
 
-  getOrgFiles: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/org-files${queryString}`);
-  },
+  getOrgFiles: (params?: QueryParams) =>
+    apiCall(`/member-auth/org-files${toQuery(params)}`),
 
-  updateProfile: (data: Record<string, any>) =>
+  updateProfile: (data: Record<string, unknown>) =>
     apiCall('/member-auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -229,18 +227,16 @@ export const memberAuthAPI = {
 
 // Users API calls
 export const usersAPI = {
-  getUsers: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/users${queryString}`);
-  },
+  getUsers: (params?: QueryParams) =>
+    apiCall(`/users${toQuery(params)}`),
 
-  createUser: (userData: any) =>
+  createUser: (userData: unknown) =>
     apiCall('/users', {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
 
-  updateUser: (userId: string, userData: any) =>
+  updateUser: (userId: string, userData: unknown) =>
     apiCall(`/users/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(userData),
@@ -261,31 +257,27 @@ export const usersAPI = {
 
 // Districts API calls
 export const districtsAPI = {
-  getDistricts: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/districts${queryString}`);
-  },
+  getDistricts: (params?: QueryParams) =>
+    apiCall(`/districts${toQuery(params)}`),
 
-  getDistrictGroups: (districtId: string, params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/districts/${districtId}/groups${queryString}`);
-  },
+  getDistrictGroups: (districtId: string, params?: QueryParams) =>
+    apiCall(`/districts/${districtId}/groups${toQuery(params)}`),
+
+  // Minimal (id, name, code) list of any district's active groups — target picker for transfers.
+  getTransferTargetGroups: (districtId: string) =>
+    apiCall(`/districts/${districtId}/transfer-groups`),
 };
 
 // Groups API calls
 export const groupsAPI = {
-  getGroups: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/groups${queryString}`);
-  },
+  getGroups: (params?: QueryParams) =>
+    apiCall(`/groups${toQuery(params)}`),
 };
 
 // Members API calls
 export const membersAPI = {
-  getMembers: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/members${queryString}`);
-  },
+  getMembers: (params?: QueryParams) =>
+    apiCall(`/members${toQuery(params)}`),
 
   getMember: (id: string) => apiCall(`/members/${id}`),
 
@@ -294,13 +286,13 @@ export const membersAPI = {
       method: 'POST',
     }),
 
-  createMember: (memberData: any) =>
+  createMember: (memberData: unknown) =>
     apiCall('/members', {
       method: 'POST',
       body: JSON.stringify(memberData),
     }),
 
-  updateMember: (id: string, memberData: any) =>
+  updateMember: (id: string, memberData: unknown) =>
     apiCall(`/members/${id}`, {
       method: 'PUT',
       body: JSON.stringify(memberData),
@@ -313,24 +305,25 @@ export const membersAPI = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  // District admins: move a member to another group (+ optional unit) inside their own district.
+  moveMemberWithinDistrict: (memberId: string, data: { group: string; unit?: string }) =>
+    apiCall(`/members/${memberId}/move`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 };
 
 // Meetings API calls
 export const meetingsAPI = {
-  getMeetings: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/meetings${queryString}`);
-  },
+  getMeetings: (params?: QueryParams) =>
+    apiCall(`/meetings${toQuery(params)}`),
 
-  getAdminOverview: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/meetings/admin/overview${queryString}`);
-  },
+  getAdminOverview: (params?: QueryParams) =>
+    apiCall(`/meetings/admin/overview${toQuery(params)}`),
 
-  getAdminReview: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/meetings/admin/review${queryString}`);
-  },
+  getAdminReview: (params?: QueryParams) =>
+    apiCall(`/meetings/admin/review${toQuery(params)}`),
 
   initializeAttendance: (meetingId: string) =>
     apiCall(`/meetings/${meetingId}/bulk-session-actions`, {
@@ -343,7 +336,7 @@ export const meetingsAPI = {
       method: 'POST',
     }),
 
-  addGuest: (meetingId: string, guestData: any) =>
+  addGuest: (meetingId: string, guestData: unknown) =>
     apiCall(`/meetings/${meetingId}/add-guest`, {
       method: 'POST',
       body: JSON.stringify(guestData),
@@ -352,20 +345,14 @@ export const meetingsAPI = {
 
 // Baithul Maal API calls
 export const baithulMaalAPI = {
-  getStats: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/baithul-maal/stats${queryString}`);
-  },
+  getStats: (params?: QueryParams) =>
+    apiCall(`/baithul-maal/stats${toQuery(params)}`),
   
-  getBaithulData: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/baithul-maal${queryString}`);
-  },
+  getBaithulData: (params?: QueryParams) =>
+    apiCall(`/baithul-maal${toQuery(params)}`),
 
-  getPayments: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/baithul-maal-payments${queryString}`);
-  },
+  getPayments: (params?: QueryParams) =>
+    apiCall(`/baithul-maal-payments${toQuery(params)}`),
 
   getMemberPayments: (memberId: string) =>
     apiCall(`/baithul-maal-payments/member/${memberId}`),
@@ -376,13 +363,13 @@ export const baithulMaalAPI = {
       body: JSON.stringify(data),
     }),
 
-  createPayment: (paymentData: any) =>
+  createPayment: (paymentData: unknown) =>
     apiCall('/baithul-maal-payments', {
       method: 'POST',
       body: JSON.stringify(paymentData),
     }),
 
-  updatePayment: (paymentId: string, paymentData: any) =>
+  updatePayment: (paymentId: string, paymentData: unknown) =>
     apiCall(`/baithul-maal-payments/${paymentId}`, {
       method: 'PUT',
       body: JSON.stringify(paymentData),
@@ -396,7 +383,7 @@ export const baithulMaalAPI = {
 
 // Transfer Requests API calls
 export const transferRequestsAPI = {
-  createTransferRequest: (requestData: any) =>
+  createTransferRequest: (requestData: unknown) =>
     apiCall('/transfer-requests', {
       method: 'POST',
       body: JSON.stringify(requestData),
@@ -405,14 +392,12 @@ export const transferRequestsAPI = {
 
 // Requests API calls (edit/approval workflow)
 export const requestsAPI = {
-  getRequests: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/requests${queryString}`);
-  },
+  getRequests: (params?: QueryParams) =>
+    apiCall(`/requests${toQuery(params)}`),
 
   getRequest: (id: string) => apiCall(`/requests/${id}`),
 
-  createRequest: (requestData: any) =>
+  createRequest: (requestData: unknown) =>
     apiCall('/requests', {
       method: 'POST',
       body: JSON.stringify(requestData),
@@ -439,32 +424,22 @@ export const requestsAPI = {
 // Reports API calls
 export const reportsAPI = {
   getDashboard: () => apiCall('/reports/dashboard'),
-  getDistrictCensus: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/reports/census/districts${queryString}`);
-  },
+  getDistrictCensus: (params?: QueryParams) =>
+    apiCall(`/reports/census/districts${toQuery(params)}`),
   getDistrictUnits: (districtId: string) =>
     apiCall(`/reports/census/districts/${districtId}/units`),
-  getMembers: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/reports/members${queryString}`);
-  },
-  getBaithulMaal: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/reports/baithul-maal${queryString}`);
-  },
+  getMembers: (params?: QueryParams) =>
+    apiCall(`/reports/members${toQuery(params)}`),
+  getBaithulMaal: (params?: QueryParams) =>
+    apiCall(`/reports/baithul-maal${toQuery(params)}`),
 };
 
 // Leaders API calls
 export const leadersAPI = {
-  getLeaders: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/users/leaders${queryString}`);
-  },
-  getMemberLeaders: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/member-auth/leaders${queryString}`);
-  },
+  getLeaders: (params?: QueryParams) =>
+    apiCall(`/users/leaders${toQuery(params)}`),
+  getMemberLeaders: (params?: QueryParams) =>
+    apiCall(`/member-auth/leaders${toQuery(params)}`),
   updateLeader: (userId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string; listingOrder?: number | null }; extraRoles?: { type?: string; name?: string; listingOrder?: number | null }[] }) =>
     apiCall(`/users/${userId}/leader`, {
       method: 'PATCH',
@@ -483,17 +458,15 @@ export const uploadsAPI = {
 
 // Notifications API calls
 export const notificationsAPI = {
-  getNotifications: (params?: Record<string, any>) => {
-    const queryString = params ? '?' + new URLSearchParams(params).toString() : '';
-    return apiCall(`/notifications${queryString}`);
-  },
+  getNotifications: (params?: QueryParams) =>
+    apiCall(`/notifications${toQuery(params)}`),
   getNotification: (id: string) => apiCall(`/notifications/${id}`),
-  createNotification: (data: any) =>
+  createNotification: (data: unknown) =>
     apiCall('/notifications', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  updateNotification: (id: string, data: any) =>
+  updateNotification: (id: string, data: unknown) =>
     apiCall(`/notifications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

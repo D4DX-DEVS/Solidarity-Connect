@@ -118,7 +118,7 @@ const MeetingDetail = () => {
   if (isLoading) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/admin/meetings-view"
           title="Meeting Details"
           subtitle="Review the meeting setup, sessions, and status information."
           eyebrow="Meetings"
@@ -134,7 +134,7 @@ const MeetingDetail = () => {
   if (error || !meeting) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/admin/meetings-view"
           title="Meeting Details"
           subtitle="Review the meeting setup, sessions, and status information."
           eyebrow="Meetings"
@@ -158,7 +158,7 @@ const MeetingDetail = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo="/admin/meetings-view"
         title={isEditing ? "Edit Meeting" : "Meeting Details"}
         subtitle="Review the meeting setup, sessions, and status information."
         eyebrow="Meetings"

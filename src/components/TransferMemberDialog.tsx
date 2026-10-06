@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +34,8 @@ interface Member {
     name: string;
     code: string;
   };
+  // Unit name — the org stores it in member.address
+  address?: string;
 }
 
 interface TransferMemberDialogProps {
@@ -46,56 +49,78 @@ interface TransferMemberDialogProps {
 const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: TransferMemberDialogProps) => {
   const { toast } = useToast();
   const { userRole, user } = useAuth();
-  // State admins move the member directly to ANY district/group (no approval workflow).
-  // District admins move the member directly WITHIN their own district only
-  // (backend PUT /api/members/:id enforces `newDistrict === user.district`).
+  // State admins move the member directly to ANY district/group (PUT /api/members/:id,
+  // no approval workflow).
+  // District admins move the member directly WITHIN their own district
+  // (PATCH /api/members/:id/move, which enforces the district); picking another
+  // district turns the dialog into a TransferRequest that goes straight to the
+  // state admin for approval.
   // Group admins create a TransferRequest that goes through the approval pipeline.
-  const isDirectMove = userRole === 'state_admin' || userRole === 'district_admin';
-  // For district admins, lock the target district selector to their own district
-  // so cross-district moves can't even be attempted through this dialog.
-  const lockedDistrictId = userRole === 'district_admin' ? user?.district?._id : null;
+  // Every path can also set a new unit; blank keeps the current one.
+  const ownDistrictId = userRole === 'district_admin' ? user?.district?._id : null;
   const [loading, setLoading] = useState(false);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [formData, setFormData] = useState({
     targetDistrict: "",
     targetGroup: "",
+    unit: "",
     reason: ""
   });
+  const isDistrictAdminRequest = !!ownDistrictId
+    && !!formData.targetDistrict
+    && formData.targetDistrict !== ownDistrictId;
+  const isDirectMove = userRole === 'state_admin'
+    || (userRole === 'district_admin' && !isDistrictAdminRequest);
 
   // Fetch districts when dialog opens
   useEffect(() => {
     if (open) {
       fetchDistricts();
       setFormData({
-        // District admins: pre-select their own district (it's locked, not selectable).
-        targetDistrict: lockedDistrictId || "",
+        // District admins: pre-select their own district (the common, instant-move case).
+        targetDistrict: ownDistrictId || "",
         targetGroup: "",
+        unit: "",
         reason: ""
       });
       setGroups([]);
     }
-  }, [open, lockedDistrictId]);
+  }, [open, ownDistrictId]);
 
-  // Safety net: if the dialog is open and the locked district id resolves later
-  // (e.g. auth restoration finishes after the dialog opens), make sure the form's
-  // targetDistrict reflects it. Avoids a race where the group dropdown would
-  // otherwise stay on "Select district first".
+  // Safety net: if the dialog is open and the own district id resolves later
+  // (e.g. auth restoration finishes after the dialog opens), pre-select it.
+  // Avoids a race where the group dropdown would otherwise stay on
+  // "Select district first".
   useEffect(() => {
-    if (open && lockedDistrictId && formData.targetDistrict !== lockedDistrictId) {
-      setFormData(prev => ({ ...prev, targetDistrict: lockedDistrictId, targetGroup: "" }));
+    if (open && ownDistrictId && !formData.targetDistrict) {
+      setFormData(prev => ({ ...prev, targetDistrict: ownDistrictId, targetGroup: "" }));
     }
-  }, [open, lockedDistrictId, formData.targetDistrict]);
+  }, [open, ownDistrictId, formData.targetDistrict]);
 
-  // Fetch groups when district changes
+  // Fetch groups when the dialog opens or the district changes. `open` is a
+  // dependency because the dialog stays mounted between uses: reopening on the
+  // same district would otherwise leave the list empty. Responses for a district
+  // that is no longer selected are dropped so they can't overwrite the list.
   useEffect(() => {
-    if (formData.targetDistrict) {
-      fetchGroups(formData.targetDistrict);
-    } else {
-      setGroups([]);
+    if (!open) return;
+    setGroups([]);
+    if (!formData.targetDistrict) {
       setFormData(prev => ({ ...prev, targetGroup: "" }));
+      return;
     }
-  }, [formData.targetDistrict]);
+    let cancelled = false;
+    // Not /districts/:id/groups — that one is scoped to the caller's own
+    // district, which would leave the picker empty for cross-district requests.
+    districtsAPI.getTransferTargetGroups(formData.targetDistrict)
+      .then((result) => {
+        if (!cancelled) setGroups(result.data || []);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) console.error('Failed to fetch groups:', error);
+      });
+    return () => { cancelled = true; };
+  }, [open, formData.targetDistrict]);
 
   const fetchDistricts = async () => {
     try {
@@ -107,22 +132,12 @@ const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: Tra
     }
   };
 
-  const fetchGroups = async (districtId: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const result = await districtsAPI.getDistrictGroups(districtId, { limit: 100 });
-      setGroups(result.data || []);
-    } catch (error) {
-      console.error('Failed to fetch groups:', error);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!member) return;
 
-    // For state/district admins doing a direct move, the "reason" note is informational only.
-    if (isDirectMove && (!formData.targetDistrict || !formData.targetGroup)) {
+    // Every path needs a target; for direct moves the "reason" note is informational only.
+    if (!formData.targetDistrict || !formData.targetGroup) {
       toast({
         title: "Missing Target Location",
         description: "Please select both a target district and group.",
@@ -152,50 +167,63 @@ const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: Tra
       return;
     }
 
+    // Blank unit = keep the member's current unit.
+    const unit = formData.unit.trim();
+
     setLoading(true);
     try {
       if (isDirectMove) {
         // ── Direct-move path (state_admin OR district_admin) ──
-        // State admins can target any district/group. District admins can only
-        // target groups within their own district (target district is locked
-        // in the UI; the backend also enforces `newDistrict === user.district`).
         // No TransferRequest / approval workflow — the member is moved immediately.
-        await membersAPI.updateMember(member._id, {
-          district: formData.targetDistrict,
-          group: formData.targetGroup,
-        });
+        if (userRole === 'state_admin') {
+          // State admins can target any district/group.
+          await membersAPI.updateMember(member._id, {
+            district: formData.targetDistrict,
+            group: formData.targetGroup,
+            ...(unit ? { address: unit } : {}),
+          });
+        } else {
+          // District admins: own district only (the backend enforces it).
+          await membersAPI.moveMemberWithinDistrict(member._id, {
+            group: formData.targetGroup,
+            ...(unit ? { unit } : {}),
+          });
+        }
 
         toast({
           title: "Member Moved",
           description: `${member.name} has been transferred to the new district/group.`,
         });
       } else {
-        // ── Group admin path: create a TransferRequest for approval ──
-        // Goes through the 3-tier approval workflow:
-        //   group_admin initiates → district_admin(s) approve → state_admin final-approves + executes.
+        // ── Request path: create a TransferRequest for approval ──
+        // group_admin: group_admin initiates → district_admin(s) approve → state_admin final-approves + executes.
+        // district_admin (cross-district): goes straight to the state_admin, who approves + executes.
         await transferRequestsAPI.createTransferRequest({
           member: member._id,
           targetDistrict: formData.targetDistrict,
           targetGroup: formData.targetGroup,
+          ...(unit ? { targetUnit: unit } : {}),
           reason: formData.reason
         });
 
         toast({
           title: "Transfer Request Submitted",
-          description: "The transfer request has been submitted and will be reviewed by the appropriate admin.",
+          description: isDistrictAdminRequest
+            ? "The transfer request has been sent to the State Admin for approval."
+            : "The transfer request has been submitted and will be reviewed by the appropriate admin.",
         });
       }
 
       onTransferred?.();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to submit transfer request:', error);
       toast({
         title: "Error",
         // Surface the backend's actual message when available (e.g.
         // "You can only transfer members within your district"); fall back to
         // a generic message otherwise.
-        description: error?.message
+        description: (error instanceof Error && error.message)
           || (isDirectMove
             ? "Failed to transfer member. Please try again."
             : "Failed to submit transfer request"),
@@ -222,41 +250,32 @@ const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: Tra
           <p className="text-sm text-muted-foreground">
             {member.group.name} ({member.group.code}) - {member.district.name} ({member.district.code})
           </p>
+          <p className="text-sm text-muted-foreground">Unit: {member.address || "No unit"}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">Target District *</label>
-            {lockedDistrictId ? (
-              // District admin: target district is fixed to their own district.
-              // Render it as a read-only badge instead of a disabled <Select> so
-              // the value is always visible (Radix Select with `disabled` + a
-              // pre-set value can render as the placeholder).
-              <div className="flex h-10 items-center rounded-md border border-input bg-muted px-3 text-sm font-medium">
-                {user?.district?.name} ({user?.district?.code})
-              </div>
-            ) : (
-              <Select
-                value={formData.targetDistrict}
-                onValueChange={(val) => setFormData({ ...formData, targetDistrict: val })}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select District" />
-                </SelectTrigger>
-                <SelectContent>
-                  {districts.map((district) => (
-                    <SelectItem key={district._id} value={district._id}>
-                      {district.name} ({district.code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {lockedDistrictId && (
+            <Select
+              value={formData.targetDistrict}
+              onValueChange={(val) => setFormData({ ...formData, targetDistrict: val, targetGroup: "" })}
+              disabled={loading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select District" />
+              </SelectTrigger>
+              <SelectContent>
+                {districts.map((district) => (
+                  <SelectItem key={district._id} value={district._id}>
+                    {district.name} ({district.code}){district._id === ownDistrictId ? " · your district" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {ownDistrictId && (
               <p className="text-xs text-muted-foreground mt-1">
-                As a district admin, you can only move members within your own district.
-                For cross-district transfers, ask the member's group admin to submit a transfer request.
+                Within your district the member is moved immediately.
+                Choosing another district sends a transfer request to the State Admin for approval.
               </p>
             )}
           </div>
@@ -279,6 +298,22 @@ const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: Tra
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            {/* Stored in member.address — the org uses it for the unit name */}
+            <label htmlFor="transfer-unit" className="text-sm font-medium mb-2 block">New Unit (Optional)</label>
+            <Input
+              id="transfer-unit"
+              placeholder="e.g. Vaduthala"
+              maxLength={100}
+              value={formData.unit}
+              onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+              disabled={loading}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Leave blank to keep the current unit{member.address ? ` (${member.address})` : ""}.
+            </p>
           </div>
 
           <div>
@@ -312,6 +347,11 @@ const TransferMemberDialog = ({ open, onOpenChange, member, onTransferred }: Tra
                   <strong>Note:</strong> {userRole === 'state_admin'
                     ? <>As a state admin, the member will be moved to the target district/group <strong>immediately</strong> — no approval required.</>
                     : <>As a district admin, the member will be moved to the new group within your district <strong>immediately</strong> — no approval required.</>}
+                </>
+              ) : isDistrictAdminRequest ? (
+                <>
+                  <strong>Note:</strong> This request goes <strong>straight to the State Admin</strong> for approval.
+                  The member stays in their current group until it is approved.
                 </>
               ) : (
                 <>

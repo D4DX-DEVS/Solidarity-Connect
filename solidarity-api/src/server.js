@@ -21,18 +21,10 @@ import baithulMaalRoutes from './routes/baithulMaal.js';
 import baithulMaalPaymentRoutes from './routes/baithulMaalPayments.js';
 import transferRequestRoutes from './routes/transferRequests.js';
 import reportRoutes from './routes/reports.js';
-import consolidationRoutes from './routes/consolidation.js';
-import bulkImportRoutes from './routes/bulkImport.js';
-import personalTargetsRoutes from './routes/personalTargets.js';
-import memberTargetProgressRoutes from './routes/memberTargetProgress.js';
 import memberAuthRoutes from './routes/memberAuth.js';
 import uploadRoutes from './routes/uploads.js';
 import orgFilesRoutes from './routes/orgFiles.js';
-import userTargetProgressRoutes from './routes/userTargetProgress.js';
-import recurringMarksRoutes from './routes/recurringMarks.js';
-import RecurringMark from './models/RecurringMark.js';
-import UserTargetProgress from './models/UserTargetProgress.js';
-import MemberTargetProgress from './models/MemberTargetProgress.js';
+import monthlyReportRoutes from './routes/monthlyReports.js';
 
 // Load environment variables
 dotenv.config();
@@ -121,15 +113,10 @@ app.use('/api/baithul-maal', baithulMaalRoutes);
 app.use('/api/baithul-maal-payments', baithulMaalPaymentRoutes);
 app.use('/api/transfer-requests', transferRequestRoutes);
 app.use('/api/reports', reportRoutes);
-app.use('/api/consolidation', consolidationRoutes);
-app.use('/api/bulk-import', bulkImportRoutes);
-app.use('/api/personal-targets', personalTargetsRoutes);
-app.use('/api/member-target-progress', memberTargetProgressRoutes);
 app.use('/api/member-auth', memberAuthRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/org-files', orgFilesRoutes);
-app.use('/api/user-target-progress', userTargetProgressRoutes);
-app.use('/api/recurring-marks', recurringMarksRoutes);
+app.use('/api/monthly-reports', monthlyReportRoutes);
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -145,90 +132,10 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Startup data fixes. Every step here runs on EVERY boot, so each must be idempotent
-// and must never overwrite data an admin can legitimately set.
-// (Removed 2026-09-30: a step that forced every Inactive/Applicant member to Active
-// and approved on each restart — it silently undid admins' status changes and the
-// source statuses from the people migration.)
-async function runMigrations() {
-  try {
-    // Backfill UserTargetProgress from RecurringMarks for admin users
-    const adminMarks = await RecurringMark.find({ userType: 'User', completed: true }).lean();
-    const adminMarksByUserTarget = {};
-    for (const m of adminMarks) {
-      const key = `${m.user}_${m.personalTarget}`;
-      adminMarksByUserTarget[key] = m;
-    }
-    for (const [, m] of Object.entries(adminMarksByUserTarget)) {
-      await UserTargetProgress.findOneAndUpdate(
-        { user: m.user, personalTarget: m.personalTarget },
-        { $set: { status: 'completed', currentProgress: 1, progressPercentage: 100, completedAt: m.markedAt } },
-        { upsert: true }
-      );
-    }
-    if (Object.keys(adminMarksByUserTarget).length > 0) {
-      console.log(`✅ Migration: synced ${Object.keys(adminMarksByUserTarget).length} recurring mark(s) to UserTargetProgress`);
-    }
-
-    // Backfill MemberTargetProgress from RecurringMarks for members
-    const memberMarks = await RecurringMark.find({ userType: 'Member', completed: true }).lean();
-    const memberMarksByUserTarget = {};
-    for (const m of memberMarks) {
-      const key = `${m.user}_${m.personalTarget}`;
-      memberMarksByUserTarget[key] = m;
-    }
-    for (const [, m] of Object.entries(memberMarksByUserTarget)) {
-      await MemberTargetProgress.findOneAndUpdate(
-        { member: m.user, personalTarget: m.personalTarget },
-        { $set: { status: 'completed', currentProgress: 1, progressPercentage: 100, completedAt: m.markedAt } },
-        { upsert: true }
-      );
-    }
-    if (Object.keys(memberMarksByUserTarget).length > 0) {
-      console.log(`✅ Migration: synced ${Object.keys(memberMarksByUserTarget).length} recurring mark(s) to MemberTargetProgress`);
-    }
-
-    // RecurringMark: replace the legacy {user, personalTarget, year, month} unique index
-    // with the new {..., week} unique index so weekly targets can record multiple marks per month.
-    try {
-      const recurringCol = RecurringMark.collection;
-      const indexes = await recurringCol.indexes();
-      const legacy = indexes.find(
-        (ix) =>
-          ix.unique &&
-          ix.key &&
-          ix.key.user === 1 &&
-          ix.key.personalTarget === 1 &&
-          ix.key.year === 1 &&
-          ix.key.month === 1 &&
-          ix.key.week === undefined
-      );
-      if (legacy) {
-        await recurringCol.dropIndex(legacy.name);
-        console.log(`✅ Migration: dropped legacy RecurringMark index "${legacy.name}"`);
-      }
-      // Backfill week=0 on any historical docs missing the new field so the unique index is happy.
-      const updated = await RecurringMark.updateMany(
-        { week: { $exists: false } },
-        { $set: { week: 0 } }
-      );
-      if (updated.modifiedCount > 0) {
-        console.log(`✅ Migration: set week=0 on ${updated.modifiedCount} existing RecurringMark doc(s)`);
-      }
-      await RecurringMark.syncIndexes();
-    } catch (indexErr) {
-      console.error('RecurringMark index migration error:', indexErr);
-    }
-  } catch (err) {
-    console.error('Migration error:', err);
-  }
-}
-
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  await runMigrations();
 });
 
 export default app;

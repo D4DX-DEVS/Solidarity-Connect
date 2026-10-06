@@ -2,9 +2,12 @@ import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import User from '../models/User.js';
-import RecurringMark from '../models/RecurringMark.js';
-import PersonalTarget from '../models/PersonalTarget.js';
+import MonthlyReport from '../models/MonthlyReport.js';
+import ReportForm from '../models/ReportForm.js';
+import { ensureForms } from './monthlyReports/store.js';
+import { orgYearMonth } from '../utils/orgTime.js';
 import { isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
+import { ageOverMatch, currentMemberMatch } from '../utils/ageOver.js';
 
 /**
  * Data for the three admin dashboards, scoped down the hierarchy:
@@ -16,13 +19,12 @@ import { isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
  * A state admin may drill into one district (`districtId`) and gets exactly the
  * district-level view. Other roles can never widen their scope.
  *
- * "Reporting" = completed recurring-target marks (secretariat / samithi / meets)
- * by admins in scope. "Complete profile" = DOB, blood group, profession and
+ * "Reporting" = the admin's district or area submitted its monthly report. "Complete profile" = DOB, blood group, profession and
  * education all filled in.
  */
 
 const ACTIVITY_MONTHS = 6;
-// An admin counts as "reporting" if they completed a mark this month or last.
+// An admin counts as "reporting" if their scope submitted a report this month or last.
 const REPORTING_MONTHS = 2;
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -32,17 +34,6 @@ const PROFILE_FIELDS = [
   { field: 'profession', label: 'Profession' },
   { field: 'education', label: 'Education' },
 ];
-
-// Marks carry the year/month the (Kerala) client was in, so windows follow IST,
-// not the server clock — otherwise the first hours of a month fall in the last one.
-const ORG_TIME_ZONE = 'Asia/Kolkata';
-
-/** Calendar year and 0-based month of `now` in the org's time zone. */
-export function orgYearMonth(now) {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: ORG_TIME_ZONE, year: 'numeric', month: 'numeric' }).formatToParts(now);
-  const get = (type) => Number(parts.find((p) => p.type === type).value);
-  return { year: get('year'), month: get('month') - 1 };
-}
 
 /** The last `count` calendar months ending with `now`'s (IST) month, oldest first. */
 export function lastMonths(now, count) {
@@ -74,10 +65,6 @@ export function fillMonthSeries(months, rows) {
 // badge of 0% is a real measured zero, never a placeholder.
 const DELTA_WINDOW_DAYS = 30;
 
-// Audiences that put a recurring target in front of admins. With none active,
-// "0 reporting" means nothing was asked of them yet, not that they are silent.
-const ADMIN_TARGET_AUDIENCES = ['all_users', 'group_admins', 'area_admins', 'group_and_area_admins', 'district_admins'];
-
 /**
  * Month-over-month growth percent: added-in-window over the prior total.
  * 0 added → 0 (genuine "No change"); no prior total to compare against →
@@ -108,6 +95,7 @@ function districtScope(district) {
     memberFilter: { district: district._id },
     adminFilter: { district: district._id, role: { $in: ['district_admin', 'group_admin'] } },
     groupFilter: { district: district._id },
+    reportFilter: { district: district._id },
     childKey: 'group',
   };
 }
@@ -129,6 +117,7 @@ export async function resolveScope(user, { districtId } = {}) {
       memberFilter: {},
       adminFilter: { role: { $in: ['district_admin', 'group_admin'] } },
       groupFilter: {},
+      reportFilter: {},
       childKey: 'district',
     };
   }
@@ -146,6 +135,7 @@ export async function resolveScope(user, { districtId } = {}) {
     memberFilter: { group: { $in: groupIds } },
     adminFilter: { group: { $in: groupIds }, role: 'group_admin' },
     groupFilter: { _id: { $in: groupIds } },
+    reportFilter: { area: { $in: groupIds } },
     childKey: groupIds.length > 1 ? 'group' : null,
   };
 }
@@ -162,9 +152,9 @@ const MEMBER_COUNTERS = {
   complete: countWhen(IS_COMPLETE),
 };
 
-async function memberFacets(scope) {
+async function memberFacets(scope, memberMatch) {
   const [result] = await Member.aggregate([
-    { $match: scope.memberFilter },
+    { $match: memberMatch },
     {
       $facet: {
         totals: [{
@@ -187,29 +177,54 @@ async function memberFacets(scope) {
 }
 
 async function adminActivity(scope, now) {
-  const admins = await User.find({ ...scope.adminFilter, isActive: true }).select('_id role district group').lean();
-  const adminIds = admins.map((a) => a._id);
-
   const months = lastMonths(now, ACTIVITY_MONTHS);
   const reportingMonths = months.slice(-REPORTING_MONTHS);
-  const marksMatch = { userType: 'User', completed: true, user: { $in: adminIds } };
+  // District and area reports in scope; the state's own report is not an admin's.
+  const submitted = { ...scope.reportFilter, level: { $in: ['district', 'area'] }, submittedAt: { $ne: null } };
 
-  const [trendRows, reportingUserIds] = adminIds.length === 0
-    ? [[], []]
-    : await Promise.all([
-      RecurringMark.aggregate([
-        { $match: { ...marksMatch, $or: months.map(({ year, month }) => ({ year, month })) } },
-        { $group: { _id: { year: '$year', month: '$month' }, count: { $sum: 1 } } },
-      ]),
-      RecurringMark.distinct('user', { ...marksMatch, $or: reportingMonths.map(({ year, month }) => ({ year, month })) }),
-    ]);
+  const [admins, groups, trendRows, recent] = await Promise.all([
+    User.find({ ...scope.adminFilter, isActive: true }).select('_id role district group roleTag adminKind').lean(),
+    Group.find(scope.groupFilter).select('name district').lean(),
+    MonthlyReport.aggregate([
+      { $match: { ...submitted, $or: months.map(({ year, month }) => ({ year, month })) } },
+      { $group: { _id: { year: '$year', month: '$month' }, count: { $sum: 1 } } },
+    ]),
+    MonthlyReport.find({ ...submitted, $or: reportingMonths.map(({ year, month }) => ({ year, month })) })
+      .select('level district area').lean(),
+  ]);
 
   return {
     admins,
-    reporting: new Set(reportingUserIds.map(String)),
+    reporting: reportingAdminIds(admins, groups, recent),
     trend: fillMonthSeries(months, trendRows),
     window: { from: reportingMonths[0].label, to: reportingMonths[reportingMonths.length - 1].label },
   };
+}
+
+/**
+ * Admins whose scope has a submitted monthly report in the window: a district
+ * admin when their district's report is in, a group admin when their area's is.
+ * Same-named groups in one district are one area (see areaCoverage); area-level
+ * admins name their area in the role tag, other group admins sit in its group.
+ */
+export function reportingAdminIds(admins, groups, reports) {
+  const areaKey = (district, name) => `${district}|${String(name ?? '').trim().toLowerCase()}`;
+  const keyOfGroup = new Map(groups.map((g) => [String(g._id), areaKey(g.district, g.name)]));
+  const districts = new Set(reports.filter((r) => r.level === 'district').map((r) => String(r.district)));
+  const areas = new Set(reports.filter((r) => r.level === 'area').map((r) => keyOfGroup.get(String(r.area))).filter(Boolean));
+
+  const reporting = new Set();
+  for (const admin of admins) {
+    if (admin.role === 'district_admin') {
+      if (districts.has(String(admin.district))) reporting.add(String(admin._id));
+      continue;
+    }
+    const key = isAreaLevelAdmin(admin) && admin.roleTag?.roleDescription
+      ? areaKey(admin.district, admin.roleTag.roleDescription)
+      : keyOfGroup.get(String(admin.group));
+    if (key && areas.has(key)) reporting.add(String(admin._id));
+  }
+  return reporting;
 }
 
 /**
@@ -263,17 +278,23 @@ export function areaCoverage(groups, admins) {
 export async function buildDashboardOverview(user, { districtId, now = new Date() } = {}) {
   const scope = await resolveScope(user, { districtId });
   const since = new Date(now.getTime() - DELTA_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-  const [facets, groups, districts, activity, membersAdded, areasAdded, adminsAdded, recurringTargets] = await Promise.all([
-    memberFacets(scope),
+  // Every member figure counts current members only; archived (age over) ones get
+  // their own count, and only on the state admin's own state-wide view.
+  const memberMatch = { ...scope.memberFilter, ...currentMemberMatch(now) };
+  const showArchived = user.role === 'state_admin' && scope.level === 'state';
+  const [facets, groups, districts, activity, membersAdded, areasAdded, adminsAdded, reportForms, archived] = await Promise.all([
+    memberFacets(scope, memberMatch),
     // Deactivated units drop out, as in the district/group listings.
     Group.find({ ...scope.groupFilter, isActive: { $ne: false } }).select('name district').lean(),
     scope.childKey === 'district' ? District.find({ isActive: { $ne: false } }).select('name').lean() : Promise.resolve([]),
     adminActivity(scope, now),
     // Same scope filters as the totals above, plus the trailing window.
-    Member.countDocuments({ ...scope.memberFilter, createdAt: { $gte: since } }),
+    Member.countDocuments({ ...memberMatch, createdAt: { $gte: since } }),
     Group.countDocuments({ ...scope.groupFilter, isActive: { $ne: false }, createdAt: { $gte: since } }),
     User.countDocuments({ ...scope.adminFilter, isActive: true, createdAt: { $gte: since } }),
-    PersonalTarget.countDocuments({ isRecurring: true, status: 'active', targetAudience: { $in: ADMIN_TARGET_AUDIENCES } }),
+    // Published district/area forms. With none, "0 reporting" means nothing was asked yet.
+    ensureForms().then(() => ReportForm.countDocuments({ level: { $in: ['district', 'area'] }, version: { $gt: 0 } })),
+    showArchived ? Member.countDocuments({ ...scope.memberFilter, ...ageOverMatch(now) }) : Promise.resolve(null),
   ]);
 
   const totals = facets.totals[0] || { total: 0, active: 0, abroad: 0, complete: 0 };
@@ -324,6 +345,8 @@ export async function buildDashboardOverview(user, { districtId, now = new Date(
       active: totals.active,
       abroad: totals.abroad,
       other: totals.total - totals.active - totals.abroad,
+      // null outside the state admin's state-wide view.
+      archived,
     },
     admins: { ...adminCounts, total: activity.admins.length, reporting: activity.reporting.size },
     areas: { total: coverage.total, withoutAdmin: coverage.withoutAdmin },
@@ -336,7 +359,7 @@ export async function buildDashboardOverview(user, { districtId, now = new Date(
       level: scope.childKey === 'district' ? 'district' : scope.childKey === 'group' ? 'area' : null,
       rows: childRows,
     },
-    activity: { months: activity.trend, reportingWindow: activity.window, recurringTargets },
+    activity: { months: activity.trend, reportingWindow: activity.window, reportForms },
     deltas: {
       windowDays: DELTA_WINDOW_DAYS,
       members: { added: membersAdded, pct: growthPct(membersAdded, totals.total) },

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useId, useMemo, useState } from "react";
+import { lazy, Suspense, useId, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, CalendarDays, Minus, Search, UserPlus, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { DashboardOverview, MembershipTrendPoint, RecentActivityItem } from "@/hooks/useDashboardOverview";
 import { cn } from "@/lib/utils";
 import { ChartCard } from "./ChartCard";
-import { COVERAGE_COLOR, formatNumber, percent, STATUS_COLOR, STATUS_LABEL, type MemberStatusKey } from "./chartTheme";
+import { formatNumber, percent, STATUS_COLOR, STATUS_LABEL, type MemberStatusKey } from "./chartTheme";
 
 // recharts is heavy — lazy so it stays out of the main bundle (PWA precache caps entry at 2 MiB).
 const MembershipTrendChart = lazy(() => import("./MembershipTrendChart"));
@@ -82,7 +82,7 @@ export interface KpiSparkProps {
   value: string;
   detail: string;
   icon: LucideIcon;
-  tone: "primary" | "success" | "warning" | "neutral";
+  tone: "primary" | "success" | "warning" | "neutral" | "muted";
   /** Small series drawn under the value; omit when there is no real history. */
   spark?: number[];
   sparkColor?: string;
@@ -99,6 +99,8 @@ const TONE_TILE: Record<KpiSparkProps["tone"], string> = {
   success: "bg-success/10 text-success",
   warning: "bg-warning/15 text-amber-600 dark:text-amber-400",
   neutral: "bg-[#7c5cff]/10 text-[#7c5cff]",
+  // Records kept for reference, not current activity (archives)
+  muted: "bg-muted text-muted-foreground",
 };
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
@@ -129,7 +131,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
 /**
  * Growth pill. Counts only ever grow (nothing tracks removals), so it is "0%"
- * or up. With no prior total — or a bulk import that makes the percent
+ * or up. With no prior total — or a large batch add that makes the percent
  * meaningless (e.g. 142000%) — it shows the added count instead.
  */
 function DeltaPill({ added, pct, windowDays }: { added: number; pct: number | null; windowDays: number }) {
@@ -142,7 +144,7 @@ function DeltaPill({ added, pct, windowDays }: { added: number; pct: number | nu
       </span>
     );
   }
-  // Rounded 0% (1 added to 1,000) and bulk-import percents both read better as the count.
+  // Rounded 0% (1 added to 1,000) and large-batch percents both read better as the count.
   const label = pct !== null && pct > 0 && pct <= 999 ? `${pct}%` : `+${formatNumber(added)}`;
   return (
     <span className="inline-flex items-center gap-0.5 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-success sm:text-[11px]" title={tip}>
@@ -198,34 +200,37 @@ export function KpiSparkCard({ title, value, detail, icon: Icon, tone, spark, sp
 }
 
 /* ------------------------------------------------------------------ */
-/* Membership trend — 12-month running total                           */
+/* Membership trend — running total since records began (max 12 months) */
 /* ------------------------------------------------------------------ */
 
-export function MembershipTrendCard({ points, loading, error, onRetry, className }: {
+/** "2026-10" key + "Oct" label → "Oct 2026". */
+const monthYear = (p: MembershipTrendPoint) => `${p.label} ${p.key.slice(0, 4)}`;
+
+/** Rendered only once `hasTrend` (or to show a load error with Retry). */
+export function MembershipTrendCard({ points, error, onRetry, className }: {
   points: MembershipTrendPoint[];
-  loading: boolean;
   error: boolean;
   onRetry: () => void;
   className?: string;
 }) {
   const data = points.map((p) => ({ label: p.label, value: p.total, added: p.added }));
+  const first = points[0];
   const latest = points.at(-1);
+  const description = !first || points.length >= 12
+    ? "Monthly member growth over the last 12 months"
+    : `Total members by month since records began in ${monthYear(first)}`;
   return (
     <ChartCard
       className={className}
       title="Membership Trend"
-      description="Monthly member growth over the last 12 months"
+      description={description}
       action={latest ? (
         <span className="hidden rounded-lg bg-muted px-2 py-1 text-[11px] font-semibold text-foreground sm:block">
           {latest.label} · {formatNumber(latest.total)}
         </span>
       ) : undefined}
-      loading={loading}
       error={error}
       onRetry={onRetry}
-      empty={data.length < 2}
-      emptyText="Not enough history yet — new members will grow this chart."
-      skeletonClassName="h-56 sm:h-64"
       contentClassName="flex flex-col"
     >
       {/* Fills whatever height the row gives it (min 14–16rem), so no dead space under the chart */}
@@ -235,6 +240,40 @@ export function MembershipTrendCard({ points, loading, error, onRetry, className
         </Suspense>
       </div>
     </ChartCard>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Queue + trend + breakdown cards — the middle of every admin dashboard */
+/* ------------------------------------------------------------------ */
+
+/**
+ * With a trend: trend beside the queue (3:2), breakdown cards two across below.
+ * Without one: the queue joins the breakdown row, three across on desktop.
+ * The queue comes first in the DOM either way so it leads on phones.
+ * Breakdown cards should pass `stackAtLg={!trend}` for the narrow three-across row.
+ */
+export function QueueTrendLayout({ queue, trend, children }: {
+  queue: ReactNode;
+  trend: ReactNode | null;
+  children: ReactNode;
+}) {
+  if (!trend) {
+    return (
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="md:col-span-2 lg:col-span-1">{queue}</div>
+        {children}
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-5">
+        <div className="lg:order-last lg:col-span-2">{queue}</div>
+        <div className="lg:col-span-3">{trend}</div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">{children}</div>
+    </>
   );
 }
 
@@ -263,12 +302,7 @@ function LegendRow({ item, total }: { item: DonutItem; total: number }) {
  * Donut beside its legend; `stackAtLg` puts the legend under the donut for the
  * narrow three-across row on desktop.
  */
-function DonutPanel({ items, centerTop, centerBottom, stackAtLg }: {
-  items: DonutItem[];
-  centerTop: string;
-  centerBottom: string;
-  stackAtLg?: boolean;
-}) {
+function DonutPanel({ items, stackAtLg }: { items: DonutItem[]; stackAtLg?: boolean }) {
   const total = items.reduce((s, i) => s + i.value, 0);
   const segments = total > 0
     ? items.map((i) => ({ name: i.label, value: i.value, color: i.color }))
@@ -277,7 +311,7 @@ function DonutPanel({ items, centerTop, centerBottom, stackAtLg }: {
   return (
     <div className={cn("flex items-center gap-3 lg:gap-6", stackAtLg && "lg:flex-col lg:items-stretch lg:gap-3")}>
       <Suspense fallback={<Skeleton className={cn("shrink-0 rounded-full", size)} />}>
-        <DonutChart segments={segments} centerTop={centerTop} centerBottom={centerBottom} className={size} showTooltip={total > 0} />
+        <DonutChart segments={segments} className={size} showTooltip={total > 0} />
       </Suspense>
       <ul className={cn("min-w-0 max-w-sm flex-1 divide-y divide-border/60", stackAtLg && "lg:max-w-none lg:flex-none")}>
         {items.map((i) => <LegendRow key={i.label} item={i} total={total} />)}
@@ -286,12 +320,10 @@ function DonutPanel({ items, centerTop, centerBottom, stackAtLg }: {
   );
 }
 
-function DonutCard({ title, description, items, centerTop, centerBottom, stackAtLg, loading, error, onRetry, className }: {
+function DonutCard({ title, description, items, stackAtLg, loading, error, onRetry, className }: {
   title: string;
   description: string;
   items: DonutItem[];
-  centerTop: string;
-  centerBottom: string;
   stackAtLg?: boolean;
   loading: boolean;
   error: boolean;
@@ -308,7 +340,7 @@ function DonutCard({ title, description, items, centerTop, centerBottom, stackAt
       onRetry={onRetry}
       skeletonClassName={cn("h-36", stackAtLg && "lg:h-64")}
     >
-      <DonutPanel items={items} centerTop={centerTop} centerBottom={centerBottom} stackAtLg={stackAtLg} />
+      <DonutPanel items={items} stackAtLg={stackAtLg} />
     </ChartCard>
   );
 }
@@ -324,34 +356,13 @@ export function MemberStatusCard({ overview, stackAtLg, ...state }: OverviewCard
       stackAtLg={stackAtLg}
       title="Member Status"
       description="Active, abroad and other"
-      centerTop={formatNumber(m?.total ?? 0)}
-      centerBottom="Total Members"
       items={STATUS_KEYS.map((k) => ({ label: STATUS_LABEL[k], value: m?.[k] ?? 0, color: STATUS_COLOR[k] }))}
     />
   );
 }
 
-export function AreaStatusCard({ overview, stackAtLg, ...state }: OverviewCardProps & { stackAtLg?: boolean }) {
-  const total = overview?.areas.total ?? 0;
-  const without = overview?.areas.withoutAdmin ?? 0;
-  return (
-    <DonutCard
-      {...state}
-      stackAtLg={stackAtLg}
-      title="Area Status"
-      description="Areas by admin cover"
-      centerTop={formatNumber(total)}
-      centerBottom="Total Areas"
-      items={[
-        { label: "Has admin", value: total - without, color: COVERAGE_COLOR.ok },
-        { label: "No admin", value: without, color: COVERAGE_COLOR.gap },
-      ]}
-    />
-  );
-}
-
 // Five distinct hues for the biggest units, slate for the rest. Kept clear of the
-// status (green/blue/slate) and coverage (amber) colours in the neighbouring donuts.
+// status (green/blue/slate) colours in the neighbouring donut and the amber review chips.
 const UNIT_COLORS = ["#7c5cff", "#eb6834", "#0891b2", "#db2777", "#a16207"];
 const REST_COLOR = "#94a3b8";
 
@@ -369,8 +380,6 @@ export function MembersByUnitCard({ overview, unit, stackAtLg, ...state }: Overv
       stackAtLg={stackAtLg}
       title={`Members by ${unit}`}
       description={`Member share by ${unit.toLowerCase()}`}
-      centerTop={formatNumber(overview?.members.total ?? 0)}
-      centerBottom="Members"
       items={items}
     />
   );

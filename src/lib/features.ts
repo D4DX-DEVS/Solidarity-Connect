@@ -6,4 +6,6 @@
 export const FEATURES = {
   /** Baithul Maal contributions: hidden for every role (state/district/area admins and members). */
   baithulMaal: false,
+  /** Meetings (overview, agendas, attendance): hidden for every role. */
+  meetings: false,
 } as const;

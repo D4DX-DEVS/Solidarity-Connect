@@ -95,7 +95,7 @@ const EditNotification = () => {
   if (fetchLoading) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/notifications"
           title="Edit Notification"
           subtitle="Update the content and audience for this notification draft."
           eyebrow="Alerts"
@@ -111,7 +111,7 @@ const EditNotification = () => {
   if (!notification) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/notifications"
           title="Edit Notification"
           subtitle="Update the content and audience for this notification draft."
           eyebrow="Alerts"
@@ -128,7 +128,7 @@ const EditNotification = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo="/notifications"
         title="Edit Notification"
         subtitle="Update the content and audience for this notification draft."
         eyebrow="Alerts"

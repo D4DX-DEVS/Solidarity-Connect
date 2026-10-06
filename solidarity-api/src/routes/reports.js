@@ -14,6 +14,7 @@ import { query } from 'express-validator';
 import { handleValidationErrors } from '../middleware/validation.js';
 import { buildDashboardOverview, ScopeError } from '../services/dashboardOverview.js';
 import { BAITHUL_MAAL_ENABLED } from '../config/features.js';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -66,9 +67,12 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
       districtFilter._id = req.user.district._id;
     }
 
+    // Member figures leave out archived (age over) members — see utils/ageOver.js
+    const currentMembers = { ...memberFilter, ...currentMemberMatch() };
+
     // Member statistics
     const memberStats = await Member.aggregate([
-      { $match: memberFilter },
+      { $match: currentMembers },
       {
         $group: {
           _id: null,
@@ -116,7 +120,7 @@ router.get('/dashboard', authenticate, authorize(['view_reports']), async (req, 
     }
 
     // Recent activity
-    const recentMembers = await Member.find(memberFilter)
+    const recentMembers = await Member.find(currentMembers)
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('district', 'name')
@@ -264,7 +268,8 @@ router.get('/members',
     try {
       const { startDate, endDate, district, group, status, page = 1, limit = 10 } = req.query;
 
-      let filter = {};
+      // Archived (age over) members are left out, so the dashboard trend ends at its KPI total.
+      let filter = currentMemberMatch();
 
       // Apply role-based filtering
       if (req.user.role === 'group_admin') {
@@ -1367,7 +1372,7 @@ router.get('/census/districts',
       const filter = await censusScopeFor(req.user, { district, group });
 
       const [result] = await Member.aggregate([
-        { $match: filter },
+        { $match: { ...filter, ...currentMemberMatch() } },
         {
           $group: {
             _id: '$district',
@@ -1471,7 +1476,7 @@ router.get('/census/districts/:districtId/units',
       filter.district = new mongoose.Types.ObjectId(districtId);
 
       const units = await Member.aggregate([
-        { $match: filter },
+        { $match: { ...filter, ...currentMemberMatch() } },
         {
           $group: {
             _id: '$group',
@@ -1523,7 +1528,7 @@ router.get('/export/members', authenticate, authorize(['view_reports']), async (
       group: req.query.group
     });
 
-    const members = await Member.find(filter)
+    const members = await Member.find({ ...filter, ...currentMemberMatch() })
       .populate('district', 'name code')
       .populate('group', 'name code')
       .select('name phone email dateOfBirth age bloodGroup profession education address status baithulMaal joinedDate isApproved')

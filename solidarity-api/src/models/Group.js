@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 const groupSchema = new mongoose.Schema({
   name: {
@@ -86,16 +87,18 @@ groupSchema.virtual('members', {
 groupSchema.methods.updateStatistics = async function() {
   const Member = mongoose.model('Member');
   
-  const totalMembers = await Member.countDocuments({ group: this._id });
+  // Archived (age over) members are not counted — see utils/ageOver.js
+  const current = currentMemberMatch();
+  const totalMembers = await Member.countDocuments({ group: this._id, ...current });
   const activeMembers = await Member.countDocuments({ 
-    group: this._id, 
+    group: this._id, ...current,
     status: 'Active', 
     isApproved: true 
   });
   
   // Calculate total Baithul Maal
   const baithulMaalResult = await Member.aggregate([
-    { $match: { group: this._id, status: 'Active', isApproved: true } },
+    { $match: { group: this._id, status: 'Active', isApproved: true, ...current } },
     {
       $group: {
         _id: null,

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 const districtSchema = new mongoose.Schema({
   name: {
@@ -92,9 +93,11 @@ districtSchema.methods.updateStatistics = async function() {
   const Member = mongoose.model('Member');
   const Group = mongoose.model('Group');
   
-  const totalMembers = await Member.countDocuments({ district: this._id });
+  // Archived (age over) members are not counted — see utils/ageOver.js
+  const current = currentMemberMatch();
+  const totalMembers = await Member.countDocuments({ district: this._id, ...current });
   const activeMembers = await Member.countDocuments({ 
-    district: this._id, 
+    district: this._id, ...current,
     status: 'Active', 
     isApproved: true 
   });

@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { memberAuthAPI, apiCall } from "@/utils/api";
+import { memberAuthAPI } from "@/utils/api";
+import { MemberAreaReport } from "@/components/reports/MemberAreaReport";
 import { downloadFile } from "@/utils/downloadFile";
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -34,7 +35,6 @@ import {
   User,
   CreditCard,
   Calendar,
-  Target,
   Bell,
   MapPin,
   Users,
@@ -47,16 +47,12 @@ import {
   Image,
   Film,
   Paperclip,
-  CheckCircle,
   Clock,
-  AlertCircle,
-  MessageSquare,
   ChevronDown,
   ChevronUp,
   Upload,
   Trash2,
   X,
-  RefreshCw,
   FolderOpen,
   Edit,
   Save,
@@ -70,11 +66,6 @@ import {
   Link2,
   LogOut,
   Menu,
-  Library,
-  HandHeart,
-  Heart,
-  GraduationCap,
-  Handshake
 } from "lucide-react";
 
 interface MemberProfile {
@@ -113,49 +104,6 @@ interface BaithulPayment {
   paymentMonth: string; // YYYY-MM
   receiptNumber?: string;
   paymentMethod?: string;
-}
-
-interface FileAttachment {
-  url: string;
-  originalName: string;
-  mimetype: string;
-  size: number;
-  key: string;
-}
-
-interface PersonalTarget {
-  _id: string | null;
-  personalTarget: {
-    _id: string;
-    title: string;
-    description: string;
-    category: string;
-    targetValue: number;
-    unit: string;
-    month: number;
-    year: number;
-    startDate: string;
-    endDate: string;
-    instructions?: string;
-    rewards?: string;
-    isRecurring?: boolean;
-    recurringFrequency?: string;
-  };
-  currentProgress: number;
-  targetValue: number;
-  progressPercentage: number;
-  status: string;
-  completedAt?: string;
-  feedback?: string;
-  fileAttachment?: FileAttachment | null;
-}
-
-interface RecurringMark {
-  targetId: string;
-  year: number;
-  month: number;
-  week?: number;
-  completed: boolean;
 }
 
 interface Meeting {
@@ -227,35 +175,24 @@ const formatOrgFileSize = (bytes: number | undefined) => {
   return `${bytes} B`;
 };
 
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 const MemberDashboard = () => {
   const [profile, setProfile] = useState<MemberProfile | null>(null);
-  const [targets, setTargets] = useState<PersonalTarget[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedView = searchParams.get("view") || "overview";
   // Baithul Maal is switched off (lib/features): old ?view=baithul links show the overview.
-  const activeView = requestedView === "baithul" && !FEATURES.baithulMaal ? "overview" : requestedView;
+  // Meetings likewise hidden: ?view=meetings falls back to the overview.
+  // The area report lives on the overview, so old ?view=report links land there.
+  const activeView =
+    (requestedView === "baithul" && !FEATURES.baithulMaal) || (requestedView === "meetings" && !FEATURES.meetings) || requestedView === "report"
+      ? "overview"
+      : requestedView;
   const setActiveView = (view: string) =>
     setSearchParams(view === "overview" ? {} : { view }, { replace: true });
-  // Target interaction state
-  const [expandedTargetId, setExpandedTargetId] = useState<string | null>(null);
-  const [targetFeedback, setTargetFeedback] = useState<Record<string, string>>({});
-  const [targetSaving, setTargetSaving] = useState<string | null>(null);
-  const [targetUploading, setTargetUploading] = useState<string | null>(null);
-  const [pendingTargetFiles, setPendingTargetFiles] = useState<Record<string, File>>({});
-  const [uploadedTargetAttachments, setUploadedTargetAttachments] = useState<Record<string, FileAttachment>>({});
-  const targetFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
-  // Recurring marks state
-  const [recurringMarks, setRecurringMarks] = useState<RecurringMark[]>([]);
-  const [expandedRecurringId, setExpandedRecurringId] = useState<string | null>(null);
-  const [recurringMarkKey, setRecurringMarkKey] = useState<string | null>(null);
-  const [recurringYear, setRecurringYear] = useState(new Date().getFullYear());
-  const [weeklyViewMonth, setWeeklyViewMonth] = useState(new Date().getMonth() + 1);
-  const [weeklyViewYear, setWeeklyViewYear] = useState(new Date().getFullYear());
-
   // Org files state
   const [orgFiles, setOrgFiles] = useState<OrgFileItem[]>([]);
   const [orgFilesLoading, setOrgFilesLoading] = useState(false);
@@ -293,18 +230,6 @@ const MemberDashboard = () => {
   const [baithulLoading, setBaithulLoading] = useState(false);
   const [baithulFetched, setBaithulFetched] = useState(false);
 
-  const syncTargetState = (data: PersonalTarget[]) => {
-    const feedbackMap: Record<string, string> = {};
-    const attachmentMap: Record<string, FileAttachment> = {};
-    data.forEach((t) => {
-      const id = t.personalTarget._id;
-      if (t.feedback) feedbackMap[id] = t.feedback;
-      if (t.fileAttachment?.url) attachmentMap[id] = t.fileAttachment as FileAttachment;
-    });
-    setTargetFeedback(feedbackMap);
-    setUploadedTargetAttachments(attachmentMap);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -314,27 +239,14 @@ const MemberDashboard = () => {
         const profileData = await memberAuthAPI.getProfile();
         setProfile(profileData.data);
 
-        // Fetch all targets (sorted by release date, recent first)
-        const targetsData = await memberAuthAPI.getTargets({
-          limit: '20' // Show recent 20 targets
-        });
-        setTargets(targetsData.data);
-        syncTargetState(targetsData.data);
-
-        // Fetch recurring marks
-        try {
-          const marksData = await apiCall('/member-auth/recurring-marks');
-          setRecurringMarks(marksData.data || []);
-        } catch {
-          // Endpoint may not exist yet — fail silently
-        }
-
         // Fetch upcoming meetings
-        const meetingsData = await memberAuthAPI.getMeetings({
-          status: 'scheduled',
-          limit: '5'
-        });
-        setMeetings(meetingsData.data.meetings);
+        if (FEATURES.meetings) {
+          const meetingsData = await memberAuthAPI.getMeetings({
+            status: 'scheduled',
+            limit: '5'
+          });
+          setMeetings(meetingsData.data.meetings);
+        }
 
         // Fetch recent notifications
         const notificationsData = await memberAuthAPI.getNotifications({
@@ -411,29 +323,6 @@ const MemberDashboard = () => {
     }).format(amount);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'not_started': return 'bg-gray-100 text-gray-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getCategoryIcon = (category: string, className = "h-5 w-5") => {
-    const icons: Record<string, typeof Target> = {
-      quran: BookOpen,
-      hadith: Library,
-      prayer: HandHeart,
-      charity: Heart,
-      knowledge: GraduationCap,
-      community: Handshake,
-    };
-    const Icon = icons[category] || Target;
-    return <Icon className={className} />;
-  };
-
   if (loading) {
     return (
       <PageShell contentClassName="pb-40 lg:pb-8">
@@ -479,101 +368,9 @@ const MemberDashboard = () => {
     );
   }
 
-  const uploadTargetFile = async (targetId: string) => {
-    const file = pendingTargetFiles[targetId];
-    if (!file) return uploadedTargetAttachments[targetId];
-    try {
-      setTargetUploading(targetId);
-      const result = await memberAuthAPI.uploadFile(file);
-      const attachment = result.data;
-      setUploadedTargetAttachments(prev => ({ ...prev, [targetId]: attachment }));
-      setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
-      return attachment;
-    } catch {
-      toast({ title: "Upload Failed", description: "Could not upload the file.", variant: "destructive" });
-      return undefined;
-    } finally {
-      setTargetUploading(null);
-    }
-  };
-
-  // ponytail: recurring progress derived from marks (server stores it as binary 0/100)
-  const recurringProgress = (targetId: string, frequency?: string) => {
-    const total = frequency === 'weekly' ? 52 : 12;
-    const done = recurringMarks.filter(
-      m => m.targetId === targetId && m.year === recurringYear && m.completed
-    ).length;
-    return { done, total, pct: Math.round((done / total) * 100) };
-  };
-
-  const toggleRecurringMark = async (targetId: string, year: number, month: number, week = 0) => {
-    const key = `${targetId}-${year}-${month}-${week}`;
-    const existing = recurringMarks.find(m => m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week);
-    const newCompleted = !existing?.completed;
-    setRecurringMarkKey(key);
-    // Optimistic update
-    setRecurringMarks(prev => {
-      const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week));
-      return [...filtered, { targetId, year, month, week, completed: newCompleted }];
-    });
-    try {
-      await apiCall('/member-auth/recurring-marks', {
-        method: 'POST',
-        body: JSON.stringify({ targetId, year, month, week, completed: newCompleted }),
-      });
-    } catch {
-      setRecurringMarks(prev => {
-        const filtered = prev.filter(m => !(m.targetId === targetId && m.year === year && m.month === month && (m.week ?? 0) === week));
-        if (existing) return [...filtered, existing];
-        return filtered;
-      });
-      toast({ title: "Error", description: "Failed to update mark", variant: "destructive" });
-    } finally {
-      setRecurringMarkKey(null);
-    }
-  };
-
-  const updateTargetProgress = async (targetId: string, status: string) => {
-    try {
-      setTargetSaving(targetId);
-      let fileAttachment = uploadedTargetAttachments[targetId];
-      if (pendingTargetFiles[targetId]) {
-        fileAttachment = await uploadTargetFile(targetId);
-      }
-      const result = await memberAuthAPI.updateTargetProgress(targetId, {
-        status,
-        feedback: targetFeedback[targetId] || '',
-        ...(fileAttachment ? { fileAttachment } : {})
-      });
-
-      // Optimistically update the badge immediately from the API response
-      if (result?.data) {
-        const updated = result.data;
-        setTargets(prev =>
-          prev.map(t =>
-            t.personalTarget._id === targetId
-              ? { ...t, status: updated.status, completedAt: updated.completedAt ?? t.completedAt, progressPercentage: updated.progressPercentage ?? t.progressPercentage }
-              : t
-          )
-        );
-      }
-
-      toast({ title: "Progress Updated", description: "Your target progress has been saved." });
-      // Full sync in background
-      const targetsData = await memberAuthAPI.getTargets({ limit: '20' });
-      setTargets(targetsData.data);
-      syncTargetState(targetsData.data);
-    } catch {
-      toast({ title: "Error", description: "Failed to update progress", variant: "destructive" });
-    } finally {
-      setTargetSaving(null);
-    }
-  };
-
   const menuItems = [
     { id: "overview", label: "Home", icon: Home },
-    { id: "targets", label: "Targets", icon: Target },
-    { id: "meetings", label: "Meetings", icon: Calendar },
+    ...(FEATURES.meetings ? [{ id: "meetings", label: "Meetings", icon: Calendar }] : []),
     { id: "orgfiles", label: "Files", icon: FolderOpen },
     { id: "leaders", label: "Leaders", icon: Star }
   ];
@@ -589,8 +386,6 @@ const MemberDashboard = () => {
         return renderOverviewContent();
       case "profile":
         return renderProfileContent();
-      case "targets":
-        return renderTargetsContent();
       case "meetings":
         return renderMeetingsContent();
       case "orgfiles":
@@ -608,10 +403,9 @@ const MemberDashboard = () => {
 
   const renderOverviewContent = () => (
     <div className="space-y-4">
-      {/* Compact stat strip */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Compact stat strip — only meetings feed it, so it shows only when meetings are on */}
+      {FEATURES.meetings ? <div className="grid grid-cols-2 gap-2">
         {[
-          { label: "Targets", value: targets.length, icon: Target, view: "targets", tone: "text-primary bg-primary/10" },
           { label: "Meetings", value: meetings.length, icon: Calendar, view: "meetings", tone: "text-green-600 bg-green-100" },
         ].map(({ label, value, icon: Icon, view, tone }) => (
           <button
@@ -628,7 +422,7 @@ const MemberDashboard = () => {
             </div>
           </button>
         ))}
-      </div>
+      </div> : null}
 
       {/* Baithul Maal summary — opens Baithul Maal view */}
       {FEATURES.baithulMaal && <Card
@@ -658,49 +452,7 @@ const MemberDashboard = () => {
         </CardContent>
       </Card>}
 
-      {/* Recent Targets */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Target className="h-5 w-5" />
-            Recent Targets
-          </CardTitle>
-          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setActiveView("targets")}>
-            See all
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {targets.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              No targets available
-            </p>
-          ) : (
-            <div className="divide-y">
-              {targets.slice(0, 3).map((target) => {
-                const rec = target.personalTarget.isRecurring
-                  ? recurringProgress(target.personalTarget._id, target.personalTarget.recurringFrequency)
-                  : null;
-                return (
-                <div key={target._id ?? target.personalTarget._id} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
-                  <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    {getCategoryIcon(target.personalTarget.category)}
-                  </span>
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium malayalam-text">
-                    {target.personalTarget.title}
-                  </p>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {rec ? `${rec.done}/${rec.total}` : `${target.currentProgress}/${target.targetValue}`}
-                  </span>
-                  <span className="shrink-0 text-sm font-semibold">
-                    {rec ? rec.pct : target.progressPercentage.toFixed(0)}%
-                  </span>
-                </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <MemberAreaReport />
 
     </div>
   );
@@ -1131,415 +883,6 @@ const MemberDashboard = () => {
     </div>
   );
 
-  const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-  const getWeeksInMonth = (year: number, month: number) => {
-    const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const total = firstDayOfWeek + daysInMonth;
-    const weeks = Math.ceil(total / 7);
-    // If the last calendar row has only 1 day (a lone Sunday), don't count it
-    return total % 7 === 1 ? weeks - 1 : weeks;
-  };
-
-  const prevWeeklyMonth = () => {
-    if (weeklyViewMonth === 1) {
-      setWeeklyViewMonth(12);
-      setWeeklyViewYear(y => y - 1);
-    } else {
-      setWeeklyViewMonth(m => m - 1);
-    }
-  };
-
-  const nextWeeklyMonth = () => {
-    if (weeklyViewMonth === 12) {
-      setWeeklyViewMonth(1);
-      setWeeklyViewYear(y => y + 1);
-    } else {
-      setWeeklyViewMonth(m => m + 1);
-    }
-  };
-  const FREQ_LABELS: Record<string, string> = { weekly: 'Weekly', monthly: 'Monthly', quarterly: 'Quarterly' };
-
-  const renderTargetsContent = () => {
-    const regularTargets = targets.filter(t => !t.personalTarget?.isRecurring);
-    const recurringTargets = targets.filter(t => t.personalTarget?.isRecurring);
-
-    return (
-      <div className="space-y-4">
-
-        {/* ── Regular Targets ── */}
-        {regularTargets.length > 0 && (
-          <div className="surface-card p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">
-              <Target className="h-5 w-5" />
-              Personal Targets
-            </h2>
-              <div className="space-y-3">
-                {regularTargets.map((target) => {
-                  const targetId = target.personalTarget._id;
-                  const isExpanded = expandedTargetId === targetId;
-                  const isSaving = targetSaving === targetId;
-                  const isUploading = targetUploading === targetId;
-                  const attachment = uploadedTargetAttachments[targetId];
-                  const pendingFile = pendingTargetFiles[targetId];
-
-                  return (
-                    <Card key={target._id ?? target.personalTarget._id} className="border-l-4 border-l-blue-500">
-                      <CardContent className="pt-3 pb-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start gap-2 flex-1">
-                            <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">{getCategoryIcon(target.personalTarget.category, "h-5 w-5")}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <Badge className={getStatusColor(target.status)}>
-                                  {target.status === 'completed' ? <CheckCircle className="h-3 w-3 mr-1" /> :
-                                    target.status === 'in_progress' ? <Clock className="h-3 w-3 mr-1" /> :
-                                    <AlertCircle className="h-3 w-3 mr-1" />}
-                                  {target.status.replace('_', ' ')}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground font-medium">
-                                  {target.progressPercentage.toFixed(0)}%
-                                </span>
-                              </div>
-                              <p className="font-semibold text-sm">{target.personalTarget.title}</p>
-                              <p className="text-xs text-muted-foreground line-clamp-2">{target.personalTarget.description}</p>
-                            </div>
-                          </div>
-                          <button
-                            className="shrink-0 p-1 text-muted-foreground hover:text-foreground"
-                            onClick={() => setExpandedTargetId(isExpanded ? null : targetId)}
-                            aria-label={isExpanded ? `Collapse ${target.personalTarget.title}` : `Expand ${target.personalTarget.title}`}
-                          >
-                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </button>
-                        </div>
-
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                          <div
-                            className="bg-blue-600 h-1.5 rounded-full transition-all"
-                            style={{ width: `${Math.min(100, target.progressPercentage)}%` }}
-                          />
-                        </div>
-
-                        {isExpanded && (
-                          <div className="mt-3 space-y-3 border-t pt-3">
-                            {target.personalTarget.instructions && (
-                              <div className="bg-muted/50 p-2 rounded text-xs">
-                                <p className="font-medium mb-1">Instructions:</p>
-                                <p>{target.personalTarget.instructions}</p>
-                              </div>
-                            )}
-                            {target.personalTarget.rewards && (
-                              <div className="bg-yellow-50 p-2 rounded text-xs">
-                                <p className="font-medium mb-1">Rewards:</p>
-                                <p>{target.personalTarget.rewards}</p>
-                              </div>
-                            )}
-                            <div>
-                              <label htmlFor={`target-feedback-${targetId}`} className="text-xs font-medium flex items-center gap-1 mb-1">
-                                <MessageSquare className="h-3 w-3" /> Feedback
-                              </label>
-                              <textarea
-                                id={`target-feedback-${targetId}`}
-                                className="w-full text-xs border rounded p-2 min-h-[60px] bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary"
-                                placeholder="Add your feedback..."
-                                value={targetFeedback[targetId] || ''}
-                                onChange={(e) => setTargetFeedback(prev => ({ ...prev, [targetId]: e.target.value }))}
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor={`target-file-${targetId}`} className="text-xs font-medium flex items-center gap-1 mb-1">
-                                <Paperclip className="h-3 w-3" /> Attachment
-                              </label>
-                              <input
-                                id={`target-file-${targetId}`}
-                                type="file"
-                                className="hidden"
-                                ref={el => { targetFileRefs.current[targetId] = el; }}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) setPendingTargetFiles(prev => ({ ...prev, [targetId]: file }));
-                                }}
-                              />
-                              {(attachment || pendingFile) ? (
-                                <div className="flex items-center gap-2 p-2 bg-muted rounded text-xs">
-                                  {(() => {
-                                    const mime = attachment?.mimetype || pendingFile?.type || '';
-                                    const name = attachment?.originalName || pendingFile?.name || 'File';
-                                    const Icon = mime.startsWith('image/') ? Image : mime.startsWith('video/') ? Film : FileText;
-                                    return (
-                                      <>
-                                        <Icon className="h-3 w-3 shrink-0" />
-                                        {attachment?.url ? (
-                                          <a href={attachment.url} target="_blank" rel="noopener noreferrer" className="flex-1 truncate text-primary hover:underline">{name}</a>
-                                        ) : (
-                                          <span className="flex-1 truncate">{name}</span>
-                                        )}
-                                        {pendingFile && <span className="text-amber-600 shrink-0">unsaved</span>}
-                                      </>
-                                    );
-                                  })()}
-                                  <button
-                                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                                    onClick={() => {
-                                      setPendingTargetFiles(prev => { const n = { ...prev }; delete n[targetId]; return n; });
-                                      setUploadedTargetAttachments(prev => { const n = { ...prev }; delete n[targetId]; return n; });
-                                      if (targetFileRefs.current[targetId]) targetFileRefs.current[targetId]!.value = '';
-                                    }}
-                                    aria-label={`Remove attachment for ${target.personalTarget.title}`}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted w-full justify-center"
-                                  onClick={() => targetFileRefs.current[targetId]?.click()}
-                                >
-                                  <Upload className="h-3 w-3" /> Choose File
-                                </button>
-                              )}
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              {target.status !== 'in_progress' && (
-                                <button
-                                  className="text-xs border rounded px-3 py-1.5 flex items-center gap-1 hover:bg-muted disabled:opacity-50"
-                                  disabled={isSaving || isUploading}
-                                  onClick={() => updateTargetProgress(targetId, 'in_progress')}
-                                >
-                                  <Clock className="h-3 w-3" /> Mark In Progress
-                                </button>
-                              )}
-                              {target.status !== 'completed' && (
-                                <button
-                                  className="text-xs bg-green-600 text-white rounded px-3 py-1.5 flex items-center gap-1 hover:bg-green-700 disabled:opacity-50"
-                                  disabled={isSaving || isUploading}
-                                  onClick={() => updateTargetProgress(targetId, 'completed')}
-                                >
-                                  <CheckCircle className="h-3 w-3" />
-                                  {isSaving ? 'Saving...' : isUploading ? 'Uploading...' : 'Mark Complete'}
-                                </button>
-                              )}
-                              <button
-                                className="text-xs border rounded px-3 py-1.5 ml-auto hover:bg-muted disabled:opacity-50"
-                                disabled={isSaving || isUploading}
-                                onClick={() => updateTargetProgress(targetId, target.status)}
-                              >
-                                Save
-                              </button>
-                            </div>
-                            {target.completedAt && (
-                              <p className="text-xs text-green-600">Completed on {formatDate(target.completedAt)}</p>
-                            )}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-          </div>
-        )}
-
-        {/* ── Recurring Targets (same as district admin: title + month grid, mark done only) ── */}
-        {recurringTargets.length > 0 && (
-          <div className="surface-card p-4">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-base font-semibold">
-                <RefreshCw className="h-5 w-5 text-blue-500" />
-                Recurring Targets
-              </h2>
-              {/* Year selector */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setRecurringYear(y => y - 1)}
-                  className="px-2 py-1 rounded border text-xs hover:bg-muted"
-                  aria-label={`Show recurring targets for ${recurringYear - 1}`}
-                >←</button>
-                <span className="text-sm font-semibold w-12 text-center">{recurringYear}</span>
-                <button
-                  onClick={() => setRecurringYear(y => y + 1)}
-                  className="px-2 py-1 rounded border text-xs hover:bg-muted"
-                  disabled={recurringYear >= new Date().getFullYear()}
-                  aria-label={`Show recurring targets for ${recurringYear + 1}`}
-                >→</button>
-              </div>
-            </div>
-
-              <div className="space-y-4">
-                {recurringTargets.map((target) => {
-                  const targetId = target.personalTarget._id;
-                  const freq = target.personalTarget.recurringFrequency || 'monthly';
-                  return (
-                    <Card key={target._id ?? targetId} className="border border-blue-100">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="shrink-0 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">{getCategoryIcon(target.personalTarget.category)}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="font-medium text-sm truncate">{target.personalTarget.title}</p>
-                              <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">
-                                <RefreshCw className="h-2.5 w-2.5 mr-1 inline" />
-                                {FREQ_LABELS[freq] || freq}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        {freq === 'weekly' ? (
-                          <>
-                            <div className="flex items-center gap-2 mb-2">
-                              <p className="text-xs text-muted-foreground font-medium flex-1">Mark completed weeks:</p>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={prevWeeklyMonth}
-                                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 text-xs"
-                                  aria-label="Previous month"
-                                >←</button>
-                                <span className="text-xs font-semibold w-16 text-center">{MONTHS_SHORT[weeklyViewMonth - 1]} {weeklyViewYear}</span>
-                                <button
-                                  onClick={nextWeeklyMonth}
-                                  disabled={weeklyViewYear > new Date().getFullYear() || (weeklyViewYear === new Date().getFullYear() && weeklyViewMonth >= new Date().getMonth() + 1)}
-                                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-500 text-xs disabled:opacity-30 disabled:cursor-not-allowed"
-                                  aria-label="Next month"
-                                >→</button>
-                              </div>
-                            </div>
-                            {(() => {
-                              const totalWeeks = getWeeksInMonth(weeklyViewYear, weeklyViewMonth);
-                              const isFutureMonth = weeklyViewYear > new Date().getFullYear() || (weeklyViewYear === new Date().getFullYear() && weeklyViewMonth > new Date().getMonth() + 1);
-                              return (
-                                <div className={`grid gap-1.5`} style={{ gridTemplateColumns: `repeat(${totalWeeks}, minmax(0, 1fr))` }}>
-                                  {Array.from({ length: totalWeeks }, (_, i) => i + 1).map((weekNum) => {
-                                    const key = `${targetId}-${weeklyViewYear}-${weeklyViewMonth}-${weekNum}`;
-                                    const mark = recurringMarks.find(
-                                      m => m.targetId === targetId && m.year === weeklyViewYear && m.month === weeklyViewMonth && (m.week ?? 0) === weekNum
-                                    );
-                                    const isCompleted = mark?.completed || false;
-                                    const isMarkLoading = recurringMarkKey === key;
-                                    return (
-                                      <button
-                                        key={weekNum}
-                                        onClick={() => !isFutureMonth && toggleRecurringMark(targetId, weeklyViewYear, weeklyViewMonth, weekNum)}
-                                        disabled={isMarkLoading || isFutureMonth}
-                                        title={isFutureMonth ? 'Future week' : `Week ${weekNum} – ${MONTHS_SHORT[weeklyViewMonth - 1]} ${weeklyViewYear}`}
-                                        className={`
-                                          h-9 rounded-lg text-xs font-medium transition-all border
-                                          ${isCompleted
-                                            ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                                            : isFutureMonth
-                                              ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                              : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
-                                          }
-                                          ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
-                                        `}
-                                      >
-                                        {isCompleted ? '✓' : `Wk ${weekNum}`}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              );
-                            })()}
-                          </>
-                        ) : (
-                          <>
-                            {(() => {
-                              const now = new Date();
-                              const curMonth = now.getMonth() + 1;
-                              const curYear = now.getFullYear();
-                              const curMark = recurringMarks.find(
-                                m => m.targetId === targetId && m.year === curYear && m.month === curMonth && (m.week ?? 0) === 0
-                              );
-                              const curDone = curMark?.completed || false;
-                              const doneCount = MONTHS_SHORT.filter((_, i) =>
-                                recurringMarks.find(m => m.targetId === targetId && m.year === recurringYear && m.month === i + 1 && (m.week ?? 0) === 0)?.completed
-                              ).length;
-                              const isOpen = expandedRecurringId === targetId;
-                              const curKey = `${targetId}-${curYear}-${curMonth}-0`;
-                              return (
-                                <div className="flex items-center gap-2 mb-2">
-                                  <button
-                                    onClick={() => toggleRecurringMark(targetId, curYear, curMonth, 0)}
-                                    disabled={recurringMarkKey === curKey}
-                                    className={`flex-1 h-9 rounded-lg text-xs font-medium border transition-all ${
-                                      curDone
-                                        ? 'bg-green-500 border-green-500 text-white'
-                                        : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
-                                    }`}
-                                  >
-                                    {curDone ? `✓ ${MONTHS_SHORT[curMonth - 1]} done` : `Mark ${MONTHS_SHORT[curMonth - 1]} done`}
-                                  </button>
-                                  <button
-                                    onClick={() => setExpandedRecurringId(isOpen ? null : targetId)}
-                                    className="shrink-0 h-9 px-3 rounded-lg text-xs font-medium border bg-white text-gray-600 hover:border-blue-400 hover:text-blue-600 flex items-center gap-1"
-                                    aria-expanded={isOpen}
-                                  >
-                                    {doneCount}/12
-                                    {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                                  </button>
-                                </div>
-                              );
-                            })()}
-                            {expandedRecurringId === targetId && (
-                            <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
-                              {MONTHS_SHORT.map((month, idx) => {
-                                const monthNum = idx + 1;
-                                const key = `${targetId}-${recurringYear}-${monthNum}-0`;
-                                const mark = recurringMarks.find(
-                                  m => m.targetId === targetId && m.year === recurringYear && m.month === monthNum && (m.week ?? 0) === 0
-                                );
-                                const isCompleted = mark?.completed || false;
-                                const isMarkLoading = recurringMarkKey === key;
-                                const isFuture = recurringYear === new Date().getFullYear() && monthNum > new Date().getMonth() + 1;
-                                return (
-                                  <button
-                                    key={monthNum}
-                                    onClick={() => !isFuture && toggleRecurringMark(targetId, recurringYear, monthNum, 0)}
-                                    disabled={isMarkLoading || isFuture}
-                                    title={isFuture ? 'Future month' : `${month} ${recurringYear}`}
-                                    aria-label={isFuture ? `${month} ${recurringYear} is a future month` : `Toggle ${month} ${recurringYear} for ${target.personalTarget.title}`}
-                                    className={`
-                                      h-9 rounded-lg text-xs font-medium transition-all border
-                                      ${isCompleted
-                                        ? 'bg-green-500 border-green-500 text-white shadow-sm'
-                                        : isFuture
-                                          ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
-                                          : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
-                                      }
-                                      ${isMarkLoading ? 'opacity-60 cursor-wait' : ''}
-                                    `}
-                                  >
-                                    {isCompleted ? '✓' : month}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            )}
-                          </>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {targets.length === 0 && (
-          <Card>
-            <CardContent className="text-center py-8">
-              <Target className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No targets available</p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
-  };
-
   const renderOrgFilesContent = () => {
     const categories = ["all", "constitution", "guidelines", "video", "audio", "document", "link", "other"];
     return (
@@ -1799,7 +1142,7 @@ const MemberDashboard = () => {
             </>
           ) : (
             <p className="min-w-0 flex-1 truncate text-base font-bold">
-              {{ profile: "My Profile", targets: "Targets", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders" }[activeView] || ""}
+              {{ profile: "My Profile", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders" }[activeView] || ""}
             </p>
           )}
           <Button

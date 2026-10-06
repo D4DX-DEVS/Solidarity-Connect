@@ -63,7 +63,7 @@ interface Member {
   isApproved: boolean;
   createdAt: string;
   transferRequest?: {
-    status: 'pending' | 'approved';
+    status: 'pending' | 'district_approved';
     targetDistrict: string;
     targetGroup: string;
   } | null;
@@ -85,6 +85,10 @@ const Members = () => {
   const navigate = useNavigate();
   const { userRole, userDistrict, userGroup, user } = useAuth();
   const { toast } = useToast();
+  // Adding/editing members is state-admin only; district and area admins view.
+  const canManageMembers = userRole === 'state_admin';
+  const actionCount = 2 + (canManageMembers ? 1 : 0) + (FEATURES.baithulMaal ? 1 : 0);
+  const actionGridCols = actionCount === 4 ? "grid-cols-4" : actionCount === 3 ? "grid-cols-3" : "grid-cols-2";
 
   const [statistics, setStatistics] = useState({
     total: 0,
@@ -92,7 +96,6 @@ const Members = () => {
     inactive: 0,
     abroad: 0,
     applicant: 0,
-    ageOver: 0,
     dismissed: 0,
     approved: 0,
     pending: 0
@@ -387,7 +390,7 @@ const Members = () => {
                   <SelectItem value="Inactive">Inactive</SelectItem>
                   <SelectItem value="Abroad">Abroad</SelectItem>
                   <SelectItem value="Applicant">Applicant</SelectItem>
-                  <SelectItem value="Age over">Age over</SelectItem>
+                  {/* Age over members live on the Archives page (state admin) */}
                   <SelectItem value="Dismissed">Dismissed</SelectItem>
                 </SelectContent>
               </Select>
@@ -450,12 +453,14 @@ const Members = () => {
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No members found</p>
-            <Button
-              onClick={() => navigate('/add-member')}
-              className="mt-4"
-            >
-              Add First Member
-            </Button>
+            {canManageMembers && (
+              <Button
+                onClick={() => navigate('/add-member')}
+                className="mt-4"
+              >
+                Add First Member
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-2 relative">
@@ -491,14 +496,10 @@ const Members = () => {
                     {member.transferRequest && (
                       <Badge
                         variant="outline"
-                        className={`shrink-0 flex items-center gap-1 px-2 py-0 text-[11px] ${
-                          member.transferRequest.status === 'pending'
-                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                            : "bg-green-100 text-green-800 border-green-300"
-                        }`}
+                        className="shrink-0 flex items-center gap-1 px-2 py-0 text-[11px] bg-yellow-100 text-yellow-800 border-yellow-300"
                       >
                         <Clock className="h-3 w-3" />
-                        Transfer {member.transferRequest.status === 'pending' ? 'Pending' : 'Approved'}
+                        {member.transferRequest.status === 'pending' ? 'Transfer Pending' : 'Awaiting State'}
                       </Badge>
                     )}
                   </div>
@@ -553,7 +554,8 @@ const Members = () => {
                   </div>
                 </div>
 
-                <div className={`mt-1.5 grid ${FEATURES.baithulMaal ? "grid-cols-4" : "grid-cols-3"} gap-1.5 sm:gap-2`}>
+                <div className={`mt-1.5 grid ${actionGridCols} gap-1.5 sm:gap-2`}>
+                  {canManageMembers && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -566,12 +568,14 @@ const Members = () => {
                     <Edit className="h-4 w-4 text-primary" />
                     <span className="text-xs">Edit</span>
                   </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-9 gap-1.5 px-1 sm:px-2"
-                    // State + district admins move a member directly (no TransferRequest),
-                    // so the button stays enabled even if a pending request exists.
+                    // State + district admins can move a member directly, so the button
+                    // stays enabled even if a pending request exists (for district admins
+                    // the API refuses both a move and a new request while one is open).
                     // Group admins create a TransferRequest and are blocked while one is pending.
                     disabled={!!member.transferRequest && userRole === 'group_admin'}
                     onClick={(e) => {
@@ -651,15 +655,17 @@ const Members = () => {
         />
       )}
 
-      {/* Floating Add Member Button */}
-      <Button
-        onClick={() => navigate('/add-member')}
-        className="fixed bottom-28 right-4 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50 lg:bottom-8"
-        size="icon"
-        aria-label="Add member"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Floating Add Member Button — state admins only */}
+      {canManageMembers && (
+        <Button
+          onClick={() => navigate('/add-member')}
+          className="fixed bottom-28 right-4 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50 lg:bottom-8"
+          size="icon"
+          aria-label="Add member"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 };

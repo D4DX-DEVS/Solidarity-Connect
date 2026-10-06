@@ -16,7 +16,7 @@ interface HierarchyScorecardProps {
   loading?: boolean;
   /** Makes rows drillable (state → district). */
   onSelect?: (row: HierarchyRow) => void;
-  /** False when no recurring targets exist: the column counts admins instead of flagging 0/N as silent. */
+  /** False when no report form is published: the column counts admins instead of flagging 0/N as silent. */
   reporting?: boolean;
 }
 

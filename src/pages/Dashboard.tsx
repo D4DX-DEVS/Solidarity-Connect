@@ -2,17 +2,16 @@ import { useEffect } from "react";
 import { UserCheck, UserCog, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
-import UserTargetsSection from "@/components/UserTargetsSection";
 import { ActionQueue } from "@/components/dashboard/ActionQueue";
 import { ChartCard } from "@/components/dashboard/ChartCard";
 import { HierarchyScorecard } from "@/components/dashboard/HierarchyScorecard";
 import {
-  DashboardToolbar, KpiSparkCard, MembershipTrendCard, MemberStatusCard, RecentActivityCard,
+  DashboardToolbar, KpiSparkCard, MembershipTrendCard, MemberStatusCard, QueueTrendLayout, RecentActivityCard,
 } from "@/components/dashboard/DashboardWidgets";
 import { meetingItems, requestItem } from "@/components/dashboard/actionItems";
 import { adminsDetail, formatNumber, percent, reportingLive } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
+import { hasTrend, useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
 
 /**
  * Area Admin (group_admin) dashboard — same layout as the state and district
@@ -34,6 +33,7 @@ const Dashboard = () => {
   const overview = overviewQuery.data;
   const summary = summaryQuery.data;
   const trendQuery = useMembershipTrend(accountId, overview?.members.total);
+  const showTrend = hasTrend(trendQuery.data) || trendQuery.isError;
   const recentQuery = useRecentActivity(accountId, "group");
 
   // A failed load must read as unknown, never as a real zero.
@@ -98,28 +98,25 @@ const Dashboard = () => {
           />
         </section>
 
-        {/* Queue is first in the DOM so it leads on phones; on desktop it sits right of the trend (3:2) */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-5">
-          <ActionQueue
-            className="lg:order-last lg:col-span-2"
-            items={actions}
-            loading={summaryQuery.isPending}
-            error={summaryQuery.isError}
-            onRetry={() => summaryQuery.refetch()}
-          />
-          <MembershipTrendCard
-            className="lg:col-span-3"
-            points={trendQuery.data ?? []}
-            // The trend waits on the overview total; if that fails it never starts, so show the error, not a skeleton.
-            loading={overviewQuery.isPending || (trendQuery.isPending && !overviewQuery.isError)}
-            error={trendQuery.isError || overviewQuery.isError}
-            onRetry={() => { trendQuery.refetch(); overviewQuery.refetch(); }}
-          />
-        </div>
-
         {/* An area has one donut's worth of breakdown, so it shares the row with the newest members */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
-          <MemberStatusCard {...overviewState} />
+        <QueueTrendLayout
+          queue={(
+            <ActionQueue
+              items={actions}
+              loading={summaryQuery.isPending}
+              error={summaryQuery.isError}
+              onRetry={() => summaryQuery.refetch()}
+            />
+          )}
+          trend={showTrend ? (
+            <MembershipTrendCard
+              points={trendQuery.data ?? []}
+              error={trendQuery.isError}
+              onRetry={() => trendQuery.refetch()}
+            />
+          ) : null}
+        >
+          <MemberStatusCard {...overviewState} stackAtLg={!showTrend} />
           <RecentActivityCard
             stacked
             items={recentQuery.data ?? []}
@@ -128,7 +125,7 @@ const Dashboard = () => {
             onRetry={() => recentQuery.refetch()}
             onViewAll={() => navigate("/members")}
           />
-        </div>
+        </QueueTrendLayout>
 
         {groupRows.length > 1 ? (
           <ChartCard
@@ -139,8 +136,6 @@ const Dashboard = () => {
             <HierarchyScorecard rows={groupRows} level="area" reporting={reportingLive(overview)} />
           </ChartCard>
         ) : null}
-
-        <UserTargetsSection />
       </main>
     </div>
   );
