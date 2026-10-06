@@ -5,17 +5,43 @@ import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
-import { authenticate, authorize, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
-import { 
-  createMemberValidation, 
-  updateMemberValidation, 
+import { authenticate, requireRole, isAreaLevelAdmin, areaGroupIdsFor, leaderEditScopeFor, leaderEditError } from '../middleware/auth.js';
+import {
+  createMemberValidation,
+  updateMemberValidation,
   paginationValidation,
   searchValidation,
   objectIdValidation,
   handleValidationErrors
 } from '../middleware/validation.js';
+import { body, query } from 'express-validator';
+import { ageCutoff, ageOn, ageOverMatch, agedOutSince, currentMemberMatch, isAgeOver } from '../utils/ageOver.js';
 
 const router = express.Router();
+
+// Archived (age over) members belong to the state admin alone; every other role
+// is answered as if the record were not there.
+const hiddenFrom = (user, member) => user.role !== 'state_admin' && isAgeOver(member);
+const ARCHIVED_NOT_FOUND = { success: false, message: 'Member not found' };
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const ARCHIVE_SORTS = { name: { name: 1 }, oldest: { dateOfBirth: 1, name: 1 }, youngest: { dateOfBirth: -1, name: 1 } };
+// Archives filters. Role: any leader, non-leaders, or one role type (primary or extra).
+const ARCHIVE_ROLES = ['leader', 'none', 'state', 'district', 'area', 'unit', 'murabi', 'coordinator'];
+const ARCHIVE_AGES = ['38', '39', '40', '41', '42plus'];
+const ARCHIVE_PERIODS = ['month', 'year']; // aged out this month / this year
+
+function archiveRoleMatch(role) {
+  if (role === 'leader') return { isLeader: true };
+  if (role === 'none') return { isLeader: { $ne: true } };
+  return { isLeader: true, $or: [{ 'roleTag.type': role }, { 'extraRoleTags.type': role }] };
+}
+
+function archiveAgeMatch(age, now) {
+  if (age === '42plus') return { dateOfBirth: { $lte: ageCutoff(42, now) } };
+  const years = Number(age);
+  return { dateOfBirth: { $lte: ageCutoff(years, now), $gt: ageCutoff(years + 1, now) } };
+}
 
 // @route   GET /api/members
 // @desc    Get all members with filtering and pagination
@@ -81,6 +107,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       // State admin can see all members (no additional filter)
     }
 
+    // Archived (age over) members live on the Archives page, not here. Role
+    // Management (state admin) still lists them so their roles can be changed.
+    if (!skipScope) Object.assign(baseFilter, currentMemberMatch());
+
     // Build query filter (includes all filters for member list)
     let filter = { ...baseFilter };
 
@@ -144,7 +174,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     const memberIds = result.docs.map(member => member._id);
     const transferRequests = await TransferRequest.find({
       member: { $in: memberIds },
-      status: { $in: ['pending', 'approved'] }
+      status: { $in: ['pending', 'district_approved'] }
     }).select('member status targetDistrict targetGroup');
 
     // Create a map of member ID to transfer request
@@ -176,7 +206,6 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
             inactive: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
             abroad: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
             applicant: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
-            ageOver: { $sum: { $cond: [{ $eq: ['$status', 'Age over'] }, 1, 0] } },
             dismissed: { $sum: { $cond: [{ $eq: ['$status', 'Dismissed'] }, 1, 0] } },
             approved: { $sum: { $cond: ['$isApproved', 1, 0] } },
             pending: { $sum: { $cond: [{ $not: '$isApproved' }, 1, 0] } }
@@ -210,8 +239,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         prevPage: result.hasPrevPage ? result.page - 1 : null
       },
       statistics: stats[0] || {
-        total: 0, active: 0, inactive: 0, abroad: 0, 
-        applicant: 0, ageOver: 0, dismissed: 0, approved: 0, pending: 0
+        total: 0, active: 0, inactive: 0, abroad: 0,
+        applicant: 0, dismissed: 0, approved: 0, pending: 0
       }
     });
 
@@ -223,6 +252,99 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     });
   }
 });
+
+// @route   GET /api/members/archives
+// @desc    Archived (age over) members — aged 38 and above, or status set to "Age over"
+// @access  Private (state_admin)
+router.get('/archives',
+  authenticate,
+  requireRole(['state_admin']),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+  query('sort').optional().isIn(Object.keys(ARCHIVE_SORTS)).withMessage('Invalid sort'),
+  query('district').optional().isMongoId().withMessage('Invalid district'),
+  query('group').optional().isMongoId().withMessage('Invalid area'),
+  query('role').optional().isIn(ARCHIVE_ROLES).withMessage('Invalid role'),
+  query('age').optional().isIn(ARCHIVE_AGES).withMessage('Invalid age'),
+  query('period').optional().isIn(ARCHIVE_PERIODS).withMessage('Invalid period'),
+  query('search').optional().isString().trim().isLength({ max: 100 }).withMessage('Search is too long'),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const now = new Date();
+      const { district, group, role, age, period, search = '', sort = 'name' } = req.query;
+      // ?district[]=a&district[]=b passes isMongoId per item — one value each
+      if ([district, group, role, age, period].some((v) => v !== undefined && typeof v !== 'string')) {
+        return res.status(400).json({ success: false, message: 'Invalid filter' });
+      }
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 20;
+
+      // Summary counts follow the place filters only, so the cards stay put while filtering further
+      const scope = {};
+      if (district) scope.district = new mongoose.Types.ObjectId(district);
+      if (group) scope.group = new mongoose.Types.ObjectId(group);
+      const and = [ageOverMatch(now)];
+      if (role) and.push(archiveRoleMatch(role));
+      if (age) and.push(archiveAgeMatch(age, now));
+      if (period) and.push({ dateOfBirth: { $gte: agedOutSince(period, now) } });
+      if (search.length >= 2) {
+        const pattern = new RegExp(escapeRegex(search), 'i');
+        and.push({ $or: [{ name: pattern }, { phone: pattern }] });
+      }
+      const filter = { ...scope, $and: and };
+
+      const onOrAfter = (since) => ({ $cond: [{ $gte: ['$dateOfBirth', since] }, 1, 0] });
+      const [result, [summary]] = await Promise.all([Member.paginate(filter, {
+        page,
+        limit,
+        sort: ARCHIVE_SORTS[sort],
+        select: 'name phone status district group address dateOfBirth isLeader roleTag extraRoleTags',
+        populate: [
+          { path: 'district', select: 'name code' },
+          { path: 'group', select: 'name code' }
+        ],
+        lean: true
+      }), Member.aggregate([
+        { $match: { ...scope, ...ageOverMatch(now) } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            leaders: { $sum: { $cond: ['$isLeader', 1, 0] } },
+            // A missing DOB sorts below any date, so status-only archives never count here
+            thisMonth: { $sum: onOrAfter(agedOutSince('month', now)) },
+            thisYear: { $sum: onOrAfter(agedOutSince('year', now)) }
+          }
+        }
+      ])]);
+
+      res.set('Cache-Control', 'no-store');
+      res.status(200).json({
+        success: true,
+        // Age from today's date — the stored `age` is only refreshed when the DOB is edited.
+        data: result.docs.map((m) => ({ ...m, age: ageOn(m.dateOfBirth, now) })),
+        summary: {
+          total: summary?.total ?? 0,
+          leaders: summary?.leaders ?? 0,
+          thisMonth: summary?.thisMonth ?? 0,
+          thisYear: summary?.thisYear ?? 0
+        },
+        pagination: {
+          currentPage: result.page,
+          totalPages: result.totalPages,
+          totalDocs: result.totalDocs,
+          limit: result.limit,
+          hasNextPage: result.hasNextPage,
+          hasPrevPage: result.hasPrevPage
+        }
+      });
+    } catch (error) {
+      console.error('Get archived members error:', error);
+      res.status(500).json({ success: false, message: 'Failed to fetch archived members' });
+    }
+  }
+);
 
 // @route   GET /api/members/user-context
 // @desc    Get user's district and group context for member creation
@@ -237,14 +359,14 @@ router.get('/user-context', authenticate, async (req, res) => {
       showGroupField: req.user.role !== 'group_admin'
     };
 
-    // Add permissions for UI control
+    // Add permissions for UI control. Adding and editing member records is
+    // state-admin only; district and area admins get a read-only view.
     context.permissions = {
-      canCreateMember: req.user.permissions.includes('manage_members'),
-      canEditMember: req.user.permissions.includes('manage_members'),
+      canCreateMember: req.user.role === 'state_admin',
+      canEditMember: req.user.role === 'state_admin',
       canDeleteMember: req.user.role === 'state_admin',
       canApproveMember: ['state_admin', 'district_admin'].includes(req.user.role),
-      canViewReports: req.user.permissions.includes('view_reports'),
-      canBulkImport: req.user.permissions.includes('bulk_import')
+      canViewReports: req.user.permissions.includes('view_reports')
     };
 
     // Orphaned admins (missing/dangling district or group ref) must not crash here —
@@ -285,11 +407,8 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       .populate('createdBy', 'name phone email')
       .populate('approvedBy', 'name phone email');
 
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        message: 'Member not found'
-      });
+    if (!member || hiddenFrom(req.user, member)) {
+      return res.status(404).json(ARCHIVED_NOT_FOUND);
     }
 
     // Check access permissions
@@ -320,7 +439,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 
     res.status(200).json({
       success: true,
-      data: member
+      data: { ...member.toObject(), ageOver: isAgeOver(member) }
     });
 
   } catch (error) {
@@ -364,7 +483,8 @@ const formatPhoneNumber = (req, res, next) => {
   next();
 };
 
-router.post('/', authenticate, authorize(['manage_members']), autoAssignDistrictGroup, createMemberValidation, formatPhoneNumber, async (req, res) => {
+// Only state admins add members; district and area admins are view-only.
+router.post('/', authenticate, requireRole(['state_admin']), autoAssignDistrictGroup, createMemberValidation, formatPhoneNumber, async (req, res) => {
   try {
     const memberData = req.body;
 
@@ -393,24 +513,6 @@ router.post('/', authenticate, authorize(['manage_members']), autoAssignDistrict
       });
     }
 
-    // Check user permissions
-    if (req.user.role === 'group_admin') {
-      // Group admin can only add to their assigned group (already enforced above)
-      if (memberData.group !== req.user.group._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'You can only add members to your assigned group'
-        });
-      }
-    } else if (req.user.role === 'district_admin') {
-      if (memberData.district !== req.user.district._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'You can only add members to your assigned district'
-        });
-      }
-    }
-
     // Check if member with same phone already exists.
     // Match all stored formats (+91-prefixed and 10-digit) so the same person
     // can't be added twice with a different phone format.
@@ -430,7 +532,7 @@ router.post('/', authenticate, authorize(['manage_members']), autoAssignDistrict
     const memberPayload = {
       ...restMemberData,
       createdBy: req.user._id,
-      isApproved: req.user.role === 'state_admin' // State admin can auto-approve
+      isApproved: true // Only state admins reach here, and they auto-approve
     };
 
     // Add baithulMaal if provided
@@ -474,39 +576,15 @@ router.post('/', authenticate, authorize(['manage_members']), autoAssignDistrict
 
 // @route   PUT /api/members/:id
 // @desc    Update member
-// @access  Private
-router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistrictGroup, updateMemberValidation, formatPhoneNumber, async (req, res) => {
+// @access  Private (state_admin only — district and area admins are view-only)
+router.put('/:id', authenticate, requireRole(['state_admin']), autoAssignDistrictGroup, updateMemberValidation, formatPhoneNumber, async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
-    
+
     if (!member) {
       return res.status(404).json({
         success: false,
         message: 'Member not found'
-      });
-    }
-
-    // Check access permissions. Area-level admins manage every group in their
-    // area, not just the one on their own account.
-    const manageableGroupIds = [];
-    if (req.user.role === 'group_admin') {
-      if (isAreaLevelAdmin(req.user)) {
-        manageableGroupIds.push(...(await areaGroupIdsFor(req.user)).map(String));
-      }
-      if (req.user.group) manageableGroupIds.push(req.user.group._id.toString());
-
-      if (!manageableGroupIds.includes(member.group.toString())) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only update members from your group.'
-        });
-      }
-    }
-
-    if (req.user.role === 'district_admin' && member.district.toString() !== req.user.district._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only update members from your district.'
       });
     }
 
@@ -537,25 +615,6 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
         return res.status(400).json({
           success: false,
           message: 'Group does not belong to the specified district'
-        });
-      }
-
-      // Check permissions for district/group changes
-      if (req.user.role === 'group_admin') {
-        // Group admins can only update members within the groups they manage
-        if (!manageableGroupIds.includes(newGroup.toString()) ||
-            newDistrict.toString() !== req.user.district._id.toString()) {
-          return res.status(403).json({
-            success: false,
-            message: 'Group admins can only update members within their own group and district'
-          });
-        }
-      }
-
-      if (req.user.role === 'district_admin' && newDistrict.toString() !== req.user.district._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: 'You can only transfer members within your district'
         });
       }
     }
@@ -601,6 +660,70 @@ router.put('/:id', authenticate, authorize(['manage_members']), autoAssignDistri
   }
 });
 
+// @route   PATCH /api/members/:id/move
+// @desc    Move a member to another group (and optionally unit) inside the
+//          district admin's own district. The one member change district admins
+//          may make while member editing is otherwise state-admin only; moves to
+//          another district go through POST /api/transfer-requests instead.
+// @access  Private (district_admin)
+router.patch('/:id/move',
+  authenticate,
+  requireRole(['district_admin']),
+  objectIdValidation('id'),
+  body('group').isMongoId().withMessage('Valid target group ID is required'),
+  // Unit is stored in member.address; blank keeps the current one.
+  body('unit').optional({ checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Unit cannot exceed 100 characters'),
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const ownDistrictId = req.user.district?._id?.toString();
+      if (!ownDistrictId) {
+        return res.status(500).json({ success: false, message: 'User account misconfigured: no district assigned' });
+      }
+
+      const member = await Member.findById(req.params.id);
+      if (!member || hiddenFrom(req.user, member)) {
+        return res.status(404).json(ARCHIVED_NOT_FOUND);
+      }
+      if (member.district?.toString() !== ownDistrictId) {
+        return res.status(403).json({ success: false, message: 'You can only move members from your district' });
+      }
+
+      const group = await Group.findById(req.body.group);
+      if (!group || group.district?.toString() !== ownDistrictId) {
+        return res.status(400).json({ success: false, message: 'Target group must be in your district' });
+      }
+      if (member.group?.toString() === group._id.toString()) {
+        return res.status(400).json({ success: false, message: 'Member is already in the target group' });
+      }
+
+      // A move would leave an open request's "from" location stale.
+      const openRequest = await TransferRequest.exists({
+        member: member._id,
+        status: { $in: ['pending', 'district_approved'] }
+      });
+      if (openRequest) {
+        return res.status(400).json({ success: false, message: 'This member has an open transfer request — wait for the State Admin to decide it first' });
+      }
+
+      member.group = group._id;
+      if (req.body.unit) member.address = req.body.unit;
+      member.updatedBy = req.user._id;
+      await member.save();
+
+      await member.populate([
+        { path: 'district', select: 'name code' },
+        { path: 'group', select: 'name code' }
+      ]);
+
+      res.status(200).json({ success: true, message: 'Member moved successfully', data: member });
+    } catch (error) {
+      console.error('Move member error:', error);
+      res.status(500).json({ success: false, message: 'Failed to move member' });
+    }
+  }
+);
+
 // @route   PATCH /api/members/:id/leader
 // @desc    Update isLeader and roleTag for a member
 // @access  Private (state_admin, district_admin, group_admin)
@@ -614,32 +737,17 @@ router.patch('/:id/leader',
       const { isLeader, roleTag, extraRoles } = req.body;
       const member = await Member.findById(req.params.id);
 
-      if (!member) {
-        return res.status(404).json({ success: false, message: 'Member not found' });
+      if (!member || hiddenFrom(req.user, member)) {
+        return res.status(404).json(ARCHIVED_NOT_FOUND);
       }
 
-      const allowedRoleTypes = {
-        state_admin: ['state', 'district', 'area', 'unit', 'murabi', 'coordinator'],
-        district_admin: ['district', 'area', 'unit', 'murabi', 'coordinator'],
-        group_admin: ['area', 'unit', 'murabi', 'coordinator']
-      };
-
-      const allowed = allowedRoleTypes[req.user.role] || [];
-      if (roleTag && roleTag.type && !allowed.includes(roleTag.type)) {
-        return res.status(403).json({
-          success: false,
-          message: `Your role does not have permission to assign roleTag type: ${roleTag.type}`
-        });
+      const inScope = await leaderEditScopeFor(req.user);
+      if (!inScope(member)) {
+        return res.status(403).json({ success: false, message: 'Access denied. This member is outside your district or area.' });
       }
-      if (Array.isArray(extraRoles)) {
-        for (const r of extraRoles) {
-          if (r && r.type && !allowed.includes(r.type)) {
-            return res.status(403).json({
-              success: false,
-              message: `Your role does not have permission to assign roleTag type: ${r.type}`
-            });
-          }
-        }
+      const denied = leaderEditError(req.user, member, req.body);
+      if (denied) {
+        return res.status(denied.status).json({ success: false, message: denied.message });
       }
 
       member.isLeader = isLeader !== undefined ? isLeader : member.isLeader;
@@ -675,7 +783,8 @@ router.patch('/:id/leader',
         member.roleTag = {
           type: roleTag.type || (member.roleTag && member.roleTag.type),
           name: roleTag.name || (member.roleTag && member.roleTag.name),
-          roleDescription: roleTag.roleDescription !== undefined ? roleTag.roleDescription : (member.roleTag && member.roleTag.roleDescription),
+          // Only a state admin may set roleDescription; everyone else keeps what is there.
+          roleDescription: roleTag.roleDescription !== undefined && req.user.role === 'state_admin' ? roleTag.roleDescription : (member.roleTag && member.roleTag.roleDescription),
           listingOrder: nextListingOrder
         };
       }
@@ -732,12 +841,9 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
 router.post('/:id/approve', authenticate, requireRole(['state_admin', 'district_admin']), objectIdValidation('id'), handleValidationErrors, async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
-    
-    if (!member) {
-      return res.status(404).json({
-        success: false,
-        message: 'Member not found'
-      });
+
+    if (!member || hiddenFrom(req.user, member)) {
+      return res.status(404).json(ARCHIVED_NOT_FOUND);
     }
 
     if (member.isApproved) {
@@ -790,8 +896,8 @@ router.post('/:id/approve', authenticate, requireRole(['state_admin', 'district_
 // @access  Private
 router.get('/stats/overview', authenticate, async (req, res) => {
   try {
-    let matchFilter = {};
-    
+    let matchFilter = currentMemberMatch();
+
     // Apply role-based filtering
     if (req.user.role === 'group_admin') {
       matchFilter.group = req.user.group._id;

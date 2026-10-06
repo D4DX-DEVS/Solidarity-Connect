@@ -2,8 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import { FEATURES } from "@/lib/features";
 import {
   LayoutDashboard, Users, UserCog, Building2, ArrowRightLeft, Shield, FileCheck,
-  BarChart3, FolderOpen, Database, Wallet, Bell, Calendar,
-  Target, Star, Landmark, Upload,
+  FolderOpen, Database, Wallet, Bell, Calendar,
+  Star, Archive, ClipboardList,
 } from "lucide-react";
 
 export interface NavItem {
@@ -26,15 +26,15 @@ export const SECTIONS: NavSection[] = [
     title: "Management",
     items: [
       { label: "Members", path: "/members", icon: Users, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Bulk Import", path: "/bulk-import", icon: Upload, roles: ["group_admin"] },
+      // Members aged 38 and above (age over) — moved out of Members, state admin only
+      { label: "Archives", path: "/archives", icon: Archive, roles: ["state_admin"] },
       { label: "Admins", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
       { label: "Districts", path: "/state-admin/districts", icon: Building2, roles: ["state_admin"] },
       { label: "Groups", path: "/state-admin/groups", icon: Users, roles: ["state_admin", "district_admin"] },
       { label: "Transfers", path: "/state-admin/transfer-approvals", icon: ArrowRightLeft, roles: ["state_admin", "district_admin"] },
       { label: "Role Management", path: "/role-management", icon: Shield, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Requests", path: "/requests", icon: FileCheck, roles: ["group_admin"] },
-      { label: "Reports", path: "/state-admin/group-reports", icon: BarChart3, roles: ["state_admin", "district_admin", "group_admin"] },
-      { label: "Consolidation", path: "/consolidation", icon: Landmark, roles: ["state_admin", "district_admin", "group_admin"] },
+      { label: "Reports", path: "/reports", icon: ClipboardList, roles: ["state_admin", "district_admin", "group_admin"] },
       ...(FEATURES.baithulMaal
         ? [{ label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] }]
         : []),
@@ -49,15 +49,17 @@ export const SECTIONS: NavSection[] = [
       { label: "Alerts", path: "/notifications", icon: Bell },
       // State/district admins get the rich overview (group progress, edit/delete);
       // group admins keep the attendance-marking list. Matches BottomNav routing.
-      { label: "Meetings", path: "/admin/meetings-view", icon: Calendar, roles: ["state_admin", "district_admin"] },
-      { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["group_admin"] },
+      ...(FEATURES.meetings
+        ? [
+            { label: "Meetings", path: "/admin/meetings-view", icon: Calendar, roles: ["state_admin", "district_admin"] },
+            { label: "Meetings", path: "/meetings", icon: Calendar, roles: ["group_admin"] },
+          ]
+        : []),
     ],
   },
   {
-    title: "Targets & Planning",
+    title: "People",
     items: [
-      { label: "My Targets", path: "/my-targets", icon: Target, roles: ["district_admin", "group_admin"] },
-      { label: "Targets", path: "/personal-targets", icon: Target, roles: ["state_admin"] },
       { label: "Leaders", path: "/leaders", icon: Star },
     ],
   },
@@ -68,8 +70,7 @@ export const MEMBER_SECTIONS: NavSection[] = [
   {
     items: [
       { label: "Dashboard", path: "__home__", icon: LayoutDashboard },
-      { label: "My Targets", path: "/member-dashboard?view=targets", icon: Target },
-      { label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar },
+      ...(FEATURES.meetings ? [{ label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar }] : []),
       ...(FEATURES.baithulMaal ? [{ label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet }] : []),
       { label: "Alerts", path: "/notifications", icon: Bell },
       { label: "Leaders", path: "/leaders", icon: Star },

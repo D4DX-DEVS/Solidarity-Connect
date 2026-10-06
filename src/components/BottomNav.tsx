@@ -1,3 +1,4 @@
+import { FEATURES } from "@/lib/features";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, Calendar, Star, Menu, LogOut } from "lucide-react";
@@ -28,7 +29,7 @@ const BottomNav = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardPath },
     { icon: Users, label: "Members", path: "/members", hideForRoles: ["member"] },
     // ponytail: admins get the single meetings workspace; others the read-only list.
-    { icon: Calendar, label: "Meetings", path: isMeetingsAdmin ? "/admin/meetings-view" : "/meetings", hideForRoles: ["member"] },
+    ...(FEATURES.meetings ? [{ icon: Calendar, label: "Meetings", path: isMeetingsAdmin ? "/admin/meetings-view" : "/meetings", hideForRoles: ["member"] }] : []),
     { icon: Star, label: "Leaders", path: "/leaders" },
   ];
 

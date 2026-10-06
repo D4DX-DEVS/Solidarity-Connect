@@ -1,13 +1,14 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, Home, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock, type LucideIcon } from "lucide-react";
+import { Archive, ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, Home, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { membersAPI, baithulMaalAPI } from "@/utils/api";
 import { FEATURES } from "@/lib/features";
 import { format } from "date-fns";
@@ -49,6 +50,9 @@ const MemberDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { toast } = useToast();
+  const { userRole } = useAuth();
+  // Editing is state-admin only; district and area admins get a read-only view.
+  const canEditMember = userRole === 'state_admin';
 
   const [downloadingCert, setDownloadingCert] = useState(false);
 
@@ -354,6 +358,15 @@ const MemberDetail = () => {
       );
     }
 
+    if (status === "Age over") {
+      return (
+        <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-amber-100 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-amber-800">
+          <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{status}</span>
+        </div>
+      );
+    }
+
     return (
       <div className="inline-flex items-center gap-1.5 rounded-full sm:gap-2 bg-gray-100 px-2 py-1 text-xs font-semibold sm:px-3 sm:text-sm text-gray-800">
         <span className="h-2.5 w-2.5 rounded-full bg-gray-500" aria-hidden="true" />
@@ -365,7 +378,7 @@ const MemberDetail = () => {
   if (loading) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/members"
           title="Member Details"
           subtitle="Loading the latest member profile and supporting records."
           eyebrow="Members"
@@ -395,7 +408,7 @@ const MemberDetail = () => {
   if (!member) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/members"
           title="Member Details"
           subtitle="The requested member record could not be loaded."
           eyebrow="Members"
@@ -415,7 +428,7 @@ const MemberDetail = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo={member.ageOver ? "/archives" : "/members"}
         title={member.name}
         subtitle={`${member.group?.name || "Group not assigned"} • ${member.district?.name || "District not assigned"}`}
         eyebrow="Member Profile"
@@ -424,7 +437,8 @@ const MemberDetail = () => {
           /* ponytail: one compact strip; buttons shrink on mobile so the row fits with equal padding (no scroll) */
           <div className="col-span-2 rounded-2xl border border-border/60 bg-card px-3 py-2.5 shadow-sm xl:col-span-4">
             <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="shrink-0">{renderMemberStatus(member.status)}</span>
+            {/* Archived (38 and above, from the API) reads as "Age over" whatever the stored status */}
+            <span className="shrink-0">{renderMemberStatus(member.ageOver ? "Age over" : member.status)}</span>
             <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2 [&_button]:h-8 [&_button]:px-2 [&_button]:text-xs [&_svg]:mr-1 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_button]:h-9 sm:[&_button]:px-3 sm:[&_button]:text-sm sm:[&_svg]:mr-2 sm:[&_svg]:h-4 sm:[&_svg]:w-4">
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">
@@ -444,10 +458,12 @@ const MemberDetail = () => {
                 <Download className="mr-2 h-4 w-4" />
                 <span className="truncate">{downloadingCert ? "Downloading..." : "Certificate"}</span>
               </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/edit`)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
+              {canEditMember && (
+                <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/edit`)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+              )}
             </div>
             </div>
           </div>
@@ -541,7 +557,7 @@ const MemberDetail = () => {
         </SectionCard>
       ) : null}
 
-      {member.meetingAttendance && member.meetingAttendance.length > 0 ? (
+      {!FEATURES.meetings ? null : member.meetingAttendance && member.meetingAttendance.length > 0 ? (
         <SectionCard title="Meeting Attendance" description="Full history of recorded meeting participation.">
           <div className="grid grid-cols-3 gap-2 mb-4">
             <MetricCard title="Total Meetings" value={String(member.meetingAttendance.length)} icon={Calendar} tone="primary" />

@@ -10,6 +10,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -138,7 +139,7 @@ router.get('/:id', authenticate, requireGroupAccess, objectIdValidation('id'), h
     await group.updateStatistics();
 
     // Get recent members
-    const recentMembers = await Member.find({ group: group._id })
+    const recentMembers = await Member.find({ group: group._id, ...currentMemberMatch() })
       .sort({ createdAt: -1 })
       .limit(10)
       .select('name phone status createdAt isApproved');
@@ -395,7 +396,8 @@ router.get('/:id/members', authenticate, requireGroupAccess, objectIdValidation(
       search
     } = req.query;
 
-    let filter = { group: req.params.id };
+    // Archived (age over) members are listed only on the state admin's Archives page
+    let filter = { group: req.params.id, ...currentMemberMatch() };
     if (status) filter.status = status;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
     
@@ -473,7 +475,7 @@ router.get('/:id/stats', authenticate, requireGroupAccess, objectIdValidation('i
 
     // Get detailed statistics
     const stats = await Member.aggregate([
-      { $match: { group: group._id } },
+      { $match: { group: group._id, ...currentMemberMatch() } },
       {
         $group: {
           _id: null,
@@ -493,7 +495,7 @@ router.get('/:id/stats', authenticate, requireGroupAccess, objectIdValidation('i
 
     // Get age distribution
     const ageDistribution = await Member.aggregate([
-      { $match: { group: group._id, age: { $exists: true } } },
+      { $match: { group: group._id, age: { $exists: true }, ...currentMemberMatch() } },
       {
         $bucket: {
           groupBy: '$age',
@@ -514,6 +516,7 @@ router.get('/:id/stats', authenticate, requireGroupAccess, objectIdValidation('i
       { 
         $match: { 
           group: group._id,
+          ...currentMemberMatch(),
           createdAt: { $gte: twelveMonthsAgo }
         }
       },

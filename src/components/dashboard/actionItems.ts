@@ -1,3 +1,4 @@
+import { FEATURES } from "@/lib/features";
 import { ArrowRightLeft, CalendarDays, FileCheck, MapPinOff, TrendingDown } from "lucide-react";
 import type { DashboardOverview, DashboardSummary, HierarchyRow } from "@/hooks/useDashboardOverview";
 import type { ActionItem } from "./ActionQueue";
@@ -42,7 +43,7 @@ export function requestItem(summary: DashboardSummary | undefined): ActionItem[]
 
 /** Children whose admins have marked nothing in the reporting window. */
 export function silentChildrenItem(overview: DashboardOverview | undefined, onView: () => void): ActionItem[] {
-  // With no recurring targets set, nobody was asked to report — not an alarm.
+  // With no report form published, nobody was asked to report — not an alarm.
   if (!overview?.children.level || !reportingLive(overview)) return [];
   const silent = overview.children.rows.filter((r) => r.admins > 0 && r.reportingAdmins === 0);
   if (silent.length === 0) return [];
@@ -76,6 +77,7 @@ export function uncoveredAreasItem(overview: DashboardOverview | undefined, to: 
 }
 
 export function meetingItems(summary: DashboardSummary | undefined, to: string): ActionItem[] {
+  if (!FEATURES.meetings) return [];
   return (summary?.upcomingMeetings ?? []).map((m) => ({
     key: `meeting-${m._id}`,
     severity: "upcoming" as const,

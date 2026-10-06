@@ -33,7 +33,6 @@ interface UserContext {
     canDeleteMember: boolean;
     canApproveMember: boolean;
     canViewReports: boolean;
-    canBulkImport: boolean;
   };
 }
 
@@ -211,7 +210,7 @@ const AddMember = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo="/members"
         title="Add New Member"
         subtitle="Create a member profile with the right district, group, and optional background details."
         eyebrow="Members"

@@ -6,9 +6,6 @@ import path from 'path';
 import crypto from 'crypto';
 import MemberAuth from '../models/MemberAuth.js';
 import Member from '../models/Member.js';
-import PersonalTarget from '../models/PersonalTarget.js';
-import MemberTargetProgress from '../models/MemberTargetProgress.js';
-import RecurringMark from '../models/RecurringMark.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
@@ -17,8 +14,13 @@ import District from '../models/District.js';
 import Group from '../models/Group.js';
 import OrgFile from '../models/OrgFile.js';
 import Request from '../models/Request.js';
+import MonthlyReport from '../models/MonthlyReport.js';
+import ReportForm from '../models/ReportForm.js';
+import { parsePeriod } from '../services/monthlyReports/period.js';
+import { sumColumns } from '../services/monthlyReports/fields.js';
+import { ensureForms, publishedForm } from '../services/monthlyReports/store.js';
 import { body, validationResult } from 'express-validator';
-import { leaderScopeFor } from '../middleware/auth.js';
+import { matchesLeaderRoleType } from '../middleware/auth.js';
 
 // Multer in-memory storage for file uploads
 const memberUpload = multer({
@@ -751,109 +753,6 @@ router.get('/meetings', authenticateMember, async (req, res) => {
   }
 });
 
-// @route   GET /api/member-auth/targets
-// @desc    Get personal targets for the member
-// @access  Private (Member)
-router.get('/targets', authenticateMember, async (req, res) => {
-  try {
-    const { limit = 50 } = req.query;
-    const member = req.member;
-    const now = new Date();
-
-    // Build filter: only show targets that are active and within the current date range
-    let targetFilter = {
-      status: 'active',
-      targetAudience: { $in: ['all_users', 'members_only'] },
-      $or: [
-        // Targets with a date range — only show if current time is within range
-        { startDate: { $lte: now }, endDate: { $gte: now } },
-        // Targets without dates set — always show (backward compat)
-        { startDate: { $exists: false } },
-        { startDate: null }
-      ]
-    };
-
-    // Get all targets that apply to this member, sorted by release date (recent first)
-    const targets = await PersonalTarget.find(targetFilter)
-      .sort({ createdAt: -1, startDate: -1 }) // Sort by creation date first, then start date
-      .limit(parseInt(limit))
-      .populate('createdBy', 'name role');
-
-    // Get member's progress for these targets
-    const targetIds = targets.map(t => t._id);
-    const progressRecords = await MemberTargetProgress.find({ 
-      member: member._id,
-      personalTarget: { $in: targetIds }
-    });
-
-    // Create a map of progress by target ID
-    const progressMap = {};
-    progressRecords.forEach(progress => {
-      progressMap[progress.personalTarget.toString()] = progress;
-    });
-
-    // Combine targets with progress data
-    const targetsWithProgress = targets.map(target => {
-      const progress = progressMap[target._id.toString()];
-      
-      if (progress) {
-        // Return existing progress record
-        return {
-          _id: progress._id,
-          personalTarget: target,
-          currentProgress: progress.currentProgress,
-          targetValue: progress.targetValue,
-          progressPercentage: progress.progressPercentage,
-          status: progress.status,
-          completedAt: progress.completedAt,
-          feedback: progress.feedback || '',
-          fileAttachment: progress.fileAttachment || null,
-          notes: progress.notes,
-          dailyProgress: progress.dailyProgress,
-          createdAt: progress.createdAt,
-          updatedAt: progress.updatedAt
-        };
-      } else {
-        // Create a virtual progress record for targets without progress
-        return {
-          _id: null, // No progress record exists yet
-          personalTarget: target,
-          currentProgress: 0,
-          targetValue: target.targetValue,
-          progressPercentage: 0,
-          status: 'not_started',
-          completedAt: null,
-          feedback: '',
-          fileAttachment: null,
-          notes: null,
-          dailyProgress: [],
-          createdAt: target.createdAt,
-          updatedAt: target.updatedAt
-        };
-      }
-    });
-
-    const filteredTargets = targetsWithProgress;
-
-    res.status(200).json({
-      success: true,
-      data: filteredTargets,
-      meta: {
-        total: filteredTargets.length,
-        hasProgress: progressRecords.length,
-        newTargets: targets.length - progressRecords.length
-      }
-    });
-
-  } catch (error) {
-    console.error('Get member targets error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch personal targets'
-    });
-  }
-});
-
 // @route   GET /api/member-auth/notifications
 // @desc    Get notifications for the member
 // @access  Private (Member)
@@ -986,8 +885,11 @@ router.get('/leaders', authenticateMember, async (req, res) => {
 
     const filter = { isLeader: true };
     // roleType is filtered in JS after multi-role fan-out (extraRoleTags may match too).
-    if (districtId) filter.district = districtId;
-    if (groupId) filter.group = groupId;
+    // State leaders are the shared top of the hierarchy — never narrow them by place.
+    if (roleType !== 'state') {
+      if (districtId) filter.district = districtId;
+      if (groupId) filter.group = groupId;
+    }
     if (unitName) filter['roleTag.name'] = unitName;
     if (search) {
       filter.$or = [
@@ -1053,16 +955,9 @@ router.get('/leaders', authenticateMember, async (req, res) => {
         expanded.push({ ...leader, _id: `${leader._id}_r${i + 1}`, roleTag: extra });
       });
     }
-    if (roleType) {
-      // "area" folds in murabi + coordinator — they have no separate filter in the UI
-      const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
-      expanded = expanded.filter((l) => types.includes(l.roleTag?.type));
-    }
-
-    // Members only see their own hierarchy: state leaders + their district's
-    // district leaders + their own area's leaders (same rule as admins).
-    const inScope = await leaderScopeFor(req.member);
-    expanded = expanded.filter(inScope);
+    // Org-wide directory (same as admins): the page opens on State leaders and
+    // the district/area/unit filters narrow from there.
+    if (roleType) expanded = expanded.filter(matchesLeaderRoleType(roleType));
     const idOf = (v) => String(v?._id || v || '');
     const myDistrict = idOf(req.member?.district);
     const myGroup = idOf(req.member?.group);
@@ -1112,49 +1007,6 @@ router.get('/leaders', authenticateMember, async (req, res) => {
   } catch (error) {
     console.error('Get leaders (member) error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch leaders' });
-  }
-});
-
-// @route   POST /api/member-auth/targets/:targetId/progress
-// @desc    Mark a target as completed / in-progress with feedback and optional file
-// @access  Private (Member)
-router.post('/targets/:targetId/progress', authenticateMember, async (req, res) => {
-  try {
-    const { status, feedback, fileAttachment } = req.body;
-    const member = req.member;
-
-    const validStatuses = ['not_started', 'in_progress', 'completed'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
-    }
-
-    // Fetch target to get targetValue for upsert
-    const personalTarget = await PersonalTarget.findById(req.params.targetId);
-    if (!personalTarget) {
-      return res.status(404).json({ success: false, message: 'Target not found' });
-    }
-
-    const isCompleted = status === 'completed';
-    const updateData = {
-      status,
-      targetValue: personalTarget.targetValue,
-      currentProgress: isCompleted ? personalTarget.targetValue : 0,
-      progressPercentage: isCompleted ? 100 : 0,
-      ...(feedback !== undefined ? { feedback } : {}),
-      ...(fileAttachment ? { fileAttachment } : {}),
-      ...(isCompleted ? { completedAt: new Date() } : {})
-    };
-
-    const progress = await MemberTargetProgress.findOneAndUpdate(
-      { member: member._id, personalTarget: req.params.targetId },
-      { $set: updateData },
-      { new: true, upsert: true }
-    );
-
-    res.status(200).json({ success: true, message: 'Progress updated', data: progress });
-  } catch (error) {
-    console.error('Update member target progress error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update progress' });
   }
 });
 
@@ -1248,101 +1100,36 @@ router.get('/groups', authenticateMember, async (req, res) => {
   }
 });
 
-// @route   GET /api/member-auth/recurring-marks
-// @desc    Get all recurring marks for the authenticated member
+// @route   GET /api/member-auth/area-report?year&month
+// @desc    The member's own area's monthly report — add-up numbers only, no other answers
 // @access  Private (Member)
-router.get('/recurring-marks', authenticateMember, async (req, res) => {
+router.get('/area-report', authenticateMember, async (req, res) => {
   try {
-    const marks = await RecurringMark.find({
-      user: req.member._id,
-      userType: 'Member'
-    }).select('personalTarget year month week completed completionCount markedAt');
+    const period = parsePeriod(req.query);
+    if (period.error) return res.status(400).json({ success: false, message: period.error });
+    const area = req.member.group;
+    if (!area?._id) return res.status(404).json({ success: false, message: 'You are not linked to an area' });
+    await ensureForms();
 
-    const data = marks.map(m => ({
-      targetId: m.personalTarget.toString(),
-      year: m.year,
-      month: m.month,
-      week: m.week || 0,
-      completed: m.completed,
-      completionCount: m.completionCount || 0,
-      markedAt: m.markedAt
+    const [report, form] = await Promise.all([
+      MonthlyReport.findOne({ scopeKey: `area:${area._id}`, ...period, submittedAt: { $ne: null } })
+        .select('numbers formVersion submittedAt').lean(),
+      ReportForm.findOne({ level: 'area' }).select('version').lean(),
+    ]);
+    const published = await publishedForm('area', report?.formVersion || form?.version);
+    const values = new Map((report?.numbers || []).map(n => [n.fieldId, n.value]));
+    // A question hidden by its show/hide rule counts as 0 once the report is in.
+    const items = sumColumns(published?.fields).map(c => ({
+      fieldId: c.id, label: c.label, section: c.section, parentId: c.parentId, value: report ? (values.get(c.id) ?? 0) : null,
     }));
 
-    res.status(200).json({ success: true, data });
-  } catch (error) {
-    console.error('Get member recurring marks error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch recurring marks' });
-  }
-});
-
-// @route   POST /api/member-auth/recurring-marks
-// @desc    Toggle (upsert) a recurring mark for the authenticated member
-// @access  Private (Member)
-router.post('/recurring-marks', authenticateMember, async (req, res) => {
-  try {
-    const { targetId, year, month, completed } = req.body;
-
-    if (!targetId || !year || !month) {
-      return res.status(400).json({ success: false, message: 'targetId, year, and month are required' });
-    }
-
-    const target = await PersonalTarget.findById(targetId);
-    if (!target) {
-      return res.status(404).json({ success: false, message: 'Target not found' });
-    }
-
-    const week = target.recurringFrequency === 'weekly' ? (req.body.week || 1) : 0;
-
-    const mark = await RecurringMark.findOneAndUpdate(
-      { user: req.member._id, userType: 'Member', personalTarget: targetId, year, month, week },
-      {
-        $set: {
-          completed: !!completed,
-          completionCount: completed ? 1 : 0,
-          markedAt: new Date()
-        }
-      },
-      { upsert: true, new: true }
-    );
-
-    // Mirror the mark into MemberTargetProgress, the way the admin path mirrors into
-    // UserTargetProgress. Admin-facing member progress views read that collection, and
-    // without this they only catch up on the next server restart.
-    const anyCompleted = await RecurringMark.exists({
-      user: req.member._id,
-      userType: 'Member',
-      personalTarget: targetId,
-      completed: true
-    });
-    await MemberTargetProgress.findOneAndUpdate(
-      { member: req.member._id, personalTarget: targetId },
-      {
-        $set: {
-          status: anyCompleted ? 'completed' : 'not_started',
-          targetValue: target.targetValue,
-          currentProgress: anyCompleted ? target.targetValue : 0,
-          progressPercentage: anyCompleted ? 100 : 0,
-          completedAt: anyCompleted ? new Date() : null
-        }
-      },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-
-    res.status(200).json({
+    res.json({
       success: true,
-      data: {
-        targetId: mark.personalTarget.toString(),
-        year: mark.year,
-        month: mark.month,
-        week: mark.week || 0,
-        completed: mark.completed,
-        completionCount: mark.completionCount || 0,
-        markedAt: mark.markedAt
-      }
+      data: { area: area.name, ...period, submitted: Boolean(report), submittedAt: report?.submittedAt || null, items },
     });
   } catch (error) {
-    console.error('Toggle member recurring mark error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update recurring mark' });
+    console.error('Member area report error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load the area report' });
   }
 });
 

@@ -2,7 +2,7 @@ import express from 'express';
 import District from '../models/District.js';
 import Group from '../models/Group.js';
 import Member from '../models/Member.js';
-import { authenticate, requireRole, requireDistrictAccess, isAreaLevelAdmin } from '../middleware/auth.js';
+import { authenticate, authorize, requireRole, requireDistrictAccess, isAreaLevelAdmin } from '../middleware/auth.js';
 import { 
   createDistrictValidation,
   paginationValidation,
@@ -10,6 +10,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -326,6 +327,30 @@ router.get('/:id/groups', authenticate, objectIdValidation('id'), handleValidati
   }
 });
 
+// @route   GET /api/districts/:id/transfer-groups
+// @desc    Minimal list (id, name, code) of a district's active groups, used as
+//          the target-group picker in the transfer dialog. Unlike /:id/groups
+//          it is not scoped to the caller's own district (cross-district
+//          transfer requests need the target district's groups) and returns no
+//          admin contact details.
+// @access  Private (admins who can manage members)
+router.get('/:id/transfer-groups', authenticate, authorize(['manage_members']), objectIdValidation('id'), handleValidationErrors, async (req, res) => {
+  try {
+    const groups = await Group.find({ district: req.params.id, isActive: true })
+      .select('name code')
+      .sort('name')
+      .lean();
+
+    res.status(200).json({ success: true, data: groups });
+  } catch (error) {
+    console.error('Get transfer target groups error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch district groups'
+    });
+  }
+});
+
 // @route   GET /api/districts/:id/members
 // @desc    Get all members in a district
 // @access  Private
@@ -340,7 +365,8 @@ router.get('/:id/members', authenticate, requireDistrictAccess, objectIdValidati
       isApproved
     } = req.query;
 
-    let filter = { district: req.params.id };
+    // Archived (age over) members are listed only on the state admin's Archives page
+    let filter = { district: req.params.id, ...currentMemberMatch() };
     if (status) filter.status = status;
     if (group) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
@@ -395,7 +421,7 @@ router.get('/:id/stats', authenticate, requireDistrictAccess, objectIdValidation
 
     // Get detailed statistics
     const stats = await Member.aggregate([
-      { $match: { district: district._id } },
+      { $match: { district: district._id, ...currentMemberMatch() } },
       {
         $group: {
           _id: null,

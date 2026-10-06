@@ -1,5 +1,5 @@
 import express from 'express';
-import Request from '../models/Request.js';
+import Request, { pickMemberEditFields } from '../models/Request.js';
 import Member from '../models/Member.js';
 import { authenticate, authorize, requireRole, isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
 import { 
@@ -9,6 +9,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
+import { isAgeOver } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -250,11 +251,19 @@ router.post('/', authenticate, authorize(['manage_members']), createRequestValid
   try {
     const requestData = req.body;
 
+    if (requestData.type === 'member_edit') {
+      requestData.proposedData = pickMemberEditFields(requestData.proposedData);
+      if (Object.keys(requestData.proposedData).length === 0) {
+        return res.status(400).json({ success: false, message: 'No editable fields in this request' });
+      }
+    }
+
     // Validate member exists and user has access
     const member = await Member.findById(requestData.member)
       .populate('district group');
 
-    if (!member) {
+    // Archived (age over) members are visible to the state admin only.
+    if (!member || (req.user.role !== 'state_admin' && isAgeOver(member))) {
       return res.status(400).json({
         success: false,
         message: 'Member not found'
@@ -343,8 +352,8 @@ router.post('/', authenticate, authorize(['manage_members']), createRequestValid
 // @route   POST /api/requests/:id/approve
 // @desc    Approve request
 // @access  Private
-router.post('/:id/approve', 
-  authenticate, 
+router.post('/:id/approve',
+  authenticate,
   objectIdValidation('id'),
   [
     body('comment').optional().trim().isLength({ max: 500 }),
@@ -352,8 +361,9 @@ router.post('/:id/approve',
   ],
   async (req, res) => {
     try {
+      // status + dateOfBirth feed the age-over check below
       const request = await Request.findById(req.params.id)
-        .populate('member', 'district group');
+        .populate('member', 'district group status dateOfBirth');
 
       if (!request) {
         return res.status(404).json({
@@ -395,6 +405,11 @@ router.post('/:id/approve',
         if (!areaGroupIds.map(g => g.toString()).includes(memberGroupId?.toString())) {
           return res.status(403).json({ success: false, message: 'Access denied' });
         }
+      }
+
+      // A member who aged out while the request was open is the state admin's to change now.
+      if (req.user.role !== 'state_admin' && isAgeOver(request.member)) {
+        return res.status(404).json({ success: false, message: 'Member not found' });
       }
 
       const { comment } = req.body;

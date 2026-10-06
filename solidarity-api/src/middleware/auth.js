@@ -131,55 +131,113 @@ export const areaGroupIdsFor = async (user) => {
   return groups.map(g => g._id);
 };
 
-// Leader directory scope. Everyone sees the state leaders (shared top of the
-// hierarchy) plus their own chain — never peers in another district or area:
-//   state_admin    — everything
-//   district_admin — own district, every level
-//   group_admin /  — own district's district leaders + own area's area /
-//   member           murabi / unit leaders (unit admins, members: own group)
-// Takes a User or a Member. Returns a predicate over fanned-out leader rows
-// (row.roleTag = that row's role).
-const LEADER_LEVEL_BY_ROLE = { state_admin: 'state', district_admin: 'district' };
+// Leader role hierarchy. Murabi and coordinator are area-level roles — they
+// fold into "area" everywhere else too.
+const AREA_LEVEL_ROLE_TYPES = ['area', 'murabi', 'coordinator'];
 
-export const leaderScopeFor = async (viewer) => {
-  if (viewer?.role === 'state_admin') return () => true;
-
-  const idOf = (v) => String(v?._id || v || '');
-  const levelOf = (l) => l.roleTag?.type || LEADER_LEVEL_BY_ROLE[l.role];
-  const myDistrict = idOf(viewer?.district);
-  const inMyDistrict = (l) => !!myDistrict && idOf(l.district) === myDistrict;
-
-  if (viewer?.role === 'district_admin') {
-    return (l) => levelOf(l) === 'state' || inMyDistrict(l);
+/**
+ * Leader role types each admin may assign or change (state admin: every type):
+ *   district_admin — area-level roles only (no state / district / unit)
+ *   area-level     — area-level roles and unit roles in their own area
+ *   unit admin     — unit roles in their own group
+ */
+const manageableRoleTypes = (user) => {
+  switch (user?.role) {
+    case 'district_admin': return AREA_LEVEL_ROLE_TYPES;
+    case 'group_admin': return isAreaLevelAdmin(user) ? [...AREA_LEVEL_ROLE_TYPES, 'unit'] : ['unit'];
+    default: return [];
   }
-
-  const areaIds = isAreaLevelAdmin(viewer) ? (await areaGroupIdsFor(viewer)).map(String) : [];
-  const myGroups = new Set(areaIds.length > 0 ? areaIds : [idOf(viewer?.group)].filter(Boolean));
-  return (l) => {
-    const level = levelOf(l);
-    if (level === 'state') return true;
-    if (level === 'district') return inMyDistrict(l);
-    return myGroups.has(idOf(l.group));
-  };
 };
 
-// Target audiences whose personal targets this user owns and marks (their
-// "My Targets" feed). members_only is member-app only, never a User audience.
-// A district admin must NOT receive area/unit targets, and vice versa.
-export const targetAudiencesFor = (user) => {
+/** Account seniority: state 0, district 1, area-level 2, unit 3. */
+const adminRankOf = (user) => {
   switch (user?.role) {
-    case 'state_admin':
-      // State admins assign and review targets — they never receive them.
-      return [];
-    case 'district_admin':
-      return ['all_users', 'district_admins'];
-    case 'group_admin':
-      return isAreaLevelAdmin(user)
-        ? ['all_users', 'area_admins', 'group_and_area_admins']
-        : ['all_users', 'group_admins', 'group_and_area_admins'];
-    default:
-      return ['all_users'];
+    case 'state_admin': return 0;
+    case 'district_admin': return 1;
+    case 'group_admin': return isAreaLevelAdmin(user) ? 2 : 3;
+    default: return Infinity;
   }
+};
+
+/** May this admin assign a leader role of this type? Mirrors src/lib/roleHierarchy.ts; keep in sync. */
+export const canManageRoleType = (user, type) =>
+  user?.role === 'state_admin' || manageableRoleTypes(user).includes(type);
+
+/**
+ * May this admin change the leader roles of this target (a User or a Member)?
+ * Every role the target already holds must be one the admin could assign, and an
+ * admin account must sit below the editor — no editing peers or seniors.
+ */
+export const canManageLeaderTarget = (user, target) => {
+  if (user?.role === 'state_admin') return true;
+  if (manageableRoleTypes(user).length === 0) return false;
+  if (target?.role && target.role !== 'member' && adminRankOf(target) <= adminRankOf(user)) return false;
+  if (!target?.isLeader) return true;
+  const held = [target.roleTag?.type, ...(target.extraRoleTags || []).map((r) => r?.type)].filter(Boolean);
+  return held.every((t) => canManageRoleType(user, t));
+};
+
+/**
+ * Where an admin may edit leader roles: district admins their own district,
+ * area-level admins their area's groups (plus own group), unit admins their own
+ * group. Returns a predicate over a Member or User, populated or not.
+ */
+export const leaderEditScopeFor = async (user) => {
+  if (user?.role === 'state_admin') return () => true;
+  const idOf = (v) => String(v?._id || v || '');
+  if (user?.role === 'district_admin') {
+    const mine = idOf(user.district);
+    return (t) => !!mine && idOf(t?.district) === mine;
+  }
+  if (user?.role === 'group_admin') {
+    const groups = new Set(isAreaLevelAdmin(user) ? (await areaGroupIdsFor(user)).map(String) : []);
+    if (user.group) groups.add(idOf(user.group));
+    return (t) => groups.has(idOf(t?.group));
+  }
+  return () => false;
+};
+
+const HIERARCHY_DENIED = 'This leader holds a role your level cannot change.';
+
+/**
+ * Validate a leader-role edit body ({ isLeader, roleTag, extraRoles }) against the
+ * hierarchy. Returns null when allowed, else { status, message }. Checks the role
+ * set as it will be AFTER the update — a bare { isLeader: true } must not revive
+ * stale tags the editor could never assign.
+ */
+export const leaderEditError = (user, target, { isLeader, roleTag, extraRoles } = {}) => {
+  if (isLeader !== undefined && typeof isLeader !== 'boolean') {
+    return { status: 400, message: 'isLeader must be true or false' };
+  }
+  if (!canManageLeaderTarget(user, target)) return { status: 403, message: HIERARCHY_DENIED };
+  if (user?.role === 'state_admin') return null;
+
+  // An admin account's primary roleTag also sets its access scope
+  // (isAreaLevelAdmin, areaGroupIdsFor) — only a state admin may change it.
+  const isAdminAccount = !!target?.role && target.role !== 'member';
+  if (isAdminAccount && roleTag?.type && roleTag.type !== target.roleTag?.type) {
+    return { status: 403, message: "Changing an admin account's primary role changes their access. Ask a State Admin." };
+  }
+
+  if (!(isLeader ?? target?.isLeader)) return null;
+  const extras = Array.isArray(extraRoles) ? extraRoles : (target?.extraRoleTags || []);
+  const next = [roleTag?.type || target?.roleTag?.type, ...extras.map((r) => r?.type)].filter(Boolean);
+  const denied = next.find((t) => !canManageRoleType(user, t));
+  return denied ? { status: 403, message: `Your role does not have permission to assign roleTag type: ${denied}` } : null;
+};
+
+// Leader directory level of a fanned-out leader row (row.roleTag = that row's
+// role). State/district admins never given a role tag still count at their
+// admin level, so the default "State" view includes every state admin.
+const LEADER_LEVEL_BY_ROLE = { state_admin: 'state', district_admin: 'district' };
+
+export const leaderLevelOf = (l) => l.roleTag?.type || LEADER_LEVEL_BY_ROLE[l.role];
+
+// Role-type filter for the leader directory. "area" folds in murabi +
+// coordinator — they have no separate filter in the UI.
+export const matchesLeaderRoleType = (roleType) => {
+  const types = roleType === 'area' ? ['area', 'murabi', 'coordinator'] : [roleType];
+  return (l) => types.includes(leaderLevelOf(l));
 };
 
 // Check if user has required permission

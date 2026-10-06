@@ -22,7 +22,7 @@ if (existing) {
     isActive: true,
     permissions: [
       'manage_users', 'manage_members', 'manage_districts', 'manage_groups',
-      'approve_transfers', 'send_notifications', 'view_reports', 'bulk_import',
+      'approve_transfers', 'send_notifications', 'view_reports',
       'manage_meetings', 'manage_baithul_maal'
     ],
     createdAt: new Date(),

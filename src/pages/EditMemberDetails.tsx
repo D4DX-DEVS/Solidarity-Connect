@@ -270,7 +270,7 @@ const EditMemberDetails = () => {
   if (loading) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/members"
           title="Edit Member"
           subtitle="Loading the current member record before opening the edit form."
           eyebrow="Members"
@@ -285,7 +285,7 @@ const EditMemberDetails = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo="/members"
         title="Edit Member"
         subtitle={member?.name || "Update the member profile without changing their organization mapping."}
         eyebrow="Members"

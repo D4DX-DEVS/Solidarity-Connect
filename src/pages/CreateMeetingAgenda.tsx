@@ -246,7 +246,7 @@ const CreateMeetingAgenda = () => {
   if (!isAuthenticated) {
     return (
       <PageShell>
-        <PageHero
+        <PageHero backTo="/admin/meetings-view"
           title="Create Monthly Meeting"
           subtitle="Prepare the monthly agenda, sessions, and supporting file."
           eyebrow="Meetings"
@@ -261,7 +261,7 @@ const CreateMeetingAgenda = () => {
 
   return (
     <PageShell>
-      <PageHero
+      <PageHero backTo="/admin/meetings-view"
         title="Create Monthly Meeting"
         subtitle="Prepare the monthly agenda, sessions, and supporting file."
         eyebrow="Meetings"

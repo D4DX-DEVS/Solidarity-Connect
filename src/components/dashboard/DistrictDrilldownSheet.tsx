@@ -13,7 +13,7 @@ interface DistrictDrilldownSheetProps {
   accountId: string | undefined;
   district: HierarchyRow | null;
   onClose: () => void;
-  /** False when no recurring targets exist — show admin counts, not 0/N reporting. */
+  /** False when no report form is published — show admin counts, not 0/N reporting. */
   reporting?: boolean;
 }
 
@@ -61,7 +61,7 @@ export function DistrictDrilldownSheet({ accountId, district: selected, onClose,
       { label: "Areas", value: String(district.areas), detail: district.areasWithoutAdmin ? `${district.areasWithoutAdmin} without admin` : "All have an admin", icon: Building2, tile: "bg-[#7c5cff]/10 text-[#7c5cff]" },
       reporting
         ? { label: "Admins reporting", value: `${district.reportingAdmins}/${district.admins}`, detail: data ? `${data.activity.reportingWindow.from} – ${data.activity.reportingWindow.to}` : "Last 2 months", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" }
-        : { label: "Admins", value: formatNumber(district.admins), detail: "No targets set yet", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" },
+        : { label: "Admins", value: formatNumber(district.admins), detail: "No report form yet", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" },
     ]
     : [];
 
@@ -115,8 +115,8 @@ export function DistrictDrilldownSheet({ accountId, district: selected, onClose,
         </div>
 
         <footer className="shrink-0 border-t bg-card p-4 sm:px-5">
-          <Button variant="outline" className="min-h-11 w-full gap-1 sm:min-h-10" onClick={() => navigate("/state-admin/group-reports")}>
-            Full census report <ChevronRight className="size-4" aria-hidden />
+          <Button variant="outline" className="min-h-11 w-full gap-1 sm:min-h-10" onClick={() => navigate("/reports?tab=consolidated")}>
+            Monthly reports <ChevronRight className="size-4" aria-hidden />
           </Button>
         </footer>
       </SheetContent>

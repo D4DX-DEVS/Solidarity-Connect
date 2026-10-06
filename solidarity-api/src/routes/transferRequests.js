@@ -11,6 +11,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
+import { isAgeOver } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -78,12 +79,19 @@ async function notifyTransferEvent({ transferRequest, audience, title, message, 
   }
 }
 
+// Who to tell about the outcome (completed / rejected) of a request: the
+// district admins when a district admin raised it, otherwise the group admins.
+// Expects `requestedBy` to be populated (POPULATE_OPTS selects its role).
+const requesterAudience = (transferRequest) =>
+  transferRequest.requestedBy?.role === 'district_admin' ? 'district_admins' : 'group_admins';
+
 // Validation for creation
 const createTransferValidation = [
   body('member').isMongoId().withMessage('Valid member ID is required'),
   body('targetDistrict').isMongoId().withMessage('Valid target district ID is required'),
   body('targetGroup').isMongoId().withMessage('Valid target group ID is required'),
   body('reason').trim().isLength({ min: 10, max: 500 }).withMessage('Reason must be 10–500 characters'),
+  body('targetUnit').optional({ checkFalsy: true }).trim().isLength({ max: 100 }).withMessage('Unit cannot exceed 100 characters'),
   handleValidationErrors
 ];
 
@@ -212,24 +220,41 @@ router.get('/pending-count', authenticate, async (req, res) => {
 });
 
 // @route   POST /api/transfer-requests
-// @desc    Create new transfer request (group_admin only)
+// @desc    Create new transfer request
+//          - group_admin: for a member of their group → district approval(s) → state
+//          - district_admin: cross-district only, for a member of their district →
+//            straight to the state admin (both district sides auto-approved).
+//            Within-district moves are done directly via PUT /api/members/:id.
 // @access  Private
 router.post('/', authenticate, authorize(['manage_members']), createTransferValidation, async (req, res) => {
   try {
-    const { member: memberId, targetDistrict, targetGroup, reason } = req.body;
+    const { member: memberId, targetDistrict, targetGroup, targetUnit, reason } = req.body;
+    const isDistrictAdmin = req.user.role === 'district_admin';
 
-    // Only group_admin can create transfer requests
-    if (req.user.role !== 'group_admin') {
-      return res.status(403).json({ success: false, message: 'Only group admins can create transfer requests' });
+    if (req.user.role !== 'group_admin' && !isDistrictAdmin) {
+      return res.status(403).json({ success: false, message: 'Only group and district admins can create transfer requests' });
     }
 
     const member = await Member.findById(memberId).populate('group district');
-    if (!member) {
+    // Archived (age over) members are the state admin's alone; only group/district admins get here.
+    if (!member || isAgeOver(member)) {
       return res.status(404).json({ success: false, message: 'Member not found' });
     }
 
-    // Only allow transfers from own group
-    if (member.group._id.toString() !== req.user.group._id.toString()) {
+    if (isDistrictAdmin) {
+      const ownDistrictId = req.user.district?._id?.toString();
+      if (!ownDistrictId) {
+        return res.status(500).json({ success: false, message: 'User account misconfigured: no district assigned' });
+      }
+      // Only allow transfers from own district
+      if (member.district._id.toString() !== ownDistrictId) {
+        return res.status(403).json({ success: false, message: 'You can only transfer members from your district' });
+      }
+      if (targetDistrict === ownDistrictId) {
+        return res.status(400).json({ success: false, message: 'Within-district moves do not need a request — move the member directly' });
+      }
+    } else if (member.group._id.toString() !== req.user.group._id.toString()) {
+      // Group admins: only allow transfers from own group
       return res.status(403).json({ success: false, message: 'You can only transfer members from your group' });
     }
 
@@ -266,12 +291,49 @@ router.post('/', authenticate, authorize(['manage_members']), createTransferVali
       currentGroup: member.group._id,
       targetDistrict,
       targetGroup,
+      ...(targetUnit ? { targetUnit } : {}),
       reason,
       requestedBy: req.user._id
     });
 
+    if (isDistrictAdmin) {
+      // District-admin requests skip the district tier and go straight to the
+      // state admin's queue.
+      const now = new Date();
+      transferRequest.sourceDistrictApproval = {
+        status: 'approved',
+        approvedBy: req.user._id,
+        approvedAt: now,
+        comments: 'Auto-approved (requested by source district admin)'
+      };
+      transferRequest.targetDistrictApproval = {
+        status: 'approved',
+        approvedBy: req.user._id,
+        approvedAt: now,
+        comments: 'Auto-approved (district admin request goes straight to state admin)'
+      };
+      transferRequest.status = 'district_approved';
+    }
+
     await transferRequest.save();
     await transferRequest.populate(POPULATE_OPTS);
+
+    if (isDistrictAdmin) {
+      notifyTransferEvent({
+        transferRequest,
+        audience: 'state_admins',
+        title: 'Transfer request ready for final approval',
+        message: `A district admin requested a cross-district transfer for {member} ({from} → {to}). It is awaiting your approval.`,
+        triggeredBy: req.user._id,
+        priority: 'high'
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Transfer request sent to the state admin for approval',
+        data: transferRequest
+      });
+    }
 
     // Notify the district admins who need to act next: the source district
     // admin (and, for cross-district transfers, the target district admin).
@@ -338,10 +400,10 @@ router.post('/:id/approve', authenticate, authorize(['manage_members']), approva
 
     if (newStatus === 'completed') {
       // State admin just performed the final approval + member move.
-      // Notify the original requesting group admin that their transfer is done.
+      // Notify the original requester (group or district admin) that their transfer is done.
       notifyTransferEvent({
         transferRequest,
-        audience: 'group_admins',
+        audience: requesterAudience(transferRequest),
         title: 'Transfer completed',
         message: `Your transfer request for {member} ({from} → {to}) has been approved and the member has been moved.`,
         triggeredBy: req.user._id,
@@ -409,11 +471,11 @@ router.post('/:id/reject', authenticate, authorize(['manage_members']), [
 
     await transferRequest.reject(req.user, reason);
 
-    // Notify the requesting group admin that their transfer was rejected,
-    // including the rejection reason so they understand why.
+    // Notify the requester (group or district admin) that their transfer was
+    // rejected, including the rejection reason so they understand why.
     notifyTransferEvent({
       transferRequest,
-      audience: 'group_admins',
+      audience: requesterAudience(transferRequest),
       title: 'Transfer request rejected',
       message: `Your transfer request for {member} ({from} → {to}) was rejected. Reason: ${reason}`,
       triggeredBy: req.user._id,

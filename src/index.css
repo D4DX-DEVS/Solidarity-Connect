@@ -20,7 +20,7 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -62,13 +62,15 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 100%;
+    /* Soft brand sidebar: red-50 panel, red-100 hover/borders, solid red-600 active pill
+       (white text passes AA), red-700 for tinted labels. */
+    --sidebar-background: 0 86% 97%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 0 84% 60%;
+    --sidebar-primary: 0 72% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
+    --sidebar-accent: 0 93% 94%;
+    --sidebar-accent-foreground: 0 74% 42%;
+    --sidebar-border: 0 93% 92%;
     --sidebar-ring: 0 84% 60%;
   }
 
@@ -112,13 +114,13 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 0 84% 60%;
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 84% 60%;
+    --sidebar-background: 0 35% 9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 0 72% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 20%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 20%;
+    --sidebar-accent: 0 45% 16%;
+    --sidebar-accent-foreground: 0 94% 82%;
+    --sidebar-border: 0 35% 17%;
     --sidebar-ring: 0 84% 60%;
   }
 }
@@ -155,7 +157,12 @@ soft tinted icon tiles. No gradients, no blur, no glassmorphism.
 @layer components {
   /* overflow-x-clip (not hidden) so position:sticky headers still stick */
   .app-page {
-    @apply relative min-h-screen overflow-x-clip lg:pl-60;
+    @apply relative min-h-screen overflow-x-clip lg:pl-60 transition-[padding-left] duration-200 ease-in-out;
+  }
+
+  /* AppSidebar toggles this on <html> when collapsed to an icon rail */
+  html[data-sidebar-collapsed="true"] .app-page {
+    @apply lg:pl-20;
   }
 
   /* Full-width, left-aligned content so headers meet the sidebar edge */

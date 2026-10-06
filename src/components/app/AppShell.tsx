@@ -1,6 +1,8 @@
 import { type ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, type LucideIcon } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +24,13 @@ interface PageHeroProps {
   className?: string;
   /** Dashboards keep their title on mobile; every other page shows logo + menu only */
   showTitleOnMobile?: boolean;
+  /** Detail pages: renders a Back button below the header; this path is used when there is no in-app history */
+  backTo?: string;
+}
+
+interface BackButtonProps {
+  fallback: string;
+  className?: string;
 }
 
 interface SectionCardProps {
@@ -59,7 +68,19 @@ function PageShell({ children, className, contentClassName }: PageShellProps) {
   );
 }
 
-function PageHero({ title, subtitle, eyebrow, icon, actions, details, className, showTitleOnMobile = false }: PageHeroProps) {
+function BackButton({ fallback, className }: BackButtonProps) {
+  const navigate = useNavigate();
+  // ponytail: history back keeps the list's filters/page; deep links (idx 0) go to the fallback
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate(fallback));
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={goBack} className={cn("self-start", className)}>
+      <ArrowLeft className="mr-1.5 h-4 w-4" />
+      Back
+    </Button>
+  );
+}
+
+function PageHero({ title, subtitle, eyebrow, icon, actions, details, className, showTitleOnMobile = false, backTo }: PageHeroProps) {
   const { userRole } = useAuth();
   return (
     <>
@@ -82,6 +103,8 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className,
         </div>
       </div>
     </section>
+    {/* ponytail: back lives in page content, not the header — header is hidden on mobile */}
+    {backTo ? <BackButton fallback={backTo} /> : null}
     {/* Details flow below the sticky header so it stays the same h-20 bar as every other page */}
     {details ? <div className="hero-details !mt-0 text-foreground">{details}</div> : null}
     </>

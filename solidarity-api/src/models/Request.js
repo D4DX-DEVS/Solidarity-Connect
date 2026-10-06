@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 import mongoosePaginate from 'mongoose-paginate-v2';
 
+// Fields a member_edit request may change. Leader roles (isLeader / roleTag /
+// extraRoleTags) and scope fields have their own checked routes.
+export const MEMBER_EDIT_FIELDS = ['name', 'email', 'phone', 'bloodGroup', 'dateOfBirth', 'status'];
+export const pickMemberEditFields = (data) =>
+  Object.fromEntries(Object.entries(data || {}).filter(([key]) => MEMBER_EDIT_FIELDS.includes(key)));
+
 const requestSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -164,7 +170,7 @@ requestSchema.methods.approve = async function(approvedBy, comment = '') {
   if (this.type === 'member_edit') {
     const Member = mongoose.model('Member');
     await Member.findByIdAndUpdate(this.member, {
-      ...this.proposedData,
+      ...pickMemberEditFields(this.proposedData),
       updatedBy: approvedBy
     });
   } else if (this.type === 'member_transfer') {

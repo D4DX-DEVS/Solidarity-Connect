@@ -40,6 +40,12 @@ const transferRequestSchema = new mongoose.Schema({
     ref: 'Group',
     required: [true, 'Target group is required']
   },
+  // New unit (stored in member.address) applied on completion; empty keeps the current one
+  targetUnit: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Unit cannot exceed 100 characters']
+  },
   // Request details
   reason: {
     type: String,
@@ -180,11 +186,12 @@ transferRequestSchema.methods.approve = async function (user, comments = '') {
     this.stateApproval.approvedAt = now;
     this.stateApproval.comments = comments;
 
-    // Update the member's district and group
+    // Update the member's district, group and (when requested) unit
     const Member = mongoose.model('Member');
     await Member.findByIdAndUpdate(this.member, {
       district: this.targetDistrict,
       group: this.targetGroup,
+      ...(this.targetUnit ? { address: this.targetUnit } : {}),
       updatedBy: user._id
     });
 

@@ -40,6 +40,9 @@ interface CachedUser {
   adminKind?: AdminKind | null;
   district?: { _id: string; name: string; code: string };
   group?: { _id: string; name: string; code: string };
+  // Area-level admins are told apart by roleTag.type — keep it so offline restore
+  // doesn't treat them as unit admins.
+  roleTag?: User["roleTag"];
 }
 
 /** One selectable account on the signed-in phone number. Mirrors the API shape. */
@@ -191,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           adminKind: userData.adminKind ?? null,
           district: userData.district,
           group: userData.group,
+          roleTag: userData.roleTag,
         };
         localStorage.setItem('userData', JSON.stringify(toCache));
 
@@ -249,6 +253,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       adminKind: normalizedUserData.adminKind ?? null,
       district: normalizedUserData.district,
       group: normalizedUserData.group,
+      roleTag: normalizedUserData.roleTag,
     };
     localStorage.setItem('userData', JSON.stringify(toCache));
     setToken(tokenValue);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, UserCog, Users } from "lucide-react";
+import { Archive, Building2, UserCog, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { ActionQueue } from "@/components/dashboard/ActionQueue";
@@ -7,13 +7,14 @@ import { ChartCard } from "@/components/dashboard/ChartCard";
 import { DistrictDrilldownSheet } from "@/components/dashboard/DistrictDrilldownSheet";
 import { HierarchyScorecard } from "@/components/dashboard/HierarchyScorecard";
 import {
-  AreaStatusCard, DashboardToolbar, KpiSparkCard, MembersByUnitCard, MembershipTrendCard, MemberStatusCard, RecentActivityCard,
+  DashboardToolbar, KpiSparkCard, MembersByUnitCard, MembershipTrendCard, MemberStatusCard, QueueTrendLayout,
+  RecentActivityCard,
 } from "@/components/dashboard/DashboardWidgets";
 import { meetingItems, requestItem, silentChildrenItem, transferItem, uncoveredAreasItem } from "@/components/dashboard/actionItems";
 import { adminsDetail, formatNumber, percent, reportingLive } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity, type HierarchyRow,
+  hasTrend, useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity, type HierarchyRow,
 } from "@/hooks/useDashboardOverview";
 
 const SCORECARD_ID = "district-scorecard";
@@ -26,6 +27,7 @@ const StateAdmin = () => {
   const overview = overviewQuery.data;
   const summary = summaryQuery.data;
   const trendQuery = useMembershipTrend(user?.id, overview?.members.total);
+  const showTrend = hasTrend(trendQuery.data) || trendQuery.isError;
   const recentQuery = useRecentActivity(user?.id, "district");
   const [drillDistrict, setDrillDistrict] = useState<HierarchyRow | null>(null);
 
@@ -57,10 +59,9 @@ const StateAdmin = () => {
       <main className="app-main space-y-3 pb-28 pt-3 sm:space-y-4 sm:pt-4">
         <DashboardToolbar reportingWindow={overview?.activity.reportingWindow} />
 
-        {/* Phones: members card full width, the other two side by side; desktop: three across */}
-        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Key figures">
+        {/* Phones and tablets: two by two; desktop: four across */}
+        <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" aria-label="Key figures">
           <KpiSparkCard
-            className="col-span-2 lg:col-span-1"
             title="Total Members"
             value={show(formatNumber(members?.total ?? 0))}
             detail={note(`${percent(members?.active ?? 0, members?.total ?? 0)}% active`)}
@@ -94,32 +95,39 @@ const StateAdmin = () => {
             loading={overviewQuery.isPending}
             onClick={() => navigate("/state-admin/users")}
           />
+          {/* Age-over members sit outside every figure above; this is their only count */}
+          <KpiSparkCard
+            title="Archives"
+            value={show(formatNumber(members?.archived ?? 0))}
+            detail={note("Aged 38 and above")}
+            icon={Archive}
+            tone="muted"
+            loading={overviewQuery.isPending}
+            onClick={() => navigate("/archives")}
+          />
         </section>
 
-        {/* Queue is first in the DOM so it leads on phones; on desktop it sits right of the trend (3:2) */}
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-5">
-          <ActionQueue
-            className="lg:order-last lg:col-span-2"
-            items={actions}
-            loading={summaryQuery.isPending || overviewQuery.isPending}
-            error={summaryQuery.isError || overviewQuery.isError}
-            onRetry={() => { summaryQuery.refetch(); overviewQuery.refetch(); }}
-          />
-          <MembershipTrendCard
-            className="lg:col-span-3"
-            points={trendQuery.data ?? []}
-            // The trend waits on the overview total; if that fails it never starts, so show the error, not a skeleton.
-            loading={overviewQuery.isPending || (trendQuery.isPending && !overviewQuery.isError)}
-            error={trendQuery.isError || overviewQuery.isError}
-            onRetry={() => { trendQuery.refetch(); overviewQuery.refetch(); }}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <MembersByUnitCard {...overviewState} unit="District" stackAtLg />
-          <MemberStatusCard {...overviewState} stackAtLg />
-          <AreaStatusCard {...overviewState} stackAtLg className="md:col-span-2 lg:col-span-1" />
-        </div>
+        {/* Admin cover and reporting gaps live in the queue only (no separate coverage card) */}
+        <QueueTrendLayout
+          queue={(
+            <ActionQueue
+              items={actions}
+              loading={summaryQuery.isPending || overviewQuery.isPending}
+              error={summaryQuery.isError || overviewQuery.isError}
+              onRetry={() => { summaryQuery.refetch(); overviewQuery.refetch(); }}
+            />
+          )}
+          trend={showTrend ? (
+            <MembershipTrendCard
+              points={trendQuery.data ?? []}
+              error={trendQuery.isError}
+              onRetry={() => trendQuery.refetch()}
+            />
+          ) : null}
+        >
+          <MembersByUnitCard {...overviewState} unit="District" stackAtLg={!showTrend} />
+          <MemberStatusCard {...overviewState} stackAtLg={!showTrend} />
+        </QueueTrendLayout>
 
         {/* Full width: the six-column table clips inside a two-thirds column */}
         <section id={SCORECARD_ID} className="scroll-mt-20">
