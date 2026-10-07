@@ -15,7 +15,30 @@ export interface HierarchyRow {
   areas: number;
   areasWithoutAdmin: number;
   admins: number;
-  reportingAdmins: number;
+  /** The due month's report: a district row adds its areas'. Missing on an area dashboard's groups. */
+  report?: { submitted: boolean; areasSubmitted?: number; areaTotal?: number };
+}
+
+export interface SubmittedCount {
+  submitted: number;
+  total: number;
+}
+
+/** The monthly report due now, from the Monthly Reports module. */
+export interface DashboardReport {
+  year: number;
+  /** 1-12 */
+  month: number;
+  /** ISO; the last editable moment (deadline day of the next month, IST). */
+  deadline: string;
+  /** The month is over and its report is due (1st to the deadline); false while it is still running. */
+  closing: boolean;
+  /** The viewer's own report; null when they have none (e.g. an area admin without an area). */
+  own: { level: ScopeLevel; label: string; canFill: boolean; submitted: boolean; submittedAt: string | null } | null;
+  /** State view only. */
+  districts: SubmittedCount | null;
+  /** State and district views. */
+  areas: SubmittedCount | null;
 }
 
 export interface DashboardOverview {
@@ -23,14 +46,12 @@ export interface DashboardOverview {
   generatedAt: string;
   /** Current members only. archived = age-over members, set on the state admin's state-wide view, else null. */
   members: { total: number; active: number; abroad: number; other: number; archived?: number | null };
-  /** reporting = every admin in scope; reportingArea = area-level admins only. */
-  admins: { district: number; area: number; total: number; reporting: number; reportingArea: number };
+  admins: { district: number; area: number; total: number };
   areas: { total: number; withoutAdmin: number };
   profiles: { total: number; complete: number; fields: { field: string; label: string; filled: number }[] };
   children: { level: "district" | "area" | null; rows: HierarchyRow[] };
-  /** reportForms: published district/area monthly report forms. 0 → nobody has been asked to
-   * report yet, so "0 reporting" is not a failure. Missing on older APIs → treat as live. */
-  activity: { months: { key: string; label: string; completed: number }[]; reportingWindow: { from: string; to: string }; reportForms?: number };
+  /** Missing on an API older than the Monthly Reports dashboards. */
+  report?: DashboardReport;
   /** Trailing-30-day growth vs the prior total. pct is null when there is no
    * prior total to compare against (badge hidden); 0 is a real measured zero. */
   deltas: {

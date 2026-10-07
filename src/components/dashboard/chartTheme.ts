@@ -20,10 +20,11 @@ export const formatNumber = (n: number) => n.toLocaleString("en-IN");
 
 export const percent = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : 0);
 
-/** False only when no district/area report form is published — then nobody has been asked to report. */
-export const reportingLive = (overview?: { activity: { reportForms?: number } }): boolean =>
-  overview?.activity.reportForms !== 0;
-
-/** KPI caption for the admins tile. */
-export const adminsDetail = (overview?: { admins: { reporting: number }; activity: { reportForms?: number } }): string =>
-  reportingLive(overview) ? `${overview?.admins.reporting ?? 0} reporting` : "No report form yet";
+/** KPI caption for the admins tile: district vs area admins. An area dashboard has only area admins. */
+export const adminsDetail = (
+  overview: { admins: { district: number; area: number } } | undefined,
+  level: "state" | "district" | "area",
+): string =>
+  level === "area"
+    ? "In this area"
+    : `${formatNumber(overview?.admins.district ?? 0)} district · ${formatNumber(overview?.admins.area ?? 0)} area`;

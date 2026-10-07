@@ -19,10 +19,11 @@ export default function Reports() {
 
   const now = currentIstPeriod();
   const month = /^\d{4}-\d{2}$/.test(params.get("month") || "") ? params.get("month")! : toMonthValue(now.year, now.month);
+  const span = params.get("span") === "year" ? "year" : "month";
   const requested = params.get("tab") as Tab | null;
   const tab: Tab = requested && TABS.includes(requested) && (requested !== "setup" || isStateAdmin) ? requested : "mine";
 
-  // The URL holds tab + month so refresh, back and shared links reproduce the view.
+  // The URL holds tab, month and span so refresh, back and shared links reproduce the view.
   const setParam = (key: string, value: string) => {
     const next = new URLSearchParams(params);
     next.set(key, value);
@@ -43,7 +44,13 @@ export default function Reports() {
             <MyReportTab month={month} onMonthChange={(v) => setParam("month", v)} />
           </TabsContent>
           <TabsContent value="consolidated" className="mt-4">
-            <ConsolidatedTab month={month} onMonthChange={(v) => setParam("month", v)} isStateAdmin={isStateAdmin} />
+            <ConsolidatedTab
+              month={month}
+              onMonthChange={(v) => setParam("month", v)}
+              span={span}
+              onSpanChange={(v) => setParam("span", v)}
+              isStateAdmin={isStateAdmin}
+            />
           </TabsContent>
           {isStateAdmin ? (
             <TabsContent value="setup" className="mt-4">

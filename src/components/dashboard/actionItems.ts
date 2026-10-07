@@ -1,8 +1,8 @@
 import { FEATURES } from "@/lib/features";
-import { ArrowRightLeft, CalendarDays, FileCheck, MapPinOff, TrendingDown } from "lucide-react";
+import { ArrowRightLeft, CalendarDays, ClipboardList, FileCheck, FileClock, MapPinOff } from "lucide-react";
 import type { DashboardOverview, DashboardSummary, HierarchyRow } from "@/hooks/useDashboardOverview";
 import type { ActionItem } from "./ActionQueue";
-import { reportingLive } from "./chartTheme";
+import { daysLeft, deadlineLabel, reportLink, reportMonthName } from "./reportStatus";
 
 // The title already carries the count; the row truncates with an ellipsis, so no "+N more"
 // suffix that the truncation could cut into a wrong number ("+13 more" → "+1…").
@@ -41,24 +41,77 @@ export function requestItem(summary: DashboardSummary | undefined): ActionItem[]
   }];
 }
 
-/** Children whose admins have marked nothing in the reporting window. */
-export function silentChildrenItem(overview: DashboardOverview | undefined, onView: () => void): ActionItem[] {
-  // With no report form published, nobody was asked to report — not an alarm.
-  if (!overview?.children.level || !reportingLive(overview)) return [];
-  const silent = overview.children.rows.filter((r) => r.admins > 0 && r.reportingAdmins === 0);
-  if (silent.length === 0) return [];
-  const noun = overview.children.level === "district" ? "district" : "area";
-  const { from } = overview.activity.reportingWindow;
-  return [{
-    key: "silent",
-    severity: "review",
-    icon: TrendingDown,
-    title: `${plural(silent.length, noun)} with no admin reporting since ${from.split(" ")[0]}`,
-    detail: listNames(silent),
-    count: silent.length,
-    cta: "View",
-    to: onView,
-  }];
+/**
+ * The due month's report: the viewer's own, then who below hasn't submitted. Only once
+ * the month is over and its report is due (1st to the deadline): mid-month an unsent
+ * report is normal, and the toolbar already shows the month and its deadline. The own
+ * item goes once its deadline passes (the page may stay open past it): it is locked then.
+ * `onViewRows` opens the scorecard; without it the item opens the consolidated report.
+ */
+export function reportItems(overview: DashboardOverview | undefined, onViewRows?: () => void): ActionItem[] {
+  const report = overview?.report;
+  if (!report?.closing) return [];
+  const month = reportMonthName(report);
+  const due = `Due ${deadlineLabel(report.deadline)}`;
+  const days = daysLeft(report.deadline);
+  const items: ActionItem[] = [];
+
+  const { own } = report;
+  if (own && !own.submitted && days >= 0) {
+    items.push(own.canFill
+      ? {
+        key: "own-report",
+        severity: days <= 3 ? "urgent" : "review",
+        icon: ClipboardList,
+        title: `Your ${month} ${own.level} report is pending`,
+        detail: `${due} · it locks after that`,
+        cta: "Fill now",
+        to: reportLink(report, "mine"),
+      }
+      : {
+        // Murabi and Coordinators see the area report but the area admin fills it.
+        key: "own-report",
+        severity: "review",
+        icon: ClipboardList,
+        title: `The ${month} ${own.level} report isn't in yet`,
+        detail: `Your ${own.level} admin fills it · ${due}`,
+        cta: "View",
+        to: reportLink(report, "mine"),
+      });
+  }
+
+  // Rows are districts on the state view and areas on the district view.
+  const pendingRows = overview.children.rows.filter((r) => r.report && !r.report.submitted);
+  const toRows = onViewRows ?? reportLink(report, "consolidated");
+  if (report.districts && report.districts.submitted < report.districts.total) {
+    const n = report.districts.total - report.districts.submitted;
+    items.push({
+      key: "district-reports",
+      severity: "review",
+      icon: FileClock,
+      title: `${plural(n, "district")} yet to submit the ${month} report`,
+      detail: listNames(pendingRows),
+      count: n,
+      cta: "View",
+      to: toRows,
+    });
+  }
+  if (report.areas && report.areas.submitted < report.areas.total) {
+    const n = report.areas.total - report.areas.submitted;
+    // State view: areas sit a level below the rows, so show the total and open the consolidated report.
+    const stateView = overview.children.level === "district";
+    items.push({
+      key: "area-reports",
+      severity: "review",
+      icon: FileClock,
+      title: `${plural(n, "area")} yet to submit the ${month} report`,
+      detail: stateView ? `${report.areas.submitted} of ${report.areas.total} submitted` : listNames(pendingRows),
+      count: n,
+      cta: "View",
+      to: stateView ? reportLink(report, "consolidated") : toRows,
+    });
+  }
+  return items;
 }
 
 export function uncoveredAreasItem(overview: DashboardOverview | undefined, to: string): ActionItem[] {

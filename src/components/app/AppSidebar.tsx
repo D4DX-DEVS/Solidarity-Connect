@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen, Repeat } from "lucide-react";
-import { SECTIONS, MEMBER_SECTIONS } from "@/lib/navSections";
+import { SECTIONS, MEMBER_SECTIONS, isNavPathActive } from "@/lib/navSections";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,8 @@ function AppSidebar() {
   const location = useLocation();
   const { userRole, user, availableAccounts, switchAccount, logout } = useAuth();
   const home = getHomeRouteByRole(userRole);
+  const sections = userRole === "member" ? MEMBER_SECTIONS : SECTIONS;
+  const navPaths = sections.flatMap((section) => section.items).map((item) => (item.path === "__home__" ? home : item.path));
   // Account-based, not role-based: Area/Murabi/Coordinator admin all share role
   // 'group_admin', so a role-name switcher collapses them into one unreachable entry.
   const otherAccounts = availableAccounts.filter((account) => account.id !== user?.id);
@@ -121,7 +123,7 @@ function AppSidebar() {
       <div aria-hidden className={cn("h-px shrink-0 bg-sidebar-border", collapsed ? "mx-3" : "mx-4")} />
 
       <nav className={cn("flex-1 overflow-y-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", collapsed ? "px-2" : "px-3")}>
-        {(userRole === "member" ? MEMBER_SECTIONS : SECTIONS).map((section, si) => {
+        {sections.map((section, si) => {
           const items = section.items.filter((item) => !item.roles || item.roles.includes(userRole || ""));
           if (!items.length) return null;
           return (
@@ -138,8 +140,7 @@ function AppSidebar() {
               <div className="space-y-0.5">
                 {items.map((item) => {
                   const path = item.path === "__home__" ? home : item.path;
-                  const full = location.pathname + location.search;
-                  const active = full === path || (location.pathname === path && !location.search);
+                  const active = isNavPathActive(path, location, navPaths);
                   // Active = solid brand pill on the tinted panel; idle icons carry a soft red tint.
                   const navButton = (
                     <button

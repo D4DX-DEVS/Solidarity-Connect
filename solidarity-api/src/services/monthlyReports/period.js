@@ -3,19 +3,36 @@ import { orgYearMonth } from '../../utils/orgTime.js';
 
 const IST_OFFSET_MINUTES = 5 * 60 + 30;
 
+const plainNumber = (value) => (typeof value === 'string' || typeof value === 'number' ? Number(value) : NaN);
+
+/** Parse ?year= for a whole-year view, rejecting anything that is not a plain value. */
+export function parseYear(query) {
+  const year = plainNumber(query?.year);
+  if (!Number.isInteger(year) || year < 2020 || year > 2100) return { error: 'year must be between 2020 and 2100' };
+  return { year };
+}
+
 /** Parse ?year=&month= into numbers, rejecting anything that is not a plain value. */
 export function parsePeriod(query) {
-  const year = typeof query?.year === 'string' || typeof query?.year === 'number' ? Number(query.year) : NaN;
-  const month = typeof query?.month === 'string' || typeof query?.month === 'number' ? Number(query.month) : NaN;
-  if (!Number.isInteger(year) || year < 2020 || year > 2100) return { error: 'year must be between 2020 and 2100' };
+  const parsed = parseYear(query);
+  if (parsed.error) return parsed;
+  const month = plainNumber(query?.month);
   if (!Number.isInteger(month) || month < 1 || month > 12) return { error: 'month must be 1–12' };
-  return { year, month };
+  return { year: parsed.year, month };
 }
 
 /** The current report month in IST, 1-based. */
 export function currentPeriod(now = new Date()) {
   const { year, month } = orgYearMonth(now);
   return { year, month: month + 1 };
+}
+
+/** Report months of `year` that have started (IST): 12 for a past year, 0 for a future one. */
+export function monthsElapsed(year, now = new Date()) {
+  const current = currentPeriod(now);
+  if (year < current.year) return 12;
+  if (year > current.year) return 0;
+  return current.month;
 }
 
 /** Last moment a month's report can be edited: `deadlineDay` of the next month, 23:59:59.999 IST. */

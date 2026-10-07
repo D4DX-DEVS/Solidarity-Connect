@@ -196,6 +196,10 @@ export const MONTH_NAMES = [
 
 export const periodLabel = (year: number, month: number) => `${MONTH_NAMES[month - 1]} ${year}`;
 
+/** "Jan – Oct 2026": the months a year view adds up (all twelve once the year is over). */
+export const yearSpanLabel = (year: number, months: number) =>
+  months > 0 ? `${MONTH_NAMES[0].slice(0, 3)} – ${MONTH_NAMES[months - 1].slice(0, 3)} ${year}` : String(year);
+
 /** "YYYY-MM" for the MonthPicker. */
 export const toMonthValue = (year: number, month: number) => `${year}-${String(month).padStart(2, "0")}`;
 

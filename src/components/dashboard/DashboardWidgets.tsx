@@ -1,14 +1,15 @@
 import { lazy, Suspense, useId, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, CalendarDays, Minus, Search, UserPlus, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, CalendarClock, CheckCircle2, Minus, Search, UserPlus, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { DashboardOverview, MembershipTrendPoint, RecentActivityItem } from "@/hooks/useDashboardOverview";
+import type { DashboardOverview, DashboardReport, MembershipTrendPoint, RecentActivityItem } from "@/hooks/useDashboardOverview";
 import { cn } from "@/lib/utils";
 import { ChartCard } from "./ChartCard";
 import { formatNumber, percent, STATUS_COLOR, STATUS_LABEL, type MemberStatusKey } from "./chartTheme";
+import { daysLeft, deadlineLabel, reportLink, reportMonthName, reportMonthShort, timeLeftLabel } from "./reportStatus";
 
 // recharts is heavy — lazy so it stays out of the main bundle (PWA precache caps entry at 2 MiB).
 const MembershipTrendChart = lazy(() => import("./MembershipTrendChart"));
@@ -24,18 +25,50 @@ interface OverviewCardProps {
 }
 
 /* ------------------------------------------------------------------ */
-/* Toolbar: reporting window + member search                           */
+/* Toolbar: monthly report chip + member search                       */
 /* ------------------------------------------------------------------ */
 
-/** "Sep 2026" + "Oct 2026" → "Sep – Oct 2026"; a window across years keeps both years. */
-const formatWindow = ({ from, to }: { from: string; to: string }): string => {
-  const [fromMonth, fromYear] = from.split(" ");
-  const [toMonth, toYear] = to.split(" ");
-  return fromYear && fromYear === toYear ? `${fromMonth} – ${toMonth} ${toYear}` : `${from} – ${to}`;
-};
+/** The viewer's own report as a word: in, locked (deadline passed), time left once the month is over, else the due date. */
+function reportChipStatus(report: DashboardReport): { text: string; tone: string } {
+  if (report.own?.submitted) return { text: "Submitted", tone: "text-success" };
+  if (daysLeft(report.deadline) < 0) return { text: "Locked", tone: "text-muted-foreground" };
+  if (report.closing) return { text: timeLeftLabel(report.deadline), tone: "text-amber-700 dark:text-amber-400" };
+  return { text: `Due ${deadlineLabel(report.deadline)}`, tone: "text-foreground" };
+}
 
-/** One row at every width (date pill + search), so phones don't spend two rows on it. */
-export function DashboardToolbar({ reportingWindow }: { reportingWindow?: { from: string; to: string } }) {
+/** The month's report this dashboard tracks, with the viewer's own status. Opens that month on Reports. */
+function ReportChip({ report }: { report?: DashboardReport }) {
+  const navigate = useNavigate();
+  const submitted = report?.own?.submitted;
+  const Icon = submitted ? CheckCircle2 : CalendarClock;
+  const status = report ? reportChipStatus(report) : null;
+  return (
+    <button
+      type="button"
+      disabled={!report}
+      onClick={() => report && navigate(reportLink(report, "mine"))}
+      title={report ? `${reportMonthName(report)} ${report.year} report · due ${deadlineLabel(report.deadline)}` : undefined}
+      className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none"
+    >
+      <Icon className={cn("h-4 w-4", submitted && "text-success")} aria-hidden />
+      {report && status ? (
+        <>
+          <span className="whitespace-nowrap font-semibold text-foreground">
+            {reportMonthShort(report)}<span className="sr-only sm:not-sr-only"> {report.year} report</span>
+          </span>
+          <span aria-hidden>·</span>
+          <span className={cn("whitespace-nowrap font-semibold", status.tone)}>{status.text}</span>
+        </>
+      ) : <span className="font-semibold text-foreground">…</span>}
+    </button>
+  );
+}
+
+/**
+ * One row at every width (report chip + search), so phones don't spend two rows on it.
+ * The chip is left out when the API has no report status (older API) once loaded.
+ */
+export function DashboardToolbar({ report, loading }: { report?: DashboardReport; loading?: boolean }) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
@@ -45,14 +78,7 @@ export function DashboardToolbar({ reportingWindow }: { reportingWindow?: { from
   };
   return (
     <div className="flex items-center gap-2">
-      <span
-        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border bg-card px-3 text-xs font-medium text-muted-foreground"
-        title="Admin reporting window"
-      >
-        <CalendarDays className="h-4 w-4" aria-hidden />
-        <span className="sr-only sm:not-sr-only">Reporting</span>
-        <span className="whitespace-nowrap font-semibold text-foreground">{reportingWindow ? formatWindow(reportingWindow) : "…"}</span>
-      </span>
+      {report || loading ? <ReportChip report={report} /> : null}
       <form
         className="relative min-w-0 flex-1"
         onSubmit={(e) => { e.preventDefault(); submit(); }}
