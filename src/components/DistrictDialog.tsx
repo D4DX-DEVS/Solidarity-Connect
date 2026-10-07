@@ -62,10 +62,11 @@ const DistrictDialog = ({ open, onOpenChange, district, mode }: DistrictDialogPr
         });
       }
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : `Failed to ${mode} district`;
       toast({
         title: "Error",
-        description: error.message || `Failed to ${mode} district`,
+        description: message,
         variant: "destructive",
       });
     }

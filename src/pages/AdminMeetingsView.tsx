@@ -18,14 +18,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import PageSizeInput from "@/components/app/PageSizeInput";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminMeetingsOverview, useMeetings, useDeleteMeeting } from "@/hooks/useMeetings";
-import { getEffectiveStatus } from "@/lib/meetings";
+import { getEffectiveStatus, Meeting } from "@/lib/meetings";
 import { useDistricts } from "@/hooks/useDistricts";
 import { useListParams } from "@/hooks/useListParams";
 import { confirmAction } from "@/lib/confirm";
@@ -66,6 +65,8 @@ interface MeetingData {
   meetingType: string;
   status: string;
   targetAudience: string;
+  targetGroups?: Array<{ _id: string; name: string; code: string }>;
+  targetDistricts?: Array<{ _id: string; name: string; code: string }>;
   scheduledDate: string;
   duration: number;
   createdBy: {
@@ -195,7 +196,7 @@ const AdminMeetingsView = () => {
     }
   };
 
-  const getTargetAudienceText = (meeting: any) => {
+  const getTargetAudienceText = (meeting: MeetingData | Meeting) => {
     switch (meeting.targetAudience) {
       case 'all': return 'All Members';
       case 'group_admins': return 'Area Admins';
@@ -395,8 +396,8 @@ const AdminMeetingsView = () => {
           )}
 
           {/* Group Progress Filters */}
-          <SectionCard title="Group Filters" description="Narrow the meeting progress table by status, district, and page size.">
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+          <SectionCard title="Group Filters" description="Narrow the meeting progress table by status and district.">
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
                 <Select value={detailFilters.groupStatus || "all"} onValueChange={(value) => handleDetailFilterChange('groupStatus', value === "all" ? "" : value)}>
                   <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
                     <SelectValue placeholder="Filter by Status" />
@@ -423,11 +424,6 @@ const AdminMeetingsView = () => {
                     )}
                   </SelectContent>
                 </Select>
-
-                <PageSizeInput
-                  value={groupPagination.itemsPerPage}
-                  onChange={(size) => setGroupPagination(prev => ({ ...prev, itemsPerPage: size, currentPage: 1 }))}
-                />
 
                 <Button variant="outline" className="h-9 px-2 text-xs sm:h-11 sm:px-4 sm:text-sm" onClick={() => setDetailFilters({ groupStatus: '', district: '' })}>
                   <span className="sm:hidden">Clear</span>
@@ -613,53 +609,18 @@ const AdminMeetingsView = () => {
                     return true;
                   });
                   
-                  const totalPages = Math.ceil(filteredGroups.length / groupPagination.itemsPerPage);
-                  
-                  if (totalPages <= 1) return null;
-                  
+                  // Rows per page sits with Previous/Next at the bottom, like every other list
                   return (
-                    <div className="data-strip flex flex-wrap items-center justify-center gap-2 border-0 pt-4 md:justify-between">
-                      <div className="text-xs text-muted-foreground sm:text-sm">
-                        Showing {((groupPagination.currentPage - 1) * groupPagination.itemsPerPage) + 1} to {Math.min(groupPagination.currentPage * groupPagination.itemsPerPage, filteredGroups.length)} of {filteredGroups.length} groups
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGroupPageChange(groupPagination.currentPage - 1)}
-                          disabled={groupPagination.currentPage <= 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          <span className="hidden sm:inline">Previous</span>
-                        </Button>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            const pageNum = Math.max(1, groupPagination.currentPage - 2) + i;
-                            if (pageNum > totalPages) return null;
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={pageNum === groupPagination.currentPage ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => handleGroupPageChange(pageNum)}
-                                className="w-8 h-8 p-0"
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          })}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGroupPageChange(groupPagination.currentPage + 1)}
-                          disabled={groupPagination.currentPage >= totalPages}
-                        >
-                          <span className="hidden sm:inline">Next</span>
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <DataPagination
+                      page={groupPagination.currentPage}
+                      pageSize={groupPagination.itemsPerPage}
+                      totalPages={Math.ceil(filteredGroups.length / groupPagination.itemsPerPage)}
+                      totalDocs={filteredGroups.length}
+                      onPageChange={handleGroupPageChange}
+                      onPageSizeChange={(size) => setGroupPagination(prev => ({ ...prev, itemsPerPage: size, currentPage: 1 }))}
+                      itemLabel="groups"
+                      className="border-0 px-0 py-0"
+                    />
                   );
                 })()}
               </div>
@@ -948,7 +909,7 @@ const AdminMeetingsView = () => {
               ) : (
                 <div className="space-y-2 sm:space-y-3">
                   <div className={`space-y-2 sm:space-y-3 transition-opacity ${agendasStale ? "opacity-60" : ""}`}>
-                    {agendas.map((meeting: any) => {
+                    {agendas.map((meeting: Meeting) => {
                       const isExpanded = expandedId === meeting._id;
                       return (
                         <Card

@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { PageSkeleton } from "@/components/ui/loading-skeletons";
-import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI, authAPI } from "@/utils/api";
+import { usersAPI, districtsAPI, groupsAPI, leadersAPI, membersAPI, authAPI, type QueryParams } from "@/utils/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,6 +118,14 @@ interface Group {
   } | string;
 }
 
+interface MemberLeaderPayload {
+  isLeader: boolean;
+  roleTag?: {
+    type?: string;
+    name?: string;
+  };
+}
+
 interface UserStats {
   totalUsers: number;
   activeUsers: number;
@@ -126,6 +134,15 @@ interface UserStats {
   districtAdmins: number;
   groupAdmins: number;
 }
+
+// roleFilter is "<role>" or "<role>:<adminKind>" — Murabi/Coordinator admins share
+// role 'group_admin' and are only told apart by adminKind.
+const applyRoleFilter = (params: QueryParams, roleFilter: string) => {
+  if (roleFilter === 'all') return;
+  const [role, adminKind] = roleFilter.split(':');
+  params.role = role;
+  if (adminKind) params.adminKind = adminKind;
+};
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -235,25 +252,17 @@ const UserManagement = () => {
       }
     };
     init();
-  }, []);
+  }, [navigate]);
 
-  // roleFilter is "<role>" or "<role>:<adminKind>" — Murabi/Coordinator admins share
-  // role 'group_admin' and are only told apart by adminKind.
-  const [filterRole, filterAdminKind] = roleFilter.split(':');
+  const [filterRole] = roleFilter.split(':');
   const isMemberView = filterRole === 'member';
-
-  const applyRoleFilter = (params: Record<string, any>) => {
-    if (roleFilter === 'all') return;
-    params.role = filterRole;
-    if (filterAdminKind) params.adminKind = filterAdminKind;
-  };
 
   // Fetch users/members when page or filters change
   useEffect(() => {
     const fetchData = async () => {
       try {
         setSearching(true);
-        const params: Record<string, any> = { page: currentPage, limit: 20 };
+        const params: QueryParams = { page: currentPage, limit: 20 };
         if (debouncedSearch) params.search = debouncedSearch;
 
         if (isMemberView) {
@@ -270,7 +279,7 @@ const UserManagement = () => {
             setHasPrevPage(result.pagination.hasPrevPage || false);
           }
         } else {
-          applyRoleFilter(params);
+          applyRoleFilter(params, roleFilter);
           if (statusFilter === 'active') params.isActive = true;
           else if (statusFilter === 'inactive') params.isActive = false;
           if (districtFilter !== 'all') params.district = districtFilter;
@@ -294,12 +303,12 @@ const UserManagement = () => {
       }
     };
     fetchData();
-  }, [currentPage, debouncedSearch, roleFilter, statusFilter, districtFilter, groupFilter, isMemberView]);
+  }, [currentPage, debouncedSearch, roleFilter, statusFilter, districtFilter, groupFilter, isMemberView, toast]);
 
   const fetchData = async () => {
     try {
       setSearching(true);
-      const params: Record<string, any> = { page: currentPage, limit: 20 };
+      const params: QueryParams = { page: currentPage, limit: 20 };
       if (debouncedSearch) params.search = debouncedSearch;
 
       if (isMemberView) {
@@ -316,7 +325,7 @@ const UserManagement = () => {
           setHasPrevPage(result.pagination.hasPrevPage || false);
         }
       } else {
-        applyRoleFilter(params);
+        applyRoleFilter(params, roleFilter);
         if (statusFilter === 'active') params.isActive = true;
         else if (statusFilter === 'inactive') params.isActive = false;
         if (districtFilter !== 'all') params.district = districtFilter;
@@ -352,7 +361,7 @@ const UserManagement = () => {
     } catch (error) {
       toast({
         title: "Error", 
-        description: "Failed to create user",
+        description: error instanceof Error && error.message ? error.message : "Failed to create user",
         variant: "destructive",
       });
     }
@@ -388,7 +397,7 @@ const UserManagement = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update user", 
+        description: error instanceof Error && error.message ? error.message : "Failed to update user",
         variant: "destructive",
       });
     }
@@ -406,7 +415,7 @@ const UserManagement = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update user status",
+        description: error instanceof Error && error.message ? error.message : "Failed to update user status",
         variant: "destructive",
       });
     }
@@ -446,7 +455,7 @@ const UserManagement = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update leader status",
+        description: error instanceof Error && error.message ? error.message : "Failed to update leader status",
         variant: "destructive",
       });
     }
@@ -465,7 +474,7 @@ const UserManagement = () => {
     if (!leaderMember) return;
     setSavingLeader(true);
     try {
-      const payload: any = { isLeader: leaderForm.isLeader };
+      const payload: MemberLeaderPayload = { isLeader: leaderForm.isLeader };
       if (leaderForm.isLeader && (leaderForm.roleTagType || leaderForm.roleTagName)) {
         payload.roleTag = {
           type: leaderForm.roleTagType || undefined,
@@ -476,8 +485,9 @@ const UserManagement = () => {
       toast({ title: "Saved", description: "Member leader status updated" });
       setLeaderMember(null);
       fetchData();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to update", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to update";
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSavingLeader(false);
     }
@@ -1048,7 +1058,7 @@ const UserManagement = () => {
 
             {formData.role === 'group_admin' && formData.district && (
               <div>
-                <Label htmlFor="group">Group *</Label>
+                <Label htmlFor="group">Area *</Label>
                 <Select 
                   value={formData.group} 
                   onValueChange={(value) => setFormData({ ...formData, group: value })} 
@@ -1057,10 +1067,10 @@ const UserManagement = () => {
                   <SelectTrigger>
                     <SelectValue placeholder={
                       loadingGroups 
-                        ? "Loading groups..." 
+                        ? "Loading areas..." 
                         : filteredGroups.length === 0 
-                          ? "No groups available" 
-                          : "Select group"
+                          ? "No areas available" 
+                          : "Select area"
                     } />
                   </SelectTrigger>
                   <SelectContent>
@@ -1072,10 +1082,10 @@ const UserManagement = () => {
                   </SelectContent>
                 </Select>
                 {loadingGroups && (
-                  <p className="text-sm text-muted-foreground mt-1">Loading groups for selected district...</p>
+                  <p className="text-sm text-muted-foreground mt-1">Loading areas for the selected district...</p>
                 )}
                 {!loadingGroups && filteredGroups.length === 0 && (
-                  <p className="text-sm text-muted-foreground mt-1">No groups available in this district</p>
+                  <p className="text-sm text-muted-foreground mt-1">No areas available in this district</p>
                 )}
               </div>
             )}

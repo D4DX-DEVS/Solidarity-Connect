@@ -210,6 +210,10 @@ export const leaderEditError = (user, target, { isLeader, roleTag, extraRoles } 
     return { status: 400, message: 'isLeader must be true or false' };
   }
   if (!canManageLeaderTarget(user, target)) return { status: 403, message: HIERARCHY_DENIED };
+  // An Area Admin's main role type is their access — set on the Admins page only.
+  if (target?.role === 'group_admin' && roleTag?.type && roleTag.type !== target.roleTag?.type) {
+    return { status: 403, message: "An Area Admin's main role is their admin access. Change it on the Admins page." };
+  }
   if (user?.role === 'state_admin') return null;
 
   // An admin account's primary roleTag also sets its access scope

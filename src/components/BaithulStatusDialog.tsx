@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,14 +40,7 @@ const BaithulStatusDialog = ({ open, onOpenChange, member, onChanged }: BaithulS
   const [loading, setLoading] = useState(false);
   const [working, setWorking] = useState(false);
 
-  useEffect(() => {
-    if (open && member) {
-      setMonth(currentMonth());
-      fetchPayments();
-    }
-  }, [open, member]);
-
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     if (!member) return;
     try {
       setLoading(true);
@@ -58,7 +51,14 @@ const BaithulStatusDialog = ({ open, onOpenChange, member, onChanged }: BaithulS
     } finally {
       setLoading(false);
     }
-  };
+  }, [member]);
+
+  useEffect(() => {
+    if (open && member) {
+      setMonth(currentMonth());
+      fetchPayments();
+    }
+  }, [open, member, fetchPayments]);
 
   if (!member) return null;
 

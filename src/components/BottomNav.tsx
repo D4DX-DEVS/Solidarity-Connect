@@ -27,7 +27,8 @@ const BottomNav = () => {
   // Filter nav items based on role
   const baseNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: dashboardPath },
-    { icon: Users, label: "Members", path: "/members", hideForRoles: ["member"] },
+    // Members see the read-only directory at the same path
+    { icon: Users, label: "Members", path: "/members" },
     // ponytail: admins get the single meetings workspace; others the read-only list.
     ...(FEATURES.meetings ? [{ icon: Calendar, label: "Meetings", path: isMeetingsAdmin ? "/admin/meetings-view" : "/meetings", hideForRoles: ["member"] }] : []),
     { icon: Star, label: "Leaders", path: "/leaders" },

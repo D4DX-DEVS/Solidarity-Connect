@@ -63,9 +63,11 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
         filter._id = null;
       }
     } else if (req.user.role === 'district_admin') {
-      // District admins see groups in their district
+      // District admins see groups in their district — none if they have no district
       if (req.user.district) {
         filter.district = req.user.district._id;
+      } else {
+        filter._id = null;
       }
     }
 
@@ -242,6 +244,7 @@ router.put('/:id',
   [
     body('name').optional().trim().isLength({ min: 2, max: 100 }),
     body('code').optional().trim().isLength({ min: 2, max: 10 }).isAlphanumeric(),
+    body('district').optional().isMongoId().withMessage('Invalid district ID'),
     body('admin').optional().isMongoId(),
     body('isActive').optional().isBoolean(),
     handleValidationErrors
@@ -268,11 +271,21 @@ router.put('/:id',
 
       const updateData = req.body;
 
-      // Check for duplicate code if being updated
+      // District admin can't move a group out of their district
+      if (req.user.role === 'district_admin' &&
+          updateData.district &&
+          updateData.district.toString() !== req.user.district._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only keep groups in your assigned district'
+        });
+      }
+
+      // Check for duplicate code if being updated — in the district the group ends up in
       if (updateData.code) {
         const existingGroup = await Group.findOne({
           code: updateData.code,
-          district: group.district._id,
+          district: updateData.district || group.district._id,
           _id: { $ne: group._id }
         });
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +54,7 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
   const [dateOpen, setDateOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
-  
+
   // Form state
   const [formData, setFormData] = useState({
     amount: "",
@@ -62,6 +62,19 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
     paymentMonth: new Date().toISOString().slice(0, 7), // YYYY-MM format
     description: ""
   });
+
+  // Fetch payments callback
+  const fetchPayments = useCallback(async () => {
+    if (!member) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const result = await baithulMaalAPI.getMemberPayments(member._id);
+      setPayments(result.data || []);
+    } catch (error) {
+      console.error('Failed to fetch payments:', error);
+    }
+  }, [member]);
 
   // Reset form when dialog opens/closes or member changes
   useEffect(() => {
@@ -75,19 +88,8 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
       setEditingPayment(null);
       fetchPayments();
     }
-  }, [open, member]);
+  }, [open, member, fetchPayments]);
 
-  const fetchPayments = async () => {
-    if (!member) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const result = await baithulMaalAPI.getMemberPayments(member._id);
-      setPayments(result.data || []);
-    } catch (error) {
-      console.error('Failed to fetch payments:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

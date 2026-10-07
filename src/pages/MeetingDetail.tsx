@@ -11,6 +11,7 @@ import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { DetailSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { useMeeting, useUpdateMeeting } from "@/hooks/useMeetings";
+import { MeetingSession } from "@/lib/meetings";
 import { format } from "date-fns";
 
 const MeetingDetail = () => {
@@ -69,10 +70,11 @@ const MeetingDetail = () => {
         description: "Meeting updated successfully",
       });
       setIsEditing(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update meeting';
       toast({
         title: "Error",
-        description: error.message || "Failed to update meeting",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -348,7 +350,7 @@ const MeetingDetail = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {meeting.sessions.map((session: any, index: number) => (
+                    {meeting.sessions.map((session: MeetingSession, index: number) => (
                       <Card key={session._id} className="surface-card border-l-4 border-l-primary">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">

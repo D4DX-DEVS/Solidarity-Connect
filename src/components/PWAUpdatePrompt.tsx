@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -34,19 +35,39 @@ export function PWAUpdatePrompt() {
       console.error("SW registration error", error);
     },
   });
+  const [updating, setUpdating] = useState(false);
+
+  // The plugin only reloads on `controllerchange`, which never fires when the page
+  // isn't SW-controlled (e.g. opened with Ctrl+Shift+R) — reload ourselves then
+  const handleUpdate = async () => {
+    setUpdating(true);
+    const waiting = (await navigator.serviceWorker.getRegistration())?.waiting;
+    if (!waiting) {
+      // New SW already took over; this page just isn't running it yet
+      window.location.reload();
+      return;
+    }
+    if (!navigator.serviceWorker.controller) {
+      waiting.addEventListener("statechange", () => {
+        if (waiting.state === "activated") window.location.reload();
+      });
+    }
+    await updateServiceWorker(true);
+  };
 
   if (!needRefresh) return null;
 
   return (
     <div className="fixed top-4 left-4 right-4 z-50 bg-primary text-primary-foreground rounded-xl shadow-lg p-4 flex items-center gap-3 animate-in slide-in-from-top-4">
-      <RefreshCw className="h-5 w-5 flex-shrink-0" />
+      <RefreshCw className={`h-5 w-5 flex-shrink-0 ${updating ? "animate-spin" : ""}`} />
       <p className="flex-1 text-sm font-medium">A new version is available!</p>
       <Button
         size="sm"
         variant="secondary"
-        onClick={() => updateServiceWorker(true)}
+        disabled={updating}
+        onClick={handleUpdate}
       >
-        Update now
+        {updating ? "Updating..." : "Update now"}
       </Button>
     </div>
   );

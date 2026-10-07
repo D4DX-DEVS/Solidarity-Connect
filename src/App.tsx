@@ -6,7 +6,8 @@ import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthProvider";
+import { useAuth } from "./contexts/AuthContext";
 import { FEATURES } from "./lib/features";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AppSidebar from "./components/app/AppSidebar";
@@ -15,13 +16,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StateAdmin from "./pages/StateAdmin";
 import DistrictAdmin from "./pages/DistrictAdmin";
-import ManageDistricts from "./pages/ManageDistricts";
-import ManageGroups from "./pages/ManageGroups";
 import MasterData from "./pages/MasterData";
 import TransferApprovals from "./pages/TransferApprovals";
 import CreateMeetingAgenda from "./pages/CreateMeetingAgenda";
 import MeetingDetail from "./pages/MeetingDetail";
 import Members from "./pages/Members";
+import MemberDirectory from "./pages/MemberDirectory";
 import Archives from "./pages/Archives";
 import MemberDetail from "./pages/MemberDetail";
 import EditMemberDetails from "./pages/EditMemberDetails";
@@ -65,13 +65,21 @@ const queryClient = new QueryClient({
 
 // Persistent layout: sidebar stays mounted across route changes (no remount flash)
 // ponytail: BottomNav lives here so every protected page keeps the mobile footer
-const AppLayout = () => (
-  <>
-    <AppSidebar />
-    <Outlet />
-    <BottomNav />
-  </>
-);
+const AppLayout = () => {
+  // A different account gets a freshly mounted page, so no page state or query
+  // observer carries over from the previous account
+  const { user } = useAuth();
+  return (
+    <>
+      <AppSidebar />
+      <Outlet key={user?.id} />
+      <BottomNav />
+    </>
+  );
+};
+
+// Admins get the managed members list; the member login gets a read-only directory
+const MembersPage = () => (useAuth().userRole === "member" ? <MemberDirectory /> : <Members />);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -88,9 +96,10 @@ const App = () => (
             <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<ProtectedRoute requiredRoles={['group_admin']}><Dashboard /></ProtectedRoute>} />
             <Route path="/state-admin" element={<ProtectedRoute requiredRoles={['state_admin']}><StateAdmin /></ProtectedRoute>} />
-            <Route path="/state-admin/districts" element={<ProtectedRoute requiredRoles={['state_admin']}><ManageDistricts /></ProtectedRoute>} />
-            <Route path="/state-admin/groups" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><ManageGroups /></ProtectedRoute>} />
-            <Route path="/state-admin/master-data" element={<ProtectedRoute requiredRoles={['state_admin']}><MasterData /></ProtectedRoute>} />
+            {/* Districts and Groups pages merged into Master Data — keep old links working */}
+            <Route path="/state-admin/districts" element={<Navigate to="/state-admin/master-data" replace />} />
+            <Route path="/state-admin/groups" element={<Navigate to="/state-admin/master-data?tab=areas" replace />} />
+            <Route path="/state-admin/master-data" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><MasterData /></ProtectedRoute>} />
             <Route path="/state-admin/transfer-approvals" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><TransferApprovals /></ProtectedRoute>} />
             {/* ponytail: agenda list folded into the single meetings workspace */}
             <Route path="/state-admin/meeting-agenda" element={<Navigate to={FEATURES.meetings ? "/admin/meetings-view" : "/"} replace />} />
@@ -104,7 +113,7 @@ const App = () => (
 
             <Route path="/admin/meetings-view" element={FEATURES.meetings ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />
-            <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
             {/* Age-over (38 and above) members, moved out of Members — state admin only */}
             <Route path="/archives" element={<ProtectedRoute requiredRoles={['state_admin']}><Archives /></ProtectedRoute>} />
             <Route path="/member/:id" element={<ProtectedRoute><MemberDetail /></ProtectedRoute>} />

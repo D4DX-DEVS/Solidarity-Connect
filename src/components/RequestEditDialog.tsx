@@ -6,10 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { requestsAPI } from "@/utils/api";
 
+interface Member {
+  _id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  status?: string;
+}
+
 interface RequestEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  member: any;
+  member: Member | undefined;
 }
 
 const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProps) => {
@@ -31,7 +39,7 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
 
     try {
       setLoading(true);
-      const proposedData: Record<string, any> = {};
+      const proposedData: Record<string, string> = {};
 
       if (formData.name && formData.name !== member.name) proposedData.name = formData.name;
       if (formData.email && formData.email !== member.email) proposedData.email = formData.email;
@@ -55,8 +63,9 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
 
       toast({ title: "Request Submitted", description: "Your edit request has been submitted for approval." });
       onOpenChange(false);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to submit request", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to submit request";
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

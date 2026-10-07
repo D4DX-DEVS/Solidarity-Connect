@@ -10,6 +10,11 @@ export interface MeetingSession {
   sessionStatus?: string;
   memberAttendance?: unknown[];
   guestAttendance?: unknown[];
+  attendance?: {
+    overall?: { total?: number };
+    members?: { total?: number };
+    guests?: { total?: number };
+  };
 }
 
 export interface Meeting {
@@ -102,6 +107,18 @@ export interface CreateMonthlyMeetingData {
   targetDistricts?: string[];
 }
 
+export interface District {
+  _id: string;
+  name: string;
+  code: string;
+}
+
+export interface Group {
+  _id: string;
+  name: string;
+  code: string;
+}
+
 export interface CreateFormData {
   monthOptions: Array<{ value: number; label: string }>;
   yearOptions: Array<{ value: number; label: string }>;
@@ -111,8 +128,8 @@ export interface CreateFormData {
   };
   userInfo: {
     role: string;
-    district?: any;
-    group?: any;
+    district?: District;
+    group?: Group;
   };
 }
 

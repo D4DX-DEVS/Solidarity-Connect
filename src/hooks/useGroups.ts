@@ -81,23 +81,22 @@ export const useDeleteGroup = () => {
 };
 
 // Ask, then delete with a 10 second Undo. Lists hide the row via usePendingDeletes().
-// `noun` follows the page: Master Data says "area", Manage Groups says "group".
-export const useConfirmDeleteGroup = (noun: 'area' | 'group' = 'area') => {
+// A Group record is an "area" in the UI.
+export const useConfirmDeleteGroup = () => {
   const queryClient = useQueryClient();
-  const Noun = noun === 'area' ? 'Area' : 'Group';
 
   return async (group: Group): Promise<void> => {
     const confirmed = await confirmAction({
-      title: `Delete this ${noun}?`,
-      description: `Only ${noun === 'area' ? 'an' : 'a'} ${noun} with no members can be deleted.`,
+      title: 'Delete this area?',
+      description: 'Only an area with no members can be deleted.',
       itemName: group.name,
-      confirmLabel: `Delete ${noun}`,
+      confirmLabel: 'Delete area',
       undoable: true,
     });
     if (!confirmed) return;
     undoableDelete({
       id: group._id,
-      title: `${Noun} deleted`,
+      title: 'Area deleted',
       description: group.name,
       commit: () => groupsApi.deleteGroup(group._id),
       // Area counts live on the districts too

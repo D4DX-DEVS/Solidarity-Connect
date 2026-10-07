@@ -16,6 +16,7 @@ import {
 } from '../middleware/validation.js';
 import { body, query } from 'express-validator';
 import { ageCutoff, ageOn, ageOverMatch, agedOutSince, currentMemberMatch, isAgeOver } from '../utils/ageOver.js';
+import { attachPersonLinks, leaderRecordError, loadPersonRecords, planPersonSync, savePersonEdit } from '../services/personRecords.js';
 
 const router = express.Router();
 
@@ -58,7 +59,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       search,
       isApproved,
       includeStats = 'true',
-      forLeaderAssignment
+      forLeaderAssignment,
+      isLeader,
+      withLinks
     } = req.query;
 
     // Validate pagination parameters
@@ -119,6 +122,9 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     if (district && req.user.role === 'state_admin') filter.district = district;
     if (group && ['state_admin', 'district_admin'].includes(req.user.role)) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
+    // Role Management's leader-status filter; $ne keeps records that never had the field.
+    if (isLeader === 'true') filter.isLeader = true;
+    if (isLeader === 'false') filter.isLeader = { $ne: true };
 
     // Build statistics filter (excludes search and status, but includes district/group filters)
     let statsFilter = { ...baseFilter };
@@ -192,6 +198,10 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       ...member.toObject(),
       transferRequest: transferRequestMap[member._id.toString()] || null
     }));
+    // Role Management: admin logins on the same phone, and where the leader roles are edited.
+    if (withLinks === 'true' && ['state_admin', 'district_admin', 'group_admin'].includes(req.user.role)) {
+      await attachPersonLinks(membersWithTransferStatus);
+    }
 
     // Calculate statistics only when requested (skip on pagination to improve speed)
     let stats = [];
@@ -749,6 +759,12 @@ router.patch('/:id/leader',
       if (denied) {
         return res.status(denied.status).json({ success: false, message: denied.message });
       }
+      // Admins are members too: when this phone has an admin login, roles are edited there.
+      const personRecords = await loadPersonRecords(member);
+      const elsewhere = leaderRecordError(member, personRecords);
+      if (elsewhere) {
+        return res.status(elsewhere.status).json({ success: false, message: elsewhere.message, data: elsewhere.data });
+      }
 
       member.isLeader = isLeader !== undefined ? isLeader : member.isLeader;
 
@@ -789,7 +805,21 @@ router.patch('/:id/leader',
         };
       }
 
-      await member.save();
+      // Copy the result to any other records on this phone.
+      const sync = planPersonSync(req.user, member, personRecords, inScope);
+      if (sync.error) {
+        return res.status(sync.error.status).json({ success: false, message: sync.error.message });
+      }
+
+      try {
+        await savePersonEdit(member, sync.changes);
+      } catch (saveError) {
+        if (saveError.name === 'ValidationError') {
+          return res.status(400).json({ success: false, message: saveError.message });
+        }
+        console.error('Leader role save error:', saveError);
+        return res.status(500).json({ success: false, message: "Couldn't save the leader roles. Nothing was changed — please try again." });
+      }
 
       res.status(200).json({
         success: true,
