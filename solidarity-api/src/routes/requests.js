@@ -9,7 +9,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
-import { isAgeOver } from '../utils/ageOver.js';
+import { hiddenAsArchived } from '../utils/ageOver.js';
 
 const router = express.Router();
 
@@ -262,8 +262,8 @@ router.post('/', authenticate, authorize(['manage_members']), createRequestValid
     const member = await Member.findById(requestData.member)
       .populate('district group');
 
-    // Archived (age over) members are visible to the state admin only.
-    if (!member || (req.user.role !== 'state_admin' && isAgeOver(member))) {
+    // Archived (age over) members are visible to the state admin only, when restricted.
+    if (!member || hiddenAsArchived(req.user, member)) {
       return res.status(400).json({
         success: false,
         message: 'Member not found'
@@ -408,7 +408,7 @@ router.post('/:id/approve',
       }
 
       // A member who aged out while the request was open is the state admin's to change now.
-      if (req.user.role !== 'state_admin' && isAgeOver(request.member)) {
+      if (hiddenAsArchived(req.user, request.member)) {
         return res.status(404).json({ success: false, message: 'Member not found' });
       }
 

@@ -428,7 +428,7 @@ const MemberDetail = () => {
 
   return (
     <PageShell>
-      <PageHero backTo={member.ageOver ? "/archives" : "/members"}
+      <PageHero backTo="/members"
         title={member.name}
         subtitle={`${member.group?.name || "Group not assigned"} • ${member.district?.name || "District not assigned"}`}
         eyebrow="Member Profile"

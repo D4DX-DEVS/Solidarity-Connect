@@ -1,8 +1,9 @@
 /**
  * "Age over" archive rule. A member is archived from their 38th birthday
  * (aged 38 and above) or when a state admin sets status "Age over" by hand.
- * Archived members drop out of the Members list, dashboards and reports, and
- * only the state admin sees them, on the Archives page.
+ * Archived members are listed on the state admin's Archives page and tagged
+ * "Age over" in Members. Whether they are also kept out of Members, dashboards,
+ * reports and non-state roles is ARCHIVE_RESTRICTED below.
  *
  * Worked out from dateOfBirth at query time and never written back, so the
  * stored status (Active, Abroad…) survives and a corrected DOB restores the
@@ -10,6 +11,13 @@
  */
 export const AGE_OVER_STATUS = 'Age over';
 export const AGE_OVER_MIN_AGE = 38;
+
+/**
+ * Off (2026-10-07): archived members count and show everywhere, for every role,
+ * like current ones. Set true to keep them out of Members, dashboards and reports
+ * and hide them from everyone but the state admin.
+ */
+export const ARCHIVE_RESTRICTED = false;
 
 // Birthdays turn over on the Kerala calendar day, not the server's.
 const ORG_TIME_ZONE = 'Asia/Kolkata';
@@ -57,9 +65,19 @@ export function ageOverMatch(now = new Date()) {
   return { $or: [{ status: AGE_OVER_STATUS }, { dateOfBirth: { $lte: ageOverCutoff(now) } }] };
 }
 
-/** Mongo match for current members; spread it into a filter (its $nor never clashes with a search $or). */
-export function currentMemberMatch(now = new Date()) {
+/** Mongo match for members who are not archived; spread it into a filter (its $nor never clashes with a search $or). */
+export function notAgeOverMatch(now = new Date()) {
   return { $nor: ageOverMatch(now).$or };
+}
+
+/** Members that count and show in day-to-day views: all of them unless ARCHIVE_RESTRICTED. */
+export function currentMemberMatch(now = new Date()) {
+  return ARCHIVE_RESTRICTED ? notAgeOverMatch(now) : {};
+}
+
+/** True when this member must be answered as "not found" for this user. */
+export function hiddenAsArchived(user, member, now = new Date()) {
+  return ARCHIVE_RESTRICTED && user?.role !== 'state_admin' && isAgeOver(member, now);
 }
 
 export function isAgeOver(member, now = new Date()) {

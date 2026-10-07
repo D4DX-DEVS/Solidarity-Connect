@@ -8,7 +8,7 @@ import { ensureForms, reportScopeFor } from './monthlyReports/store.js';
 import { dueReportMonth, reportProgress } from './dashboardReports.js';
 import { deadlineFor } from './monthlyReports/period.js';
 import { isAreaLevelAdmin, areaGroupIdsFor } from '../middleware/auth.js';
-import { ageOverMatch, currentMemberMatch } from '../utils/ageOver.js';
+import { ARCHIVE_RESTRICTED, ageOverMatch, currentMemberMatch } from '../utils/ageOver.js';
 
 /**
  * Data for the three admin dashboards, scoped down the hierarchy:
@@ -252,8 +252,8 @@ export function areaCoverage(groups, admins) {
 export async function buildDashboardOverview(user, { districtId, now = new Date() } = {}) {
   const scope = await resolveScope(user, { districtId });
   const since = new Date(now.getTime() - DELTA_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-  // Every member figure counts current members only; archived (age over) ones get
-  // their own count, and only on the state admin's own state-wide view.
+  // Member figures include archived (age over) members unless ARCHIVE_RESTRICTED;
+  // the archived count itself is only on the state admin's own state-wide view.
   const memberMatch = { ...scope.memberFilter, ...currentMemberMatch(now) };
   const showArchived = user.role === 'state_admin' && scope.level === 'state';
   const [facets, scopeGroups, districts, admins, report, membersAdded, areasAdded, adminsAdded, archived] = await Promise.all([
@@ -323,6 +323,8 @@ export async function buildDashboardOverview(user, { districtId, now = new Date(
       other: totals.total - totals.active - totals.abroad,
       // null outside the state admin's state-wide view.
       archived,
+      // Whether total (and every member figure) already counts the archived ones.
+      includesArchived: !ARCHIVE_RESTRICTED,
     },
     admins: { district: districtAdmins, area: admins.length - districtAdmins, total: admins.length },
     areas: { total: coverage.total, withoutAdmin: coverage.withoutAdmin },

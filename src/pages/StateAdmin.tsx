@@ -38,6 +38,9 @@ const StateAdmin = () => {
 
   const members = overview?.members;
   const deltas = overview?.deltas;
+  // Everyone on the roll, archived included, whether or not the API counts them in total
+  const archivedCount = members?.archived ?? 0;
+  const rollCount = (members?.total ?? 0) + (members?.includesArchived ? 0 : archivedCount);
   const scrollToScorecard = () => document.getElementById(SCORECARD_ID)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const actions = [
@@ -63,8 +66,8 @@ const StateAdmin = () => {
         <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" aria-label="Key figures">
           <KpiSparkCard
             title="Total Members"
-            value={show(formatNumber(members?.total ?? 0))}
-            detail={note(`${percent(members?.active ?? 0, members?.total ?? 0)}% active`)}
+            value={show(formatNumber(rollCount))}
+            detail={note(`${formatNumber(rollCount - archivedCount)} under 38 · ${formatNumber(archivedCount)} archived`)}
             icon={Users}
             tone="primary"
             spark={(trendQuery.data ?? []).map((p) => p.total)}
@@ -95,7 +98,7 @@ const StateAdmin = () => {
             loading={overviewQuery.isPending}
             onClick={() => navigate("/state-admin/users")}
           />
-          {/* Age-over members sit outside every figure above; this is their only count */}
+          {/* Age-over members: part of Total Members above; this card counts them on their own */}
           <KpiSparkCard
             title="Archives"
             value={show(formatNumber(members?.archived ?? 0))}

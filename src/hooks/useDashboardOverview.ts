@@ -44,8 +44,11 @@ export interface DashboardReport {
 export interface DashboardOverview {
   scope: { level: ScopeLevel; name: string; parentName: string | null };
   generatedAt: string;
-  /** Current members only. archived = age-over members, set on the state admin's state-wide view, else null. */
-  members: { total: number; active: number; abroad: number; other: number; archived?: number | null };
+  /**
+   * archived = age-over members, set on the state admin's state-wide view, else null.
+   * includesArchived: whether total/active/abroad/other already count them (API's ARCHIVE_RESTRICTED off).
+   */
+  members: { total: number; active: number; abroad: number; other: number; archived?: number | null; includesArchived?: boolean };
   admins: { district: number; area: number; total: number };
   areas: { total: number; withoutAdmin: number };
   profiles: { total: number; complete: number; fields: { field: string; label: string; filled: number }[] };

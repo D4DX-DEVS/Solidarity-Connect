@@ -1,6 +1,6 @@
 // Self-check for the "Age over" archive rule. Run: node src/utils/age-over.check.mjs
 import assert from 'node:assert/strict';
-import { ageCutoff, ageOverCutoff, ageOverMatch, agedOutSince, currentMemberMatch, isAgeOver, ageOn, AGE_OVER_STATUS } from './ageOver.js';
+import { ageCutoff, ageOverCutoff, ageOverMatch, agedOutSince, currentMemberMatch, hiddenAsArchived, isAgeOver, notAgeOverMatch, ageOn, AGE_OVER_STATUS, ARCHIVE_RESTRICTED } from './ageOver.js';
 
 const utc = (y, m, d) => new Date(Date.UTC(y, m - 1, d));
 // Noon IST on a calendar day
@@ -49,8 +49,14 @@ assert.deepEqual(agedOutSince('month', new Date(Date.UTC(2026, 9, 31, 19, 0))), 
 // $nor keeps the current-members match from colliding with a filter's own $or (search).
 const archived = ageOverMatch(today);
 assert.deepEqual(archived, { $or: [{ status: AGE_OVER_STATUS }, { dateOfBirth: { $lte: utc(1988, 10, 6) } }] });
-assert.deepEqual(currentMemberMatch(today), { $nor: archived.$or });
-const merged = { $or: [{ name: /x/ }], ...currentMemberMatch(today) };
+assert.deepEqual(notAgeOverMatch(today), { $nor: archived.$or });
+const merged = { $or: [{ name: /x/ }], ...notAgeOverMatch(today) };
 assert.ok(merged.$or && merged.$nor);
+
+// The restriction switch: off = archived members count and show for every role.
+const aged = { status: 'Active', dateOfBirth: utc(1980, 1, 1) };
+assert.deepEqual(currentMemberMatch(today), ARCHIVE_RESTRICTED ? notAgeOverMatch(today) : {});
+assert.equal(hiddenAsArchived({ role: 'district_admin' }, aged, today), ARCHIVE_RESTRICTED);
+assert.equal(hiddenAsArchived({ role: 'state_admin' }, aged, today), false);
 
 console.log('age-over check: OK');
