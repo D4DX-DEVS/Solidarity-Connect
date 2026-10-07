@@ -288,8 +288,8 @@ const Archives = () => {
         </div>
 
         <p className="data-strip px-3 py-2 text-xs text-muted-foreground sm:text-sm">
-          Members move here on their 38th birthday, or when their status is set to Age over. They are left out of
-          Members, dashboards and reports, and only state admins see them. Correcting a date of birth moves a member back.
+          Members are listed here from their 38th birthday, or when their status is set to Age over. They still show in
+          Members with an Age over tag and count in dashboards and reports. Correcting a date of birth clears the tag.
         </p>
 
         {isPending ? (

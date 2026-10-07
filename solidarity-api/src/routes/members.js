@@ -15,14 +15,14 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body, query } from 'express-validator';
-import { ageCutoff, ageOn, ageOverMatch, agedOutSince, currentMemberMatch, isAgeOver } from '../utils/ageOver.js';
+import { AGE_OVER_STATUS, ageCutoff, ageOn, ageOverCutoff, ageOverMatch, agedOutSince, currentMemberMatch, hiddenAsArchived, isAgeOver, notAgeOverMatch } from '../utils/ageOver.js';
 import { attachPersonLinks, leaderRecordError, loadPersonRecords, planPersonSync, savePersonEdit } from '../services/personRecords.js';
 
 const router = express.Router();
 
-// Archived (age over) members belong to the state admin alone; every other role
-// is answered as if the record were not there.
-const hiddenFrom = (user, member) => user.role !== 'state_admin' && isAgeOver(member);
+// Archived (age over) members, when ARCHIVE_RESTRICTED, belong to the state admin
+// alone; every other role is answered as if the record were not there.
+const hiddenFrom = (user, member) => hiddenAsArchived(user, member);
 const ARCHIVED_NOT_FOUND = { success: false, message: 'Member not found' };
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -110,15 +110,19 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       // State admin can see all members (no additional filter)
     }
 
-    // Archived (age over) members live on the Archives page, not here. Role
-    // Management (state admin) still lists them so their roles can be changed.
-    if (!skipScope) Object.assign(baseFilter, currentMemberMatch());
+    // Archived (age over) members show here flagged ageOver (also on the Archives
+    // page); with ARCHIVE_RESTRICTED only the state admin's list keeps them.
+    if (!skipScope && req.user.role !== 'state_admin') Object.assign(baseFilter, currentMemberMatch());
+    const now = new Date();
 
     // Build query filter (includes all filters for member list)
     let filter = { ...baseFilter };
 
-    // Apply additional filters for member list
-    if (status) filter.status = status;
+    // Apply additional filters for member list. "Age over" = computed archive rule;
+    // any other status lists current members only.
+    // $and keeps the archive $or clear of the search $or below.
+    if (status === 'Age over') filter.$and = [ageOverMatch(now)];
+    else if (status) Object.assign(filter, { status }, notAgeOverMatch(now));
     if (district && req.user.role === 'state_admin') filter.district = district;
     if (group && ['state_admin', 'district_admin'].includes(req.user.role)) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
@@ -196,6 +200,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     // Add transfer request status to each member
     const membersWithTransferStatus = result.docs.map(member => ({
       ...member.toObject(),
+      ageOver: isAgeOver(member, now),
       transferRequest: transferRequestMap[member._id.toString()] || null
     }));
     // Role Management: admin logins on the same phone, and where the leader roles are edited.
@@ -206,17 +211,25 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     // Calculate statistics only when requested (skip on pagination to improve speed)
     let stats = [];
     if (includeStats !== 'false') {
+      // Per-status counts are current members only; archived ones count once, as ageOver.
+      const cutoff = ageOverCutoff(now);
+      const archived = { $or: [
+        { $eq: ['$status', AGE_OVER_STATUS] },
+        { $and: [{ $eq: [{ $type: '$dateOfBirth' }, 'date'] }, { $lte: ['$dateOfBirth', cutoff] }] }
+      ] };
+      const current = (s) => ({ $sum: { $cond: [{ $and: [{ $eq: ['$status', s] }, { $not: [archived] }] }, 1, 0] } });
       stats = await Member.aggregate([
         { $match: statsFilter },
         {
           $group: {
             _id: null,
             total: { $sum: 1 },
-            active: { $sum: { $cond: [{ $eq: ['$status', 'Active'] }, 1, 0] } },
-            inactive: { $sum: { $cond: [{ $eq: ['$status', 'Inactive'] }, 1, 0] } },
-            abroad: { $sum: { $cond: [{ $eq: ['$status', 'Abroad'] }, 1, 0] } },
-            applicant: { $sum: { $cond: [{ $eq: ['$status', 'Applicant'] }, 1, 0] } },
-            dismissed: { $sum: { $cond: [{ $eq: ['$status', 'Dismissed'] }, 1, 0] } },
+            active: current('Active'),
+            inactive: current('Inactive'),
+            abroad: current('Abroad'),
+            applicant: current('Applicant'),
+            dismissed: current('Dismissed'),
+            ageOver: { $sum: { $cond: [archived, 1, 0] } },
             approved: { $sum: { $cond: ['$isApproved', 1, 0] } },
             pending: { $sum: { $cond: [{ $not: '$isApproved' }, 1, 0] } }
           }
@@ -250,7 +263,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       },
       statistics: stats[0] || {
         total: 0, active: 0, inactive: 0, abroad: 0,
-        applicant: 0, dismissed: 0, approved: 0, pending: 0
+        applicant: 0, dismissed: 0, ageOver: 0, approved: 0, pending: 0
       }
     });
 
