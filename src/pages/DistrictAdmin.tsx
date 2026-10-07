@@ -80,7 +80,7 @@ const DistrictAdmin = () => {
             delta={deltas?.areas}
             deltaWindowDays={deltas?.windowDays}
             loading={overviewQuery.isPending}
-            onClick={() => navigate("/state-admin/groups")}
+            onClick={() => navigate("/state-admin/master-data")}
           />
           <KpiSparkCard
             title="Admins"

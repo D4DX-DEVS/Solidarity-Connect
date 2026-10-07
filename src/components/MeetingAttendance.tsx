@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/app/AppShell';
 import { Users, Check, X, Search, Plus } from 'lucide-react';
-import { meetingsApi } from '@/lib/meetings';
+import { meetingsApi, Meeting, MeetingAttendanceData } from '@/lib/meetings';
 import { useToast } from '@/hooks/use-toast';
 
 interface Member {
@@ -16,9 +16,26 @@ interface Member {
   isApproved: boolean;
 }
 
+interface UserGroup {
+  _id: string;
+  name?: string;
+}
+
+interface AttendanceRecord {
+  user?: string;
+  member?: string;
+  status: 'present' | 'absent' | 'late';
+  markedAt: string;
+}
+
+interface GuestAttendanceRecord {
+  name: string;
+  phone?: string;
+}
+
 interface MeetingAttendanceProps {
-  meeting: any;
-  userGroup: any;
+  meeting: Meeting;
+  userGroup: UserGroup;
   onRefresh: () => void;
 }
 
@@ -31,22 +48,32 @@ export const MeetingAttendance = ({ meeting, userGroup, onRefresh }: MeetingAtte
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Latest attendance on the meeting, read when the list first loads. A ref, so a
+  // refreshed meeting (after marking attendance) doesn't reload and reset the list.
+  const meetingAttendanceRef = useRef(meeting.attendance);
+  useEffect(() => {
+    meetingAttendanceRef.current = meeting.attendance;
+  }, [meeting.attendance]);
+  const hasMembers = members.length > 0;
+
   // Load group members and existing guests
   useEffect(() => {
     const loadData = async () => {
-      if (!userGroup?._id || members.length > 0) return; // Prevent repeated calls
-      
+      if (!userGroup?._id || hasMembers) return; // Prevent repeated calls
+
       try {
         const response = await meetingsApi.getGroupMembers(userGroup._id);
         const membersList = response.data || [];
         setMembers(membersList);
-        
+
+        const currentMeetingAttendance = meetingAttendanceRef.current;
+
         // Initialize attendance with smart defaults
         const initialAttendance: Record<string, 'present' | 'absent'> = {};
         membersList.forEach((member: Member) => {
-          const existingAttendance = meeting.attendance?.find((a: any) => a.member === member._id);
+          const existingAttendance = currentMeetingAttendance?.find((a: AttendanceRecord) => a.member === member._id);
           if (existingAttendance) {
-            initialAttendance[member._id] = existingAttendance.status === 'abroad' ? 'absent' : existingAttendance.status;
+            initialAttendance[member._id] = existingAttendance.status === 'late' ? 'present' : (existingAttendance.status as 'present' | 'absent');
           } else {
             // Smart defaults: Present for Active+Approved, Absent for others
             if (member.status === 'Active' && member.isApproved) {
@@ -61,14 +88,14 @@ export const MeetingAttendance = ({ meeting, userGroup, onRefresh }: MeetingAtte
         // Load existing attendance and guest data from the new models
         try {
           const attendanceResponse = await meetingsApi.getAttendance(meeting._id);
-          
+
           if (attendanceResponse.success) {
             // Update attendance from database records
             const dbAttendance: Record<string, 'present' | 'absent'> = {};
-            attendanceResponse.data.memberAttendance.forEach((record: any) => {
-              dbAttendance[record.member._id] = record.status === 'late' ? 'present' : record.status;
+            attendanceResponse.data.memberAttendance.forEach((record: { member: { _id: string }; status: string }) => {
+              dbAttendance[record.member._id] = record.status === 'late' ? 'present' : (record.status as 'present' | 'absent');
             });
-            
+
             // Merge with smart defaults for members not in database
             membersList.forEach((member: Member) => {
               if (!dbAttendance[member._id]) {
@@ -79,22 +106,22 @@ export const MeetingAttendance = ({ meeting, userGroup, onRefresh }: MeetingAtte
                 }
               }
             });
-            
+
             setAttendance(dbAttendance);
 
             // Load existing guests
             if (attendanceResponse.data.guestAttendance) {
-              const existingGuests = attendanceResponse.data.guestAttendance.map((guest: any) => ({
+              const existingGuests = attendanceResponse.data.guestAttendance.map((guest: GuestAttendanceRecord) => ({
                 name: guest.name,
                 phone: guest.phone || ''
               }));
               setGuests(existingGuests);
             }
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.log('No existing attendance data, using defaults');
         }
-      } catch (error) {
+      } catch {
         toast({
           title: "Error",
           description: "Failed to load group members",
@@ -104,7 +131,7 @@ export const MeetingAttendance = ({ meeting, userGroup, onRefresh }: MeetingAtte
     };
 
     loadData();
-  }, [userGroup?._id, meeting._id]); // Depend on both userGroup and meeting
+  }, [userGroup?._id, meeting._id, hasMembers, toast]); // Depend on both userGroup and meeting
 
   const handleAttendanceChange = async (memberId: string, status: 'present' | 'absent') => {
     try {

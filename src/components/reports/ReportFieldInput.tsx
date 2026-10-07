@@ -18,6 +18,8 @@ interface ReportFieldInputProps {
   onChange: (value: AnswerValue) => void;
   error?: string;
   disabled?: boolean;
+  /** Three grid rows — label, control, error — so a parent subgrid can line them up across a row. */
+  className?: string;
 }
 
 const INPUT_TYPES: Partial<Record<ReportField["type"], string>> = {
@@ -25,18 +27,20 @@ const INPUT_TYPES: Partial<Record<ReportField["type"], string>> = {
 };
 
 /** One question of a monthly report, as an editable control with its label, help and error. */
-export function ReportFieldInput({ field, value, onChange, error, disabled }: ReportFieldInputProps) {
+export function ReportFieldInput({ field, value, onChange, error, disabled, className }: ReportFieldInputProps) {
   const inputId = `report-field-${field.id}`;
   const describedBy = [field.helpText ? `${inputId}-help` : null, error ? `${inputId}-error` : null].filter(Boolean).join(" ") || undefined;
   const common = { id: inputId, disabled, "aria-invalid": Boolean(error), "aria-describedby": describedBy };
 
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={inputId} className="text-sm font-medium leading-snug">
-        {field.label}
-        {field.required ? <span className="ml-0.5 text-destructive" aria-hidden>*</span> : null}
-      </Label>
-      {field.helpText ? <p id={`${inputId}-help`} className="text-xs text-muted-foreground">{field.helpText}</p> : null}
+    <div className={cn("grid content-start gap-1.5", className)}>
+      <div className="space-y-1.5">
+        <Label htmlFor={inputId} className="text-sm font-medium leading-snug">
+          {field.label}
+          {field.required ? <span className="ml-0.5 text-destructive" aria-hidden>*</span> : null}
+        </Label>
+        {field.helpText ? <p id={`${inputId}-help`} className="text-xs text-muted-foreground">{field.helpText}</p> : null}
+      </div>
 
       <Control field={field} value={value} onChange={onChange} disabled={disabled} common={common} />
 
@@ -69,7 +73,7 @@ function Control({ field, value, onChange, disabled, common }: ControlProps) {
           // Scrolling over a focused number input must not change the count.
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
           onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
-          className="h-11 max-w-[12rem] tabular-nums"
+          className="h-11 tabular-nums"
         />
       );
     case "textarea":

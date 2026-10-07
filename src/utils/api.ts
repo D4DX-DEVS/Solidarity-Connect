@@ -214,6 +214,10 @@ export const memberAuthAPI = {
   getOrgFiles: (params?: QueryParams) =>
     apiCall(`/member-auth/org-files${toQuery(params)}`),
 
+  /** Read-only directory of every member (org-wide). */
+  getMembers: (params?: QueryParams) =>
+    apiCall(`/member-auth/members${toQuery(params)}`),
+
   // keepalive: a change sent as the tab closes (undo window flush) still arrives
   updateProfile: (data: Record<string, unknown>, options: { keepalive?: boolean } = {}) =>
     apiCall('/member-auth/profile', {

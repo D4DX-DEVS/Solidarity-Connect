@@ -16,9 +16,12 @@ interface GroupDialogProps {
   mode: "add" | "edit";
   selectedDistrictId?: string;
   districts: District[];
+  /** District admins can't move an area out of their district */
+  lockDistrict?: boolean;
 }
 
-const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, districts }: GroupDialogProps) => {
+// Stored as a Group record; the UI calls it an area
+const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, districts, lockDistrict = false }: GroupDialogProps) => {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [districtId, setDistrictId] = useState("");
@@ -53,7 +56,7 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
           isActive: true,
         });
         toast({
-          title: "Group Added",
+          title: "Area Added",
           description: `${name} has been added successfully.`,
         });
       } else if (group) {
@@ -66,15 +69,15 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
           },
         });
         toast({
-          title: "Group Updated",
+          title: "Area Updated",
           description: `${name} has been updated successfully.`,
         });
       }
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || `Failed to ${mode} group`,
+        description: (error instanceof Error && error.message) || `Failed to ${mode} area`,
         variant: "destructive",
       });
     }
@@ -84,18 +87,18 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{mode === "add" ? "Add New Group" : "Edit Group"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Add New Area" : "Edit Area"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">District</label>
+            <label htmlFor="area-district" className="text-sm font-medium mb-2 block">District</label>
             <Select
               value={districtId}
               onValueChange={(val) => setDistrictId(val)}
-              disabled={isLoading}
+              disabled={isLoading || lockDistrict}
             >
-              <SelectTrigger>
+              <SelectTrigger id="area-district">
                 <SelectValue placeholder="Select District" />
               </SelectTrigger>
               <SelectContent>
@@ -109,23 +112,25 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Group Name</label>
+            <label htmlFor="area-name" className="text-sm font-medium mb-2 block">Area Name</label>
             <Input
+              id="area-name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter group name"
+              placeholder="Enter area name"
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Group Code</label>
+            <label htmlFor="area-code" className="text-sm font-medium mb-2 block">Area Code</label>
             <Input
+              id="area-code"
               required
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Enter group code (e.g., VRP, PMP)"
+              placeholder="Enter area code (e.g., VRP, PMP)"
               maxLength={10}
               disabled={isLoading}
             />
@@ -141,8 +146,8 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="flex-1 bg-primary hover:bg-primary/90"
               disabled={isLoading || !name.trim() || !code.trim() || !districtId}
             >
@@ -152,7 +157,7 @@ const GroupDialog = ({ open, onOpenChange, group, mode, selectedDistrictId, dist
                   {mode === "add" ? "Adding..." : "Updating..."}
                 </>
               ) : (
-                mode === "add" ? "Add Group" : "Update Group"
+                mode === "add" ? "Add Area" : "Update Area"
               )}
             </Button>
           </div>

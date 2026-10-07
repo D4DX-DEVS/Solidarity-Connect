@@ -17,10 +17,13 @@ import Request from '../models/Request.js';
 import MonthlyReport from '../models/MonthlyReport.js';
 import ReportForm from '../models/ReportForm.js';
 import { parsePeriod } from '../services/monthlyReports/period.js';
+import { compareRecords } from '../services/personLeaderRoles.js';
 import { sumColumns } from '../services/monthlyReports/fields.js';
 import { ensureForms, publishedForm } from '../services/monthlyReports/store.js';
 import { body, validationResult } from 'express-validator';
 import { matchesLeaderRoleType } from '../middleware/auth.js';
+import { attachLeaderUnits } from '../services/leaderUnits.js';
+import { currentMemberMatch } from '../utils/ageOver.js';
 
 // Multer in-memory storage for file uploads
 const memberUpload = multer({
@@ -903,13 +906,13 @@ router.get('/leaders', authenticateMember, async (req, res) => {
     // Query both collections in parallel
     const [users, members, userCount, memberCount] = await Promise.all([
       User.find(filter)
-        .select('name phone role roleTag extraRoleTags isLeader district group')
+        .select('name phone role adminKind roleTag extraRoleTags isLeader district group')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .populate('roleTag.areaId', 'name code')
         .lean(),
       Member.find(filter)
-        .select('name phone roleTag extraRoleTags isLeader district group')
+        .select('name phone roleTag extraRoleTags isLeader district group address')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .lean(),
@@ -933,21 +936,22 @@ router.get('/leaders', authenticateMember, async (req, res) => {
     const seenPhones = new Set();
     const deduped = [];
     // One person can hold several logins (e.g. State Admin + Murabi); keep the
-    // most senior so the badge is right.
-    const ROLE_RANK = { state_admin: 0, district_admin: 1, group_admin: 2 };
-    const bySeniority = [...users].sort((a, b) => (ROLE_RANK[a.role] ?? 9) - (ROLE_RANK[b.role] ?? 9));
+    // most senior so the badge is right — same order Role Management edits by.
+    const bySeniority = [...users].sort(compareRecords);
     for (const u of bySeniority) {
       const phone = normalizePhone(u.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);
       deduped.push(u);
     }
-    for (const m of normalizedMembers) {
+    for (const m of [...normalizedMembers].sort(compareRecords)) {
       const phone = normalizePhone(m.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);
       deduped.push(m);
     }
+
+    await attachLeaderUnits(deduped);
 
     // Multi-role fan-out: one display row per role. Extra-role rows get a
     // suffixed _id so client list keys stay unique (display only, no edits here).
@@ -1011,6 +1015,74 @@ router.get('/leaders', authenticateMember, async (req, res) => {
   } catch (error) {
     console.error('Get leaders (member) error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch leaders' });
+  }
+});
+
+// Statuses shown in the member directory. Dismissed, archived (age over) and
+// not-yet-approved members are left out.
+const DIRECTORY_STATUSES = ['Active', 'Applicant', 'Inactive', 'Abroad'];
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// @route   GET /api/member-auth/members
+// @desc    Read-only directory of every member, org-wide; optional district/area/status filters
+// @access  Private (Member)
+router.get('/members', authenticateMember, async (req, res) => {
+  try {
+    const { search, status, district, group } = req.query;
+    const pageNum = Math.max(1, parseInt(req.query.page) || 1);
+    const limitNum = Math.min(Math.max(1, parseInt(req.query.limit) || 20), 100);
+    if (status !== undefined && !DIRECTORY_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    const isId = (v) => typeof v === 'string' && /^[a-f\d]{24}$/i.test(v);
+    if ((district !== undefined && !isId(district)) || (group !== undefined && !isId(group))) {
+      return res.status(400).json({ success: false, message: 'Invalid district or area' });
+    }
+
+    const filter = {
+      isApproved: true,
+      status: status || { $in: DIRECTORY_STATUSES },
+      ...currentMemberMatch(),
+    };
+    if (district) filter.district = district;
+    if (group) filter.group = group;
+    const term = typeof search === 'string' ? search.trim() : '';
+    if (term.length >= 2) {
+      const pattern = { $regex: escapeRegex(term), $options: 'i' };
+      filter.$or = [{ name: pattern }, { phone: pattern }, { address: pattern }];
+    }
+
+    // Directory fields only — no DOB, email or other personal details.
+    // address = unit name.
+    const result = await Member.paginate(filter, {
+      page: pageNum,
+      limit: limitNum,
+      // _id breaks ties so members sharing a name never repeat or vanish across pages
+      sort: { name: 1, _id: 1 },
+      collation: { locale: 'en', strength: 2 },
+      select: 'name phone status district group address avatar isLeader roleTag',
+      populate: [
+        { path: 'district', select: 'name' },
+        { path: 'group', select: 'name' },
+      ],
+      lean: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: result.docs,
+      pagination: {
+        currentPage: result.page,
+        totalPages: result.totalPages,
+        totalDocs: result.totalDocs,
+        limit: result.limit,
+        hasNextPage: result.hasNextPage,
+        hasPrevPage: result.hasPrevPage,
+      },
+    });
+  } catch (error) {
+    console.error('Get member directory error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch members' });
   }
 });
 

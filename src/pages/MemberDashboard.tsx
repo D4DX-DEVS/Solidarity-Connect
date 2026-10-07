@@ -33,6 +33,7 @@ import { FEATURES } from "@/lib/features";
 import { confirmAction } from "@/lib/confirm";
 import { undoableDelete, type UndoHandle } from "@/lib/undoDelete";
 import Leaders from "@/pages/Leaders";
+import MemberDirectory from "@/pages/MemberDirectory";
 import {
   User,
   CreditCard,
@@ -309,7 +310,7 @@ const MemberDashboard = () => {
       }
     };
     fetchOrgFiles();
-  }, [activeView, orgFilesCategory, orgFilesDebouncedSearch]);
+  }, [activeView, orgFilesCategory, orgFilesDebouncedSearch, toast]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -375,6 +376,7 @@ const MemberDashboard = () => {
   const menuItems = [
     { id: "overview", label: "Home", icon: Home },
     ...(FEATURES.meetings ? [{ id: "meetings", label: "Meetings", icon: Calendar }] : []),
+    { id: "members", label: "Members", icon: Users },
     { id: "orgfiles", label: "Files", icon: FolderOpen },
     { id: "leaders", label: "Leaders", icon: Star }
   ];
@@ -400,6 +402,8 @@ const MemberDashboard = () => {
         return renderBaithulContent();
       case "leaders":
         return <Leaders embedded />;
+      case "members":
+        return <MemberDirectory embedded />;
       default:
         return renderOverviewContent();
     }
@@ -1155,7 +1159,7 @@ const MemberDashboard = () => {
             </>
           ) : (
             <p className="min-w-0 flex-1 truncate text-base font-bold">
-              {{ profile: "My Profile", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders" }[activeView] || ""}
+              {{ profile: "My Profile", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders", members: "Members" }[activeView] || ""}
             </p>
           )}
           <Button
@@ -1180,7 +1184,7 @@ const MemberDashboard = () => {
       {/* ponytail: same shape as BottomNav — tabs plus a "More" menu, no header hamburger */}
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-3 pb-safe lg:hidden">
         <nav className="pointer-events-auto w-full max-w-md rounded-2xl border border-border/70 bg-background/95 px-2 py-2 shadow-lg">
-          <div className="grid h-[4.6rem] grid-cols-6 items-center gap-1">
+          <div className={`grid h-[4.6rem] items-center gap-1 ${menuItems.length + 1 >= 6 ? "grid-cols-6" : "grid-cols-5"}`}>
             {menuItems.map((item) => {
               const IconComponent = item.icon;
               const isActive = activeView === item.id;

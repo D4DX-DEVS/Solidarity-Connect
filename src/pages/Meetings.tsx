@@ -23,7 +23,7 @@ import DataPagination from "@/components/app/DataPagination";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { useBulkSessionActions, useCompleteSession } from "@/hooks/useSessionManagement";
-import { meetingsApi, getEffectiveStatus } from "@/lib/meetings";
+import { meetingsApi, getEffectiveStatus, Meeting, MeetingSession } from "@/lib/meetings";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -46,7 +46,7 @@ const Meetings = () => {
   );
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedMeeting, setSelectedMeeting] = useState<any>(null);
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const [expandedMeetings, setExpandedMeetings] = useState<Record<string, boolean>>({});
 
@@ -138,7 +138,7 @@ const Meetings = () => {
     }
   };
 
-  const handleViewSessions = (meeting: any) => {
+  const handleViewSessions = (meeting: Meeting) => {
     // Set the selected meeting to show detailed view
     setSelectedMeeting(meeting);
   };
@@ -310,7 +310,7 @@ const Meetings = () => {
             // Calculate attendance status - check if any attendance has been recorded
             const hasAttendanceData = meeting.sessionInfo?.totalMembersAcrossSessions > 0 || 
                                      meeting.sessionInfo?.totalGuestsAcrossSessions > 0 ||
-                                     (meeting.sessionInfo?.sessions && meeting.sessionInfo.sessions.some((s: any) => 
+                                     (meeting.sessionInfo?.sessions && meeting.sessionInfo.sessions.some((s: MeetingSession) =>
                                        s.attendance?.overall?.total > 0 || s.attendance?.members?.total > 0 || s.attendance?.guests?.total > 0
                                      ));
             

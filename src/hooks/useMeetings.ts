@@ -3,20 +3,34 @@ import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { meetingsApi, Meeting, CreateMeetingData, CreateMonthlyMeetingData, CreateFormData } from '@/lib/meetings';
 import { meetingsAPI } from '@/utils/api';
 
+// Filter types
+export interface MeetingFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  meetingType?: string;
+  targetAudience?: string;
+  upcoming?: boolean;
+  past?: boolean;
+  search?: string;
+  completionStatus?: string;
+  sort?: string;
+}
+
 // Query keys
 export const meetingKeys = {
   all: ['meetings'] as const,
   lists: () => [...meetingKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...meetingKeys.lists(), filters] as const,
+  list: (filters: MeetingFilters) => [...meetingKeys.lists(), filters] as const,
   details: () => [...meetingKeys.all, 'detail'] as const,
   detail: (id: string) => [...meetingKeys.details(), id] as const,
   upcoming: () => [...meetingKeys.all, 'upcoming'] as const,
   createData: () => [...meetingKeys.all, 'create-data'] as const,
-  adminOverview: (filters: Record<string, any>) => [...meetingKeys.all, 'admin-overview', filters] as const,
+  adminOverview: (filters: MeetingFilters) => [...meetingKeys.all, 'admin-overview', filters] as const,
 };
 
 // Admin meetings overview (cached — no refetch-on-every-visit)
-export const useAdminMeetingsOverview = (filters: Record<string, any>) => {
+export const useAdminMeetingsOverview = (filters: MeetingFilters) => {
   return useQuery({
     queryKey: meetingKeys.adminOverview(filters),
     queryFn: () => meetingsAPI.getAdminOverview(

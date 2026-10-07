@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface DistrictApproval {
   status: "pending" | "approved" | "rejected";
@@ -66,11 +66,8 @@ const TransferApprovals = () => {
   const crossDistrictCount = transferRequests.filter((request) => request.isCrossDistrict).length;
   const waitingOnStateCount = transferRequests.filter((request) => request.stateApproval?.status === "pending").length;
 
-  useEffect(() => {
-    fetchTransferRequests();
-  }, [itemsPerPage]);
-
-  const fetchTransferRequests = async (page = 1, append = false) => {
+  // Reloads page 1 whenever the page size changes; also used by Load more and after approve/reject
+  const fetchTransferRequests = useCallback(async (page = 1, append = false) => {
     try {
       if (!append) setLoading(true);
       else setLoadingMore(true);
@@ -97,7 +94,11 @@ const TransferApprovals = () => {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [itemsPerPage]);
+
+  useEffect(() => {
+    fetchTransferRequests();
+  }, [fetchTransferRequests]);
 
   const loadMoreRequests = async () => {
     if (!hasNextPage || loadingMore) return;

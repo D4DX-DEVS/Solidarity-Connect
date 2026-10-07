@@ -112,7 +112,7 @@ const AnnouncementsPanel = () => {
     setLoadingList(true);
     try {
       // ponytail: single alerts surface — list every notification type together
-      const params: Record<string, any> = {
+      const params: Record<string, string | number> = {
         limit: 10,
         page: currentPage,
       };
@@ -137,7 +137,7 @@ const AnnouncementsPanel = () => {
           setHasPrevPage(result.pagination.hasPrevPage || false);
         }
       }
-    } catch {
+    } catch (error: unknown) {
       // silently fail for list
     } finally {
       setLoadingList(false);
@@ -185,11 +185,12 @@ const AnnouncementsPanel = () => {
             af.file === file ? { ...af, url: result.data.url, uploading: false } : af
           )
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Upload failed";
         setAttachedFiles((prev) =>
           prev.map((af) =>
             af.file === file
-              ? { ...af, uploading: false, error: error.message || "Upload failed" }
+              ? { ...af, uploading: false, error: errorMessage }
               : af
           )
         );
@@ -266,8 +267,9 @@ const AnnouncementsPanel = () => {
       setAttachedFiles([]);
       setShowForm(false);
       fetchAnnouncements();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to send announcement", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to send announcement";
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

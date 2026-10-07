@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import {
   FileText, Film, Music, Upload, Trash2, Edit, ArrowLeft,
   Download, BookOpen, Book, File, Plus, Save, X, Eye, EyeOff, Search, Link2
@@ -143,16 +143,8 @@ const OrgFiles = () => {
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // Reset to first page whenever the filter/search changes
-  useEffect(() => {
-    setPage(1);
-  }, [activeCategory, debouncedSearch]);
-
-  useEffect(() => {
-    fetchFiles();
-  }, [activeCategory, debouncedSearch, page]);
-
-  const fetchFiles = async () => {
+  // Fetch files with memoization to avoid infinite loops
+  const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
       const params: Record<string, string> = {};
@@ -178,7 +170,17 @@ const OrgFiles = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeCategory, debouncedSearch, page, user?.role]);
+
+  // Reset to first page whenever the filter/search changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory, debouncedSearch]);
+
+  // Fetch files when page or filters change
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
 
   const handleUpload = async () => {
     const isLinkCategory = uploadForm.category === "link";
@@ -210,8 +212,9 @@ const OrgFiles = () => {
       setSelectedFile(null);
       setUploadForm({ title: "", description: "", category: "document", fileType: "general", link: "" });
       await fetchFiles();
-    } catch (error: any) {
-      toast({ title: "Upload Failed", description: error.message || "Failed to upload file", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to upload file";
+      toast({ title: "Upload Failed", description: message, variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -229,8 +232,9 @@ const OrgFiles = () => {
       setShowEditDialog(false);
       setEditingFile(null);
       await fetchFiles();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to update file", variant: "destructive" });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to update file";
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setSaving(false);
     }

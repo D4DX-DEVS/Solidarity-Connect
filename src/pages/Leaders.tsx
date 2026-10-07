@@ -44,6 +44,10 @@ const ADMIN_ROLE_LABELS: Record<string, string> = {
   member: "Member",
 };
 
+// District / area / unit pickers sit side by side, even on phones.
+const FILTER_GRID_COLS = ["", "grid-cols-1", "grid-cols-2", "grid-cols-3"];
+const FILTER_TRIGGER_CLASS = "min-w-0 px-3 text-left text-xs sm:px-4 sm:text-sm xl:w-48";
+
 interface Leader {
   _id: string;
   name: string;
@@ -53,6 +57,8 @@ interface Leader {
   roleTag?: { type?: string; name?: string; areaId?: { _id?: string; name: string; code?: string }; roleDescription?: string; listingOrder?: number | null };
   district?: { _id?: string; name: string; code?: string };
   group?: { _id?: string; name: string; code?: string };
+  // Set by the API for unit leaders (from member.address, the org's unit field)
+  unit?: string;
 }
 
 interface FilterOption {
@@ -240,37 +246,40 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
     setHasPrevPage(p.hasPrevPage || false);
   }, [leadersResult]);
 
+  const filterCount = [requiresDistrict, requiresArea, requiresUnit].filter(Boolean).length;
+
   const content = (
       <div className="space-y-3">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search name or phone…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
+        {/* Toolbar: search + level on one row, hierarchy pickers side by side
+            below it (one line with everything on wide screens) */}
+        <div className="flex flex-col gap-2 xl:flex-row">
+          <div className="flex gap-2 xl:flex-1 xl:min-w-0">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search name or phone…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-[7.5rem] shrink-0" aria-label="Filter by role type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_TYPES.map((tab) => (
+                  <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={activeTab} onValueChange={setActiveTab}>
-            <SelectTrigger className="w-[7.5rem] shrink-0" aria-label="Filter by role type">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ROLE_TYPES.map((tab) => (
-                <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Hierarchy filters */}
-        {(requiresDistrict || requiresArea || requiresUnit) && (
-          <Card className="shadow-sm">
-            <CardContent className="p-3 space-y-3">
+          {filterCount > 0 && (
+            <div className={`grid gap-2 ${FILTER_GRID_COLS[filterCount]} xl:flex xl:shrink-0`}>
               {requiresDistrict && (
                 <Select value={selectedDistrictId || "all"} onValueChange={(value) => setSelectedDistrictId(value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className={FILTER_TRIGGER_CLASS} aria-label="Filter by district">
                     <SelectValue placeholder="Select district" />
                   </SelectTrigger>
                   <SelectContent>
@@ -284,7 +293,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
               {requiresArea && (
                 <Select value={selectedAreaId || "all"} onValueChange={(value) => setSelectedAreaId(value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className={FILTER_TRIGGER_CLASS} aria-label="Filter by area">
                     <SelectValue placeholder="Select area" />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,7 +307,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
 
               {requiresUnit && (
                 <Select value={selectedUnit || "all"} onValueChange={(value) => setSelectedUnit(value === "all" ? "" : value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className={FILTER_TRIGGER_CLASS} aria-label="Filter by unit section">
                     <SelectValue placeholder="Select unit section" />
                   </SelectTrigger>
                   <SelectContent>
@@ -309,9 +318,9 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
                   </SelectContent>
                 </Select>
               )}
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* Leader count */}
         {!loading && (
@@ -341,6 +350,7 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
               const tagName =
                 leader.roleTag?.name ||
                 (leader.role === "group_admin" ? leader.group?.name : leader.role === "district_admin" ? leader.district?.name : undefined);
+              const unitName = tagType === "unit" ? leader.unit : undefined;
               return (
               <Card key={leader._id} className="surface-card">
                 <CardContent className="p-3">
@@ -364,8 +374,13 @@ const Leaders = ({ embedded = false }: { embedded?: boolean }) => {
                         )}
                       </div>
 
-                      {tagName && (
-                        <p className="text-xs font-medium text-primary">{tagName}</p>
+                      {(tagName || unitName) && (
+                        <p className="text-xs font-medium text-primary">
+                          {tagName}
+                          {unitName && (
+                            <span className="text-foreground">{tagName ? " · " : ""}{unitName} Unit</span>
+                          )}
+                        </p>
                       )}
 
                       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">

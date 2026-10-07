@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, ChevronLeft, ChevronRight, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2 } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import PageSizeInput from "@/components/app/PageSizeInput";
+import DataPagination from "@/components/app/DataPagination";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
@@ -115,8 +115,6 @@ const Members = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPrevPage, setHasPrevPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
@@ -207,24 +205,8 @@ const Members = () => {
     if (p) {
       setTotalPages(p.totalPages);
       setTotalDocs(p.totalDocs);
-      setHasNextPage(p.hasNextPage);
-      setHasPrevPage(p.hasPrevPage);
     }
   }, [membersResult]);
-
-  // Navigate to next page
-  const goToNextPage = () => {
-    if (hasNextPage) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
-
-  // Navigate to previous page
-  const goToPrevPage = () => {
-    if (hasPrevPage) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
 
   const handleApproveAndActivate = async (member: Member) => {
     try {
@@ -332,7 +314,8 @@ const Members = () => {
         title="Members"
       />
 
-      <main className="app-main pt-4 pb-28 lg:pb-8">
+      {/* Extra bottom room for state admins so the page footer scrolls clear of the Add Member button */}
+      <main className={`app-main pt-4 ${canManageMembers ? "pb-44 lg:pb-28" : "pb-28 lg:pb-8"}`}>
         <div className="space-y-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -418,11 +401,9 @@ const Members = () => {
         </div>
 
         <div className="data-strip flex items-center justify-between gap-2 text-xs text-muted-foreground sm:text-sm">
+          {/* Range + page number are in the footer with the page controls */}
           <span className="min-w-0 truncate">
-            Showing {members.length} of {totalDocs} members
-            {totalPages > 1 && (
-              <span> • Page {currentPage} of {totalPages}</span>
-            )}
+            {totalDocs} member{totalDocs === 1 ? "" : "s"}
           </span>
           <div className="flex shrink-0 items-center gap-1.5">
             <DropdownMenu>
@@ -443,7 +424,6 @@ const Members = () => {
                 <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF (.pdf)</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <PageSizeInput value={itemsPerPage} onChange={(s) => { setItemsPerPage(s); setCurrentPage(1); }} />
           </div>
         </div>
 
@@ -625,19 +605,17 @@ const Members = () => {
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 py-1">
-            <Button onClick={goToPrevPage} disabled={!hasPrevPage} variant="outline" size="icon" className="h-8 w-8" aria-label="Previous page">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="min-w-12 text-center text-sm text-muted-foreground">
-              {currentPage} / {totalPages}
-            </span>
-            <Button onClick={goToNextPage} disabled={!hasNextPage} variant="outline" size="icon" className="h-8 w-8" aria-label="Next page">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        {/* Rows per page + Previous/Next live together at the bottom */}
+        {!loading && (
+          <DataPagination
+            page={currentPage}
+            pageSize={itemsPerPage}
+            totalPages={totalPages}
+            totalDocs={totalDocs}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => { setItemsPerPage(size); setCurrentPage(1); }}
+            itemLabel="members"
+          />
         )}
       </main>
 

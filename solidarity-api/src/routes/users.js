@@ -2,7 +2,10 @@ import express from 'express';
 import User from '../models/User.js';
 import Member from '../models/Member.js';
 import otpService from '../services/otpService.js';
+import { attachLeaderUnits } from '../services/leaderUnits.js';
 import { authenticate, requireRole, matchesLeaderRoleType, canManageLeaderTarget, leaderEditScopeFor, leaderEditError } from '../middleware/auth.js';
+import { compareRecords } from '../services/personLeaderRoles.js';
+import { applyAreaAccess, attachPersonLinks, leaderRecordError, listPeople, loadPersonRecords, planPersonSync, savePersonEdit, syncNewAccount } from '../services/personRecords.js';
 import { 
   paginationValidation,
   objectIdValidation,
@@ -26,11 +29,18 @@ router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), pa
       district,
       group,
       isActive,
+      isLeader,
+      withLinks,
+      groupBy,
+      severalAccounts,
       search
     } = req.query;
 
     let filter = {};
     if (role) filter.role = role;
+    // Role Management's leader-status filter; $ne keeps records that never had the field.
+    if (isLeader === 'true') filter.isLeader = true;
+    if (isLeader === 'false') filter.isLeader = { $ne: true };
     // Area-level admins share role 'group_admin'; adminKind narrows to one flavour
     // (area / murabi / coordinator). Legacy rows predate the field, so a request for
     // 'area' must also match documents where it was never set.
@@ -66,11 +76,34 @@ router.get('/', authenticate, requireRole(['state_admin', 'district_admin']), pa
       ]
     };
 
-    const result = await User.paginate(filter, options);
+    // Role Management "All Roles": one row per person — their admin logins grouped by phone.
+    const byPerson = groupBy === 'person' && !role && !adminKind;
+    let result;
+    if (byPerson) {
+      const match = { ...filter };
+      delete match.isLeader; // the person's Leader status — checked after grouping
+      result = await listPeople({
+        match,
+        access: req.user.role === 'district_admin' && req.user.district ? { district: filter.district } : {},
+        sort: options.sort,
+        page: options.page,
+        limit: options.limit,
+        isLeader: isLeader === 'true' ? true : isLeader === 'false' ? false : undefined,
+        severalAccounts: severalAccounts === 'true',
+      });
+    } else {
+      result = await User.paginate(filter, options);
+    }
+    // Role Management: which of these people hold other logins, and where their roles are edited.
+    const data = byPerson
+      ? result.docs
+      : withLinks === 'true'
+        ? await attachPersonLinks(result.docs.map((doc) => doc.toJSON()))
+        : result.docs;
 
     res.status(200).json({
       success: true,
-      data: result.docs,
+      data,
       pagination: {
         currentPage: result.page,
         totalPages: result.totalPages,
@@ -138,7 +171,7 @@ router.get('/leaders', authenticate, async (req, res) => {
         .populate('roleTag.areaId', 'name code')
         .lean(),
       Member.find(filter)
-        .select('name phone roleTag extraRoleTags isLeader district group')
+        .select('name phone roleTag extraRoleTags isLeader district group address')
         .populate('district', 'name code')
         .populate('group', 'name code')
         .lean(),
@@ -163,8 +196,8 @@ router.get('/leaders', authenticate, async (req, res) => {
     const deduped = [];
     // Add users first (higher priority). One person can hold several logins
     // (e.g. State Admin + Murabi); keep the most senior so the badge is right.
-    const ROLE_RANK = { state_admin: 0, district_admin: 1, group_admin: 2 };
-    const bySeniority = [...users].sort((a, b) => (ROLE_RANK[a.role] ?? 9) - (ROLE_RANK[b.role] ?? 9));
+    // Same order Role Management uses to pick where a person's roles are edited.
+    const bySeniority = [...users].sort(compareRecords);
     for (const u of bySeniority) {
       const phone = normalizePhone(u.phone);
       if (phone && seenPhones.has(phone)) continue;
@@ -172,7 +205,8 @@ router.get('/leaders', authenticate, async (req, res) => {
       deduped.push(u);
     }
     // Then add members only if their phone hasn't been seen
-    for (const m of normalizedMembers) {
+    // Duplicate member records of one phone: same order Role Management edits by.
+    for (const m of [...normalizedMembers].sort(compareRecords)) {
       const phone = normalizePhone(m.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);
@@ -184,9 +218,16 @@ router.get('/leaders', authenticate, async (req, res) => {
     // so the client can save slot-level edits back as a full replace.
     // canEdit: may this viewer change this person's leader roles (scope + hierarchy)?
     // Decided per person before fan-out, so every row of a person agrees.
+    await attachLeaderUnits(deduped);
     const inEditScope = await leaderEditScopeFor(req.user);
     for (const leader of deduped) {
       leader.canEdit = inEditScope(leader) && canManageLeaderTarget(req.user, leader);
+    }
+    // A filter (district, area, unit) can hide the record that holds a person's roles,
+    // leaving another copy on screen — that copy is view-only and names the real one.
+    await attachPersonLinks(deduped);
+    for (const leader of deduped) {
+      if (leader.leaderRecord) leader.canEdit = false;
     }
     let expanded = [];
     for (const leader of deduped) {
@@ -257,11 +298,17 @@ router.patch('/:id/leader',
 
       const inScope = await leaderEditScopeFor(req.user);
       if (!inScope(targetUser)) {
-        return res.status(403).json({ success: false, message: 'Access denied' });
+        return res.status(403).json({ success: false, message: 'Access denied. This admin account is outside your district or area.' });
       }
       const denied = leaderEditError(req.user, targetUser, req.body);
       if (denied) {
         return res.status(denied.status).json({ success: false, message: denied.message });
+      }
+      // One person, several records on this phone: roles are edited on one of them only.
+      const personRecords = await loadPersonRecords(targetUser);
+      const elsewhere = leaderRecordError(targetUser, personRecords);
+      if (elsewhere) {
+        return res.status(elsewhere.status).json({ success: false, message: elsewhere.message, data: elsewhere.data });
       }
       const isStateAdmin = req.user.role === 'state_admin';
 
@@ -307,7 +354,21 @@ router.patch('/:id/leader',
         };
       }
 
-      await targetUser.save();
+      // Copy the result to the person's member record and other admin logins.
+      const sync = planPersonSync(req.user, targetUser, personRecords, inScope);
+      if (sync.error) {
+        return res.status(sync.error.status).json({ success: false, message: sync.error.message });
+      }
+
+      try {
+        await savePersonEdit(targetUser, sync.changes);
+      } catch (saveError) {
+        if (saveError.name === 'ValidationError') {
+          return res.status(400).json({ success: false, message: saveError.message });
+        }
+        console.error('Leader role save error:', saveError);
+        return res.status(500).json({ success: false, message: "Couldn't save the leader roles. Nothing was changed — please try again." });
+      }
 
       await targetUser.populate([
         { path: 'district', select: 'name code' },
@@ -489,8 +550,27 @@ router.put('/:id',
       }
 
       // Update user
+      const idOf = (v) => String(v?._id || v || '');
+      const before = { role: user.role, phone: user.phone, group: idOf(user.group), district: idOf(user.district) };
       Object.assign(user, updateData);
+      // Area Admin access = the district + area chosen on the Admins page (never Role Management).
+      // Set when the area, district or role changes, or the account has none yet — a name or
+      // phone edit leaves it as it is.
+      const accessEdited = user.role !== before.role || idOf(user.group) !== before.group || idOf(user.district) !== before.district
+        || !user.roleTag?.type || !user.roleTag?.areaId || !user.roleTag?.roleDescription;
+      const access = isStateAdmin && accessEdited ? await applyAreaAccess(user) : { typeChanged: false };
+      if (access.error) {
+        return res.status(access.error.status).json({ success: false, message: access.error.message });
+      }
       await user.save();
+      // Now a different role (seniority), another phone (person) or a new access type: line its leader roles up with the person's.
+      if (user.role !== before.role || user.phone !== before.phone || access.typeChanged) {
+        try {
+          await syncNewAccount(user);
+        } catch (syncError) {
+          console.error('Update user: leader roles not copied:', syncError);
+        }
+      }
 
       // Populate the updated user
       await user.populate([
@@ -563,7 +643,18 @@ router.post('/',
 
       // Create user
       const user = new User(userData);
+      // An Area Admin's access: the district + area chosen on the Admins page.
+      const access = await applyAreaAccess(user);
+      if (access.error) {
+        return res.status(access.error.status).json({ success: false, message: access.error.message });
+      }
       await user.save();
+      // Same person (phone) already a leader: the new account carries their leader roles too.
+      try {
+        await syncNewAccount(user);
+      } catch (syncError) {
+        console.error('Create user: leader roles not copied:', syncError);
+      }
 
       // Populate the created user
       await user.populate([

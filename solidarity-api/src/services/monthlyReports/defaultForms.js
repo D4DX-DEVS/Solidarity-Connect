@@ -18,7 +18,6 @@ export const DEFAULT_FORMS = {
       count(3, 'ഏരിയ സമിതി'),
       count(4, 'മെമ്പേഴ്‌സ് മീറ്റ്'),
       count(5, 'മെമ്പേഴ്‌സ് മീറ്റിൽ പങ്കെടുത്തവരുടെ എണ്ണം', {
-        helpText: 'മെമ്പേഴ്‌സ് മീറ്റിൽ എത്ര പേർ പങ്കെടുത്തു',
         condition: { fieldId: 4, operator: 'greater_than', value: '0' },
       }),
       count(6, 'യൂത്ത് മീറ്റ്'),

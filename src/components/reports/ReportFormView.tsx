@@ -14,35 +14,69 @@ interface ReportFormViewProps {
   disabled?: boolean;
 }
 
+interface Section {
+  heading: ReportField | null;
+  fields: ReportField[];
+}
+
+/** Questions grouped under the heading that precedes them. */
+function toSections(fields: ReportField[]): Section[] {
+  const sections: Section[] = [];
+  for (const field of fields) {
+    if (field.type === "heading") sections.push({ heading: field, fields: [] });
+    else if (sections.length) sections[sections.length - 1].fields.push(field);
+    else sections.push({ heading: null, fields: [field] });
+  }
+  return sections;
+}
+
+// How many grid columns a question takes: counts sit side by side, choice lists and long text take the full row.
+const FULL_ROW: ReadonlySet<ReportField["type"]> = new Set(["textarea", "radio", "checkbox"]);
+const NARROW: ReadonlySet<ReportField["type"]> = new Set(["number", "time"]);
+
+function cellSpan(type: ReportField["type"]): string {
+  if (FULL_ROW.has(type)) return "col-span-full";
+  if (NARROW.has(type)) return "";
+  return "col-span-2 sm:col-span-1";
+}
+
 /** A report form: editable when `onChange` is given, otherwise the answers as text. */
 export function ReportFormView({ fields, answers, onChange, errors = {}, disabled }: ReportFormViewProps) {
-  const shown = visibleFields(fields, answers);
+  const sections = toSections(visibleFields(fields, answers));
   const readOnly = !onChange;
 
   return (
-    <div className="space-y-5">
-      {shown.map((field) => {
-        if (field.type === "heading") {
-          return (
-            <div key={field.id} className="border-b pb-1.5 pt-2 first:pt-0">
-              <h3 className="text-base font-semibold">{field.label}</h3>
-              {field.helpText ? <p className="text-xs text-muted-foreground">{field.helpText}</p> : null}
+    <div className="space-y-6">
+      {sections.map((section, i) => (
+        <section key={section.heading?.id ?? `top-${i}`} className="space-y-4">
+          {section.heading ? (
+            <div className="border-b pb-1.5">
+              <h3 className="text-base font-semibold">{section.heading.label}</h3>
+              {section.heading.helpText ? <p className="text-xs text-muted-foreground">{section.heading.helpText}</p> : null}
             </div>
-          );
-        }
-        const value = answers[answerKey(field.id)];
-        if (readOnly) return <AnswerRow key={field.id} field={field} value={value} />;
-        return (
-          <ReportFieldInput
-            key={field.id}
-            field={field}
-            value={value}
-            error={errors[field.id]}
-            disabled={disabled}
-            onChange={(next) => onChange({ ...answers, [answerKey(field.id)]: next })}
-          />
-        );
-      })}
+          ) : null}
+          {readOnly ? (
+            <div className="space-y-5">
+              {section.fields.map(field => <AnswerRow key={field.id} field={field} value={answers[answerKey(field.id)]} />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 lg:grid-cols-4">
+              {section.fields.map(field => (
+                <ReportFieldInput
+                  key={field.id}
+                  field={field}
+                  value={answers[answerKey(field.id)]}
+                  error={errors[field.id]}
+                  disabled={disabled}
+                  onChange={(next) => onChange({ ...answers, [answerKey(field.id)]: next })}
+                  // Label, control and error rows line up with the other questions in the same row.
+                  className={`row-span-3 grid-rows-subgrid ${cellSpan(field.type)}`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      ))}
     </div>
   );
 }

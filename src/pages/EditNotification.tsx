@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,13 +22,7 @@ const EditNotification = () => {
     targetAudience: "all",
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchNotification();
-    }
-  }, [id]);
-
-  const fetchNotification = async () => {
+  const fetchNotification = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -51,7 +45,13 @@ const EditNotification = () => {
     } finally {
       setFetchLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchNotification();
+    }
+  }, [id, fetchNotification]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

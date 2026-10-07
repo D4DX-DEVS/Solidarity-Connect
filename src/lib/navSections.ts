@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { FEATURES } from "@/lib/features";
 import {
-  LayoutDashboard, Users, UserCog, Building2, ArrowRightLeft, Shield, FileCheck,
+  LayoutDashboard, Users, UserCog, ArrowRightLeft, Shield, FileCheck,
   FolderOpen, Database, Wallet, Bell, Calendar,
   Star, Archive, ClipboardList,
 } from "lucide-react";
@@ -29,8 +29,6 @@ export const SECTIONS: NavSection[] = [
       // Members aged 38 and above (age over) — moved out of Members, state admin only
       { label: "Archives", path: "/archives", icon: Archive, roles: ["state_admin"] },
       { label: "Admins", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
-      { label: "Districts", path: "/state-admin/districts", icon: Building2, roles: ["state_admin"] },
-      { label: "Groups", path: "/state-admin/groups", icon: Users, roles: ["state_admin", "district_admin"] },
       { label: "Transfers", path: "/state-admin/transfer-approvals", icon: ArrowRightLeft, roles: ["state_admin", "district_admin"] },
       { label: "Role Management", path: "/role-management", icon: Shield, roles: ["state_admin", "district_admin", "group_admin"] },
       { label: "Requests", path: "/requests", icon: FileCheck, roles: ["group_admin"] },
@@ -38,7 +36,8 @@ export const SECTIONS: NavSection[] = [
       ...(FEATURES.baithulMaal
         ? [{ label: "Baithul Maal", path: "/state-admin/baithul-data", icon: Wallet, roles: ["state_admin", "district_admin", "group_admin"] }]
         : []),
-      { label: "Master Data", path: "/state-admin/master-data", icon: Database, roles: ["state_admin"] },
+      // Districts + areas in one place; district admins see only their own areas
+      { label: "Master Data", path: "/state-admin/master-data", icon: Database, roles: ["state_admin", "district_admin"] },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
     ],
   },
@@ -73,6 +72,8 @@ export const MEMBER_SECTIONS: NavSection[] = [
       ...(FEATURES.meetings ? [{ label: "Meetings", path: "/member-dashboard?view=meetings", icon: Calendar }] : []),
       ...(FEATURES.baithulMaal ? [{ label: "Baithul Maal", path: "/member-dashboard?view=baithul", icon: Wallet }] : []),
       { label: "Alerts", path: "/notifications", icon: Bell },
+      // Read-only directory of every member (pages/MemberDirectory)
+      { label: "Members", path: "/members", icon: Users },
       { label: "Leaders", path: "/leaders", icon: Star },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
       { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog },

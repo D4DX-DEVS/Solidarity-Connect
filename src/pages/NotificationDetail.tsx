@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, Send, Trash2, Users, Paperclip, FileText, Image, Film, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,7 @@ const NotificationDetail = () => {
   const [notification, setNotification] = useState<Notification | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchNotification();
-    }
-  }, [id]);
-
-  const fetchNotification = async () => {
+  const fetchNotification = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -42,7 +36,13 @@ const NotificationDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchNotification();
+    }
+  }, [id, fetchNotification]);
 
   const handleDelete = async () => {
     if (!id || !notification) return;

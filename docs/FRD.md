@@ -62,7 +62,7 @@ Out of scope: payment gateways (payments are recorded manually by admins), SMS/e
 |---|---|
 | **State** | The whole organisation (default state: Kerala). Managed by State Admins. |
 | **District** | First level under the state. Has a unique name and code. |
-| **Area** | An organisational unit inside a district. Stored in the database as a **Group** record; the UI calls it "Area" (Master Data), "Group" (Members, Groups pages) or "Unit" (census report). |
+| **Area** | An organisational unit inside a district. Stored in the database as a **Group** record; the UI calls it "Area" (Master Data), "Group" (Members page) or "Unit" (census report). |
 | **Unit** | A single Group when viewed as the smallest scope, e.g. the scope of a unit-level admin or a row in the census report. |
 | **Area Admin** | Any admin with role `group_admin`. Shown in the UI as "Area Admin". |
 | **Murabi Admin / Coordinator Admin** | Kinds of area-level admin (`adminKind`). Same permissions as Area Admin but a separate login account. |
@@ -304,7 +304,7 @@ Each requirement has an ID (`FR-<module>-<nn>`). "Shall" states current system b
 | FR-ORG-02 | A district shall not be deleted while it has areas or members. |
 | FR-ORG-03 | State Admins (any district) and District Admins (own district) shall create, edit and delete **areas/Groups** (name, code unique within the district, optional admin, meeting schedule, contact, active flag). |
 | FR-ORG-04 | An area shall not be deleted while it has members. |
-| FR-ORG-05 | The Master Data page shall have two tabs, **Districts** and **Areas**, with search, a district filter for areas, and summary counts (districts, areas, members). |
+| FR-ORG-05 | The Master Data page shall have two tabs, **Districts** and **Areas**, with search, a district filter for areas, and summary counts (districts, areas, members). District Admins open the same page with only their own district’s areas (no tabs, no district filter). It is the only page for districts and areas; the old Districts and Groups links redirect to it. |
 | FR-ORG-06 | District and area statistics (total members, active members, groups, total monthly Baithul Maal) shall be recalculated when a district or area is opened. |
 
 ### 6.4 Admin User Management
@@ -622,7 +622,7 @@ Views: **Overview, Targets, Meetings, Baithul Maal, Alerts, Leaders, Files, Prof
 |---|---|
 | FR-NAV-01 | Desktop: a sidebar with sections **Management**, **Communication**, **Targets & Planning**, filtered by role, and an account menu (switch account, logout). |
 | FR-NAV-02 | Mobile: a bottom bar (Dashboard, Members, Meetings, Leaders, More). "More" lists the remaining allowed pages, the account switcher and Logout. |
-| FR-NAV-03 | Menu by role: State Admin — Members, Admins, Districts, Groups, Transfers, Role Management, Reports, Consolidation, Baithul Maal, Master Data, Files, Alerts, Meetings overview, Targets, Leaders. District Admin — Members, Groups, Transfers, Role Management, Reports, Consolidation, Baithul Maal, Files, Alerts, Meetings overview, My Targets, Leaders. Area Admin — Members, Role Management, Requests, Reports, Consolidation, Baithul Maal, Files, Alerts, Meetings, My Targets, Leaders. Member — Dashboard, My Targets, Meetings, Baithul Maal, Alerts, Leaders, Files, Profile. |
+| FR-NAV-03 | Menu by role: State Admin — Members, Admins, Transfers, Role Management, Reports, Consolidation, Baithul Maal, Master Data, Files, Alerts, Meetings overview, Targets, Leaders. District Admin — Members, Transfers, Role Management, Reports, Consolidation, Baithul Maal, Master Data, Files, Alerts, Meetings overview, My Targets, Leaders. Area Admin — Members, Role Management, Requests, Reports, Consolidation, Baithul Maal, Files, Alerts, Meetings, My Targets, Leaders. Member — Dashboard, My Targets, Meetings, Baithul Maal, Alerts, Leaders, Files, Profile. |
 | FR-NAV-04 | The app shall be installable (name "SOLIDARITY", standalone, portrait, red theme) with an install banner (dismissible) and automatic updates checked hourly. |
 | FR-NAV-05 | Offline: app shell, images (30 days) and fonts are cached; API responses are cached network-first for 24 hours (10-second network timeout). Changes made offline are not queued. |
 

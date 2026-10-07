@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PageSizeInput from "@/components/app/PageSizeInput";import BaithulEnrollDialog from "@/components/BaithulEnrollDialog";
 import BaithulStatusDialog from "@/components/BaithulStatusDialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { baithulMaalAPI, districtsAPI } from "@/utils/api";
 import { format } from "date-fns";
@@ -85,16 +85,25 @@ interface District {
   code: string;
 }
 
+interface MonthlyReportData {
+  month: string;
+  monthLabel: string;
+  totalAmount: number;
+  totalPayments: number;
+  avgAmount: number;
+  payments: BaithulPayment[];
+}
+
 const BaithulDataView = () => {
   const { toast } = useToast();
-  
+
   // State
   const [loading, setLoading] = useState(true);
   const [baithulMembers, setBaithulMembers] = useState<BaithulMember[]>([]);
   const [baithulPayments, setBaithulPayments] = useState<BaithulPayment[]>([]);
   const [baithulStats, setBaithulStats] = useState<BaithulStats | null>(null);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [monthlyReportData, setMonthlyReportData] = useState<any[]>([]);
+  const [monthlyReportData, setMonthlyReportData] = useState<MonthlyReportData[]>([]);
   
   // Filters
   const [selectedDistrict, setSelectedDistrict] = useState("");
@@ -111,47 +120,79 @@ const BaithulDataView = () => {
   const [totalGroups, setTotalGroups] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // Fetch data
-  const fetchBaithulData = async () => {
+  // Fetch monthly report data
+  const fetchMonthlyReportData = useCallback(async (params: Record<string, string>) => {
+    try {
+      // Fetch payments for selected month (or current month if none selected)
+      const monthlyData: MonthlyReportData[] = [];
+      const now = new Date();
+      const targetMonthStr = selectedMonth || format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM');
+      const targetDate = new Date(targetMonthStr + '-01');
+
+      const monthlyPayments = await baithulMaalAPI.getPayments({
+        ...params,
+        paymentMonth: targetMonthStr,
+        limit: '100' // Get payments for the month (max allowed by API)
+      });
+
+      const monthData: MonthlyReportData = {
+        month: targetMonthStr,
+        monthLabel: format(targetDate, 'MMMM yyyy'),
+        totalAmount: monthlyPayments.statistics?.totalAmount || 0,
+        totalPayments: monthlyPayments.statistics?.totalPayments || 0,
+        avgAmount: monthlyPayments.statistics?.avgAmount || 0,
+        payments: monthlyPayments.data || []
+      };
+
+      monthlyData.push(monthData);
+
+      setMonthlyReportData(monthlyData);
+    } catch (error) {
+      console.error('Error fetching monthly report data:', error);
+    }
+  }, [selectedMonth]);
+
+  // Fetch Baithul data
+  const fetchBaithulData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       const params: Record<string, string> = {};
       if (selectedDistrict) params.district = selectedDistrict;
-      
+
       // Add pagination params based on view mode
       const paginatedParams = {
         ...params,
         page: currentPage.toString(),
         limit: itemsPerPage.toString()
       };
-      
+
       // Fetch based on view mode
       if (viewMode === "members") {
         const [membersResult, statsResult] = await Promise.all([
           baithulMaalAPI.getBaithulData(paginatedParams),
           baithulMaalAPI.getStats(params)
         ]);
-        
+
         setBaithulMembers(Array.isArray(membersResult.data) ? membersResult.data.filter(m => m && m._id) : []);
         setTotalMembers(membersResult.pagination?.totalDocs || 0);
         setBaithulStats(statsResult.data || null);
       } else if (viewMode === "payments") {
         const [paymentsResult, statsResult] = await Promise.all([
-          baithulMaalAPI.getPayments({ 
-            ...paginatedParams, 
+          baithulMaalAPI.getPayments({
+            ...paginatedParams,
             ...(selectedMonth && { paymentMonth: selectedMonth })
           }),
           baithulMaalAPI.getStats(params)
         ]);
-        
+
         setBaithulPayments(Array.isArray(paymentsResult.data) ? paymentsResult.data.filter(p => p && p._id) : []);
         setTotalPayments(paymentsResult.pagination?.totalDocs || 0);
         setBaithulStats(statsResult.data || null);
       } else if (viewMode === "groups") {
         const statsResult = await baithulMaalAPI.getStats(params);
         setBaithulStats(statsResult.data || null);
-        
+
         // Groups are in stats, apply client-side pagination
         const allGroups = statsResult.data?.groupStatistics || [];
         setTotalGroups(allGroups.length);
@@ -166,7 +207,7 @@ const BaithulDataView = () => {
         const statsResult = await baithulMaalAPI.getStats(params);
         setBaithulStats(statsResult.data || null);
       }
-      
+
     } catch (error) {
       console.error('Error fetching Baithul Maal data:', error);
       toast({
@@ -177,38 +218,7 @@ const BaithulDataView = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchMonthlyReportData = async (params: Record<string, string>) => {
-    try {
-      // Fetch payments for selected month (or current month if none selected)
-      const monthlyData = [];
-      const now = new Date();
-      const targetMonthStr = selectedMonth || format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM');
-      const targetDate = new Date(targetMonthStr + '-01');
-
-      const monthlyPayments = await baithulMaalAPI.getPayments({
-        ...params,
-        paymentMonth: targetMonthStr,
-        limit: '100' // Get payments for the month (max allowed by API)
-      });
-      
-      const monthData = {
-        month: targetMonthStr,
-        monthLabel: format(targetDate, 'MMMM yyyy'),
-        totalAmount: monthlyPayments.statistics?.totalAmount || 0,
-        totalPayments: monthlyPayments.statistics?.totalPayments || 0,
-        avgAmount: monthlyPayments.statistics?.avgAmount || 0,
-        payments: monthlyPayments.data || []
-      };
-      
-      monthlyData.push(monthData);
-      
-      setMonthlyReportData(monthlyData);
-    } catch (error) {
-      console.error('Error fetching monthly report data:', error);
-    }
-  };
+  }, [selectedDistrict, selectedMonth, viewMode, currentPage, itemsPerPage, fetchMonthlyReportData, toast]);
 
   const fetchDistricts = async () => {
     try {
@@ -221,7 +231,7 @@ const BaithulDataView = () => {
 
   useEffect(() => {
     fetchBaithulData();
-  }, [selectedDistrict, selectedMonth, viewMode, currentPage, itemsPerPage]);
+  }, [fetchBaithulData]);
   
   useEffect(() => {
     setCurrentPage(1); // Reset to page 1 when filters change
