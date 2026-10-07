@@ -22,8 +22,11 @@ function summary(report) {
     lastEditedAt: report.lastEditedAt || null,
     unlockedUntil: report.unlockedUntil || null,
     numbers,
+    ...(report.monthsSubmitted === undefined ? {} : { monthsSubmitted: report.monthsSubmitted }),
   };
 }
+
+const scopeKeyOf = (r) => (r.level === 'state' ? 'state' : r.level === 'district' ? `district:${idOf(r.district)}` : `area:${idOf(r.area)}`);
 
 /**
  * @param {{ districts: {_id, name}[], areas: {_id, name, district}[], reports: object[], includeState: boolean }} input
@@ -31,10 +34,7 @@ function summary(report) {
  */
 export function consolidate({ districts, areas, reports, includeState }) {
   const byScope = new Map();
-  for (const r of reports) {
-    const key = r.level === 'state' ? 'state' : r.level === 'district' ? `district:${idOf(r.district)}` : `area:${idOf(r.area)}`;
-    byScope.set(key, r);
-  }
+  for (const r of reports) byScope.set(scopeKeyOf(r), r);
 
   const totals = { state: {}, district: {}, area: {} };
   const counts = { districts: { submitted: 0, total: districts.length }, areas: { submitted: 0, total: areas.length } };
@@ -80,4 +80,63 @@ export function consolidate({ districts, areas, reports, includeState }) {
   }
 
   return { state, districts: districtRows, totals, counts };
+}
+
+/**
+ * A year's months merged into one report per scope: submitted months' numbers summed,
+ * how many months were submitted, and no single report id (there is nothing one to open).
+ */
+function mergeYear(reports) {
+  const byScope = new Map();
+  for (const r of reports) {
+    const key = scopeKeyOf(r);
+    const merged = byScope.get(key) || {
+      _id: null, level: r.level, district: r.district, area: r.area, submittedAt: null, monthsSubmitted: 0, totals: {},
+    };
+    if (r.submittedAt) {
+      merged.monthsSubmitted += 1;
+      addInto(merged.totals, r.numbers);
+      if (!merged.submittedAt || r.submittedAt > merged.submittedAt) merged.submittedAt = r.submittedAt;
+    }
+    byScope.set(key, merged);
+  }
+  return [...byScope.values()].map(({ totals, ...merged }) => ({
+    ...merged,
+    numbers: Object.entries(totals).map(([fieldId, value]) => ({ fieldId, value })),
+  }));
+}
+
+const withMonths = (report) => ({ ...report, monthsSubmitted: report.monthsSubmitted ?? 0 });
+const sum = (values) => values.reduce((total, value) => total + value, 0);
+
+/**
+ * A calendar year rolled up like consolidate(), every submitted month added together.
+ * `months` is how many of the year's months have started, for "9 of 10 months" counts.
+ */
+export function consolidateYear({ districts, areas, reports, includeState, months }) {
+  const tree = consolidate({ districts, areas, reports: mergeYear(reports), includeState });
+  const districtRows = tree.districts.map((district) => {
+    const areaRows = district.areas.map(area => ({ ...area, report: withMonths(area.report) }));
+    return {
+      ...district,
+      report: withMonths(district.report),
+      areas: areaRows,
+      areaMonthsSubmitted: sum(areaRows.map(a => a.report.monthsSubmitted)),
+    };
+  });
+  const state = tree.state ? withMonths(tree.state) : null;
+
+  return {
+    ...tree,
+    state,
+    districts: districtRows,
+    counts: {
+      ...tree.counts,
+      months: {
+        district: { submitted: sum(districtRows.map(d => d.report.monthsSubmitted)), total: districts.length * months },
+        area: { submitted: sum(districtRows.map(d => d.areaMonthsSubmitted)), total: areas.length * months },
+        state: state ? { submitted: state.monthsSubmitted, total: months } : null,
+      },
+    },
+  };
 }

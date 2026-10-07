@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { districtsApi, District, CreateDistrictData, DistrictFilters } from '@/lib/districts';
+import { confirmAction } from '@/lib/confirm';
+import { undoableDelete } from '@/lib/undoDelete';
 
 // Query keys
 const districtKeys = {
@@ -71,6 +73,29 @@ export const useDeleteDistrict = () => {
       queryClient.invalidateQueries({ queryKey: districtKeys.lists() });
     },
   });
+};
+
+// Ask, then delete with a 10 second Undo. Lists hide the row via usePendingDeletes().
+export const useConfirmDeleteDistrict = () => {
+  const queryClient = useQueryClient();
+
+  return async (district: District): Promise<void> => {
+    const confirmed = await confirmAction({
+      title: 'Delete this district?',
+      description: 'Only a district with no areas or members can be deleted.',
+      itemName: district.name,
+      confirmLabel: 'Delete district',
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: district._id,
+      title: 'District deleted',
+      description: district.name,
+      commit: () => districtsApi.deleteDistrict(district._id),
+      onCommitted: () => queryClient.invalidateQueries({ queryKey: districtKeys.all }),
+    });
+  };
 };
 
 // Get district statistics

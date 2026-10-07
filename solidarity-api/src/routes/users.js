@@ -161,8 +161,11 @@ router.get('/leaders', authenticate, async (req, res) => {
     };
     const seenPhones = new Set();
     const deduped = [];
-    // Add users first (higher priority)
-    for (const u of users) {
+    // Add users first (higher priority). One person can hold several logins
+    // (e.g. State Admin + Murabi); keep the most senior so the badge is right.
+    const ROLE_RANK = { state_admin: 0, district_admin: 1, group_admin: 2 };
+    const bySeniority = [...users].sort((a, b) => (ROLE_RANK[a.role] ?? 9) - (ROLE_RANK[b.role] ?? 9));
+    for (const u of bySeniority) {
       const phone = normalizePhone(u.phone);
       if (phone && seenPhones.has(phone)) continue;
       if (phone) seenPhones.add(phone);

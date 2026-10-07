@@ -18,7 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import PageSizeInput from "@/components/app/PageSizeInput";import HeaderWithLogout from "@/components/HeaderWithLogout";
+import PageSizeInput from "@/components/app/PageSizeInput";
+import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { SectionCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
 import { format } from "date-fns";
@@ -27,6 +28,8 @@ import { useAdminMeetingsOverview, useMeetings, useDeleteMeeting } from "@/hooks
 import { getEffectiveStatus } from "@/lib/meetings";
 import { useDistricts } from "@/hooks/useDistricts";
 import { useListParams } from "@/hooks/useListParams";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
 
 interface GroupProgress {
   groupId: string;
@@ -144,7 +147,8 @@ const AdminMeetingsView = () => {
   });
 
   const { data: overview, isPending: loading } = useAdminMeetingsOverview(filters);
-  const meetings: MeetingData[] = overview?.data ?? [];
+  const pendingDeletes = usePendingDeletes();
+  const meetings: MeetingData[] = (overview?.data ?? []).filter((meeting: MeetingData) => !pendingDeletes.has(meeting._id));
   const summaryStats: SummaryStats | null = overview?.summaryStats ?? null;
   const pagination: PaginationInfo = overview?.pagination ?? {
     currentPage: 1,
@@ -164,18 +168,19 @@ const AdminMeetingsView = () => {
     { page: agendaList.page, limit: agendaList.pageSize },
     { keepPrevious: "page" }
   );
-  const agendas = agendaResponse?.data || [];
+  const agendas = (agendaResponse?.data || []).filter((agenda) => !pendingDeletes.has(agenda._id));
   const agendaTotal = agendaResponse?.pagination?.totalDocs ?? agendas.length;
   const deleteMeeting = useDeleteMeeting();
 
   const handleDeleteMeeting = async (meetingId: string, meetingTitle: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${meetingTitle}"?`)) return;
-    try {
-      await deleteMeeting.mutateAsync(meetingId);
-      toast({ title: "Success", description: "Meeting deleted successfully" });
-    } catch {
-      toast({ title: "Error", description: "Failed to delete meeting", variant: "destructive" });
-    }
+    const confirmed = await confirmAction({ title: "Delete this meeting?", itemName: meetingTitle, undoable: true });
+    if (!confirmed) return;
+    undoableDelete({
+      id: meetingId,
+      title: "Meeting deleted",
+      description: meetingTitle,
+      commit: () => deleteMeeting.mutateAsync(meetingId),
+    });
   };
 
   const getAgendaStatusColor = (status: string) => {
@@ -660,7 +665,8 @@ const AdminMeetingsView = () => {
               </div>
             </CardContent>
           </Card>
-        </main>      </div>
+        </main>
+      </div>
     );
   }
 
@@ -1029,7 +1035,8 @@ const AdminMeetingsView = () => {
             </SectionCard>
           </TabsContent>
         </Tabs>
-      </main>    </div>
+      </main>
+    </div>
   );
 };
 

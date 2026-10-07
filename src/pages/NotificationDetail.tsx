@@ -8,17 +8,8 @@ import { PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import { DetailSkeleton } from "@/components/ui/loading-skeletons";
 import { toast } from "@/hooks/use-toast";
 import { notificationService, type Notification } from "@/services/notificationService";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete } from "@/lib/undoDelete";
 
 const NotificationDetail = () => {
   const navigate = useNavigate();
@@ -54,26 +45,22 @@ const NotificationDetail = () => {
   };
 
   const handleDelete = async () => {
-    if (!id) return;
-
-    try {
-      setActionLoading(true);
-      await notificationService.deleteNotification(id);
-      toast({
-        title: "Success",
-        description: "Notification deleted successfully",
-      });
-      navigate("/notifications");
-    } catch (error) {
-      console.error('Failed to delete notification:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete notification",
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
+    if (!id || !notification) return;
+    const confirmed = await confirmAction({
+      title: "Delete this notification?",
+      description: "It is removed for everyone it was sent to.",
+      itemName: notification.title,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    // The list hides it while the undo window is open; Undo brings it back there.
+    undoableDelete({
+      id,
+      title: "Notification deleted",
+      description: notification.title,
+      commit: () => notificationService.deleteNotification(id),
+    });
+    navigate("/notifications");
   };
 
   const handleSend = async () => {
@@ -262,26 +249,10 @@ const NotificationDetail = () => {
             </Button>
           )}
 
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={actionLoading}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Notification</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this notification? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button variant="destructive" disabled={actionLoading} onClick={handleDelete}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete
+          </Button>
         </div>
       </SectionCard>
     </PageShell>

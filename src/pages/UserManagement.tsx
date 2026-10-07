@@ -55,6 +55,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { getRoleLabel, ROLE_FILTER_OPTIONS } from "@/lib/adminKinds";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
+import { useLatest } from "@/hooks/useLatest";
 interface User {
   _id: string;
   name: string;
@@ -129,6 +132,8 @@ const UserManagement = () => {
   const { toast } = useToast();
   
   const [users, setUsers] = useState<User[]>([]);
+  const pendingDeletes = usePendingDeletes();
+  const visibleUsers = users.filter((user) => !pendingDeletes.has(user._id));
   const [members, setMembers] = useState<Member[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -407,24 +412,23 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-
-    try {
-      const result = await usersAPI.deleteUser(userId);
-
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-      fetchData();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      });
-    }
+  // Runs after the undo window, so refresh with the filters on screen then, not now
+  const fetchDataRef = useLatest(fetchData);
+  const handleDeleteUser = async (user: User) => {
+    const confirmed = await confirmAction({
+      title: "Delete this user?",
+      description: "They lose access to the app straight away.",
+      itemName: user.name,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: user._id,
+      title: "User deleted",
+      description: user.name,
+      commit: () => usersAPI.deleteUser(user._id),
+      onCommitted: () => fetchDataRef.current(),
+    });
   };
 
   const handleToggleLeader = async (user: User) => {
@@ -819,7 +823,7 @@ const UserManagement = () => {
 
         {/* Users List */}
         {!isMemberView && <div className="space-y-3">
-          {users.map((user) => (
+          {visibleUsers.map((user) => (
             <Card key={user._id} className="surface-card transition-transform hover:-translate-y-0.5">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-start justify-between">
@@ -893,7 +897,7 @@ const UserManagement = () => {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem 
-                        onClick={() => handleDeleteUser(user._id)}
+                        onClick={() => handleDeleteUser(user)}
                         className="text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -907,7 +911,7 @@ const UserManagement = () => {
           ))}
         </div>}
 
-        {!isMemberView && users.length === 0 && !searching && (
+        {!isMemberView && visibleUsers.length === 0 && !searching && (
           <Card className="surface-card">
             <CardContent className="p-8 text-center">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -1160,7 +1164,8 @@ const UserManagement = () => {
             </div>
           </div>
         </DialogContent>
-      </Dialog>    </PageShell>
+      </Dialog>
+    </PageShell>
   );
 };
 

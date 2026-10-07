@@ -7,8 +7,8 @@ import Group from '../models/Group.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { REPORT_LEVELS, normaliseFormFields, sumColumns } from '../services/monthlyReports/fields.js';
 import { validateAnswers, changedFieldIds } from '../services/monthlyReports/answers.js';
-import { parsePeriod, editState, currentPeriod } from '../services/monthlyReports/period.js';
-import { consolidate } from '../services/monthlyReports/consolidate.js';
+import { parsePeriod, parseYear, monthsElapsed, editState, currentPeriod } from '../services/monthlyReports/period.js';
+import { consolidate, consolidateYear } from '../services/monthlyReports/consolidate.js';
 import {
   ensureForms, publishedForm, reportScopeFor, scopeCovers, isAllowedFileUrl,
 } from '../services/monthlyReports/store.js';
@@ -306,9 +306,11 @@ async function numberColumns(level, totals) {
 }
 
 // @route GET /api/monthly-reports/consolidated?year&month[&district] — hierarchy-scoped totals
+//        ?year&period=year adds up every month of that calendar year instead
 router.get('/consolidated', async (req, res) => {
   try {
-    const period = parsePeriod(req.query);
+    const yearly = req.query.period === 'year';
+    const period = yearly ? parseYear(req.query) : parsePeriod(req.query);
     if (period.error) return fail(res, 400, period.error);
     const scope = await scopeOrFail(req, res);
     if (!scope) return;
@@ -337,10 +339,14 @@ router.get('/consolidated', async (req, res) => {
     if (!areaOnly) scopes.push({ level: 'district', district: { $in: districtIds } });
     if (all) scopes.push({ level: 'state' });
     const reports = await MonthlyReport.find({ ...period, $or: scopes })
-      .select('level district area submittedAt lastEditedAt unlockedUntil numbers').lean();
+      .select('level district area month submittedAt lastEditedAt unlockedUntil numbers').lean();
 
-    const tree = consolidate({ districts, areas, reports, includeState: all });
-    const forms = await ReportForm.find().select('level deadlineDay').lean();
+    const months = yearly ? monthsElapsed(period.year) : 1;
+    const tree = yearly
+      ? consolidateYear({ districts, areas, reports, includeState: all, months })
+      : consolidate({ districts, areas, reports, includeState: all });
+    // A year has no single deadline to unlock; reports are unlocked month by month.
+    const forms = yearly ? [] : await ReportForm.find().select('level deadlineDay').lean();
     const deadlines = Object.fromEntries(forms.map(f => [f.level, editState({ ...period, deadlineDay: f.deadlineDay }).deadline]));
 
     const [stateColumns, districtColumns, areaColumns] = await Promise.all([
@@ -352,13 +358,15 @@ router.get('/consolidated', async (req, res) => {
     res.json({
       success: true,
       data: {
-        period,
+        span: yearly ? 'year' : 'month',
+        period: yearly ? { year: period.year, month: null } : period,
+        months,
         current: currentPeriod(),
         viewer: { level: scope.level, view: all ? 'all' : areaOnly ? 'area' : 'district' },
         canUnlock: {
-          state: req.user.role === 'state_admin',
-          district: req.user.role === 'state_admin',
-          area: req.user.role === 'state_admin' || req.user.role === 'district_admin',
+          state: !yearly && req.user.role === 'state_admin',
+          district: !yearly && req.user.role === 'state_admin',
+          area: !yearly && (req.user.role === 'state_admin' || req.user.role === 'district_admin'),
         },
         columns: { state: stateColumns, district: districtColumns, area: areaColumns },
         deadlines,

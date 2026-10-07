@@ -72,6 +72,8 @@ export interface ReportSummary {
   unlockedUntil?: string | null;
   /** Add-up numbers keyed by field id. */
   numbers: Record<string, number>;
+  /** Year view: how many of the year's months this scope submitted. */
+  monthsSubmitted?: number;
 }
 
 export interface AreaRow {
@@ -87,6 +89,8 @@ export interface DistrictRow {
   areas: AreaRow[];
   areasSubmitted: number;
   areaTotals: Record<string, number>;
+  /** Year view: area reports submitted across all its areas and months. */
+  areaMonthsSubmitted?: number;
 }
 
 export interface NumberColumn {
@@ -99,17 +103,34 @@ export interface NumberColumn {
   retired?: boolean;
 }
 
+export interface SubmittedCount {
+  submitted: number;
+  total: number;
+}
+
+export type ConsolidatedSpan = "month" | "year";
+
 export interface Consolidated {
-  period: { year: number; month: number };
+  span: ConsolidatedSpan;
+  /** `month` is null for the year view. */
+  period: { year: number; month: number | null };
+  /** Months counted: 1 for a month, months started so far for a year. */
+  months: number;
   current: { year: number; month: number };
   viewer: { level: ReportLevel; view: "all" | "district" | "area" };
   canUnlock: Record<ReportLevel, boolean>;
   columns: Record<ReportLevel, NumberColumn[]>;
-  deadlines: Record<ReportLevel, string>;
+  /** Empty for the year view — months are unlocked one at a time. */
+  deadlines: Partial<Record<ReportLevel, string>>;
   state: ReportSummary | null;
   districts: DistrictRow[];
   totals: Record<ReportLevel, Record<string, number>>;
-  counts: { districts: { submitted: number; total: number }; areas: { submitted: number; total: number } };
+  counts: {
+    districts: SubmittedCount;
+    areas: SubmittedCount;
+    /** Year view: monthly reports submitted out of those due so far. */
+    months?: { district: SubmittedCount; area: SubmittedCount; state: SubmittedCount | null };
+  };
 }
 
 export interface ReportDetail {
@@ -145,8 +166,8 @@ export const monthlyReportService = {
   getStatus: async (year: number) =>
     (await apiCall(`/monthly-reports/status?year=${year}`)).data as { month: number; submitted: boolean; submittedAt: string | null }[],
 
-  getConsolidated: async (year: number, month: number, district?: string) =>
-    (await apiCall(`/monthly-reports/consolidated?${period(year, month)}${district && district !== "all" ? `&district=${district}` : ""}`)).data as Consolidated,
+  getConsolidated: async (year: number, month: number, district?: string, span: ConsolidatedSpan = "month") =>
+    (await apiCall(`/monthly-reports/consolidated?${span === "year" ? `year=${year}&period=year` : period(year, month)}${district && district !== "all" ? `&district=${district}` : ""}`)).data as Consolidated,
 
   getReport: async (id: string) => (await apiCall(`/monthly-reports/${id}`)).data as ReportDetail,
 

@@ -14,12 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";import { useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { usersAPI, leadersAPI, membersAPI, districtsAPI } from "@/utils/api";
 import { getRoleLabel } from "@/lib/adminKinds";
 import { LEADER_ROLE_TYPES, canManageLeaderTarget, canManageRoleType } from "@/lib/roleHierarchy";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete } from "@/lib/undoDelete";
 
 const ROLE_TYPE_LABELS: Record<string, string> = {
   state: "State",
@@ -386,6 +389,36 @@ const RoleManagement = () => {
       ...prev,
       [userId]: { ...prev[userId], ...patch },
     }));
+  };
+
+  // Asks first (unless the row is still blank); Undo puts the row back for 10 seconds.
+  const removeExtraRole = async (user: UserWithLeader, index: number) => {
+    const removed = editStates[user._id]?.extraRoles[index];
+    if (!removed) return;
+    const blank = !removed.type && !removed.name.trim();
+    const roleLabel = [ROLE_TYPE_LABELS[removed.type] || removed.type, removed.name.trim()].filter(Boolean).join(" · ");
+    if (!blank) {
+      const confirmed = await confirmAction({
+        title: "Remove this role?",
+        description: `It comes off ${user.name} when you save.`,
+        itemName: roleLabel,
+        confirmLabel: "Remove",
+        undoable: true,
+      });
+      if (!confirmed) return;
+    }
+    const updateRoles = (change: (roles: ExtraRoleEdit[]) => ExtraRoleEdit[]) =>
+      setEditStates((prev) => {
+        const current = prev[user._id];
+        return current ? { ...prev, [user._id]: { ...current, extraRoles: change(current.extraRoles) } } : prev;
+      });
+    updateRoles((roles) => roles.filter((_, i) => i !== index));
+    if (blank) return;
+    undoableDelete({
+      title: "Role removed",
+      description: roleLabel,
+      onRestore: () => updateRoles((roles) => [...roles.slice(0, index), removed, ...roles.slice(index)]),
+    });
   };
 
   const hasChanges = (user: UserWithLeader, state: EditState) => {
@@ -822,11 +855,7 @@ const RoleManagement = () => {
                                     variant="ghost"
                                     className="h-6 w-6 p-0 text-destructive"
                                     aria-label={`Remove additional role ${i + 1} for ${user.name}`}
-                                    onClick={() =>
-                                      updateEditState(user._id, {
-                                        extraRoles: state.extraRoles.filter((_, idx) => idx !== i),
-                                      })
-                                    }
+                                    onClick={() => removeExtraRole(user, i)}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
@@ -952,7 +981,8 @@ const RoleManagement = () => {
             )}
           </>
         )}
-      </SectionCard>    </PageShell>
+      </SectionCard>
+    </PageShell>
   );
 };
 

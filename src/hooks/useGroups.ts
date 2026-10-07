@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listPlaceholder, type KeepPrevious } from '@/lib/listPlaceholder';
 import { groupsApi, Group, CreateGroupData, GroupFilters } from '@/lib/groups';
+import { confirmAction } from '@/lib/confirm';
+import { undoableDelete } from '@/lib/undoDelete';
 
 // Query keys
 const groupKeys = {
@@ -76,6 +78,35 @@ export const useDeleteGroup = () => {
       queryClient.invalidateQueries({ queryKey: ['districts'] });
     },
   });
+};
+
+// Ask, then delete with a 10 second Undo. Lists hide the row via usePendingDeletes().
+// `noun` follows the page: Master Data says "area", Manage Groups says "group".
+export const useConfirmDeleteGroup = (noun: 'area' | 'group' = 'area') => {
+  const queryClient = useQueryClient();
+  const Noun = noun === 'area' ? 'Area' : 'Group';
+
+  return async (group: Group): Promise<void> => {
+    const confirmed = await confirmAction({
+      title: `Delete this ${noun}?`,
+      description: `Only ${noun === 'area' ? 'an' : 'a'} ${noun} with no members can be deleted.`,
+      itemName: group.name,
+      confirmLabel: `Delete ${noun}`,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: group._id,
+      title: `${Noun} deleted`,
+      description: group.name,
+      commit: () => groupsApi.deleteGroup(group._id),
+      // Area counts live on the districts too
+      onCommitted: () => Promise.all([
+        queryClient.invalidateQueries({ queryKey: groupKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['districts'] }),
+      ]),
+    });
+  };
 };
 
 // Get group statistics

@@ -25,7 +25,7 @@ export const TEST_PHONES = ['9876543210', '9995707129'];
 export const phoneVariants = (bare) => [bare, `+91${bare}`, `91${bare}`];
 export const TEST_PHONE_VARIANTS = TEST_PHONES.flatMap(phoneVariants);
 
-export const LEADER_MISMATCH = 'Leader column disagrees with Roles — roles win';
+export const LEADER_MISMATCH = 'Is Leader is TRUE but there is no role in that slot — no admin login';
 
 const BLOOD_GROUPS = new Set(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
 const STATUSES = new Map(
@@ -161,16 +161,20 @@ export function normalizeStatus(raw) {
   return { value: 'Active', warning: `unknown status "${text}" — imported as Active` };
 }
 
-/** [{ type, name }] raw role cells → [{ type, title }], typo-fixed, rank-sorted. */
+/**
+ * [{ type, name, admin }] raw role cells → [{ type, title, admin }], typo-fixed,
+ * rank-sorted. `admin` = that slot's own "Is Leader" flag: only those roles get
+ * an admin login; every role still shows as a leader tag.
+ */
 export function parseRoles(rawRoles) {
   const roles = [];
   const invalid = [];
   const fixes = [];
-  for (const { type: rawType, name: rawName } of rawRoles) {
+  for (const { type: rawType, name: rawName, admin = false } of rawRoles) {
     const type = String(rawType ?? '').trim().toLowerCase();
     let title = String(rawName ?? '').trim();
     if (!type && !title) continue;
-    if (type === 'murabi') { roles.push({ type: 'murabi', title: 'Murabi' }); continue; }
+    if (type === 'murabi') { roles.push({ type: 'murabi', title: 'Murabi', admin }); continue; }
     if (!(type in ROLE_RANK) || !title) { invalid.push(`${rawType || '?'} - ${rawName || '?'}`); continue; }
     for (const [re, fix] of TITLE_FIXES) {
       if (re.test(title)) {
@@ -179,7 +183,7 @@ export function parseRoles(rawRoles) {
         title = fixed;
       }
     }
-    roles.push({ type, title: title.charAt(0).toUpperCase() + title.slice(1) });
+    roles.push({ type, title: title.charAt(0).toUpperCase() + title.slice(1), admin });
   }
   // One role per type — a second of the same type would collide on the login key.
   const seen = new Set();
@@ -188,11 +192,11 @@ export function parseRoles(rawRoles) {
   return { roles: unique, invalid, fixes };
 }
 
-/** v1 "area - Secretary; murabi" → raw role cells. */
+/** v1 "area - Secretary; murabi" → raw role cells. v1 had no per-role flag: all admin. */
 const splitRoleText = (text) =>
   String(text ?? '').split(';').map((s) => s.trim()).filter(Boolean).map((part) => {
     const m = part.match(/^([^-]+?)\s*-\s*(.+)$/);
-    return m ? { type: m[1], name: m[2] } : { type: part, name: '' };
+    return m ? { type: m[1], name: m[2], admin: true } : { type: part, name: '', admin: true };
   });
 
 const isTrue = (v) => v === true || /^(yes|true)$/i.test(String(v ?? '').trim());
@@ -209,18 +213,29 @@ export function readRows(xlsxPath) {
   }
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   return XLSX.utils.sheet_to_json(sheet, { defval: '' })
-    .filter((r) => String(r.NAME ?? '').trim() || String(r['PHONE NUMBER'] ?? '').trim())
-    .map((r) => ({
-      src: r['SI:NO'], name: r.NAME, phone: r['PHONE NUMBER'], district: r.District,
-      area: r['MEMBERS GROUP'], unit: r.Unit, dob: r.DOB, blood: r['BLOOD GROUP'], status: r.STATUS,
-      rawRoles: [
-        { type: r['Role Type'], name: r['Role Name'] },
-        { type: r['Role Type_1'], name: r['Role Name_1'] },
-        { type: r['Role Type_2'], name: r['Role Name_2'] },
-      ],
-      leaderFlag: isTrue(r['Is Leader']) || isTrue(r['Is Leader_1']),
-    }));
+    .map((raw) => {
+      // Header case varies between sheets ("District" / "DISTRICT"); look up case-insensitively.
+      const byKey = new Map(Object.keys(raw).map((k) => [k.trim().toLowerCase(), raw[k]]));
+      const r = (key) => byKey.get(key.toLowerCase()) ?? '';
+      return {
+        // No SI:NO column → use the Excel row number.
+        src: r('SI:NO') || `row ${raw.__rowNum__ + 1}`,
+        name: r('NAME'), phone: r('PHONE NUMBER'), district: r('District'), area: r('MEMBERS GROUP'),
+        unit: r('Unit'), dob: r('DOB'), blood: r('BLOOD GROUP'), status: r('STATUS'),
+        // Each slot's own flag decides its admin login; slot 3 has no flag column.
+        rawRoles: [
+          { type: r('Role Type'), name: r('Role Name'), admin: isTrue(r('Is Leader')) },
+          { type: r('Role Type_1'), name: r('Role Name_1'), admin: isTrue(r('Is Leader_1')) },
+          { type: r('Role Type_2'), name: r('Role Name_2'), admin: false },
+        ],
+        leaderFlag: isTrue(r('Is Leader')) || isTrue(r('Is Leader_1')),
+      };
+    })
+    .filter((r) => String(r.name).trim() || String(r.phone).trim());
 }
+
+// "Puthukod" vs "PUTHUKKOD": compare with letters only and doubled letters collapsed.
+const looseName = (s) => String(s).toUpperCase().replace(/[^A-Z]/g, '').replace(/(.)\1+/g, '$1');
 
 /**
  * Full roleTag for one role. For area/murabi, roleDescription MUST equal the
@@ -242,8 +257,9 @@ export function roleTagFor(role, person) {
 }
 
 /**
- * Admin logins a leader gets — one per (role, adminKind), which is the users
- * collection's unique key:
+ * Admin logins a leader gets — only for roles whose own "Is Leader" flag is TRUE
+ * (user rule 2026-10-07: flag FALSE = leader tag only, member login only).
+ * One login per (role, adminKind), which is the users collection's unique key:
  *   state → state_admin, district → district_admin,
  *   area / murabi / unit → ONE group_admin (area beats murabi beats unit; a
  *   murabi-only leader gets adminKind 'murabi' so isAreaLevelAdmin holds).
@@ -254,13 +270,14 @@ export function loginsFor(person) {
   const { roles } = person;
   const extrasExcept = (primary) =>
     roles.filter((r) => r !== primary).map((r) => ({ type: r.type, name: r.type === 'murabi' ? 'Murabi' : r.title }));
+  const adminRoles = roles.filter((r) => r.admin);
 
   const logins = [];
-  const state = roles.find((r) => r.type === 'state');
+  const state = adminRoles.find((r) => r.type === 'state');
   if (state) logins.push({ role: 'state_admin', adminKind: 'area', primary: state });
-  const district = roles.find((r) => r.type === 'district');
+  const district = adminRoles.find((r) => r.type === 'district');
   if (district) logins.push({ role: 'district_admin', adminKind: 'area', primary: district });
-  const groupLevel = roles.find((r) => r.type === 'area') || roles.find((r) => r.type === 'murabi') || roles.find((r) => r.type === 'unit');
+  const groupLevel = adminRoles.find((r) => r.type === 'area') || adminRoles.find((r) => r.type === 'murabi') || adminRoles.find((r) => r.type === 'unit');
   if (groupLevel) {
     logins.push({ role: 'group_admin', adminKind: groupLevel.type === 'murabi' ? 'murabi' : 'area', primary: groupLevel });
   }
@@ -308,7 +325,14 @@ export function buildPeople(rows, districts, groups) {
     const district = districtByName.get(districtName.toUpperCase());
     if (!district) { skip(`district "${districtName}" not in master data`); continue; }
     const areaName = String(row.area ?? '').trim();
-    const group = groupByKey.get(`${district._id}|${areaName.toUpperCase()}`);
+    let group = groupByKey.get(`${district._id}|${areaName.toUpperCase()}`);
+    if (!group) {
+      const close = groups.filter((g) => String(g.district) === String(district._id) && looseName(g.name) === looseName(areaName));
+      if (close.length === 1) {
+        group = close[0];
+        warn(`area "${areaName}" matched to "${group.name}" (spelling)`);
+      }
+    }
     if (!group) { skip(`area "${areaName}" not in ${district.name}`); continue; }
 
     const dob = parseDob(row.dob);
@@ -319,8 +343,8 @@ export function buildPeople(rows, districts, groups) {
     if (status.blank) warn('blank status — imported as Active');
     fixes.forEach(warn);
     if (invalid.length) warn(`unrecognised role(s) ignored: ${invalid.join(', ')}`);
-    // Source "Leader" is "No" for most unit office bearers; Roles is the real data.
-    if (row.leaderFlag !== roles.length > 0) warn(LEADER_MISMATCH);
+    // A TRUE flag with no role to go with it can't become a login — report it.
+    if (row.leaderFlag && !roles.some((r) => r.admin)) warn(LEADER_MISMATCH);
     if (/^name$/i.test(name)) warn('name is literally "Name" — check source');
     const unit = String(row.unit ?? '').trim();
     if (!unit) warn('no unit');

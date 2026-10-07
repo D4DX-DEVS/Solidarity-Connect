@@ -1,0 +1,4582 @@
+[
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac77"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed95741956"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac7a"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed95741958"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac7b"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed95741960"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac7c"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed95741963"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac81"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed9574196b"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac7d"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed9574196c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac83"
+  },
+  "user": {
+   "$oid": "6abe09d0da3ab8ed9574196e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358180"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac91"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed95741992"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5aca1"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed95741994"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac94"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed9574199e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac9a"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419a0"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac97"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419a1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ac9b"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419a3"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5aca2"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419c0"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358181"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5aca8"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419ca"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5aca9"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419cf"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acb4"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419d4"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acb3"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419d5"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acab"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419d6"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac03"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419d9"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c32d"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419d9"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acad"
+  },
+  "user": {
+   "$oid": "6abe09d1da3ab8ed957419dd"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358182"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acb6"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed957419f7"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acbd"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed957419fc"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acbc"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed957419fd"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac09"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a00"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c333"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a00"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acb7"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a04"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acb8"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a05"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acbb"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a08"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acc5"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a13"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acbf"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a17"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358183"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acc7"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a32"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acc8"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a34"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5accc"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a3d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acd8"
+  },
+  "user": {
+   "$oid": "6abe09d2da3ab8ed95741a49"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acea"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a71"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ace1"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a7b"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ace0"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a7c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acdd"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a80"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acdc"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a81"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acdf"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a82"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358184"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ace4"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a84"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac14"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a87"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c33e"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a87"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ace7"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a89"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac15"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a8b"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c33f"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a8b"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ace8"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a8d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac10"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a90"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c33a"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741a90"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5aceb"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741aaf"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acef"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741ab1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358185"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acf9"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741ab4"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5acfa"
+  },
+  "user": {
+   "$oid": "6abe09d3da3ab8ed95741ab5"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac1a"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741ae9"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c344"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741ae9"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad01"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741aee"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac19"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741aef"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107283"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c343"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741aef"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad0a"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad07"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af2"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac1b"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af3"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c345"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af3"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445792"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad06"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af7"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad03"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741af8"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad04"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741afd"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad10"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741afe"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad0e"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b00"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358186"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac20"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b1b"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c34a"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b1b"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac21"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b21"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c34b"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b21"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac1f"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b2a"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c349"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b2a"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad1b"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b30"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad16"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b34"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad18"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b35"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad23"
+  },
+  "user": {
+   "$oid": "6abe09d4da3ab8ed95741b3a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358187"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad36"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b54"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad2e"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b55"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad31"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b5a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad32"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b5d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad2c"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b60"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad29"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b64"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358188"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad39"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b67"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad3d"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b68"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad38"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b6d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad3f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b8a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad3e"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b8b"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad40"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b8c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad45"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b90"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad46"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b91"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad43"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b92"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad41"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b94"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad44"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b95"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad4b"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b99"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358189"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad52"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b9a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad53"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b9b"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad54"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741b9d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad55"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ba0"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad50"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ba1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad4f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ba2"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad51"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ba3"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad56"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bbf"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad5a"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bc1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad5c"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bc5"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad59"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bc6"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad5e"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bc8"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad60"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bc9"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad5f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bca"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad62"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bd0"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad61"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bd1"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad65"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bd5"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad64"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bd6"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad63"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bd7"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad72"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bf5"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad75"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bf9"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad70"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bfa"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad71"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bfb"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad6f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bfc"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358190"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad76"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741bfd"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad7b"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c03"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad82"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c27"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad87"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c28"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad8e"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c2c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad92"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c2d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad8d"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c2e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad8a"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c2f"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad89"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c30"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad83"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c31"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad95"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c32"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad90"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c33"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad94"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c34"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad91"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c35"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad96"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c36"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad8f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c37"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad88"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c38"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad86"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c39"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad93"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c3d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad97"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c3e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358191"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad9c"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c5a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad9e"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c5c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad9f"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c5d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ada2"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c5e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ad9d"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c5f"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ada0"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c60"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ada1"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c61"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac28"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c66"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c352"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c66"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adab"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c6e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adad"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c6f"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ada9"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c70"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adaa"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c72"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adb1"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c8e"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adb2"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c90"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adb8"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c98"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adc1"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c9a"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adbc"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741c9c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adb5"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ca8"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adb3"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741ca9"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358192"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adc0"
+  },
+  "user": {
+   "$oid": "6abe09d5da3ab8ed95741cac"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358193"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adc9"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741ccd"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adcf"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741ccf"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adc5"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cd2"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5add0"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cd3"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5add1"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cd7"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5add5"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cde"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5add6"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741ce0"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358194"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac377e3cfc2da1cd9c5ac2d"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "personalTarget": {
+   "$oid": "6ac377e3cfc2da1cd9c5abe2"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195107284"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c925cfc2da1cd9c5c357"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "status": "completed",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281445793"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791291191123"
+   }
+  },
+  "completedAt": {
+   "$date": {
+    "$numberLong": "1791281556271"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5addc"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cff"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adde"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d01"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5addf"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d02"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade0"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d03"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adeb"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d04"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade4"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d05"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5adea"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d06"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade2"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d07"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade6"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d08"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade1"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d0c"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade7"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d0d"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac378decfc2da1cd9c5ade9"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741d0f"
+  },
+  "personalTarget": {
+   "$oid": "6ac378ddcfc2da1cd9c5ac35"
+  },
+  "status": "not_started",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791195358195"
+   }
+  }
+ }
+]

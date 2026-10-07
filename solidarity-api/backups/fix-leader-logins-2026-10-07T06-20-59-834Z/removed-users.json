@@ -1,0 +1,9852 @@
+[
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed957419fc"
+  },
+  "name": "Abdul Basith",
+  "phone": "7025503353",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c3c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Peringathur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c5f"
+  },
+  "name": "Samad T K",
+  "phone": "7025833932",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Koorad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ba0"
+  },
+  "name": "Abdul Salam P K",
+  "phone": "7418883969",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Melattur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c3d"
+  },
+  "name": "Yasir M",
+  "phone": "7558001612",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Santhinagar",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a80"
+  },
+  "name": "Fayad A",
+  "phone": "7558803212",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kannanalloor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b21"
+  },
+  "name": "Suhail K H",
+  "phone": "7559980101",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Youth Culture",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "murabi",
+    "name": "Murabi",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d4da3ab8ed95741b22"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c60"
+  },
+  "name": "Umair P",
+  "phone": "7560913492",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Vidyapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c9c"
+  },
+  "name": "Mansoor Ali K",
+  "phone": "7736436544",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "West Kodiyathur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c36"
+  },
+  "name": "Ali Salim A K",
+  "phone": "7736501890",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Hajyarpalli",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bfa"
+  },
+  "name": "Shabeerbabu T P",
+  "phone": "7736990045",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vadakkumuri",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a7c"
+  },
+  "name": "Dileep I",
+  "phone": "7907635243",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c58"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Edathara",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419a0"
+  },
+  "name": "Sajeer N K",
+  "phone": "7994632428",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c2a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Hidaya",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed95741958"
+  },
+  "name": "Nadeem",
+  "phone": "7994693123",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29be4"
+   },
+   "name": "ALAPPUZHA"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c13"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vaduthala",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c6b"
+  },
+  "name": "Muhammed Saeed T K",
+  "phone": "8075943463",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bc6"
+  },
+  "name": "Shafeeq T",
+  "phone": "8086015572",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Junction",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d0c"
+  },
+  "name": "Rashad T K",
+  "phone": "8086857789",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cee"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Sivapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c6e"
+  },
+  "name": "Fairoos Banna",
+  "phone": "8086925150",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cce"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Karuvanpoyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c38"
+  },
+  "name": "Irfanul Haque C H",
+  "phone": "8089213066",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kavungal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a42"
+  },
+  "name": "Aneesh Mullasery",
+  "phone": "8089364163",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Organization Expansion",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741ac4"
+  },
+  "name": "Shahin C S",
+  "phone": "8089498546",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c00"
+   },
+   "name": "PALAKKAD"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Islamic Society Study",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "murabi",
+    "name": "Murabi",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741ac5"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251631"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251631"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741af3"
+  },
+  "name": "Dr Anas P Aboobacker",
+  "phone": "8089607004",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Research",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419ca"
+  },
+  "name": "Afasal U V",
+  "phone": "8089920283",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c32"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kanhirode",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cd7"
+  },
+  "name": "Bahas K P",
+  "phone": "8089928364",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29ce6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Palath",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a49"
+  },
+  "name": "Amjad Bin Shareef",
+  "phone": "8111862263",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c54"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Roaduvila",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed95741963"
+  },
+  "name": "Hidayathulla S",
+  "phone": "8111908694",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29be4"
+   },
+   "name": "ALAPPUZHA"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c18"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Alissery",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741aaf"
+  },
+  "name": "Maneh Ummer",
+  "phone": "8129039291",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c00"
+   },
+   "name": "PALAKKAD"
+  },
+  "group": {
+   "$oid": "6a141d9ba19e59c11ba29c68"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Mcs",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bc8"
+  },
+  "name": "Sanoob A",
+  "phone": "8129296742",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Edappal-Ponnani Town",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a13"
+  },
+  "name": "Muhammed Razi T P",
+  "phone": "8129439552",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf1"
+   },
+   "name": "KASARAGOD"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c44"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Trikaripur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bc9"
+  },
+  "name": "Shareef P",
+  "phone": "8129508972",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "K K Junction",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a7b"
+  },
+  "name": "Salman N",
+  "phone": "8129631237",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c58"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pathanapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b3a"
+  },
+  "name": "Shameem C A",
+  "phone": "8157853107",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cae"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Aripra",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed95741994"
+  },
+  "name": "Saif Bin Aslam",
+  "phone": "8281739403",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c26"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Muvattupuzha",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c32"
+  },
+  "name": "Abdul Kabeer U",
+  "phone": "8281842809",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Umathoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cd6"
+  },
+  "name": "Faseeh Ahmad E K",
+  "phone": "8547061525",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419a1"
+  },
+  "name": "Ansal N M",
+  "phone": "8547153295",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c2a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Hidaya",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cdd"
+  },
+  "name": "Amjad Ali E M",
+  "phone": "8590672787",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Youth Culture Secretary",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741aee"
+  },
+  "name": "Fasil K H",
+  "phone": "8590805019",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c7e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Thriprayar",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bfd"
+  },
+  "name": "Irfan C K",
+  "phone": "8592065737",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kizhuparamba",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b99"
+  },
+  "name": "Althaf Ali A M",
+  "phone": "8606305494",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c98"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Al Ameen Nagar",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419c0"
+  },
+  "name": "Shamrees K M",
+  "phone": "8606573523",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c2c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vaniyakkad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c5e"
+  },
+  "name": "Asif P P",
+  "phone": "8606723753",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Karakkaparamb",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a87"
+  },
+  "name": "Siyaul Haque Haque",
+  "phone": "8606820915",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d95a19e59c11ba29bfc"
+   },
+   "name": "KOTTAYAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Islamic Society",
+   "roleDescription": "KOTTAYAM",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "unit",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a88"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a89"
+  },
+  "name": "Siyaul Haque Haque",
+  "phone": "8606820915",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d95a19e59c11ba29bfc"
+   },
+   "name": "KOTTAYAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Eratupetta Town",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "Islamic Society",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a8a"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d06"
+  },
+  "name": "Shuhaib C K",
+  "phone": "8714449441",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Palazhi",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c30"
+  },
+  "name": "Adhnan Hamza",
+  "phone": "8891115531",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kodur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b9a"
+  },
+  "name": "Anas M",
+  "phone": "8891663499",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c98"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Chemmad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cff"
+  },
+  "name": "Muhammed Iqbal C K",
+  "phone": "8907007827",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Moozhikkal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b8a"
+  },
+  "name": "Mahsoof P",
+  "phone": "8907111853",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c96"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pariyapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cd3"
+  },
+  "name": "Raheesh T M",
+  "phone": "8943195479",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29ce6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pallipoyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed95741992"
+  },
+  "name": "Ibrahim Nabeel",
+  "phone": "9020701080",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c26"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Muvattupuzha",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249160"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249160"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a08"
+  },
+  "name": "Safarudheen H",
+  "phone": "9035921170",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf1"
+   },
+   "name": "KASARAGOD"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c42"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Koliyadukkam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741ab1"
+  },
+  "name": "Fadhil Kamarudheen",
+  "phone": "9037001056",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c00"
+   },
+   "name": "PALAKKAD"
+  },
+  "group": {
+   "$oid": "6a141d9ba19e59c11ba29c68"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Mcs",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419dd"
+  },
+  "name": "Shinoj T P",
+  "phone": "9037134100",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c38"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Thalassery",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a38"
+  },
+  "name": "Sajeed P M",
+  "phone": "9037296439",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Media",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a82"
+  },
+  "name": "Anas T K",
+  "phone": "9037340498",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kuttichira",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d07"
+  },
+  "name": "Roshan Rahman",
+  "phone": "9037431467",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Olavanna",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bfc"
+  },
+  "name": "Ajmal Badsha M K",
+  "phone": "9037539198",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kizhuparamba",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b1b"
+  },
+  "name": "Yaser Abdulrazak",
+  "phone": "9037719745",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "President",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "murabi",
+    "name": "Murabi",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d4da3ab8ed95741b1c"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c72"
+  },
+  "name": "Nubail P K",
+  "phone": "9048304080",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd0"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kaithappoyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ca8"
+  },
+  "name": "Nabeel M",
+  "phone": "9048646633",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cda"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kuttiadi",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ca9"
+  },
+  "name": "Shafeek E M",
+  "phone": "9048762057",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cda"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Velom",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c2f"
+  },
+  "name": "Abdulsalam K P",
+  "phone": "9048951011",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Ummathoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c31"
+  },
+  "name": "Muhammed Hashim K P",
+  "phone": "9061650967",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Hajiyarpalli",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d05"
+  },
+  "name": "Ali Nabeel V P",
+  "phone": "9061789999",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Palazhi",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b60"
+  },
+  "name": "Anas Karuvadan",
+  "phone": "9072808580",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb2"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Karuvarakundu",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bd0"
+  },
+  "name": "Basith K",
+  "phone": "9207238525",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbc"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Ekkaparamba",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b91"
+  },
+  "name": "Abdul Jabir P T",
+  "phone": "9207681992",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Padinjattummuri",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ca3"
+  },
+  "name": "Afeef Hameed",
+  "phone": "9400123932",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Youth Spring",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d5da3ab8ed95741ca4"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c35"
+  },
+  "name": "Ahamed Nashad V",
+  "phone": "9400532273",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Paithiniparamba",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c5d"
+  },
+  "name": "Abdul Jamal T",
+  "phone": "9446522335",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Karakkaparamb",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c2e"
+  },
+  "name": "Yosufali U",
+  "phone": "9446736832",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pattarkadavu",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c5a"
+  },
+  "name": "Raees N",
+  "phone": "9446988614",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Wandoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a90"
+  },
+  "name": "Ramees P S",
+  "phone": "9447438026",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d95a19e59c11ba29bfc"
+   },
+   "name": "KOTTAYAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Youth Culture",
+   "roleDescription": "KOTTAYAM",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ba2"
+  },
+  "name": "Aboobacker Sidheeq K",
+  "phone": "9447482525",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pallikuth",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a3d"
+  },
+  "name": "Ahmed Saheer M A",
+  "phone": "9447727572",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c50"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Nettoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cde"
+  },
+  "name": "Nabeel P T",
+  "phone": "9447885981",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Cheruvatta",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254585"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254585"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a81"
+  },
+  "name": "Benshad Salim",
+  "phone": "9447904220",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pallimukk",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a0d"
+  },
+  "name": "Abdul Jabbar A G",
+  "phone": "9495105608",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf1"
+   },
+   "name": "KASARAGOD"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d2da3ab8ed95741a0e"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250172"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250172"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741ae9"
+  },
+  "name": "Afsal U S",
+  "phone": "9495514246",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Islamic Society",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed9574198a"
+  },
+  "name": "Abdul Basith Ummer",
+  "phone": "9496336486",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Research Convenor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249160"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249160"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed9574196b"
+  },
+  "name": "Raees C A",
+  "phone": "9496336746",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c1e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kunjunnikkara",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a8b"
+  },
+  "name": "Anwar Haroon",
+  "phone": "9496803653",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d95a19e59c11ba29bfc"
+   },
+   "name": "KOTTAYAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Media",
+   "roleDescription": "KOTTAYAM",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "unit",
+    "name": "Secretary",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a8c"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a8d"
+  },
+  "name": "Anwar Haroon",
+  "phone": "9496803653",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d95a19e59c11ba29bfc"
+   },
+   "name": "KOTTAYAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Nadakkal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "Media",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a8e"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c3e"
+  },
+  "name": "Adhil Aboobacker",
+  "phone": "9496838596",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Vaniyambalam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d0d"
+  },
+  "name": "Jaseem K",
+  "phone": "9497306836",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cee"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kuttamboor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419d1"
+  },
+  "name": "Adv Rehman Irikkur",
+  "phone": "9526019540",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Legal Convenor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bf9"
+  },
+  "name": "Thanveer Ahammed K",
+  "phone": "9526261454",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kuniyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b5d"
+  },
+  "name": "Abdul Irshad M",
+  "phone": "9526315436",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb0"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Olavattur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c33"
+  },
+  "name": "Irfan N K",
+  "phone": "9526463242",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kavungal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bca"
+  },
+  "name": "Nisamudheen N",
+  "phone": "9526651550",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Atteeri",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c90"
+  },
+  "name": "Munawar Khasim E K",
+  "phone": "9526661236",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd2"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Central Chennamangallur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b92"
+  },
+  "name": "Mohammed Afsal M",
+  "phone": "9526723130",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kadungooth",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bd5"
+  },
+  "name": "Muhammed Shareef M",
+  "phone": "9526755768",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kottakkal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c37"
+  },
+  "name": "Shafeeque Rahman M",
+  "phone": "9544241809",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Paithiniparamba",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c05"
+  },
+  "name": "Ajmal K P",
+  "phone": "9544277186",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d5da3ab8ed95741c06"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253583"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253583"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed95741953"
+  },
+  "name": "Binas T A",
+  "phone": "9544321355",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29be4"
+   },
+   "name": "ALAPPUZHA"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248596"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248596"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741afe"
+  },
+  "name": "Ajnas",
+  "phone": "9544577992",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c82"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "West Koratty",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bd6"
+  },
+  "name": "Faiz Hameed V",
+  "phone": "9544646977",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Chunoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741ce0"
+  },
+  "name": "Fuad P K",
+  "phone": "9544665626",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Cheruvatta",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254585"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254585"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c61"
+  },
+  "name": "Rehmathulla",
+  "phone": "9562381834",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Shanthi",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c0d"
+  },
+  "name": "Dr Safeer A K",
+  "phone": "9567013188",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Public Relation Secretary",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b2a"
+  },
+  "name": "Ajmal Aslam",
+  "phone": "9567200145",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Social Engagement",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741afd"
+  },
+  "name": "Abdul Basith K M",
+  "phone": "9567222046",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c82"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Annamanada",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a84"
+  },
+  "name": "Nadeem A R",
+  "phone": "9567663147",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c5c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pezhummood",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c70"
+  },
+  "name": "Azharudheen K A",
+  "phone": "9567745503",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cce"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Koduvally",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c34"
+  },
+  "name": "Mohammed Jaisal M",
+  "phone": "9567976438",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Mylappuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b35"
+  },
+  "name": "Shajeer V",
+  "phone": "9605203465",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29ca6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kunnakkavu",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d01"
+  },
+  "name": "Mubasheer T P",
+  "phone": "9605741011",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kuttikkattoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741cac"
+  },
+  "name": "Navas A",
+  "phone": "9605850078",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cda"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Velom",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253884"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b9d"
+  },
+  "name": "Subeer K",
+  "phone": "9605873939",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c98"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Parappanangadi",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bd7"
+  },
+  "name": "Adil K",
+  "phone": "9605920805",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Chunoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419cf"
+  },
+  "name": "Sabik K",
+  "phone": "9633102132",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c32"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kanhirode",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741af8"
+  },
+  "name": "Naeemuddeen P N",
+  "phone": "9633330424",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c80"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kathiyalam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed9574196c"
+  },
+  "name": "Abdul Razak",
+  "phone": "9633360958",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c1e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Uliyannoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b94"
+  },
+  "name": "Hadiq N K",
+  "phone": "9633396135",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Munhakkulam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed9574196e"
+  },
+  "name": "Shihas K K",
+  "phone": "9633535127",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c1e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kodikuthumalal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a75"
+  },
+  "name": "Aslam Ali S",
+  "phone": "9633631254",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Secretariat Member",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ba3"
+  },
+  "name": "Mohamed Haris A",
+  "phone": "9633820037",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Vengoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c2c"
+  },
+  "name": "Shabeer P K",
+  "phone": "9633872185",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pattarkadavu",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c9a"
+  },
+  "name": "Fasal Habeeb O M",
+  "phone": "9645047575",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Valiyaparamb",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d0f"
+  },
+  "name": "Ajnas T P",
+  "phone": "9645177188",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cf2"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Cheryakumbbalam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741af1"
+  },
+  "name": "Mohamed Shafi T T",
+  "phone": "9645304510",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c7e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Farooq Orphanage",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b8c"
+  },
+  "name": "Rasween A S",
+  "phone": "9645451109",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c96"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pariyapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c39"
+  },
+  "name": "Jaseem C P",
+  "phone": "9656282440",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Mangattuppulam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b90"
+  },
+  "name": "Naseef C H",
+  "phone": "9656568324",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kadungooth",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b00"
+  },
+  "name": "Shameer",
+  "phone": "9656965286",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c82"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "West Koratty",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252117"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252117"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d04"
+  },
+  "name": "Ishfaq Habeeb",
+  "phone": "9744630267",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kovoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d02"
+  },
+  "name": "Shad T S",
+  "phone": "9745056892",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kuttikkattoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed9574199e"
+  },
+  "name": "Reja Thoufeeque T K",
+  "phone": "9745076886",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c2a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Mannam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed957419fd"
+  },
+  "name": "Muhammad Afsal V",
+  "phone": "9745408501",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c3c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Peringathur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c98"
+  },
+  "name": "Shihab N K",
+  "phone": "9745458903",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "S.Kodiyathur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c27"
+  },
+  "name": "Abdul Malik K",
+  "phone": "9746204426",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29ca4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Tanalur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a32"
+  },
+  "name": "Umar Farooque",
+  "phone": "9746268172",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c4a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kallu Chira",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b9b"
+  },
+  "name": "Musammil V",
+  "phone": "9746523614",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c98"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Al Ameen Nagar",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419d6"
+  },
+  "name": "Shihab K",
+  "phone": "9747170634",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c34"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Uliyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bfb"
+  },
+  "name": "Kaja Muhinudheen A",
+  "phone": "9747231066",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vadakkumuri, Therattammal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419d5"
+  },
+  "name": "Muhammed Shafi M",
+  "phone": "9747376659",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c34"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Narayanpara",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c28"
+  },
+  "name": "Jamsheer K U",
+  "phone": "9747601539",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29ca4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Tanalur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b64"
+  },
+  "name": "Suhaib M K",
+  "phone": "9747622680",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pookkottumpadam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b67"
+  },
+  "name": "Sajad T P",
+  "phone": "9747722590",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c94"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kadungathukund",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a34"
+  },
+  "name": "Amanullah P M",
+  "phone": "9747853239",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c4c"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Edavanakkad North",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250632"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741ba1"
+  },
+  "name": "Khalid A",
+  "phone": "9747982644",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vengoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed95741960"
+  },
+  "name": "Siyadudheeen Labba",
+  "phone": "9809505553",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29be4"
+   },
+   "name": "ALAPPUZHA"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c16"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Ambalappuzha",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b55"
+  },
+  "name": "Riyas U",
+  "phone": "9809585937",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cae"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kadannamanna",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed957419f7"
+  },
+  "name": "Ramshad P",
+  "phone": "9809740940",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c38"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Thalassery",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b8b"
+  },
+  "name": "Husni Mubarack V P",
+  "phone": "9809964804",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c96"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Pariyapuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741ab5"
+  },
+  "name": "Noufal B",
+  "phone": "9846147642",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c00"
+   },
+   "name": "PALAKKAD"
+  },
+  "group": {
+   "$oid": "6a141d9ba19e59c11ba29c68"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Chundakkad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741af2"
+  },
+  "name": "Ashfaq Ahmed K A",
+  "phone": "9846500583",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c80"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Eriyad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b5a"
+  },
+  "name": "Fazalul Haque",
+  "phone": "9846832310",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb0"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Santhigram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a17"
+  },
+  "name": "Faseer",
+  "phone": "9847301760",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf3"
+   },
+   "name": "KOCHI CITY"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c4a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kallu Chira",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bd1"
+  },
+  "name": "Ashfaq Ahmed P",
+  "phone": "9847361392",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kottakkal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a04"
+  },
+  "name": "Muhammed Niyas M",
+  "phone": "9847495881",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c40"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kakad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c8e"
+  },
+  "name": "Jamsheer A",
+  "phone": "9847692402",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cd0"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kaithapoyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253883"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d08"
+  },
+  "name": "Habeeb K P",
+  "phone": "9847833615",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Olavanna",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a71"
+  },
+  "name": "Thanseer L",
+  "phone": "9847928983",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "group": {
+   "$oid": "6a141d9aa19e59c11ba29c56"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vavvakavu",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "state",
+    "name": "State Committee Members",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a72"
+    }
+   },
+   {
+    "type": "district",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a73"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741a6b"
+  },
+  "name": "Thanseer L",
+  "phone": "9847928983",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bf8"
+   },
+   "name": "KOLLAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a6c"
+    }
+   },
+   {
+    "type": "unit",
+    "name": "President",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d3da3ab8ed95741a6d"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251132"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "name": "Abdul Rauf C",
+  "phone": "9895283473",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Organisation Secretary",
+   "roleDescription": "KOZHIKKODE",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "state",
+    "name": "State Committee Members",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d6da3ab8ed95741cfe"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254704"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254704"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cfb"
+  },
+  "name": "Abdul Rauf C",
+  "phone": "9895283473",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "district",
+    "name": "Organisation Secretary",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d6da3ab8ed95741cfc"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254704"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254704"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b30"
+  },
+  "name": "Mubarak Ahamed",
+  "phone": "9895512316",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c8e"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kolappuram",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419bf"
+  },
+  "name": "Shefrin K M",
+  "phone": "9895541334",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741af7"
+  },
+  "name": "Salih V S",
+  "phone": "9895609606",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "group": {
+   "$oid": "6a141d9ca19e59c11ba29c80"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Eriyad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c03"
+  },
+  "name": "Sahal K",
+  "phone": "9895625801",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc0"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Meppadam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b32"
+  },
+  "name": "Suhaib C T",
+  "phone": "9895706961",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "State Committee Members",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bc1"
+  },
+  "name": "Mansoor M M",
+  "phone": "9895782277",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pandikkad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a00"
+  },
+  "name": "Muhammad Ismail",
+  "phone": "9895842861",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Islamic Society",
+   "roleDescription": "KANNUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "murabi",
+    "name": "Murabi",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d2da3ab8ed95741a01"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250172"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250172"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b54"
+  },
+  "name": "Nishad",
+  "phone": "9895921686",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cae"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Koottil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b25"
+  },
+  "name": "Anees Adam",
+  "phone": "9910665249",
+  "role": "state_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_users",
+   "manage_members",
+   "manage_districts",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "state",
+   "name": "Social Engagements",
+   "listingOrder": null
+  },
+  "extraRoleTags": [
+   {
+    "type": "murabi",
+    "name": "Murabi",
+    "listingOrder": null,
+    "_id": {
+     "$oid": "6abe09d4da3ab8ed95741b26"
+    }
+   }
+  ],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bf5"
+  },
+  "name": "Anwar P T",
+  "phone": "9946503717",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cbe"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Thrikalayoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253582"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c6f"
+  },
+  "name": "Muhammed Fasil K",
+  "phone": "9946935707",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cce"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Koduvally",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b68"
+  },
+  "name": "Jabir Ahamed V",
+  "phone": "9947367672",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c94"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kanmanam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c5c"
+  },
+  "name": "Al Ameen N",
+  "phone": "9947452020",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9fa19e59c11ba29cc6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Wandoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c2d"
+  },
+  "name": "Saeed V T",
+  "phone": "9947698598",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cc4"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Kodur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253685"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bc5"
+  },
+  "name": "Raees T",
+  "phone": "9947819023",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c9a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Edappal-Ponnani Town",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741c66"
+  },
+  "name": "Sahal Rahman",
+  "phone": "9947954524",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0a"
+   },
+   "name": "WAYANAD"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Social Engagement",
+   "roleDescription": "WAYANAD",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253779"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b6d"
+  },
+  "name": "Musadhiq M C",
+  "phone": "9961027338",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c05"
+   },
+   "name": "MALAPPURAM WEST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29c94"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Valavannur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253150"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741bbf"
+  },
+  "name": "Muhsinul Faris P",
+  "phone": "9961678295",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cba"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Pallikkuth",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253370"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419a3"
+  },
+  "name": "Shameer N K",
+  "phone": "9961722078",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bea"
+   },
+   "name": "ERANAKULAM"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c2a"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Mannam",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249161"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741b34"
+  },
+  "name": "Nisar V",
+  "phone": "9961755476",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9da19e59c11ba29ca6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Canal",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252635"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d3da3ab8ed95741ab4"
+  },
+  "name": "Faisal R",
+  "phone": "9961771360",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c00"
+   },
+   "name": "PALAKKAD"
+  },
+  "group": {
+   "$oid": "6a141d9ba19e59c11ba29c68"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Chundakkad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839251630"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741ccf"
+  },
+  "name": "Naeem P",
+  "phone": "9961922231",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29ce2"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Puthur",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d2da3ab8ed95741a05"
+  },
+  "name": "Mohammed Raneesh P M",
+  "phone": "9995023665",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c40"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Chalad",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839250171"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d5da3ab8ed95741b95"
+  },
+  "name": "Rabee Hussain P K",
+  "phone": "9995055895",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c07"
+   },
+   "name": "MALAPPURAM EAST"
+  },
+  "group": {
+   "$oid": "6a141d9ea19e59c11ba29cb8"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "Secretary",
+   "roleDescription": "Vadakkangara",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839253253"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419d4"
+  },
+  "name": "Shakir P C",
+  "phone": "9995171493",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "group": {
+   "$oid": "6a141d99a19e59c11ba29c34"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Uliyil",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741ccd"
+  },
+  "name": "Yunus K C",
+  "phone": "9995358905",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29ce2"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Omassery",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741cd2"
+  },
+  "name": "Jaisal M",
+  "phone": "9995556341",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29ce6"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Palath",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254584"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d0da3ab8ed95741956"
+  },
+  "name": "Musab",
+  "phone": "9995576777",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29be4"
+   },
+   "name": "ALAPPUZHA"
+  },
+  "group": {
+   "$oid": "6a141d98a19e59c11ba29c13"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Vaduthala Jetty",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839248597"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d4da3ab8ed95741aef"
+  },
+  "name": "Abdul Samad P A",
+  "phone": "9995678937",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d96a19e59c11ba29c03"
+   },
+   "name": "THRISSUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Media",
+   "roleDescription": "THRISSUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839252116"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d1da3ab8ed957419d9"
+  },
+  "name": "Mufeed Hassan K M",
+  "phone": "9995773544",
+  "role": "district_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d94a19e59c11ba29bec"
+   },
+   "name": "KANNUR"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "manage_groups",
+   "approve_transfers",
+   "send_notifications",
+   "view_reports",
+   "bulk_import",
+   "manage_meetings",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "district",
+   "name": "Social Engagement",
+   "roleDescription": "KANNUR",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839249663"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6abe09d6da3ab8ed95741d03"
+  },
+  "name": "Hamdan P P",
+  "phone": "9995931610",
+  "role": "group_admin",
+  "adminKind": "area",
+  "district": {
+   "_id": {
+    "$oid": "6a141d97a19e59c11ba29c0c"
+   },
+   "name": "KOZHIKKODE"
+  },
+  "group": {
+   "$oid": "6a141da0a19e59c11ba29cec"
+  },
+  "isActive": true,
+  "otp": {
+   "attempts": {
+    "$numberInt": "0"
+   }
+  },
+  "permissions": [
+   "manage_members",
+   "view_reports",
+   "bulk_import",
+   "manage_baithul_maal"
+  ],
+  "isLeader": true,
+  "roleTag": {
+   "type": "unit",
+   "name": "President",
+   "roleDescription": "Kovoor",
+   "listingOrder": null
+  },
+  "extraRoleTags": [],
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1790839254702"
+   }
+  },
+  "__v": {
+   "$numberInt": "0"
+  }
+ }
+]

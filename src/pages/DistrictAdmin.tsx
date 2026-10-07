@@ -8,8 +8,8 @@ import {
   DashboardToolbar, KpiSparkCard, MembersByUnitCard, MembershipTrendCard, MemberStatusCard, QueueTrendLayout,
   RecentActivityCard,
 } from "@/components/dashboard/DashboardWidgets";
-import { meetingItems, requestItem, silentChildrenItem, transferItem, uncoveredAreasItem } from "@/components/dashboard/actionItems";
-import { adminsDetail, formatNumber, percent, reportingLive } from "@/components/dashboard/chartTheme";
+import { meetingItems, reportItems, requestItem, transferItem, uncoveredAreasItem } from "@/components/dashboard/actionItems";
+import { adminsDetail, formatNumber, percent } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasTrend, useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
 
@@ -40,7 +40,7 @@ const DistrictAdmin = () => {
   const actions = [
     ...transferItem(summary, "district"),
     ...requestItem(summary),
-    ...silentChildrenItem(overview, scrollToScorecard),
+    ...reportItems(overview, scrollToScorecard),
     ...uncoveredAreasItem(overview, "/role-management"),
     ...meetingItems(summary, "/admin/meetings-view"),
   ];
@@ -54,7 +54,7 @@ const DistrictAdmin = () => {
       />
 
       <main className="app-main space-y-3 pb-28 pt-3 sm:space-y-4 sm:pt-4">
-        <DashboardToolbar reportingWindow={overview?.activity.reportingWindow} />
+        <DashboardToolbar report={overview?.report} loading={overviewQuery.isPending} />
 
         {/* Phones: members card full width, the other two side by side; desktop: three across */}
         <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Key figures">
@@ -85,7 +85,7 @@ const DistrictAdmin = () => {
           <KpiSparkCard
             title="Admins"
             value={show(formatNumber(overview?.admins.total ?? 0))}
-            detail={note(adminsDetail(overview))}
+            detail={note(adminsDetail(overview, "district"))}
             icon={UserCog}
             tone="warning"
             delta={deltas?.admins}
@@ -95,7 +95,7 @@ const DistrictAdmin = () => {
           />
         </section>
 
-        {/* Admin cover and reporting gaps live in the queue only (no separate coverage card) */}
+        {/* Admin cover and monthly report gaps live in the queue only (no separate coverage card) */}
         <QueueTrendLayout
           queue={(
             <ActionQueue
@@ -120,12 +120,12 @@ const DistrictAdmin = () => {
         <section id={SCORECARD_ID} className="scroll-mt-20">
           <ChartCard
             title="Area Performance"
-            description="Members, active rate and admin status by area"
+            description="Members, active rate and monthly report by area"
             error={overviewQuery.isError}
             onRetry={() => overviewQuery.refetch()}
             contentClassName="p-0 pt-0 sm:p-0 sm:pt-0"
           >
-            <HierarchyScorecard rows={overview?.children.rows ?? []} level="area" loading={overviewQuery.isPending} reporting={reportingLive(overview)} />
+            <HierarchyScorecard rows={overview?.children.rows ?? []} level="area" loading={overviewQuery.isPending} report={overview?.report} />
           </ChartCard>
         </section>
 

@@ -1,36 +1,39 @@
-import { useState } from "react";
-import { AlertTriangle, ArrowDown, ArrowUp, ChevronRight } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, ChevronRight, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import type { HierarchyRow } from "@/hooks/useDashboardOverview";
+import type { DashboardReport, HierarchyRow } from "@/hooks/useDashboardOverview";
 import { cn } from "@/lib/utils";
 import { formatNumber, percent, STATUS_LABEL, STATUS_SWATCH, type MemberStatusKey } from "./chartTheme";
+import { reportMonthShort } from "./reportStatus";
 
-type SortKey = "name" | "total" | "activePct" | "coverage" | "reportingPct";
+type SortKey = "name" | "total" | "activePct" | "coverage" | "report" | "areaReports" | "admins";
 
 interface HierarchyScorecardProps {
   rows: HierarchyRow[];
-  /** district rows (state view) add an Areas column; area rows (district view) flag "No admin" in reporting. */
+  /** district rows (state view) add Areas and Area reports columns; area rows (district view) flag "No admin". */
   level: "district" | "area";
   loading?: boolean;
   /** Makes rows drillable (state → district). */
   onSelect?: (row: HierarchyRow) => void;
-  /** False when no report form is published: the column counts admins instead of flagging 0/N as silent. */
-  reporting?: boolean;
+  /** The due month's report: names the report column; "Pending" turns amber once the month is over. */
+  report?: DashboardReport;
 }
 
 const MOBILE_ROWS = 6;
 const SEGMENTS: MemberStatusKey[] = ["active", "abroad", "other"];
 
-const sortValue = (r: HierarchyRow, key: SortKey, reporting: boolean): number | string => {
+const sortValue = (r: HierarchyRow, key: SortKey): number | string => {
   switch (key) {
     case "name": return r.name;
     case "total": return r.total;
     case "activePct": return percent(r.active, r.total);
     case "coverage": return r.areas;
-    // Units with nobody to report sort below 0% — "No admin" is worse than silent admins.
-    case "reportingPct": return r.admins > 0 ? (reporting ? percent(r.reportingAdmins, r.admins) : r.admins) : -1;
+    case "report": return r.report?.submitted ? 1 : 0;
+    // A district with no areas sorts below 0% — there is nothing to count.
+    case "areaReports": return r.report?.areaTotal ? percent(r.report.areasSubmitted ?? 0, r.report.areaTotal) : -1;
+    case "admins": return r.admins;
   }
 };
 
@@ -70,16 +73,38 @@ function NoAdmin() {
   );
 }
 
-/** "3/15" + bar — the fraction already carries the admin count, so no separate admins column. */
-function Reporting({ row, reporting }: { row: HierarchyRow; reporting: boolean }) {
-  if (row.admins === 0) return <NoAdmin />;
-  if (!reporting) return <span className="text-xs font-semibold tabular-nums text-foreground">{row.admins}</span>;
+/** Report status colours: green submitted; pending amber once the month is over, grey before. Text always says which. */
+const reportTone = (submitted: boolean, closing: boolean) =>
+  submitted ? "text-success" : closing ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground";
+
+const reportFill = (submitted: boolean, closing: boolean) =>
+  submitted ? "bg-success/10" : closing ? "bg-warning/15" : "bg-muted";
+
+function ReportBadge({ submitted, closing }: { submitted: boolean; closing: boolean }) {
+  const Icon = submitted ? CheckCircle2 : Clock3;
+  return (
+    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4", reportFill(submitted, closing), reportTone(submitted, closing))}>
+      <Icon className="size-3" aria-hidden /> {submitted ? "Submitted" : "Pending"}
+    </span>
+  );
+}
+
+/** District rows: how many of its areas have submitted, "12/15" + bar. */
+function AreaReports({ row }: { row: HierarchyRow }) {
+  const total = row.report?.areaTotal ?? 0;
+  if (!total) return <span className="text-xs text-muted-foreground">—</span>;
+  const done = row.report?.areasSubmitted ?? 0;
   return (
     <div className="flex items-center gap-2">
-      <span className="w-12 text-xs font-semibold tabular-nums text-foreground">{row.reportingAdmins}/{row.admins}</span>
-      <Bar value={row.reportingAdmins} total={row.admins} label={`${row.name} admins reporting`} />
+      <span className="w-12 text-xs font-semibold tabular-nums text-foreground">{done}/{total}</span>
+      <Bar value={done} total={total} label={`${row.name} area reports submitted`} />
     </div>
   );
+}
+
+/** Without report status (an area dashboard's groups, or an older API): the admin count. */
+function Admins({ row }: { row: HierarchyRow }) {
+  return row.admins === 0 ? <NoAdmin /> : <span className="text-xs font-semibold tabular-nums text-foreground">{row.admins}</span>;
 }
 
 /** District rows only: how many areas the district has, and how many lack an area admin. */
@@ -121,9 +146,10 @@ function SortHeader({ label, sortKey, sort, onSort, align = "left" }: {
 
 /**
  * One row per child unit — the main hierarchy view. Every figure appears once:
- * members (bar), active share, area cover (districts only), admin reporting.
+ * members (bar), active share, area cover (districts only), the due month's report
+ * (districts add their areas' reports).
  */
-export function HierarchyScorecard({ rows, level, loading, onSelect, reporting = true }: HierarchyScorecardProps) {
+export function HierarchyScorecard({ rows, level, loading, onSelect, report }: HierarchyScorecardProps) {
   const isMobile = useIsMobile();
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "total", dir: "desc" });
   const [expanded, setExpanded] = useState(false);
@@ -148,15 +174,25 @@ export function HierarchyScorecard({ rows, level, loading, onSelect, reporting =
     setSort((s) => (s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: key === "name" ? "asc" : "desc" }));
 
   const sorted = [...rows].sort((a, b) => {
-    const av = sortValue(a, sort.key, reporting);
-    const bv = sortValue(b, sort.key, reporting);
+    const av = sortValue(a, sort.key);
+    const bv = sortValue(b, sort.key);
     const cmp = typeof av === "string" ? av.localeCompare(String(bv)) : av - Number(bv);
     return (sort.dir === "asc" ? cmp : -cmp) || b.total - a.total;
   });
   const max = Math.max(0, ...rows.map((r) => r.total));
   const noun = level === "district" ? "District" : "Area";
-  // Area count per district is its own fact; per area, admin count lives in "Admins reporting".
   const showAreas = level === "district";
+  const showReport = rows.some((r) => r.report);
+  const closing = report?.closing ?? false;
+  const reportLabel = report ? `${reportMonthShort(report)} report` : "Report";
+
+  // Area rows: an area without an admin explains a missing report, so the flag sits beside it.
+  const reportCell = (r: HierarchyRow) => (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <ReportBadge submitted={!!r.report?.submitted} closing={closing} />
+      {!showAreas && r.admins === 0 ? <NoAdmin /> : null}
+    </div>
+  );
 
   const legend = (
     <ul className="flex flex-wrap gap-x-4 gap-y-1 px-4 pb-3 sm:px-5" aria-label="Legend">
@@ -171,6 +207,18 @@ export function HierarchyScorecard({ rows, level, loading, onSelect, reporting =
 
   if (isMobile) {
     const visible = expanded ? sorted : sorted.slice(0, MOBILE_ROWS);
+    const mobileStats = (r: HierarchyRow): { label: string; value: ReactNode }[] => {
+      const submitted = !!r.report?.submitted;
+      return [
+        { label: "Active", value: r.total ? `${percent(r.active, r.total)}%` : "—" },
+        showReport
+          ? { label: reportLabel, value: <span className={reportTone(submitted, closing)}>{submitted ? "Submitted" : "Pending"}</span> }
+          : { label: "Admins", value: r.admins ? String(r.admins) : "—" },
+        ...(showReport && showAreas
+          ? [{ label: "Area reports", value: r.report?.areaTotal ? `${r.report.areasSubmitted ?? 0}/${r.report.areaTotal}` : "—" }]
+          : []),
+      ];
+    };
     return (
       <div>
         {legend}
@@ -186,13 +234,8 @@ export function HierarchyScorecard({ rows, level, loading, onSelect, reporting =
                   </span>
                 </div>
                 <div className="my-2"><MemberBar row={r} max={max} /></div>
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  {[
-                    { label: "Active", value: r.total ? `${percent(r.active, r.total)}%` : "—" },
-                    reporting
-                      ? { label: "Reporting", value: r.admins ? `${r.reportingAdmins}/${r.admins}` : "—" }
-                      : { label: "Admins", value: r.admins ? String(r.admins) : "—" },
-                  ].map((s) => (
+                <div className={cn("grid gap-2 text-center", showReport && showAreas ? "grid-cols-3" : "grid-cols-2")}>
+                  {mobileStats(r).map((s) => (
                     <div key={s.label} className="rounded-lg bg-muted/50 px-1 py-1.5">
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{s.label}</p>
                       <p className="text-xs font-semibold tabular-nums text-foreground">{s.value}</p>
@@ -234,14 +277,16 @@ export function HierarchyScorecard({ rows, level, loading, onSelect, reporting =
     <div>
       {legend}
       <div className="overflow-x-auto">
-        <table className={cn("w-full border-collapse text-sm", showAreas ? "min-w-[620px]" : "min-w-[500px]")}>
+        <table className={cn("w-full border-collapse text-sm", showAreas ? (showReport ? "min-w-[720px]" : "min-w-[620px]") : "min-w-[500px]")}>
           <thead className="border-y bg-muted/40">
             <tr className="text-left">
               <SortHeader label={noun} sortKey="name" sort={sort} onSort={onSort} />
               <SortHeader label="Members" sortKey="total" sort={sort} onSort={onSort} />
               <SortHeader label="Active" sortKey="activePct" sort={sort} onSort={onSort} align="right" />
               {showAreas ? <SortHeader label="Areas" sortKey="coverage" sort={sort} onSort={onSort} /> : null}
-              <SortHeader label={reporting ? "Admins reporting" : "Admins"} sortKey="reportingPct" sort={sort} onSort={onSort} />
+              {showReport ? <SortHeader label={reportLabel} sortKey="report" sort={sort} onSort={onSort} /> : null}
+              {showReport && showAreas ? <SortHeader label="Area reports" sortKey="areaReports" sort={sort} onSort={onSort} /> : null}
+              {showReport ? null : <SortHeader label="Admins" sortKey="admins" sort={sort} onSort={onSort} />}
               {onSelect ? <th scope="col" className="w-8" aria-label="Open" /> : null}
             </tr>
           </thead>
@@ -274,7 +319,9 @@ export function HierarchyScorecard({ rows, level, loading, onSelect, reporting =
                 </td>
                 <td className="px-3 py-2.5 text-right text-xs font-semibold tabular-nums">{r.total ? `${percent(r.active, r.total)}%` : "—"}</td>
                 {showAreas ? <td className="px-3 py-2.5"><Coverage row={r} /></td> : null}
-                <td className="px-3 py-2.5"><Reporting row={r} reporting={reporting} /></td>
+                {showReport ? <td className="px-3 py-2.5">{reportCell(r)}</td> : null}
+                {showReport && showAreas ? <td className="px-3 py-2.5"><AreaReports row={r} /></td> : null}
+                {showReport ? null : <td className="px-3 py-2.5"><Admins row={r} /></td>}
                 {onSelect ? <td className="pr-3"><ChevronRight className="size-4 text-muted-foreground" aria-hidden /></td> : null}
               </tr>
             ))}

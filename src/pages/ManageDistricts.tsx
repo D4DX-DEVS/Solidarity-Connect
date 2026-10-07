@@ -1,4 +1,4 @@
-﻿import { Plus, Building2, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
+﻿import { Plus, Building2, Users, Edit, Trash2, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
-import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { useDistricts, useDeleteDistrict } from "@/hooks/useDistricts";
+import { useDistricts, useConfirmDeleteDistrict } from "@/hooks/useDistricts";
+import { usePendingDeletes } from "@/lib/undoDelete";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { District } from "@/lib/districts";
 
@@ -17,8 +16,6 @@ const ManageDistricts = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [districtToDelete, setDistrictToDelete] = useState<District | null>(null);
   // Page, size and search live in the URL
   const list = useListParams();
   const [searchQuery, setSearchQuery] = useDebouncedParam(list, "q");
@@ -35,9 +32,10 @@ const ManageDistricts = () => {
     },
     { keepPrevious: "page" }
   );
-  const deleteDistrictMutation = useDeleteDistrict();
+  const confirmDeleteDistrict = useConfirmDeleteDistrict();
+  const pendingDeletes = usePendingDeletes();
 
-  const districts = districtsResponse?.data || [];
+  const districts = (districtsResponse?.data || []).filter((district) => !pendingDeletes.has(district._id));
   const districtTotal = districtsResponse?.pagination?.totalDocs ?? districts.length;
 
   // Metric cards cover every district, not just the visible page
@@ -57,31 +55,6 @@ const ManageDistricts = () => {
     setDialogMode("edit");
     setSelectedDistrict(district);
     setShowDialog(true);
-  };
-
-  const handleDeleteClick = (district: District) => {
-    setDistrictToDelete(district);
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!districtToDelete) return;
-
-    try {
-      await deleteDistrictMutation.mutateAsync(districtToDelete._id);
-      toast({
-        title: "District Deleted",
-        description: `${districtToDelete.name} has been deleted successfully.`,
-      });
-      setShowDeleteDialog(false);
-      setDistrictToDelete(null);
-    } catch (error: unknown) {
-      toast({
-        title: "Error",
-        description: (error instanceof Error && error.message) || "Failed to delete district",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -178,14 +151,9 @@ const ManageDistricts = () => {
                           size="sm"
                           variant="outline"
                           className="w-full text-destructive"
-                          onClick={() => handleDeleteClick(district)}
-                          disabled={deleteDistrictMutation.isPending}
+                          onClick={() => confirmDeleteDistrict(district)}
                         >
-                          {deleteDistrictMutation.isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="mr-2 h-4 w-4" />
-                          )}
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </Button>
                       </div>
@@ -213,14 +181,6 @@ const ManageDistricts = () => {
           onOpenChange={setShowDialog}
           district={selectedDistrict}
           mode={dialogMode}
-        />
-
-        <DeleteConfirmDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          onConfirm={handleDeleteConfirm}
-          title="Delete District"
-          description={`Are you sure you want to delete ${districtToDelete?.name}? This will also delete all groups and members under this district. This action cannot be undone.`}
         />
     </PageShell>
   );

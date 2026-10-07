@@ -1,7 +1,7 @@
 import { normaliseFormFields, sumColumns } from '../fields.js';
 import { validateAnswers, isFieldVisible, changedFieldIds } from '../answers.js';
-import { deadlineFor, editState, parsePeriod } from '../period.js';
-import { consolidate } from '../consolidate.js';
+import { deadlineFor, editState, parsePeriod, parseYear, monthsElapsed } from '../period.js';
+import { consolidate, consolidateYear } from '../consolidate.js';
 import { DEFAULT_FORMS } from '../defaultForms.js';
 
 const num = (id, extra = {}) => ({ id, type: 'number', label: `N${id}`, required: true, sum: true, ...extra });
@@ -196,6 +196,78 @@ describe('consolidate', () => {
 
   test('state report hidden unless included', () => {
     expect(consolidate({ districts, areas, reports, includeState: false }).state).toBeNull();
+  });
+});
+
+describe('year period', () => {
+  test('parseYear validates the year only', () => {
+    expect(parseYear({ year: '2026' })).toEqual({ year: 2026 });
+    expect(parseYear({ year: '1999' }).error).toBeDefined();
+    expect(parseYear({ year: { $gt: 1 } }).error).toBeDefined();
+  });
+
+  test('monthsElapsed: 12 for past years, months so far this year, 0 ahead', () => {
+    const now = new Date('2026-10-06T06:00:00Z'); // October IST
+    expect(monthsElapsed(2025, now)).toBe(12);
+    expect(monthsElapsed(2026, now)).toBe(10);
+    expect(monthsElapsed(2027, now)).toBe(0);
+  });
+});
+
+describe('consolidateYear', () => {
+  const districts = [{ _id: 'd1', name: 'Kozhikode' }, { _id: 'd2', name: 'Malappuram' }];
+  const areas = [
+    { _id: 'a1', name: 'Medical College', district: 'd1' },
+    { _id: 'a2', name: 'Feroke', district: 'd1' },
+    { _id: 'a3', name: 'Tirur', district: 'd2' },
+  ];
+  const sub = new Date('2026-03-02T00:00:00Z');
+  const n = (pairs) => pairs.map(([fieldId, value]) => ({ fieldId, value }));
+  const reports = [
+    { _id: 'd1m1', level: 'district', district: 'd1', month: 1, submittedAt: sub, numbers: n([[1, 1]]) },
+    { _id: 'd1m2', level: 'district', district: 'd1', month: 2, submittedAt: sub, numbers: n([[1, 2], [2, 5]]) },
+    { _id: 'a1m1', level: 'area', district: 'd1', area: 'a1', month: 1, submittedAt: sub, numbers: n([[3, 2]]) },
+    { _id: 'a1m2', level: 'area', district: 'd1', area: 'a1', month: 2, submittedAt: sub, numbers: n([[3, 4]]) },
+    { _id: 'a1m3', level: 'area', district: 'd1', area: 'a1', month: 3, submittedAt: null, numbers: [] }, // unlock stub
+    { _id: 'a2m2', level: 'area', district: 'd1', area: 'a2', month: 2, submittedAt: sub, numbers: n([[3, 1]]) },
+    { _id: 'a3m1', level: 'area', district: 'd2', area: 'a3', month: 1, submittedAt: null, numbers: [] },
+    { _id: 's1', level: 'state', month: 1, submittedAt: sub, numbers: n([[9, 3]]) },
+    { _id: 's2', level: 'state', month: 2, submittedAt: sub, numbers: n([[9, 1]]) },
+  ];
+  const result = consolidateYear({ districts, areas, reports, includeState: true, months: 3 });
+  const koz = result.districts.find(d => d.id === 'd1');
+  const mal = result.districts.find(d => d.id === 'd2');
+
+  test('adds every submitted month per scope, with no single report to open', () => {
+    expect(koz.report).toMatchObject({ submitted: true, reportId: null, monthsSubmitted: 2, numbers: { 1: 3, 2: 5 } });
+    expect(koz.areas.find(a => a.id === 'a1').report).toMatchObject({ monthsSubmitted: 2, numbers: { 3: 6 } });
+    expect(koz.areas.find(a => a.id === 'a2').report).toMatchObject({ monthsSubmitted: 1, numbers: { 3: 1 } });
+    expect(koz.areaTotals).toEqual({ 3: 7 });
+    expect(koz.areaMonthsSubmitted).toBe(3);
+    expect(result.totals).toEqual({ area: { 3: 7 }, district: { 1: 3, 2: 5 }, state: { 9: 4 } });
+  });
+
+  test('scopes with only unsubmitted months count as missing', () => {
+    expect(mal.report).toMatchObject({ submitted: false, monthsSubmitted: 0 });
+    expect(mal.areas[0].report).toMatchObject({ submitted: false, monthsSubmitted: 0, numbers: {} });
+    expect(mal.areaMonthsSubmitted).toBe(0);
+  });
+
+  test('counts scopes reporting and months submitted against months so far', () => {
+    expect(result.counts.districts).toEqual({ submitted: 1, total: 2 });
+    expect(result.counts.areas).toEqual({ submitted: 2, total: 3 });
+    expect(result.counts.months).toEqual({
+      district: { submitted: 2, total: 6 },
+      area: { submitted: 3, total: 9 },
+      state: { submitted: 2, total: 3 },
+    });
+    expect(result.state).toMatchObject({ monthsSubmitted: 2, numbers: { 9: 4 } });
+  });
+
+  test('no state months without the state in scope', () => {
+    const scoped = consolidateYear({ districts, areas, reports, includeState: false, months: 3 });
+    expect(scoped.state).toBeNull();
+    expect(scoped.counts.months.state).toBeNull();
   });
 });
 

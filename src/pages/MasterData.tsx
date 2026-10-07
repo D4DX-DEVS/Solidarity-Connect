@@ -10,12 +10,11 @@ import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/A
 import DataPagination from "@/components/app/DataPagination";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import { useSearchParams } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import DistrictDialog from "@/components/DistrictDialog";
 import GroupDialog from "@/components/GroupDialog";
-import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { useDistricts, useDeleteDistrict } from "@/hooks/useDistricts";
-import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
+import { useDistricts, useConfirmDeleteDistrict } from "@/hooks/useDistricts";
+import { useGroups, useConfirmDeleteGroup } from "@/hooks/useGroups";
+import { usePendingDeletes } from "@/lib/undoDelete";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { District } from "@/lib/districts";
 import { Group } from "@/lib/groups";
@@ -42,8 +41,6 @@ const MasterData = () => {
   const [showDistrictDialog, setShowDistrictDialog] = useState(false);
   const [districtDialogMode, setDistrictDialogMode] = useState<"add" | "edit">("add");
   const [selectedDistrict, setSelectedDistrict] = useState<District | null>(null);
-  const [showDistrictDeleteDialog, setShowDistrictDeleteDialog] = useState(false);
-  const [districtToDelete, setDistrictToDelete] = useState<District | null>(null);
 
   // Area (Group) state — page, size, search and district filter live in the URL (areas_*)
   const areaList = useListParams("areas");
@@ -54,8 +51,6 @@ const MasterData = () => {
   const [showGroupDialog, setShowGroupDialog] = useState(false);
   const [groupDialogMode, setGroupDialogMode] = useState<"add" | "edit">("add");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [showGroupDeleteDialog, setShowGroupDeleteDialog] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
 
   // Fetch one page of districts
   const {
@@ -74,8 +69,9 @@ const MasterData = () => {
     },
     { keepPrevious: "page" }
   );
-  const deleteDistrictMutation = useDeleteDistrict();
-  const districts = districtsResponse?.data || [];
+  const confirmDeleteDistrict = useConfirmDeleteDistrict();
+  const pendingDeletes = usePendingDeletes();
+  const districts = (districtsResponse?.data || []).filter((district) => !pendingDeletes.has(district._id));
   const districtTotal = districtsResponse?.pagination?.totalDocs ?? districts.length;
 
   // Every district, unfiltered — feeds the metric cards and the district pickers
@@ -100,8 +96,8 @@ const MasterData = () => {
     },
     { keepPrevious: "page" }
   );
-  const deleteGroupMutation = useDeleteGroup();
-  const groups = groupsResponse?.data || [];
+  const confirmDeleteGroup = useConfirmDeleteGroup();
+  const groups = (groupsResponse?.data || []).filter((group) => !pendingDeletes.has(group._id));
   const groupTotal = groupsResponse?.pagination?.totalDocs ?? groups.length;
 
   const totalDistricts = allDistrictsResponse?.pagination?.totalDocs ?? allDistricts.length;
@@ -121,24 +117,6 @@ const MasterData = () => {
     setShowDistrictDialog(true);
   };
 
-  const handleDeleteDistrictClick = (district: District) => {
-    setDistrictToDelete(district);
-    setShowDistrictDeleteDialog(true);
-  };
-
-  const handleDeleteDistrictConfirm = async () => {
-    if (!districtToDelete) return;
-    try {
-      await deleteDistrictMutation.mutateAsync(districtToDelete._id);
-      toast({ title: "District Deleted", description: `${districtToDelete.name} has been deleted successfully.` });
-      setShowDistrictDeleteDialog(false);
-      setDistrictToDelete(null);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "";
-      toast({ title: "Error", description: message || "Failed to delete district", variant: "destructive" });
-    }
-  };
-
   // Area/Group handlers
   const handleAddGroup = () => {
     setGroupDialogMode("add");
@@ -150,24 +128,6 @@ const MasterData = () => {
     setGroupDialogMode("edit");
     setSelectedGroup(group);
     setShowGroupDialog(true);
-  };
-
-  const handleDeleteGroupClick = (group: Group) => {
-    setGroupToDelete(group);
-    setShowGroupDeleteDialog(true);
-  };
-
-  const handleDeleteGroupConfirm = async () => {
-    if (!groupToDelete) return;
-    try {
-      await deleteGroupMutation.mutateAsync(groupToDelete._id);
-      toast({ title: "Area Deleted", description: `${groupToDelete.name} has been deleted successfully.` });
-      setShowGroupDeleteDialog(false);
-      setGroupToDelete(null);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "";
-      toast({ title: "Error", description: message || "Failed to delete area", variant: "destructive" });
-    }
   };
 
   const clearAreaFilters = () => {
@@ -277,8 +237,7 @@ const MasterData = () => {
                             size="icon"
                             variant="ghost"
                             className="text-destructive"
-                            onClick={() => handleDeleteDistrictClick(district)}
-                            disabled={deleteDistrictMutation.isPending}
+                            onClick={() => confirmDeleteDistrict(district)}
                             aria-label={`Delete ${district.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -430,8 +389,7 @@ const MasterData = () => {
                             size="icon"
                             variant="ghost"
                             className="text-destructive"
-                            onClick={() => handleDeleteGroupClick(group)}
-                            disabled={deleteGroupMutation.isPending}
+                            onClick={() => confirmDeleteGroup(group)}
                             aria-label={`Delete ${group.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -472,22 +430,6 @@ const MasterData = () => {
         mode={groupDialogMode}
         selectedDistrictId={selectedDistrictFilter || undefined}
         districts={allDistricts}
-      />
-
-      <DeleteConfirmDialog
-        open={showDistrictDeleteDialog}
-        onOpenChange={setShowDistrictDeleteDialog}
-        onConfirm={handleDeleteDistrictConfirm}
-        title="Delete District"
-        description={`Are you sure you want to delete "${districtToDelete?.name}"? This will also delete all areas and members under this district.`}
-      />
-
-      <DeleteConfirmDialog
-        open={showGroupDeleteDialog}
-        onOpenChange={setShowGroupDeleteDialog}
-        onConfirm={handleDeleteGroupConfirm}
-        title="Delete Area"
-        description={`Are you sure you want to delete "${groupToDelete?.name}"? This will also affect all members in this area.`}
       />
     </PageShell>
   );

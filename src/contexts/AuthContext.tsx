@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import { authAPI, memberAuthAPI } from "@/utils/api";
 import type { AdminKind } from "@/lib/adminKinds";
+import { flushPendingDeletes } from "@/lib/undoDelete";
 
 type UserRole = "state_admin" | "district_admin" | "group_admin" | "member";
 
@@ -266,12 +267,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    // Deletes still inside their undo window go out while the token is valid.
+    flushPendingDeletes();
     clearSession();
   };
 
   // Switch active role in-session (no new OTP). Server revalidates identity
   // from DB and issues a fresh token for the target role.
   const switchRole = async (targetRole: UserRole) => {
+    flushPendingDeletes();
     const result = await authAPI.switchRole(targetRole);
     const { token: newToken, member, user: adminUser } = result.data;
 
@@ -296,6 +300,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Switch to a specific account by id. Unlike switchRole this can tell two
   // area-level accounts apart (e.g. Area Admin vs Murabi Admin on one number).
   const switchAccount = async (account: LoginAccount) => {
+    // Deletes still inside their undo window go out under the account that made them.
+    flushPendingDeletes();
     const result = await authAPI.switchAccount(account.id, account.type);
     const { token: newToken, member, user: adminUser } = result.data;
 

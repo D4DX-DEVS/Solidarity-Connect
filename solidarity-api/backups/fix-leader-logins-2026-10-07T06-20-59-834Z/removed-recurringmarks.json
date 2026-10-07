@@ -1,0 +1,266 @@
+[
+ {
+  "_id": {
+   "$oid": "6ac4c94b5d0ee81c0ac99187"
+  },
+  "userType": "User",
+  "week": {
+   "$numberInt": "1"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "month": {
+   "$numberInt": "10"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": true,
+  "completionCount": {
+   "$numberInt": "1"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281483283"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281551104"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281551169"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c9925d0ee81c0ac9918c"
+  },
+  "userType": "User",
+  "week": {
+   "$numberInt": "1"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "month": {
+   "$numberInt": "9"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": true,
+  "completionCount": {
+   "$numberInt": "1"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281554078"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281554013"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281554078"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c9925d0ee81c0ac99190"
+  },
+  "userType": "User",
+  "week": {
+   "$numberInt": "3"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "month": {
+   "$numberInt": "9"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": true,
+  "completionCount": {
+   "$numberInt": "1"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281554723"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281554653"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281554723"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c9935d0ee81c0ac99194"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "month": {
+   "$numberInt": "9"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "week": {
+   "$numberInt": "5"
+  },
+  "userType": "User",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": false,
+  "completionCount": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281555733"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281719876"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281719942"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c9945d0ee81c0ac99198"
+  },
+  "userType": "User",
+  "week": {
+   "$numberInt": "4"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "month": {
+   "$numberInt": "9"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": true,
+  "completionCount": {
+   "$numberInt": "1"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281556336"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281556271"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281556336"
+   }
+  }
+ },
+ {
+  "_id": {
+   "$oid": "6ac4c9975d0ee81c0ac9919e"
+  },
+  "year": {
+   "$numberInt": "2026"
+  },
+  "month": {
+   "$numberInt": "10"
+  },
+  "personalTarget": {
+   "$oid": "6ac4c925cfc2da1cd9c5c30c"
+  },
+  "user": {
+   "$oid": "6abe09d6da3ab8ed95741cfd"
+  },
+  "week": {
+   "$numberInt": "2"
+  },
+  "userType": "User",
+  "__v": {
+   "$numberInt": "0"
+  },
+  "attendance": [],
+  "completed": false,
+  "completionCount": {
+   "$numberInt": "0"
+  },
+  "createdAt": {
+   "$date": {
+    "$numberLong": "1791281559874"
+   }
+  },
+  "markedAt": {
+   "$date": {
+    "$numberLong": "1791281562648"
+   }
+  },
+  "updatedAt": {
+   "$date": {
+    "$numberLong": "1791281562713"
+   }
+  }
+ }
+]

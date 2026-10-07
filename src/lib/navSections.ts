@@ -80,6 +80,22 @@ export const MEMBER_SECTIONS: NavSection[] = [
   },
 ];
 
+/**
+ * Whether a nav path is the current page. A page's own query (tabs, filters, search)
+ * keeps its item active. An item with a query (?view=…) needs those params, and a
+ * plain item on the same pathname yields to it. `paths` = every item path in the nav.
+ */
+export function isNavPathActive(path: string, location: { pathname: string; search: string }, paths: string[]): boolean {
+  const current = new URLSearchParams(location.search);
+  const matches = (p: string) => {
+    const [pathname, query] = p.split("?");
+    if (pathname !== location.pathname) return false;
+    return !query || [...new URLSearchParams(query)].every(([key, value]) => current.get(key) === value);
+  };
+  if (!matches(path)) return false;
+  return path.includes("?") || !paths.some((p) => p.includes("?") && matches(p));
+}
+
 /** Paths already reachable from the mobile BottomNav — kept out of the "More" menu. */
 export const getBottomNavPaths = (userRole?: string | null): string[] => {
   const isMeetingsAdmin = userRole === "state_admin" || userRole === "district_admin";

@@ -8,8 +8,8 @@ import { HierarchyScorecard } from "@/components/dashboard/HierarchyScorecard";
 import {
   DashboardToolbar, KpiSparkCard, MembershipTrendCard, MemberStatusCard, QueueTrendLayout, RecentActivityCard,
 } from "@/components/dashboard/DashboardWidgets";
-import { meetingItems, requestItem } from "@/components/dashboard/actionItems";
-import { adminsDetail, formatNumber, percent, reportingLive } from "@/components/dashboard/chartTheme";
+import { meetingItems, reportItems, requestItem } from "@/components/dashboard/actionItems";
+import { adminsDetail, formatNumber, percent } from "@/components/dashboard/chartTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasTrend, useDashboardOverview, useDashboardSummary, useMembershipTrend, useRecentActivity } from "@/hooks/useDashboardOverview";
 
@@ -48,7 +48,7 @@ const Dashboard = () => {
   // An area spanning several groups gets the same scorecard one level down.
   const groupRows = overview?.children.rows ?? [];
 
-  const actions = [...requestItem(summary), ...meetingItems(summary, "/meetings")];
+  const actions = [...reportItems(overview), ...requestItem(summary), ...meetingItems(summary, "/meetings")];
 
   return (
     <div className="app-page">
@@ -59,7 +59,7 @@ const Dashboard = () => {
       />
 
       <main className="app-main space-y-3 pb-28 pt-3 sm:space-y-4 sm:pt-4">
-        <DashboardToolbar reportingWindow={overview?.activity.reportingWindow} />
+        <DashboardToolbar report={overview?.report} loading={overviewQuery.isPending} />
 
         {/* Phones: members card full width, the other two side by side; desktop: three across */}
         <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Key figures">
@@ -88,7 +88,7 @@ const Dashboard = () => {
           <KpiSparkCard
             title="Admins"
             value={show(formatNumber(overview?.admins.total ?? 0))}
-            detail={note(adminsDetail(overview))}
+            detail={note(adminsDetail(overview, "area"))}
             icon={UserCog}
             tone="warning"
             delta={deltas?.admins}
@@ -103,9 +103,9 @@ const Dashboard = () => {
           queue={(
             <ActionQueue
               items={actions}
-              loading={summaryQuery.isPending}
-              error={summaryQuery.isError}
-              onRetry={() => summaryQuery.refetch()}
+              loading={summaryQuery.isPending || overviewQuery.isPending}
+              error={summaryQuery.isError || overviewQuery.isError}
+              onRetry={() => { summaryQuery.refetch(); overviewQuery.refetch(); }}
             />
           )}
           trend={showTrend ? (
@@ -133,7 +133,7 @@ const Dashboard = () => {
             description="Members, active rate and admin status by group"
             contentClassName="p-0 pt-0 sm:p-0 sm:pt-0"
           >
-            <HierarchyScorecard rows={groupRows} level="area" reporting={reportingLive(overview)} />
+            <HierarchyScorecard rows={groupRows} level="area" />
           </ChartCard>
         ) : null}
       </main>

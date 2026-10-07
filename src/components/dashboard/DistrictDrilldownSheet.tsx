@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Building2, ChevronRight, RotateCw, UserCog, Users, X, type LucideIcon } from "lucide-react";
+import { AlertTriangle, Building2, ChevronRight, ClipboardCheck, ClipboardList, RotateCw, UserCog, Users, X, type LucideIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboardOverview, type HierarchyRow } from "@/hooks/useDashboardOverview";
+import { useDashboardOverview, type DashboardReport, type HierarchyRow } from "@/hooks/useDashboardOverview";
 import { cn } from "@/lib/utils";
 import { formatNumber, percent } from "./chartTheme";
 import { HierarchyScorecard } from "./HierarchyScorecard";
+import { reportLink, reportMonthName } from "./reportStatus";
 
 interface DistrictDrilldownSheetProps {
   accountId: string | undefined;
   district: HierarchyRow | null;
   onClose: () => void;
-  /** False when no report form is published — show admin counts, not 0/N reporting. */
-  reporting?: boolean;
+  /** The state dashboard's due report: names the month and opens it on Reports. */
+  report?: DashboardReport;
 }
 
 interface Stat {
@@ -43,7 +44,7 @@ function StatTile({ label, value, detail, icon: Icon, tile, className }: Stat) {
 }
 
 /** State admin's drill-down: one district's areas, same scorecard one level down. */
-export function DistrictDrilldownSheet({ accountId, district: selected, onClose, reporting = true }: DistrictDrilldownSheetProps) {
+export function DistrictDrilldownSheet({ accountId, district: selected, onClose, report }: DistrictDrilldownSheetProps) {
   const navigate = useNavigate();
   // Keep showing the last district while the sheet slides out, instead of flashing a blank skeleton.
   const [district, setDistrict] = useState(selected);
@@ -54,14 +55,24 @@ export function DistrictDrilldownSheet({ accountId, district: selected, onClose,
   const data = query.data;
 
   // The row the admin clicked is already on screen — show it instantly, refine when areas load.
+  const own = district?.report;
   const stats: Stat[] = district
     ? [
       // Same arrangement as the dashboard KPI row: members full width on phones, three across from sm.
       { label: "Members", value: formatNumber(district.total), detail: `${percent(district.active, district.total)}% active`, icon: Users, tile: "bg-info/10 text-info", className: "col-span-2 sm:col-span-1" },
       { label: "Areas", value: String(district.areas), detail: district.areasWithoutAdmin ? `${district.areasWithoutAdmin} without admin` : "All have an admin", icon: Building2, tile: "bg-[#7c5cff]/10 text-[#7c5cff]" },
-      reporting
-        ? { label: "Admins reporting", value: `${district.reportingAdmins}/${district.admins}`, detail: data ? `${data.activity.reportingWindow.from} – ${data.activity.reportingWindow.to}` : "Last 2 months", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" }
-        : { label: "Admins", value: formatNumber(district.admins), detail: "No report form yet", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" },
+      own
+        ? {
+          label: report ? `${reportMonthName(report)} report` : "Monthly report",
+          value: own.submitted ? "Submitted" : "Pending",
+          detail: `${own.areasSubmitted ?? 0}/${own.areaTotal ?? 0} area reports in`,
+          icon: own.submitted ? ClipboardCheck : ClipboardList,
+          // Same tones as the scorecard: pending is amber only once the month is over.
+          tile: own.submitted
+            ? "bg-success/10 text-success"
+            : report?.closing ? "bg-warning/15 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground",
+        }
+        : { label: "Admins", value: formatNumber(district.admins), detail: "District and area admins", icon: UserCog, tile: "bg-warning/15 text-amber-600 dark:text-amber-400" },
     ]
     : [];
 
@@ -108,14 +119,18 @@ export function DistrictDrilldownSheet({ accountId, district: selected, onClose,
               </div>
             ) : (
               <div className="pt-3 animate-in fade-in duration-300">
-                <HierarchyScorecard rows={data?.children.rows ?? []} level="area" reporting={reporting} />
+                <HierarchyScorecard rows={data?.children.rows ?? []} level="area" report={data?.report ?? report} />
               </div>
             )}
           </div>
         </div>
 
         <footer className="shrink-0 border-t bg-card p-4 sm:px-5">
-          <Button variant="outline" className="min-h-11 w-full gap-1 sm:min-h-10" onClick={() => navigate("/reports?tab=consolidated")}>
+          <Button
+            variant="outline"
+            className="min-h-11 w-full gap-1 sm:min-h-10"
+            onClick={() => navigate(report ? reportLink(report, "consolidated") : "/reports?tab=consolidated")}
+          >
             Monthly reports <ChevronRight className="size-4" aria-hidden />
           </Button>
         </footer>

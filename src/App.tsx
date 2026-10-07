@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { ConfirmDialogHost } from "@/components/shared/ConfirmDialog";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -77,7 +78,9 @@ const App = () => (
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
+        {/* Undo toasts: centred, above the floating bottom nav on phones; room for several so none hides its Undo */}
+        <Sonner position="bottom-center" mobileOffset={{ bottom: 116 }} visibleToasts={6} />
+        <ConfirmDialogHost />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />

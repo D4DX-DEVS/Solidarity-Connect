@@ -30,6 +30,8 @@ import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import { FEATURES } from "@/lib/features";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, type UndoHandle } from "@/lib/undoDelete";
 import Leaders from "@/pages/Leaders";
 import {
   User,
@@ -208,6 +210,8 @@ const MemberDashboard = () => {
   const [profileSaving, setProfileSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarFileRef = useRef<HTMLInputElement | null>(null);
+  // A photo removal still inside its undo window; a new upload cancels it
+  const pendingAvatarRemoval = useRef<UndoHandle | null>(null);
   const [showChangeRequest, setShowChangeRequest] = useState(false);
   const [changeRequestForm, setChangeRequestForm] = useState({ name: "", phone: "", note: "" });
   const [changeRequestSending, setChangeRequestSending] = useState(false);
@@ -458,6 +462,9 @@ const MemberDashboard = () => {
   );
 
   const uploadAvatar = async (file: File) => {
+    // The new photo replaces the old one anyway — don't let a waiting removal clear it later
+    pendingAvatarRemoval.current?.discard();
+    pendingAvatarRemoval.current = null;
     try {
       setAvatarUploading(true);
       const result = await memberAuthAPI.uploadFile(file);
@@ -475,16 +482,22 @@ const MemberDashboard = () => {
   };
 
   const removeAvatar = async () => {
-    try {
-      setAvatarUploading(true);
-      await memberAuthAPI.updateProfile({ avatar: null });
-      setProfile(prev => prev ? { ...prev, profile: { ...prev.profile, avatar: null } } : prev);
-      toast({ title: "Photo Removed", description: "Your profile photo has been removed." });
-    } catch {
-      toast({ title: "Error", description: "Failed to remove photo", variant: "destructive" });
-    } finally {
-      setAvatarUploading(false);
-    }
+    const previous = profile?.profile.avatar;
+    if (!previous) return;
+    const confirmed = await confirmAction({
+      title: "Remove your profile photo?",
+      description: "Your initials show in its place.",
+      confirmLabel: "Remove",
+      undoable: true,
+    });
+    if (!confirmed) return;
+    setProfile(prev => prev ? { ...prev, profile: { ...prev.profile, avatar: null } } : prev);
+    pendingAvatarRemoval.current = undoableDelete({
+      title: "Photo removed",
+      commit: () => memberAuthAPI.updateProfile({ avatar: null }, { keepalive: true }),
+      // Only put it back if no new photo was uploaded meanwhile
+      onRestore: () => setProfile(prev => prev && !prev.profile.avatar ? { ...prev, profile: { ...prev.profile, avatar: previous } } : prev),
+    });
   };
 
   const submitChangeRequest = async () => {
