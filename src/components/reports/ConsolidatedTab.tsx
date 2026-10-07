@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Building2, Download, Landmark, Loader2, MapPin } from "lucide-react";
+import { Building2, Download, Landmark, LockOpen, MapPin } from "lucide-react";
 import { MetricCard, SectionCard } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ErrorState } from "@/components/shared/StateMessage";
 import { useToast } from "@/hooks/use-toast";
 import { useDistricts } from "@/hooks/useDistricts";
@@ -150,23 +147,17 @@ export function ConsolidatedTab({ month, onMonthChange, isStateAdmin }: {
 
       <ReportDetailDialog reportId={detailId} onClose={() => setDetailId(null)} />
 
-      <AlertDialog open={Boolean(unlockTarget)} onOpenChange={(open) => { if (!open && !unlocking) setUnlockTarget(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unlock {unlockTarget?.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Its admins can submit or edit the {periodLabel(year, monthNumber)} report for the next 7 days. The change is logged.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={unlocking}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={unlocking} onClick={(e) => { e.preventDefault(); unlock(); }} className="gap-2">
-              {unlocking ? <Loader2 className="size-4 animate-spin" /> : null}
-              Unlock for 7 days
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={Boolean(unlockTarget)}
+        onOpenChange={(open) => { if (!open) setUnlockTarget(null); }}
+        busy={unlocking}
+        tone="warning"
+        icon={LockOpen}
+        title={`Unlock ${unlockTarget?.name ?? ""}?`}
+        description={`Its admins can submit or edit the ${periodLabel(year, monthNumber)} report for the next 7 days. The change is logged.`}
+        confirmLabel="Unlock for 7 days"
+        onConfirm={unlock}
+      />
     </div>
   );
 }

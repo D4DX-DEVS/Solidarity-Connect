@@ -9,16 +9,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { EmptyState, ErrorState } from "@/components/shared/StateMessage";
 import { useToast } from "@/hooks/use-toast";
 import {
   FIELD_TYPE_LABELS, LEVEL_LABELS, OPERATOR_LABELS, VALUELESS_OPERATORS, formatDateTime,
   type Answers, type FieldType, type ReportField, type ReportLevel,
 } from "@/lib/reportForm";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete } from "@/lib/undoDelete";
 import { monthlyReportService, type ReportFormDraft } from "@/services/monthlyReportService";
 import { FieldEditorDialog } from "./FieldEditorDialog";
 import { ReportFormView } from "./ReportFormView";
@@ -103,6 +102,33 @@ export function ReportSetupTab() {
     const [item] = fields.splice(index, 1);
     fields.splice(index + by, 0, item);
     setFields(fields);
+  };
+
+  const removeField = async (field: ReportField) => {
+    if (!draft) return;
+    const confirmed = await confirmAction({
+      title: field.type === "heading" ? "Delete this section heading?" : "Delete this question?",
+      description: "It leaves the draft now; the published form changes only when you publish.",
+      itemName: field.label || "Untitled",
+      undoable: true,
+    });
+    if (!confirmed) return;
+    const formLevel = level;
+    const index = draft.fields.findIndex(f => f.id === field.id);
+    // Questions whose show/hide rule pointed at this one lose it; Undo gives it back.
+    const dependents = new Map(draft.fields.filter(f => f.condition?.fieldId === field.id).map(f => [f.id, f.condition]));
+    setFields(draft.fields.filter(f => f.id !== field.id));
+    undoableDelete({
+      title: field.type === "heading" ? "Heading deleted" : "Question deleted",
+      description: field.label || undefined,
+      onRestore: () => setDrafts(prev => {
+        const current = prev?.[formLevel];
+        if (!prev || !current || current.fields.some(f => f.id === field.id)) return prev;
+        const fields = current.fields.map(f => (dependents.has(f.id) && !f.condition ? { ...f, condition: dependents.get(f.id) } : f));
+        fields.splice(Math.min(index, fields.length), 0, field);
+        return { ...prev, [formLevel]: { ...current, fields: keepValidConditions(fields).fields } };
+      }),
+    });
   };
 
   const addField = () => {
@@ -235,7 +261,7 @@ export function ReportSetupTab() {
                   <Button variant="ghost" size="icon" aria-label={`Move ${f.label} up`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="size-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label={`Move ${f.label} down`} disabled={i === draft.fields.length - 1} onClick={() => move(i, 1)}><ArrowDown className="size-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label={`Edit ${f.label}`} onClick={() => setEditing(f)}><Pencil className="size-4" /></Button>
-                  <Button variant="ghost" size="icon" aria-label={`Delete ${f.label}`} onClick={() => setFields(draft.fields.filter(x => x.id !== f.id))}><Trash2 className="size-4 text-destructive" /></Button>
+                  <Button variant="ghost" size="icon" aria-label={`Delete ${f.label}`} onClick={() => removeField(f)}><Trash2 className="size-4 text-destructive" /></Button>
                 </div>
               </div>
             ))}
@@ -267,23 +293,17 @@ export function ReportSetupTab() {
 
       <FieldEditorDialog field={editing} earlierFields={earlierFields} onSave={saveField} onClose={() => setEditing(null)} />
 
-      <AlertDialog open={confirmPublish} onOpenChange={(open) => { if (!busy) setConfirmPublish(open); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Publish the {LEVEL_LABELS[level].toLowerCase()} form?</AlertDialogTitle>
-            <AlertDialogDescription>
-              New reports use this version from now on. Reports already submitted keep the questions they were filled with.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={busy !== null}>Cancel</AlertDialogCancel>
-            <AlertDialogAction disabled={busy !== null} onClick={(e) => { e.preventDefault(); publish(); }} className="gap-2">
-              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-              Publish version {form.version + 1}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={confirmPublish}
+        onOpenChange={setConfirmPublish}
+        busy={busy !== null}
+        tone="primary"
+        icon={Rocket}
+        title={`Publish the ${LEVEL_LABELS[level].toLowerCase()} form?`}
+        description="New reports use this version from now on. Reports already submitted keep the questions they were filled with."
+        confirmLabel={`Publish version ${form.version + 1}`}
+        onConfirm={publish}
+      />
     </div>
   );
 }

@@ -30,6 +30,9 @@ import { downloadFile } from "@/utils/downloadFile";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAreaLevelAdmin } from "@/lib/adminKinds";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
+import { useLatest } from "@/hooks/useLatest";
 
 interface OrgFile {
   _id: string;
@@ -97,6 +100,7 @@ const OrgFiles = () => {
   const canSeeMembershipForm = isStateAdmin || user?.role === "group_admin";
 
   const [files, setFiles] = useState<OrgFile[]>([]);
+  const pendingDeletes = usePendingDeletes();
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,15 +236,23 @@ const OrgFiles = () => {
     }
   };
 
+  // Runs after the undo window, so refresh with the filters on screen then, not now
+  const fetchFilesRef = useLatest(fetchFiles);
   const handleDelete = async (file: OrgFile) => {
-    if (!window.confirm(`Delete "${file.title}"?`)) return;
-    try {
-      await apiCall(`/org-files/${file._id}`, { method: "DELETE" });
-      toast({ title: "Deleted", description: "File deleted successfully." });
-      await fetchFiles();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to delete file", variant: "destructive" });
-    }
+    const confirmed = await confirmAction({
+      title: "Delete this file?",
+      description: "Members can no longer open or download it.",
+      itemName: file.title,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: file._id,
+      title: "File deleted",
+      description: file.title,
+      commit: () => apiCall(`/org-files/${file._id}`, { method: "DELETE" }),
+      onCommitted: () => fetchFilesRef.current(),
+    });
   };
 
   const openEditDialog = (file: OrgFile) => {
@@ -257,6 +269,7 @@ const OrgFiles = () => {
   };
 
   const filteredFiles = files.filter(f => {
+    if (pendingDeletes.has(f._id)) return false;
     if (!f.isActive && !isStateAdmin) return false;
     return true;
   });

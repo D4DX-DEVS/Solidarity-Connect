@@ -38,6 +38,8 @@ export const apiCall = async (endpoint: string, options: RequestInit = {}): Prom
   }
 
   const config: RequestInit = {
+    // A delete flushed as the tab closes (undo window) still reaches the server.
+    ...(options.method === 'DELETE' ? { keepalive: true } : {}),
     ...options,
     headers: {
       ...defaultHeaders,
@@ -212,10 +214,12 @@ export const memberAuthAPI = {
   getOrgFiles: (params?: QueryParams) =>
     apiCall(`/member-auth/org-files${toQuery(params)}`),
 
-  updateProfile: (data: Record<string, unknown>) =>
+  // keepalive: a change sent as the tab closes (undo window flush) still arrives
+  updateProfile: (data: Record<string, unknown>, options: { keepalive?: boolean } = {}) =>
     apiCall('/member-auth/profile', {
       method: 'PUT',
       body: JSON.stringify(data),
+      ...options,
     }),
 
   requestProfileChange: (data: { name?: string; phone?: string; note?: string }) =>

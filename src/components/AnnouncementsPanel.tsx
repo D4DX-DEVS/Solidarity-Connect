@@ -26,6 +26,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { uploadsAPI, notificationsAPI, memberAuthAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
+import { useLatest } from "@/hooks/useLatest";
 
 const AUDIENCE_OPTIONS = [
   { value: "all", label: "All Users", description: "Everyone in the system" },
@@ -270,21 +273,26 @@ const AnnouncementsPanel = () => {
     }
   };
 
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const pendingDeletes = usePendingDeletes();
+  const visibleAnnouncements = announcements.filter((ann) => !pendingDeletes.has(ann._id));
 
-  const handleDelete = async (id: string) => {
-    // ponytail: window.confirm, custom confirm dialog if design demands
-    if (!window.confirm("Delete this announcement? This cannot be undone.")) return;
-    setDeletingId(id);
-    try {
-      await notificationsAPI.deleteNotification(id);
-      toast({ title: "Deleted", description: "Announcement deleted" });
-      fetchAnnouncements();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to delete", variant: "destructive" });
-    } finally {
-      setDeletingId(null);
-    }
+  // Runs after the undo window, so refresh with the filters on screen then, not now
+  const fetchAnnouncementsRef = useLatest(fetchAnnouncements);
+  const handleDelete = async (ann: Announcement) => {
+    const confirmed = await confirmAction({
+      title: "Delete this announcement?",
+      description: "It is removed for everyone it was sent to.",
+      itemName: ann.title,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: ann._id,
+      title: "Announcement deleted",
+      description: ann.title,
+      commit: () => notificationsAPI.deleteNotification(ann._id),
+      onCommitted: () => fetchAnnouncementsRef.current(),
+    });
   };
 
   const audienceLabel = (audiences: string[], singleAudience?: string) => {
@@ -527,7 +535,7 @@ const AnnouncementsPanel = () => {
           </div>
           {loadingList ? (
             <ListSkeleton rows={4} />
-          ) : announcements.length === 0 ? (
+          ) : visibleAnnouncements.length === 0 ? (
             <div className="p-8 text-center">
               <Megaphone className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">No announcements yet</p>
@@ -539,7 +547,7 @@ const AnnouncementsPanel = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {announcements.map((ann) => (
+              {visibleAnnouncements.map((ann) => (
                 <Card key={ann._id} className="surface-card transition-all hover:-translate-y-0.5">
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -554,8 +562,7 @@ const AnnouncementsPanel = () => {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(ann._id)}
-                          disabled={deletingId === ann._id}
+                          onClick={() => handleDelete(ann)}
                           aria-label="Delete announcement"
                         >
                           <Trash2 className="h-4 w-4" />

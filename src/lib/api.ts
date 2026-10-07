@@ -80,6 +80,8 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      // A delete flushed as the tab closes (undo window) still reaches the server.
+      keepalive: true,
     });
     return handleResponse<T>(response);
   },

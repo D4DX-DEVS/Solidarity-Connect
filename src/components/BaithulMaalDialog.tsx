@@ -11,6 +11,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Trash2, Plus, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { baithulMaalAPI } from "@/utils/api";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
+import { useLatest } from "@/hooks/useLatest";
 
 interface Payment {
   _id: string;
@@ -45,6 +48,8 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
   const [activeTab, setActiveTab] = useState("add");
   const [loading, setLoading] = useState(false);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const pendingDeletes = usePendingDeletes();
+  const visiblePayments = payments.filter((payment) => !pendingDeletes.has(payment._id));
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
@@ -148,26 +153,22 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
     setActiveTab("add");
   };
 
-  const handleDelete = async (paymentId: string) => {
-    if (!confirm("Are you sure you want to delete this payment record?")) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      await baithulMaalAPI.deletePayment(paymentId);
-      
-      toast({
-        title: "Success",
-        description: "Payment record deleted successfully",
-      });
-      fetchPayments();
-    } catch (error) {
-      console.error('Failed to delete payment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete payment",
-        variant: "destructive"
-      });
-    }
+  // Runs after the undo window, so refresh with the filters on screen then, not now
+  const fetchPaymentsRef = useLatest(fetchPayments);
+  const handleDelete = async (payment: Payment) => {
+    const confirmed = await confirmAction({
+      title: "Delete this payment record?",
+      itemName: `${formatCurrency(payment.amount)} · ${payment.paymentMonth}`,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: payment._id,
+      title: "Payment deleted",
+      description: formatCurrency(payment.amount),
+      commit: () => baithulMaalAPI.deletePayment(payment._id),
+      onCommitted: () => fetchPaymentsRef.current(),
+    });
   };
 
   const formatCurrency = (amount: number) => {
@@ -349,7 +350,7 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
 
           {/* ponytail: 340px ≈ form's natural height, keeps dialog same size across tabs */}
           <TabsContent value="history" className="h-[340px] data-[state=inactive]:hidden flex flex-col mt-4">
-            {payments.length === 0 ? (
+            {visiblePayments.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
                 <p className="font-medium">No payments yet</p>
                 <Button
@@ -363,7 +364,7 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
-                {payments.map((payment) => (
+                {visiblePayments.map((payment) => (
                   <Card key={payment._id} className="p-4 rounded-xl">
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1 min-w-0">
@@ -391,7 +392,7 @@ const BaithulMaalDialog = ({ open, onOpenChange, member }: BaithulMaalDialogProp
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(payment._id)}
+                          onClick={() => handleDelete(payment)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

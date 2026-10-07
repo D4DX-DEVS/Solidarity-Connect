@@ -99,11 +99,22 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        // Undo toast countdown; the toast sets the real duration inline
+        "undo-ring": {
+          from: { strokeDashoffset: "0" },
+          to: { strokeDashoffset: "100" },
+        },
+        "undo-bar": {
+          from: { transform: "scaleX(1)" },
+          to: { transform: "scaleX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 1.6s infinite",
+        "undo-ring": "undo-ring 10s linear forwards",
+        "undo-bar": "undo-bar 10s linear forwards",
       },
     },
   },

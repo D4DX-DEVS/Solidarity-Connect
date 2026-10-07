@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { Plus, Users, Edit, Trash2, Loader2, Search } from "lucide-react";
+import { Plus, Users, Edit, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,9 @@ import { MetricCard, PageHero, PageShell, SectionCard } from "@/components/app/A
 import DataPagination from "@/components/app/DataPagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
-import { toast } from "@/hooks/use-toast";
 import GroupDialog from "@/components/GroupDialog";
-import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
-import { useGroups, useDeleteGroup } from "@/hooks/useGroups";
+import { useGroups, useConfirmDeleteGroup } from "@/hooks/useGroups";
+import { usePendingDeletes } from "@/lib/undoDelete";
 import { useDistricts } from "@/hooks/useDistricts";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { Group } from "@/lib/groups";
@@ -58,9 +57,10 @@ const ManageGroups = () => {
     },
     { keepPrevious: "page" }
   );
-  const deleteGroupMutation = useDeleteGroup();
+  const confirmDeleteGroup = useConfirmDeleteGroup("group");
+  const pendingDeletes = usePendingDeletes();
 
-  const groups = groupsResponse?.data || [];
+  const groups = (groupsResponse?.data || []).filter((group) => !pendingDeletes.has(group._id));
   const groupTotal = groupsResponse?.pagination?.totalDocs ?? groups.length;
   // District-wide total, so the card doesn't shrink to the visible page
   const totalMembers = selectedDistrict?.statistics?.totalMembers ?? 0;
@@ -75,31 +75,6 @@ const ManageGroups = () => {
     setDialogMode("edit");
     setSelectedGroup(group);
     setShowDialog(true);
-  };
-
-  const handleDeleteClick = (group: Group) => {
-    setGroupToDelete(group);
-    setShowDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!groupToDelete) return;
-
-    try {
-      await deleteGroupMutation.mutateAsync(groupToDelete._id);
-      toast({
-        title: "Group Deleted",
-        description: `${groupToDelete.name} has been deleted successfully.`,
-      });
-      setShowDeleteDialog(false);
-      setGroupToDelete(null);
-    } catch (error: unknown) {
-      toast({
-        title: "Error",
-        description: (error instanceof Error && error.message) || "Failed to delete group",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -230,14 +205,9 @@ const ManageGroups = () => {
                           size="sm"
                           variant="outline"
                           className="w-full text-destructive"
-                          onClick={() => handleDeleteClick(group)}
-                          disabled={deleteGroupMutation.isPending}
+                          onClick={() => confirmDeleteGroup(group)}
                         >
-                          {deleteGroupMutation.isPending ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="mr-2 h-4 w-4" />
-                          )}
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </Button>
                       </div>
@@ -267,14 +237,6 @@ const ManageGroups = () => {
           mode={dialogMode}
           selectedDistrictId={selectedDistrictId}
           districts={districts}
-        />
-
-        <DeleteConfirmDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          onConfirm={handleDeleteConfirm}
-          title="Delete Group"
-          description={`Are you sure you want to delete ${groupToDelete?.name}? This will also delete all members in this group. This action cannot be undone.`}
         />
     </PageShell>
   );
