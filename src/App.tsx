@@ -114,7 +114,7 @@ const App = () => (
             <Route path="/admin/meetings-view" element={FEATURES.meetings ? <ProtectedRoute requiredRoles={['state_admin', 'district_admin']}><AdminMeetingsView /></ProtectedRoute> : <Navigate to="/" replace />} />
             <Route path="/district-admin" element={<ProtectedRoute requiredRoles={['district_admin']}><DistrictAdmin /></ProtectedRoute>} />
             <Route path="/members" element={<ProtectedRoute><MembersPage /></ProtectedRoute>} />
-            {/* Age-over (38 and above) members, moved out of Members — state admin only */}
+            {/* Age-over members (by birth year and term) — state admin only */}
             <Route path="/archives" element={<ProtectedRoute requiredRoles={['state_admin']}><Archives /></ProtectedRoute>} />
             <Route path="/member/:id" element={<ProtectedRoute><MemberDetail /></ProtectedRoute>} />
             {/* Adding/editing members is state-admin only; district and area admins view */}

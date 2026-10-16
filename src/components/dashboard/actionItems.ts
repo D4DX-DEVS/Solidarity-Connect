@@ -45,7 +45,7 @@ export function requestItem(summary: DashboardSummary | undefined): ActionItem[]
  * The due month's report: the viewer's own, then who below hasn't submitted. Only once
  * the month is over and its report is due (1st to the deadline): mid-month an unsent
  * report is normal, and the toolbar already shows the month and its deadline. The own
- * item goes once its deadline passes (the page may stay open past it): it is locked then.
+ * item goes once its due date passes (the page may stay open past it): the next month is due then.
  * `onViewRows` opens the scorecard; without it the item opens the consolidated report.
  */
 export function reportItems(overview: DashboardOverview | undefined, onViewRows?: () => void): ActionItem[] {

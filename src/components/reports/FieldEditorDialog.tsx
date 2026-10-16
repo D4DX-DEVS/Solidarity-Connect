@@ -103,6 +103,24 @@ export function FieldEditorDialog({ field, earlierFields, onSave, onClose }: Fie
             <Textarea id="fe-help" rows={2} value={draft.helpText || ""} onChange={(e) => set({ helpText: e.target.value })} maxLength={500} />
           </div>
 
+          {draft.type === "heading" ? (
+            <>
+              <ToggleRow
+                id="fe-repeat"
+                label="Fill once per unit"
+                hint="The questions under this heading are answered for each unit. The filler names each unit and adds more with + Add; numbers are totalled."
+                checked={Boolean(draft.repeat)}
+                onChange={(v) => set({ repeat: v || undefined, itemLabel: v ? draft.itemLabel : undefined })}
+              />
+              {draft.repeat ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="fe-item">One entry is called</Label>
+                  <Input id="fe-item" className="h-11" placeholder="Unit" value={draft.itemLabel || ""} onChange={(e) => set({ itemLabel: e.target.value || undefined })} maxLength={40} />
+                </div>
+              ) : null}
+            </>
+          ) : null}
+
           {draft.type !== "heading" ? (
             <>
               <ToggleRow id="fe-required" label="Required" checked={Boolean(draft.required)} onChange={(v) => set({ required: v })} />

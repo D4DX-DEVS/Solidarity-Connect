@@ -1,16 +1,26 @@
 /**
- * "Age over" archive rule. A member is archived from their 38th birthday
- * (aged 38 and above) or when a state admin sets status "Age over" by hand.
- * Archived members are listed on the state admin's Archives page and tagged
- * "Age over" in Members. Whether they are also kept out of Members, dashboards,
- * reports and non-state roles is ARCHIVE_RESTRICTED below.
+ * "Age over" archive rule, by birth year and two-year term (user decision 2026-10-16).
+ *
+ * Terms start on 1 January of 2027, 2029, 2031, … (IST). From the first term on,
+ * members born in 1986 or earlier are age over; each later term moves the cutoff
+ * one birth year on (1987 from 1 Jan 2029, 1988 from 1 Jan 2031, …). Before
+ * 2027 nobody is age over by date of birth. A state admin can still set status
+ * "Age over" by hand, which archives a member at any time.
+ *
+ * Archived members are listed on the state admin's Archives page only; Members
+ * and Role Management do not tag them. Whether they are also kept out of
+ * Members, dashboards, reports and non-state roles is ARCHIVE_RESTRICTED below.
  *
  * Worked out from dateOfBirth at query time and never written back, so the
  * stored status (Active, Abroad…) survives and a corrected DOB restores the
  * member on its own.
  */
 export const AGE_OVER_STATUS = 'Age over';
-export const AGE_OVER_MIN_AGE = 38;
+
+/** First term start year, and the last birth year that is age over in that term. */
+export const FIRST_TERM_YEAR = 2027;
+export const FIRST_TERM_CUTOFF_BIRTH_YEAR = 1986;
+export const TERM_YEARS = 2;
 
 /**
  * Off (2026-10-07): archived members count and show everywhere, for every role,
@@ -19,7 +29,7 @@ export const AGE_OVER_MIN_AGE = 38;
  */
 export const ARCHIVE_RESTRICTED = false;
 
-// Birthdays turn over on the Kerala calendar day, not the server's.
+// Terms turn over on the Kerala calendar day, not the server's.
 const ORG_TIME_ZONE = 'Asia/Kolkata';
 
 function orgDate(now) {
@@ -34,35 +44,54 @@ function toDate(value) {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/**
- * Latest date of birth that is `minAge` or older today. DOBs are stored at UTC
- * midnight, so `dateOfBirth <= cutoff` means that birthday has come.
- */
-export function ageCutoff(minAge, now = new Date()) {
-  const { year, month, day } = orgDate(now);
-  const cutoffYear = year - minAge;
-  // 29 Feb has no twin in a non-leap year: use 28 Feb rather than rolling into March.
-  const lastDay = new Date(Date.UTC(cutoffYear, month + 1, 0)).getUTCDate();
-  return new Date(Date.UTC(cutoffYear, month, Math.min(day, lastDay)));
-}
-
-/** Latest date of birth that is age over (38 or older) today. */
-export function ageOverCutoff(now = new Date()) {
-  return ageCutoff(AGE_OVER_MIN_AGE, now);
+/** The term a calendar year falls in: start year and cutoff birth year, or null before the first term. */
+function termOfYear(year) {
+  if (year < FIRST_TERM_YEAR) return null;
+  const index = Math.floor((year - FIRST_TERM_YEAR) / TERM_YEARS);
+  return {
+    startYear: FIRST_TERM_YEAR + index * TERM_YEARS,
+    cutoffBirthYear: FIRST_TERM_CUTOFF_BIRTH_YEAR + index,
+  };
 }
 
 /**
- * Earliest date of birth that turned 38 in the current IST month or year;
- * `since <= dateOfBirth <= ageOverCutoff()` = aged out in that period so far.
+ * Last birth year that is age over today (IST), or null while no term has started.
  */
-export function agedOutSince(period, now = new Date()) {
-  const { year, month } = orgDate(now);
-  return new Date(Date.UTC(year - AGE_OVER_MIN_AGE, period === 'year' ? 0 : month, 1));
+export function ageOverBirthYear(now = new Date()) {
+  return termOfYear(orgDate(now).year)?.cutoffBirthYear ?? null;
+}
+
+/**
+ * Earliest date of birth that is NOT age over today: 1 Jan of the year after the
+ * cutoff birth year, or null while no term has started. DOBs are stored at UTC
+ * midnight, so `dateOfBirth < bound` means age over.
+ */
+export function ageOverBound(now = new Date()) {
+  const year = ageOverBirthYear(now);
+  return year === null ? null : new Date(Date.UTC(year + 1, 0, 1));
+}
+
+/**
+ * The rule as it stands today and its next change, for the Archives page:
+ * { cutoffBirthYear, termStart, next: { date, cutoffBirthYear } }. Dates are
+ * 'YYYY-MM-DD' (1 January IST).
+ */
+export function ageOverRule(now = new Date()) {
+  const { year } = orgDate(now);
+  const current = termOfYear(year);
+  const nextStart = current ? current.startYear + TERM_YEARS : FIRST_TERM_YEAR;
+  return {
+    cutoffBirthYear: current?.cutoffBirthYear ?? null,
+    termStart: current ? `${current.startYear}-01-01` : null,
+    next: { date: `${nextStart}-01-01`, cutoffBirthYear: termOfYear(nextStart).cutoffBirthYear },
+  };
 }
 
 /** Mongo match for archived members. */
 export function ageOverMatch(now = new Date()) {
-  return { $or: [{ status: AGE_OVER_STATUS }, { dateOfBirth: { $lte: ageOverCutoff(now) } }] };
+  const bound = ageOverBound(now);
+  const byStatus = { status: AGE_OVER_STATUS };
+  return { $or: bound ? [byStatus, { dateOfBirth: { $lt: bound } }] : [byStatus] };
 }
 
 /** Mongo match for members who are not archived; spread it into a filter (its $nor never clashes with a search $or). */
@@ -83,7 +112,8 @@ export function hiddenAsArchived(user, member, now = new Date()) {
 export function isAgeOver(member, now = new Date()) {
   if (member?.status === AGE_OVER_STATUS) return true;
   const dob = toDate(member?.dateOfBirth);
-  return !!dob && dob <= ageOverCutoff(now);
+  const bound = ageOverBound(now);
+  return !!dob && !!bound && dob < bound;
 }
 
 /** Whole years on today's IST date, or null without a usable DOB. */

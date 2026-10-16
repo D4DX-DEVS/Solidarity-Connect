@@ -67,7 +67,7 @@ const StateAdmin = () => {
           <KpiSparkCard
             title="Total Members"
             value={show(formatNumber(rollCount))}
-            detail={note(`${formatNumber(rollCount - archivedCount)} under 38 · ${formatNumber(archivedCount)} archived`)}
+            detail={note(`Includes ${formatNumber(archivedCount)} in archives`)}
             icon={Users}
             tone="primary"
             spark={(trendQuery.data ?? []).map((p) => p.total)}
@@ -102,7 +102,7 @@ const StateAdmin = () => {
           <KpiSparkCard
             title="Archives"
             value={show(formatNumber(members?.archived ?? 0))}
-            detail={note("Aged 38 and above")}
+            detail={note("Age over by birth year")}
             icon={Archive}
             tone="muted"
             loading={overviewQuery.isPending}
@@ -140,6 +140,7 @@ const StateAdmin = () => {
             error={overviewQuery.isError}
             onRetry={() => overviewQuery.refetch()}
             contentClassName="p-0 pt-0 sm:p-0 sm:pt-0"
+            flatOnPhone
           >
             <HierarchyScorecard
               rows={overview?.children.rows ?? []}

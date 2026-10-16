@@ -17,7 +17,7 @@ const NUMERIC_OPERATORS = ['greater_than', 'less_than'];
 
 const MAX_FIELDS = 100;
 const MAX_OPTIONS = 50;
-const LIMITS = { label: 300, helpText: 500, placeholder: 200, option: 200, conditionValue: 200 };
+const LIMITS = { label: 300, helpText: 500, placeholder: 200, option: 200, conditionValue: 200, itemLabel: 40 };
 export const MAX_TEXT_LENGTH = { text: 500, textarea: 5000 };
 
 const trimmed = (value, max) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
@@ -58,6 +58,12 @@ function cleanField(raw, earlier) {
   if (type === 'heading') {
     const helpText = trimmed(raw.helpText, LIMITS.helpText);
     if (helpText) field.helpText = helpText;
+    // The questions under it are answered once per entry (an area's units), each named by the filler.
+    if (raw.repeat === true) {
+      field.repeat = true;
+      const itemLabel = trimmed(raw.itemLabel, LIMITS.itemLabel);
+      if (itemLabel) field.itemLabel = itemLabel;
+    }
     return { field };
   }
 
@@ -122,6 +128,8 @@ export function normaliseFormFields(rawFields, { savedIds, nextFieldId }) {
   const saved = new Set(savedIds.map(Number));
   const earlier = new Map();
   const fields = [];
+  const sectionOf = new Map(); // question id -> repeating heading id it sits under
+  let repeating = null;
   let maxId = 0;
 
   for (const raw of rawFields) {
@@ -132,6 +140,13 @@ export function normaliseFormFields(rawFields, { savedIds, nextFieldId }) {
 
     const { field, error } = cleanField(raw, earlier);
     if (error) return { error };
+    if (field.type === 'heading') repeating = field.repeat ? id : null;
+    else if (repeating !== null) sectionOf.set(id, repeating);
+    // Outside its section a per-unit question only has a total, and only numbers have one.
+    const target = field.condition && earlier.get(field.condition.fieldId);
+    if (target && sectionOf.has(target.id) && sectionOf.get(target.id) !== sectionOf.get(id) && target.type !== 'number') {
+      return { error: `"${field.label}": a show/hide rule outside a per-unit section can only use a number question from it` };
+    }
     fields.push(field);
     earlier.set(id, field);
     maxId = Math.max(maxId, id);

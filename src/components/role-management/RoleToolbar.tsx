@@ -22,6 +22,8 @@ interface RoleToolbarProps {
   role: FilterControl;
   /** Each is omitted when it doesn't apply to the current view or account. */
   district?: FilterControl;
+  /** Areas of the chosen district (or a district admin's own). */
+  area?: FilterControl;
   leaderStatus?: FilterControl;
   level?: FilterControl;
   /** "312 users" — omitted until the first load finishes. */
@@ -61,6 +63,7 @@ export function RoleToolbar({
   onSearchChange,
   role,
   district,
+  area,
   leaderStatus,
   level,
   countLabel,
@@ -72,8 +75,8 @@ export function RoleToolbar({
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-2 shadow-sm lg:flex-nowrap lg:p-2.5">
-      <div className="relative min-w-0 flex-1 lg:max-w-sm">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-2 shadow-sm lg:p-2.5 2xl:flex-nowrap">
+      <div className="relative min-w-0 flex-1 lg:min-w-[14rem] lg:max-w-sm">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <Input
           type="search"
@@ -112,6 +115,7 @@ export function RoleToolbar({
         <ToolbarSelect label="Role" control={role} className="lg:w-44" />
         {level && <ToolbarSelect label="Level" control={level} className="lg:w-40" />}
         {district && <ToolbarSelect label="District" control={district} className="lg:w-44" />}
+        {area && <ToolbarSelect label="Area" control={area} className="lg:w-44" />}
         {leaderStatus && <ToolbarSelect label="Leader status" control={leaderStatus} className="lg:w-44" />}
         {onClear && (
           <Button type="button" variant="ghost" className="h-11 gap-1 text-muted-foreground lg:hidden" onClick={onClear}>

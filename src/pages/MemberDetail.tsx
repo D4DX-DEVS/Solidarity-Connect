@@ -437,8 +437,7 @@ const MemberDetail = () => {
           /* ponytail: one compact strip; buttons shrink on mobile so the row fits with equal padding (no scroll) */
           <div className="col-span-2 rounded-2xl border border-border/60 bg-card px-3 py-2.5 shadow-sm xl:col-span-4">
             <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Archived (38 and above, from the API) reads as "Age over" whatever the stored status */}
-            <span className="shrink-0">{renderMemberStatus(member.ageOver ? "Age over" : member.status)}</span>
+            <span className="shrink-0">{renderMemberStatus(member.status)}</span>
             <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2 [&_button]:h-8 [&_button]:px-2 [&_button]:text-xs [&_svg]:mr-1 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_button]:h-9 sm:[&_button]:px-3 sm:[&_button]:text-sm sm:[&_svg]:mr-2 sm:[&_svg]:h-4 sm:[&_svg]:w-4">
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">

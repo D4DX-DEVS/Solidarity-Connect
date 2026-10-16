@@ -124,6 +124,7 @@ const DistrictAdmin = () => {
             error={overviewQuery.isError}
             onRetry={() => overviewQuery.refetch()}
             contentClassName="p-0 pt-0 sm:p-0 sm:pt-0"
+            flatOnPhone
           >
             <HierarchyScorecard rows={overview?.children.rows ?? []} level="area" loading={overviewQuery.isPending} report={overview?.report} />
           </ChartCard>

@@ -3,26 +3,32 @@ import User from '../models/User.js';
 import Member from '../models/Member.js';
 import MemberAuth from '../models/MemberAuth.js';
 import LoginOtp from '../models/LoginOtp.js';
+import LoginAttempt from '../models/LoginAttempt.js';
 import msghexService from './msghexService.js';
 
 /**
  * Phone-first sign-in.
  *
- *   1. sendLoginOtp(phone)            → one WhatsApp code for the whole number
- *   2. verifyLoginOtp(phone, code)    → every account on that number + a short-lived ticket
- *   3. selectAccount(ticket, ...)     → a real session token for the chosen account
+ *   1. verifyLoginDob(phone, dob)     → mobile number + date of birth on the member
+ *                                       record: every account on that number + a short-lived ticket
+ *   2. selectAccount(ticket, ...)     → a real session token for the chosen account
  *
- * The ticket exists so step 3 cannot be called without having passed step 2, and so
- * switching between a number's accounts never costs a second OTP.
+ * The ticket exists so step 2 cannot be called without having passed step 1, and so
+ * switching between a number's accounts never costs a second check. The older
+ * WhatsApp code (sendLoginOtp / verifyLoginOtp) still works but the app no longer uses it.
  */
 
 /** Shared demo/QA login. Covers every role so one number can exercise the whole app. */
 export const TEST_PHONE = '9876543210';
 export const TEST_OTP = '1234';
+/** What signs the test number in, typed as 00/00/0000 — never a real date, so no member can match it. */
+export const TEST_DOB = '0000-00-00';
 
 const TICKET_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 const MAX_OTP_ATTEMPTS = 5;
+const MAX_DOB_ATTEMPTS = 5;
+const DOB_LOCK_MINUTES = 15;
 
 const ROLE_LABELS = {
   state_admin: 'State Admin',
@@ -271,6 +277,79 @@ export async function verifyLoginOtp(phone, code) {
   };
 }
 
+/** A stored date of birth (UTC midnight) as 'YYYY-MM-DD', or null. */
+function dobKey(value) {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : null;
+}
+
+const minutesUntil = (date) => Math.max(1, Math.ceil((date.getTime() - Date.now()) / 60000));
+
+/** Count a wrong date of birth; the number locks after MAX_DOB_ATTEMPTS within the window. */
+async function recordDobFailure(phone) {
+  const windowEnd = new Date(Date.now() + DOB_LOCK_MINUTES * 60 * 1000);
+  const row = await LoginAttempt.findOneAndUpdate(
+    { phone },
+    { $inc: { failures: 1 }, $set: { expiresAt: windowEnd } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+  if (row.failures >= MAX_DOB_ATTEMPTS) {
+    row.lockedUntil = windowEnd;
+    await row.save();
+    return 0;
+  }
+  return MAX_DOB_ATTEMPTS - row.failures;
+}
+
+/**
+ * Step 1 — mobile number + date of birth ('YYYY-MM-DD'). The date must match a
+ * member record on that number (any status: an admin is always a member too);
+ * hands back every account on the number and a selection ticket, like the old code check.
+ */
+export async function verifyLoginDob(phone, dob) {
+  const bare = normalizePhone(phone);
+  if (!isValidPhone(bare)) {
+    return { success: false, status: 400, message: 'Enter a valid mobile number.' };
+  }
+
+  const attempt = await LoginAttempt.findOne({ phone: bare });
+  if (attempt?.lockedUntil && attempt.lockedUntil > new Date()) {
+    const wait = minutesUntil(attempt.lockedUntil);
+    return { success: false, status: 429, message: `Too many wrong tries. Try again in ${wait} minute${wait === 1 ? '' : 's'}.` };
+  }
+
+  const accounts = await listAccounts(bare);
+  if (accounts.length === 0) {
+    return { success: false, status: 404, message: 'This number is not registered. Please contact your administrator.' };
+  }
+
+  const members = await Member.find({ phone: { $in: phoneVariants(bare) } }).select('dateOfBirth').lean();
+  const dobs = new Set(members.map((m) => dobKey(m.dateOfBirth)).filter(Boolean));
+  if (bare === TEST_PHONE) dobs.add(TEST_DOB);
+  if (dobs.size === 0) {
+    return {
+      success: false,
+      status: 409,
+      message: 'No date of birth is saved for this number. Ask your admin to add it to your member profile.',
+    };
+  }
+
+  if (!dobs.has(dob)) {
+    const left = await recordDobFailure(bare);
+    return {
+      success: false,
+      status: left === 0 ? 429 : 400,
+      message: left === 0
+        ? `Too many wrong tries. Try again in ${DOB_LOCK_MINUTES} minutes.`
+        : `Mobile number and date of birth do not match. ${left} attempt${left === 1 ? '' : 's'} left.`,
+      attemptsRemaining: left,
+    };
+  }
+
+  if (attempt) await attempt.deleteOne();
+  return { success: true, message: 'Verified.', accounts, ticket: signTicket(bare) };
+}
+
 function signAdminToken(user) {
   return jwt.sign(
     { id: user._id, phone: user.phone, role: user.role },
@@ -372,6 +451,7 @@ export async function selectAccount(phone, accountId, accountType) {
 export default {
   TEST_PHONE,
   TEST_OTP,
+  TEST_DOB,
   accountLabel,
   normalizePhone,
   isValidPhone,
@@ -380,5 +460,6 @@ export default {
   readTicket,
   sendLoginOtp,
   verifyLoginOtp,
+  verifyLoginDob,
   selectAccount,
 };

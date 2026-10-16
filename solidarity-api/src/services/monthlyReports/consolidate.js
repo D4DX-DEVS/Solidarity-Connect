@@ -11,6 +11,42 @@ function addInto(totals, numbers) {
   }
 }
 
+const ENTRIES_KEY = /^g\d+$/;
+const ANSWER_KEY = /^f(\d+)$/;
+
+/**
+ * An area report's per-unit rows: every named entry of its repeating sections,
+ * with the numbers it was given. A unit named in two sections is one row.
+ * @returns {{ name: string, numbers: Record<string, number> }[]}
+ */
+export function unitsOf(answers) {
+  const units = new Map();
+  for (const [key, entries] of Object.entries(answers || {})) {
+    if (!ENTRIES_KEY.test(key) || !Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      const name = typeof entry?.name === 'string' ? entry.name.trim() : '';
+      if (!name) continue;
+      const unit = units.get(name.toLowerCase()) || { name, numbers: {} };
+      for (const [answerKey, value] of Object.entries(entry)) {
+        const match = ANSWER_KEY.exec(answerKey);
+        if (match && typeof value === 'number' && Number.isFinite(value)) unit.numbers[match[1]] = (unit.numbers[match[1]] || 0) + value;
+      }
+      units.set(name.toLowerCase(), unit);
+    }
+  }
+  return [...units.values()];
+}
+
+/** Units of several reports (a year's months) added up by name, first-seen order. */
+function addUnits(into, units) {
+  for (const unit of units) {
+    const key = unit.name.toLowerCase();
+    const existing = into.get(key) || { name: unit.name, numbers: {} };
+    for (const [fieldId, value] of Object.entries(unit.numbers)) existing.numbers[fieldId] = (existing.numbers[fieldId] || 0) + value;
+    into.set(key, existing);
+  }
+}
+
 function summary(report) {
   if (!report) return { submitted: false, reportId: null, numbers: {} };
   const numbers = {};
@@ -22,6 +58,8 @@ function summary(report) {
     lastEditedAt: report.lastEditedAt || null,
     unlockedUntil: report.unlockedUntil || null,
     numbers,
+    // Area reports break down by unit; a year's months arrive already merged
+    ...(report.level === 'area' ? { units: report.submittedAt ? report.units ?? unitsOf(report.answers) : [] } : {}),
     ...(report.monthsSubmitted === undefined ? {} : { monthsSubmitted: report.monthsSubmitted }),
   };
 }
@@ -91,18 +129,20 @@ function mergeYear(reports) {
   for (const r of reports) {
     const key = scopeKeyOf(r);
     const merged = byScope.get(key) || {
-      _id: null, level: r.level, district: r.district, area: r.area, submittedAt: null, monthsSubmitted: 0, totals: {},
+      _id: null, level: r.level, district: r.district, area: r.area, submittedAt: null, monthsSubmitted: 0, totals: {}, unitTotals: new Map(),
     };
     if (r.submittedAt) {
       merged.monthsSubmitted += 1;
       addInto(merged.totals, r.numbers);
+      if (r.level === 'area') addUnits(merged.unitTotals, unitsOf(r.answers));
       if (!merged.submittedAt || r.submittedAt > merged.submittedAt) merged.submittedAt = r.submittedAt;
     }
     byScope.set(key, merged);
   }
-  return [...byScope.values()].map(({ totals, ...merged }) => ({
+  return [...byScope.values()].map(({ totals, unitTotals, ...merged }) => ({
     ...merged,
     numbers: Object.entries(totals).map(([fieldId, value]) => ({ fieldId, value })),
+    ...(merged.level === 'area' ? { units: [...unitTotals.values()] } : {}),
   }));
 }
 

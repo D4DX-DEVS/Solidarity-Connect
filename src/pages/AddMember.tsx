@@ -10,6 +10,7 @@ import { FormSkeleton } from "@/components/ui/loading-skeletons";
 import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 import { FEATURES } from "@/lib/features";
+import { DateOfBirthInput } from "@/components/shared/DateOfBirthInput";
 
 interface UserContext {
   userRole: string;
@@ -369,12 +370,12 @@ const AddMember = () => {
 
               <div className="space-y-2">
                 <label htmlFor="member-dob" className="text-sm font-medium text-foreground">Date of Birth</label>
-                <Input
+                <DateOfBirthInput
                   id="member-dob"
-                  type="date"
                   value={formData.dateOfBirth}
-                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                  onChange={(dateOfBirth) => setFormData({ ...formData, dateOfBirth })}
                 />
+                <p className="text-xs text-muted-foreground">Used to sign in.</p>
               </div>
 
               <div className="space-y-2">

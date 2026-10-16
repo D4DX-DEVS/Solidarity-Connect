@@ -116,17 +116,30 @@ function coerce(field, raw, { isAllowedFileUrl }) {
  * Conditions are evaluated against the answers already accepted, so a question
  * whose trigger is hidden is hidden too. Hidden and unknown answers are dropped.
  *
+ * A heading with `repeat` (the area form's units) is answered once per entry:
+ * `g<headingId>` holds [{ name, f<id>: value, … }] and each number question in
+ * that section is stored as the entries' total under its own `f<id>`, so totals,
+ * consolidation and member views read it like any other answer.
+ *
  * @returns {{ answers: Record<string, unknown>, numbers: {fieldId: number, value: number}[],
- *   errors: {fieldId: number, message: string}[] }}
+ *   errors: {fieldId: number, entry?: number, message: string}[] }}
  */
 export function validateAnswers(fields, rawAnswers, { isAllowedFileUrl } = {}) {
   const raw = rawAnswers && typeof rawAnswers === 'object' ? rawAnswers : {};
   const answers = {};
   const numbers = [];
   const errors = [];
+  const repeated = repeatedFieldIds(fields);
 
   for (const field of fields) {
-    if (field.type === 'heading' || !isFieldVisible(field, answers)) continue;
+    if (field.type === 'heading') {
+      if (field.repeat) {
+        const section = fields.filter(f => repeated.get(f.id) === field.id);
+        validateEntries(field, section, raw, { answers, numbers, errors }, { isAllowedFileUrl });
+      }
+      continue;
+    }
+    if (repeated.has(field.id) || !isFieldVisible(field, answers)) continue;
     const key = keyOf(field.id);
     const { value, error } = coerce(field, raw[key], { isAllowedFileUrl });
     if (error) {
@@ -142,6 +155,89 @@ export function validateAnswers(fields, rawAnswers, { isAllowedFileUrl } = {}) {
   }
 
   return { answers, numbers, errors };
+}
+
+export const entriesKeyOf = (headingId) => `g${headingId}`;
+export const MAX_ENTRIES = 50;
+const MAX_ENTRY_NAME = 100;
+
+/** Question id → id of the repeating heading it sits under (only questions in repeating sections). */
+export function repeatedFieldIds(fields) {
+  const map = new Map();
+  let current = null;
+  for (const f of fields || []) {
+    if (f.type === 'heading') current = f.repeat ? f.id : null;
+    else if (current !== null) map.set(f.id, current);
+  }
+  return map;
+}
+
+/**
+ * One repeating section: every entry needs a unique name and answers its section's
+ * questions (shown-when rules see the earlier answers plus that entry's own).
+ * Writes the entries and the number totals into `out`.
+ */
+function validateEntries(heading, section, raw, out, options) {
+  const itemLabel = heading.itemLabel || 'Unit';
+  const list = Array.isArray(raw[entriesKeyOf(heading.id)]) ? raw[entriesKeyOf(heading.id)] : [];
+  if (list.length === 0) {
+    out.errors.push({ fieldId: heading.id, message: `${heading.label}: add at least one ${itemLabel.toLowerCase()}` });
+    return;
+  }
+  if (list.length > MAX_ENTRIES) {
+    out.errors.push({ fieldId: heading.id, message: `${heading.label}: at most ${MAX_ENTRIES} entries` });
+    return;
+  }
+
+  const entries = [];
+  const totals = new Map();
+  const seen = new Set();
+  list.forEach((rawEntry, index) => {
+    const entryRaw = rawEntry && typeof rawEntry === 'object' && !Array.isArray(rawEntry) ? rawEntry : {};
+    const name = typeof entryRaw.name === 'string' ? entryRaw.name.trim().replace(/\s+/g, ' ') : '';
+    const who = name || `${itemLabel} ${index + 1}`;
+    if (!name) out.errors.push({ fieldId: heading.id, entry: index, message: `${itemLabel} ${index + 1} needs a name` });
+    else if (name.length > MAX_ENTRY_NAME) out.errors.push({ fieldId: heading.id, entry: index, message: `${who}: name is too long` });
+    else if (seen.has(name.toLowerCase())) out.errors.push({ fieldId: heading.id, entry: index, message: `${who} is listed twice` });
+    seen.add(name.toLowerCase());
+
+    const entry = { name };
+    for (const field of section) {
+      if (!isFieldVisible(field, { ...out.answers, ...entry })) continue;
+      const key = keyOf(field.id);
+      const { value, error } = coerce(field, entryRaw[key], options);
+      if (error) {
+        out.errors.push({ fieldId: field.id, entry: index, message: `${who}: ${field.label} ${error}` });
+        continue;
+      }
+      if (isEmptyAnswer(value)) {
+        if (field.required) out.errors.push({ fieldId: field.id, entry: index, message: `${who}: ${field.label} is required` });
+        continue;
+      }
+      entry[key] = value;
+      if (field.type === 'number') totals.set(field.id, (totals.get(field.id) || 0) + value);
+    }
+    entries.push(entry);
+  });
+
+  out.answers[entriesKeyOf(heading.id)] = entries;
+  for (const field of section) {
+    if (field.type !== 'number' || !totals.has(field.id)) continue;
+    const value = totals.get(field.id);
+    out.answers[keyOf(field.id)] = value;
+    if (field.sum) out.numbers.push({ fieldId: field.id, value });
+  }
+}
+
+/**
+ * Whether a submitted report can move to a newer form version when edited:
+ * every question it was filled on is still there with the same type, so no
+ * answer is dropped. (A newer version that only adds questions or turns on
+ * per-unit entry qualifies.)
+ */
+export function canUpgradeForm(fromFields, toFields) {
+  const next = new Map((toFields || []).map(f => [f.id, f.type]));
+  return (fromFields || []).every(f => f.type === 'heading' || next.get(f.id) === f.type);
 }
 
 /** Field ids whose stored answer differs between two answer maps, ascending. */

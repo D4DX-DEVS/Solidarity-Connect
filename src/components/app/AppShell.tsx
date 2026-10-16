@@ -111,10 +111,16 @@ function PageHero({ title, subtitle, eyebrow, icon, actions, details, className,
   );
 }
 
+/**
+ * Page-level containers on phones: no frame, so the cards they hold sit straight in
+ * the page gutter instead of a card inside a card. A normal card from `sm` up.
+ */
+export const FLAT_ON_PHONE = "max-sm:rounded-none max-sm:border-0 max-sm:bg-transparent max-sm:shadow-none";
+
 function SectionCard({ title, description, action, children, className, contentClassName }: SectionCardProps) {
   return (
-    <Card className={cn("surface-card", className)}>
-      <CardHeader className="space-y-3 p-4 pb-0 sm:p-6 sm:pb-0">
+    <Card className={cn("surface-card", FLAT_ON_PHONE, className)}>
+      <CardHeader className="space-y-3 p-0 sm:p-6 sm:pb-0">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
             <CardTitle className="text-base font-semibold tracking-tight sm:text-lg">{title}</CardTitle>
@@ -124,7 +130,7 @@ function SectionCard({ title, description, action, children, className, contentC
           {action ? <div className="shrink-0">{action}</div> : null}
         </div>
       </CardHeader>
-      <CardContent className={cn("p-4 pt-4 sm:p-6 sm:pt-5", contentClassName)}>{children}</CardContent>
+      <CardContent className={cn("p-0 pt-3 sm:p-6 sm:pt-5", contentClassName)}>{children}</CardContent>
     </Card>
   );
 }

@@ -4,9 +4,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { unitColumnsOf } from "@/lib/consolidatedSummary";
 import { langOf } from "@/lib/malayalam";
+import { cn } from "@/lib/utils";
 import { formatDate, groupBySection, type ReportLevel } from "@/lib/reportForm";
 import type { Consolidated, DistrictRow, NumberColumn, ReportSummary } from "@/services/monthlyReportService";
+import { UnitBreakdown } from "./UnitBreakdown";
 
 export interface UnlockTarget {
   level: ReportLevel;
@@ -108,7 +111,7 @@ function AreaTable({ data, districtId, onView, onUnlock }: BreakdownProps & { di
   const district = data.districts.find(d => d.id === districtId)!;
   const columns = data.columns.area;
   const groups = groupBySection(columns);
-  // Phones hide the number columns; an area opens to show its numbers instead.
+  // Phones hide the number columns; an area opens to show its numbers instead. Any width opens to its units.
   const [openArea, setOpenArea] = useState<string | null>(null);
   const counted = areaCount(data, district);
   const totalCount = `${counted.submitted} of ${counted.total}${data.span === "year" ? " reports" : ""}`;
@@ -152,6 +155,9 @@ function AreaTable({ data, districtId, onView, onUnlock }: BreakdownProps & { di
         <TableBody>
           {district.areas.map(area => {
             const open = openArea === area.id;
+            const units = area.report.submitted ? area.report.units ?? [] : [];
+            const unitColumns = unitColumnsOf(columns, units);
+            const hasUnits = units.length > 0 && unitColumns.length > 0;
             return (
               <Fragment key={area.id}>
                 <TableRow>
@@ -169,8 +175,8 @@ function AreaTable({ data, districtId, onView, onUnlock }: BreakdownProps & { di
                     <div className="flex items-center justify-end gap-1.5">
                       {area.report.submitted && columns.length ? (
                         <Button
-                          variant="ghost" size="icon" className="size-11 md:hidden"
-                          aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} numbers for ${area.name}`}
+                          variant="ghost" size="icon" className={hasUnits ? "size-11 md:size-9" : "size-11 md:hidden"}
+                          aria-expanded={open} aria-label={`${open ? "Hide" : "Show"} ${hasUnits ? "units and numbers" : "numbers"} for ${area.name}`}
                           onClick={() => setOpenArea(open ? null : area.id)}
                         >
                           <ChevronDown className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -181,9 +187,18 @@ function AreaTable({ data, districtId, onView, onUnlock }: BreakdownProps & { di
                   </TableCell>
                 </TableRow>
                 {open ? (
-                  <TableRow className="hover:bg-transparent md:hidden">
-                    <TableCell colSpan={columns.length + 3} className="bg-muted/30">
-                      <NumberList columns={columns} numbers={area.report.numbers} />
+                  <TableRow className={cn("hover:bg-transparent", !hasUnits && "md:hidden")}>
+                    <TableCell colSpan={columns.length + 3} className="space-y-4 bg-muted/30">
+                      <div className="md:hidden"><NumberList columns={columns} numbers={area.report.numbers} /></div>
+                      {hasUnits ? (
+                        // Phones: no min width of its own, so the area table stays screen-wide and this scrolls inside
+                        <div className="space-y-1.5 max-md:w-0 max-md:min-w-full md:sticky md:left-3 md:max-w-3xl">
+                          <p className="text-xs font-semibold text-foreground/70">
+                            {data.span === "year" ? "Units, all months added up" : "Units"}
+                          </p>
+                          <UnitBreakdown columns={unitColumns} units={units} caption={`${area.name} by unit`} />
+                        </div>
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 ) : null}

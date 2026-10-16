@@ -1,0 +1,17 @@
+[
+  {
+    "_id": "6a7eba1fd630f16c2f6858ca",
+    "member": "6a7eba1f389f6324f847b0eb",
+    "__v": 0,
+    "createdAt": "2026-08-14T06:47:59.716Z",
+    "deviceInfo": [],
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "phone": "+919995707129",
+    "updatedAt": "2026-08-19T09:31:08.052Z",
+    "lastLogin": "2026-08-19T09:31:08.050Z",
+    "loginAttempts": 0
+  }
+]

@@ -562,6 +562,49 @@ router.post('/login/verify-otp', [
   }
 });
 
+// @route   POST /api/auth/login/verify-dob
+// @desc    Mobile number + date of birth; returns every account on the number + a selection ticket
+// @access  Public (wrong tries lock the number for a while)
+router.post('/login/verify-dob', [
+  phoneBody,
+  body('dob')
+    .custom((value, { req }) => {
+      // The test number's 00/00/0000
+      if (value === loginService.TEST_DOB) return loginService.normalizePhone(req.body.phone) === loginService.TEST_PHONE;
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+      if (!m) return false;
+      const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+      return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] && d < new Date();
+    })
+    .withMessage('Enter a valid date of birth'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+  }
+
+  try {
+    const result = await loginService.verifyLoginDob(req.body.phone, req.body.dob);
+
+    if (!result.success) {
+      return res.status(result.status || 400).json({
+        success: false,
+        message: result.message,
+        attemptsRemaining: result.attemptsRemaining,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: { accounts: result.accounts, ticket: result.ticket },
+    });
+  } catch (error) {
+    console.error('Login verify-dob error:', error);
+    res.status(500).json({ success: false, message: 'Failed to sign in' });
+  }
+});
+
 // @route   POST /api/auth/login/select-account
 // @desc    Exchange a verification ticket for a session on one chosen account
 // @access  Public (ticket-gated)

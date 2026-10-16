@@ -7,7 +7,13 @@ const shown = (value: number | null) => (value === null ? "—" : value.toLocale
  * Report totals as titled sections of numbered tiles. A follow-up count (the
  * attendee count under Members Meet) sits inside its parent's tile.
  */
-export function ReportTotals({ sections, actions = {} }: { sections: TotalSection[]; actions?: Record<string, ReactNode> }) {
+export function ReportTotals({ sections, actions = {}, details = {} }: {
+  sections: TotalSection[];
+  /** Beside a section's title, keyed by section key. */
+  actions?: Record<string, ReactNode>;
+  /** Under a section's tiles (an area's units), keyed by section key. */
+  details?: Record<string, ReactNode>;
+}) {
   return (
     <div className="space-y-5">
       {sections.map(section => (
@@ -37,6 +43,7 @@ export function ReportTotals({ sections, actions = {} }: { sections: TotalSectio
               </li>
             ))}
           </ol>
+          {details[section.key]}
         </section>
       ))}
     </div>
