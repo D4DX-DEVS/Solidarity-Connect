@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Archive, CalendarClock, CalendarRange, Search, Star, X, type LucideIcon } from "lucide-react";
+import { Archive, CalendarClock, Hand, Search, Star, X, type LucideIcon } from "lucide-react";
 import HeaderWithLogout from "@/components/HeaderWithLogout";
 import { MetricCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
@@ -16,15 +16,24 @@ import { apiCall, districtsAPI, groupsAPI } from "@/utils/api";
 interface ArchivesSummary {
   total: number;
   leaders: number;
-  /** Turned 38 so far this month / this calendar year. */
-  thisMonth: number;
-  thisYear: number;
+  /** Born in this term's cutoff year: newly age over when the term began. */
+  thisTerm: number;
+  /** Status set to "Age over" by hand. */
+  manual: number;
+}
+
+/** Born in `cutoffBirthYear` or earlier = age over; null before the first term (2027). */
+interface AgeOverRule {
+  cutoffBirthYear: number | null;
+  termStart: string | null;
+  next: { date: string; cutoffBirthYear: number };
 }
 
 interface ArchivesResponse {
   data: ArchivedMember[];
-  /** Follows the district/area filters only, not role, age, period or search. */
+  /** Follows the district/area filters only, not role, birth year, source or search. */
   summary: ArchivesSummary;
+  rule: AgeOverRule;
   pagination: { totalPages: number; totalDocs: number };
 }
 
@@ -50,13 +59,16 @@ const ROLE_OPTIONS: Option[] = [
   { value: "coordinator", label: "Coordinators" },
 ];
 
-const AGE_OPTIONS: Option[] = [
-  { value: "38", label: "38 years" },
-  { value: "39", label: "39 years" },
-  { value: "40", label: "40 years" },
-  { value: "41", label: "41 years" },
-  { value: "42plus", label: "42 and above" },
-];
+/** The cutoff year and the three before it, then everything earlier ("upto-<year>"). */
+function bornOptions(cutoff: number | null | undefined): Option[] {
+  if (!cutoff) return [];
+  return [
+    ...[0, 1, 2, 3].map((back) => ({ value: String(cutoff - back), label: `Born ${cutoff - back}` })),
+    { value: `upto-${cutoff - 4}`, label: `Born ${cutoff - 4} or earlier` },
+  ];
+}
+
+const BORN_PATTERN = /^(upto-)?\d{4}$/;
 
 const SORT_OPTIONS: Option[] = [
   { value: "name", label: "Name A–Z" },
@@ -64,7 +76,7 @@ const SORT_OPTIONS: Option[] = [
   { value: "youngest", label: "Youngest first" },
 ];
 
-const PERIODS = ["month", "year"];
+const SOURCES = ["manual"];
 
 /** Keeps a URL value only when it is one of the options (old links, hand edits). */
 const pick = (raw: string, options: Option[] | string[]) =>
@@ -105,7 +117,11 @@ interface SummaryCard {
   onClick: () => void;
 }
 
-/** Members aged 38 and above (or set to "Age over"), moved out of Members — state admin only. */
+// "2027-01-01" → "1 Jan 2027"
+const formatDay = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+
+/** Members born in or before this term's cutoff year (or set to "Age over") — state admin only. */
 const Archives = () => {
   // Every filter, page and size lives in the URL
   const list = useListParams();
@@ -115,12 +131,13 @@ const Archives = () => {
   const district = list.getParam("district");
   const group = list.getParam("group");
   const role = pick(list.getParam("role"), ROLE_OPTIONS);
-  const age = pick(list.getParam("age"), AGE_OPTIONS);
-  const period = pick(list.getParam("period"), PERIODS);
+  // Options depend on the rule from the API, so only the shape is checked here
+  const born = BORN_PATTERN.test(list.getParam("born")) ? list.getParam("born") : "";
+  const source = pick(list.getParam("source"), SOURCES);
   const sort = pick(list.getParam("sort"), SORT_OPTIONS) || "name";
   // The API ignores one-letter searches, so they don't count as a filter
   const searchSent = committedSearch.length >= 2;
-  const activeFilters = [searchSent, district, group, role, age, period].filter(Boolean).length;
+  const activeFilters = [searchSent, district, group, role, born, source].filter(Boolean).length;
 
   // Same keys as the Members page, so both lists come from one cache
   const { data: districts = [] } = useQuery({
@@ -145,8 +162,8 @@ const Archives = () => {
     ...(district ? { district } : {}),
     ...(group ? { group } : {}),
     ...(role ? { role } : {}),
-    ...(age ? { age } : {}),
-    ...(period ? { period } : {}),
+    ...(born ? { born } : {}),
+    ...(source ? { source } : {}),
   };
 
   const { data, isPending, isError, isPlaceholderData, refetch } = useQuery({
@@ -159,22 +176,23 @@ const Archives = () => {
   const members = data?.data ?? [];
   const totalDocs = data?.pagination.totalDocs ?? 0;
   const summary = data?.summary;
+  const rule = data?.rule;
+  const cutoff = rule?.cutoffBirthYear ?? null;
 
   const clearFilters = () => {
     setSearch("");
-    setParams({ q: "", district: "", group: "", role: "", age: "", period: "", sort: "" });
+    setParams({ q: "", district: "", group: "", role: "", born: "", source: "", sort: "" });
   };
 
-  const now = new Date();
   const cards: SummaryCard[] = [
     {
       title: "Age over",
       value: summary?.total,
-      detail: "Aged 38 and above",
+      detail: cutoff ? `Born ${cutoff} or earlier` : "Set by hand only",
       icon: Archive,
       tone: "warning",
-      active: !role && !period,
-      onClick: () => setParams({ role: "", period: "" }),
+      active: !role && !born && !source,
+      onClick: () => setParams({ role: "", born: "", source: "" }),
     },
     {
       title: "Leaders",
@@ -186,22 +204,25 @@ const Archives = () => {
       onClick: () => setParam("role", role === "leader" ? "" : "leader"),
     },
     {
-      title: "This month",
-      value: summary?.thisMonth,
-      detail: `Turned 38 in ${now.toLocaleString("en-IN", { month: "long" })}`,
+      title: "This term",
+      value: summary?.thisTerm,
+      detail: cutoff && rule?.termStart ? `Born ${cutoff}, from ${formatDay(rule.termStart)}` : "No term yet",
       icon: CalendarClock,
       tone: "danger",
-      active: period === "month",
-      onClick: () => setParam("period", period === "month" ? "" : "month"),
+      active: !!cutoff && born === String(cutoff),
+      // Nothing to filter before the first term
+      onClick: () => {
+        if (cutoff) setParams({ born: born === String(cutoff) ? "" : String(cutoff), source: "" });
+      },
     },
     {
-      title: "This year",
-      value: summary?.thisYear,
-      detail: `Turned 38 in ${now.getFullYear()}`,
-      icon: CalendarRange,
+      title: "Set by hand",
+      value: summary?.manual,
+      detail: "Status set to Age over",
+      icon: Hand,
       tone: "neutral",
-      active: period === "year",
-      onClick: () => setParam("period", period === "year" ? "" : "year"),
+      active: source === "manual",
+      onClick: () => setParams({ source: source === "manual" ? "" : "manual", born: "" }),
     },
   ];
   // A failed load must read as unknown, never as a real zero
@@ -214,7 +235,7 @@ const Archives = () => {
       <HeaderWithLogout
         icon={<Archive className="h-6 w-6 text-primary-foreground" />}
         title="Archives"
-        subtitle="Members aged 38 and above"
+        subtitle="Age over members, by birth year"
       />
 
       <main className="app-main space-y-3 pb-28 pt-4 lg:pb-8">
@@ -263,7 +284,13 @@ const Archives = () => {
               onChange={(v) => setParam("group", v)}
             />
             <FilterSelect label="Role" value={role} allLabel="All Roles" options={ROLE_OPTIONS} onChange={(v) => setParam("role", v)} />
-            <FilterSelect label="Age" value={age} allLabel="All Ages" options={AGE_OPTIONS} onChange={(v) => setParam("age", v)} />
+            <FilterSelect
+              label="Birth year"
+              value={born}
+              allLabel="All birth years"
+              options={bornOptions(cutoff)}
+              onChange={(v) => setParams({ born: v, source: "" })}
+            />
             <FilterSelect
               label="Sort"
               value={sort}
@@ -277,7 +304,7 @@ const Archives = () => {
             <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground sm:text-sm">
               <span>
                 {activeFilters} filter{activeFilters === 1 ? "" : "s"} applied
-                {period ? ` · aged out this ${period}` : ""}
+                {source === "manual" ? " · set by hand" : ""}
               </span>
               <Button variant="ghost" size="sm" className="min-h-11 gap-1 sm:min-h-9" onClick={clearFilters}>
                 <X className="h-4 w-4" aria-hidden />
@@ -288,8 +315,8 @@ const Archives = () => {
         </div>
 
         <p className="data-strip px-3 py-2 text-xs text-muted-foreground sm:text-sm">
-          Members are listed here from their 38th birthday, or when their status is set to Age over. They still show in
-          Members with an Age over tag and count in dashboards and reports. Correcting a date of birth clears the tag.
+          {rule ? <AgeOverRuleText rule={rule} /> : null} Members whose status is set to Age over are listed too. Archived
+          members stay in Members, untagged, and count in dashboards and reports.
         </p>
 
         {isPending ? (
@@ -322,7 +349,11 @@ const Archives = () => {
             ) : (
               <>
                 <p className="font-medium text-foreground">No archived members</p>
-                <p className="mt-1 text-sm text-muted-foreground">Nobody is 38 or older yet.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {rule && !cutoff
+                    ? `Members born in ${rule.next.cutoffBirthYear} or earlier move here on ${formatDay(rule.next.date)}.`
+                    : "Nobody is age over yet."}
+                </p>
               </>
             )}
           </div>
@@ -349,5 +380,14 @@ const Archives = () => {
     </div>
   );
 };
+
+/** Who is age over now, and when the cutoff moves next. */
+function AgeOverRuleText({ rule }: { rule: AgeOverRule }) {
+  const next = `From ${formatDay(rule.next.date)}: born ${rule.next.cutoffBirthYear} or earlier.`;
+  if (rule.cutoffBirthYear === null || !rule.termStart) {
+    return <>Age over starts on {formatDay(rule.next.date)} with members born {rule.next.cutoffBirthYear} or earlier, and moves one birth year on every two-year term.</>;
+  }
+  return <>This term (from {formatDay(rule.termStart)}): born {rule.cutoffBirthYear} or earlier. {next}</>;
+}
 
 export default Archives;

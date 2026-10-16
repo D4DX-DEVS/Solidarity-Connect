@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { requestsAPI } from "@/utils/api";
+import { DateOfBirthInput } from "@/components/shared/DateOfBirthInput";
 
 interface Member {
   _id: string;
@@ -108,11 +109,11 @@ const RequestEditDialog = ({ open, onOpenChange, member }: RequestEditDialogProp
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">Date of Birth</label>
-            <Input
-              type="date"
+            <label htmlFor="request-dob" className="text-sm font-medium mb-2 block">Date of Birth</label>
+            <DateOfBirthInput
+              id="request-dob"
               value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+              onChange={(dateOfBirth) => setFormData({ ...formData, dateOfBirth })}
             />
           </div>
 

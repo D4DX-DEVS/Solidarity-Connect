@@ -20,6 +20,8 @@ interface ReportFieldInputProps {
   disabled?: boolean;
   /** Three grid rows — label, control, error — so a parent subgrid can line them up across a row. */
   className?: string;
+  /** Keeps element ids unique when the same question shows once per unit. */
+  idSuffix?: string;
 }
 
 const INPUT_TYPES: Partial<Record<ReportField["type"], string>> = {
@@ -27,8 +29,8 @@ const INPUT_TYPES: Partial<Record<ReportField["type"], string>> = {
 };
 
 /** One question of a monthly report, as an editable control with its label, help and error. */
-export function ReportFieldInput({ field, value, onChange, error, disabled, className }: ReportFieldInputProps) {
-  const inputId = `report-field-${field.id}`;
+export function ReportFieldInput({ field, value, onChange, error, disabled, className, idSuffix = "" }: ReportFieldInputProps) {
+  const inputId = `report-field-${field.id}${idSuffix}`;
   const describedBy = [field.helpText ? `${inputId}-help` : null, error ? `${inputId}-error` : null].filter(Boolean).join(" ") || undefined;
   const common = { id: inputId, disabled, "aria-invalid": Boolean(error), "aria-describedby": describedBy };
 
@@ -127,7 +129,7 @@ function Control({ field, value, onChange, disabled, common }: ControlProps) {
         </RadioGroup>
       );
     case "checkbox": {
-      const picked = Array.isArray(value) ? value : [];
+      const picked = Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
       return (
         <div className="grid gap-1.5">
           {(field.options || []).map((o, i) => (

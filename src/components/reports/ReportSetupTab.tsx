@@ -213,13 +213,13 @@ export function ReportSetupTab() {
             <Input id="form-title" className="h-11" value={draft.title} maxLength={200} onChange={(e) => update({ title: e.target.value })} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="form-deadline">Deadline day</Label>
+            <Label htmlFor="form-deadline">Due day</Label>
             <Input
               id="form-deadline" type="number" min={1} max={28} className="h-11" aria-describedby="form-deadline-hint"
               value={draft.deadlineDay}
               onChange={(e) => update({ deadlineDay: Math.min(28, Math.max(1, Number(e.target.value) || 1)) })}
             />
-            <p id="form-deadline-hint" className="text-xs text-muted-foreground">Admins can edit until this day of the next month (1–28).</p>
+            <p id="form-deadline-hint" className="text-xs text-muted-foreground">Reports are due by this day of the next month (1–28). Each month stays editable for 3 months: its own and the two after.</p>
           </div>
         </div>
       </SectionCard>
@@ -242,11 +242,13 @@ export function ReportSetupTab() {
           <div className="space-y-2">
             {draft.fields.length === 0 ? <EmptyState title="No questions yet" description="Add the first question below." /> : null}
             {draft.fields.map((f, i) => (
-              <div key={f.id} className={`flex items-start gap-2 rounded-lg border p-2.5 ${f.type === "heading" ? "bg-muted/50" : ""}`}>
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className={`text-sm ${f.type === "heading" ? "font-semibold" : "font-medium"}`}>{f.label || <span className="text-muted-foreground">Untitled</span>}</p>
-                  <div className="flex flex-wrap gap-1">
+              // Label on its own line, then tags and actions share one row — no narrow label column on phones
+              <div key={f.id} className={`rounded-lg border p-2.5 ${f.type === "heading" ? "bg-muted/50" : ""}`}>
+                <p className={`text-sm ${f.type === "heading" ? "font-semibold" : "font-medium"}`}>{f.label || <span className="text-muted-foreground">Untitled</span>}</p>
+                <div className="mt-1 flex items-end justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap gap-1">
                     <Badge variant="secondary" className="text-[11px]">{FIELD_TYPE_LABELS[f.type]}</Badge>
+                    {f.type === "heading" && f.repeat ? <Badge variant="outline" className="text-[11px]">Per {(f.itemLabel || "Unit").toLowerCase()}</Badge> : null}
                     {f.required ? <Badge variant="outline" className="text-[11px]">Required</Badge> : null}
                     {f.type === "number" && f.sum ? <Badge variant="outline" className="border-primary/40 text-[11px] text-primary">Add up</Badge> : null}
                     {f.condition ? (
@@ -256,12 +258,12 @@ export function ReportSetupTab() {
                       </Badge>
                     ) : null}
                   </div>
-                </div>
-                <div className="flex shrink-0 items-center">
+                  <div className="-mb-1 -mr-1 flex shrink-0 items-center">
                   <Button variant="ghost" size="icon" aria-label={`Move ${f.label} up`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="size-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label={`Move ${f.label} down`} disabled={i === draft.fields.length - 1} onClick={() => move(i, 1)}><ArrowDown className="size-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label={`Edit ${f.label}`} onClick={() => setEditing(f)}><Pencil className="size-4" /></Button>
                   <Button variant="ghost" size="icon" aria-label={`Delete ${f.label}`} onClick={() => removeField(f)}><Trash2 className="size-4 text-destructive" /></Button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -300,7 +302,7 @@ export function ReportSetupTab() {
         tone="primary"
         icon={Rocket}
         title={`Publish the ${LEVEL_LABELS[level].toLowerCase()} form?`}
-        description="New reports use this version from now on. Reports already submitted keep the questions they were filled with."
+        description="New reports use this version from now on. A report already submitted keeps the questions it was filled with, and moves to this version when it is next edited if every one of its questions is still here."
         confirmLabel={`Publish version ${form.version + 1}`}
         onConfirm={publish}
       />

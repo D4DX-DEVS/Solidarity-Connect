@@ -9,7 +9,8 @@ export const DEFAULT_FORMS = {
     title: 'ഏരിയ പ്രതിമാസ റിപ്പോർട്ട്',
     // Units first, as the state committee lists them; ids keep their seeded values.
     fields: [
-      { id: 7, type: 'heading', label: 'യൂണിറ്റ്', helpText: 'ഏരിയയിലെ എല്ലാ യൂണിറ്റുകളുടെയും ആകെ' },
+      // Filled once per unit (repeat): the area admin names each unit with + Add unit.
+      { id: 7, type: 'heading', label: 'യൂണിറ്റ്', helpText: 'ഏരിയയിലെ എല്ലാ യൂണിറ്റുകളുടെയും ആകെ', repeat: true, itemLabel: 'Unit' },
       count(8, 'യൂണിറ്റ് മീറ്റിംഗ്'),
       count(9, 'യൂത്ത് മീറ്റ്'),
       count(10, 'യൂത്ത് ആക്റ്റിവിറ്റി'),

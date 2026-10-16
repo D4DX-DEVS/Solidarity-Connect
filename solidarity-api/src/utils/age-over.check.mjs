@@ -1,62 +1,58 @@
 // Self-check for the "Age over" archive rule. Run: node src/utils/age-over.check.mjs
 import assert from 'node:assert/strict';
-import { ageCutoff, ageOverCutoff, ageOverMatch, agedOutSince, currentMemberMatch, hiddenAsArchived, isAgeOver, notAgeOverMatch, ageOn, AGE_OVER_STATUS, ARCHIVE_RESTRICTED } from './ageOver.js';
+import { ageOverBirthYear, ageOverBound, ageOverMatch, ageOverRule, currentMemberMatch, hiddenAsArchived, isAgeOver, notAgeOverMatch, ageOn, AGE_OVER_STATUS, ARCHIVE_RESTRICTED } from './ageOver.js';
 
 const utc = (y, m, d) => new Date(Date.UTC(y, m - 1, d));
 // Noon IST on a calendar day
 const istNoon = (y, m, d) => new Date(Date.UTC(y, m - 1, d, 6, 30));
 
-// Cutoff: born on or before this date = 38 or older
-assert.deepEqual(ageOverCutoff(istNoon(2026, 10, 6)), utc(1988, 10, 6));
+// Before the first term (1 Jan 2027) nobody is age over by date of birth
+const before = istNoon(2026, 10, 16);
+assert.equal(ageOverBirthYear(before), null);
+assert.equal(ageOverBound(before), null);
+assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1950, 1, 1) }, before), false);
+assert.deepEqual(ageOverMatch(before), { $or: [{ status: AGE_OVER_STATUS }] });
+assert.equal(isAgeOver({ status: AGE_OVER_STATUS }, before), true);
+assert.deepEqual(ageOverRule(before), { cutoffBirthYear: null, termStart: null, next: { date: '2027-01-01', cutoffBirthYear: 1986 } });
 
-// Cutoff follows the IST calendar day: 7 Oct 00:30 IST is still 6 Oct 19:00 UTC
-assert.deepEqual(ageOverCutoff(new Date(Date.UTC(2026, 9, 6, 19, 0))), utc(1988, 10, 7));
+// Term 2027–2028: born 1986 or earlier
+for (const now of [istNoon(2027, 1, 1), istNoon(2027, 7, 1), istNoon(2028, 12, 31)]) {
+  assert.equal(ageOverBirthYear(now), 1986);
+  assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1986, 12, 31) }, now), true);
+  assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1987, 1, 1) }, now), false);
+}
+assert.deepEqual(ageOverBound(istNoon(2027, 3, 1)), utc(1987, 1, 1));
+assert.deepEqual(ageOverRule(istNoon(2027, 3, 1)), { cutoffBirthYear: 1986, termStart: '2027-01-01', next: { date: '2029-01-01', cutoffBirthYear: 1987 } });
 
-// 29 Feb today, 38 years back is not a leap year — clamp to 28 Feb, don't roll into March
-assert.deepEqual(ageOverCutoff(istNoon(2028, 2, 29)), utc(1990, 2, 28));
+// Term 2029–2030: born 1987 or earlier; 2031–2032: 1988
+assert.equal(ageOverBirthYear(istNoon(2029, 1, 1)), 1987);
+assert.equal(ageOverBirthYear(istNoon(2030, 12, 31)), 1987);
+assert.equal(ageOverBirthYear(istNoon(2031, 1, 1)), 1988);
+assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1987, 6, 1) }, istNoon(2029, 1, 1)), true);
 
-// isAgeOver: 38th birthday is the first archived day
-const today = istNoon(2026, 10, 6);
-assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1988, 10, 6) }, today), true); // exactly 38
-assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1988, 10, 7) }, today), false); // 38 tomorrow
-assert.equal(isAgeOver({ status: 'Active', dateOfBirth: utc(1989, 10, 6) }, today), false); // exactly 37
-// Manual status archives regardless of DOB; no DOB and bad DOB never archive
-assert.equal(isAgeOver({ status: AGE_OVER_STATUS }, today), true);
-assert.equal(isAgeOver({ status: 'Active' }, today), false);
-assert.equal(isAgeOver({ status: 'Active', dateOfBirth: 'not-a-date' }, today), false);
-// DOB as an ISO string (JSON / lean docs)
-assert.equal(isAgeOver({ status: 'Abroad', dateOfBirth: '1980-01-01T00:00:00.000Z' }, today), true);
+// Terms turn over on the IST calendar day: 1 Jan 2027 00:30 IST is still 31 Dec 2026 in UTC
+assert.equal(ageOverBirthYear(new Date(Date.UTC(2026, 11, 31, 19, 0))), 1986);
+assert.equal(ageOverBirthYear(new Date(Date.UTC(2026, 11, 31, 18, 0))), null);
 
-// ageOn agrees with the cutoff, including the leap-day edge
-assert.equal(ageOn(utc(1987, 10, 6), today), 39);
-assert.equal(ageOn(utc(1987, 10, 7), today), 38);
-assert.equal(ageOn(utc(1988, 2, 29), istNoon(2027, 2, 28)), 38);
-assert.equal(ageOn(utc(1988, 2, 29), istNoon(2027, 3, 1)), 39);
-assert.equal(ageOn(null, today), null);
+// No DOB and bad DOB never archive; DOB as an ISO string (JSON / lean docs) works
+const inTerm = istNoon(2027, 5, 1);
+assert.equal(isAgeOver({ status: 'Active' }, inTerm), false);
+assert.equal(isAgeOver({ status: 'Active', dateOfBirth: 'not-a-date' }, inTerm), false);
+assert.equal(isAgeOver({ status: 'Abroad', dateOfBirth: '1980-01-01T00:00:00.000Z' }, inTerm), true);
 
-// ageCutoff: exactly 40 = DOB in (ageCutoff(41), ageCutoff(40)]
-assert.deepEqual(ageCutoff(40, today), utc(1986, 10, 6));
-assert.equal(ageOn(ageCutoff(40, today), today), 40);
-assert.equal(ageOn(new Date(ageCutoff(41, today).getTime() + 864e5), today), 40);
+// Match and its negation
+assert.deepEqual(ageOverMatch(inTerm), { $or: [{ status: AGE_OVER_STATUS }, { dateOfBirth: { $lt: utc(1987, 1, 1) } }] });
+assert.deepEqual(notAgeOverMatch(inTerm), { $nor: ageOverMatch(inTerm).$or });
 
-// agedOutSince: first DOB that turned 38 this IST month / year
-assert.deepEqual(agedOutSince('month', today), utc(1988, 10, 1));
-assert.deepEqual(agedOutSince('year', today), utc(1988, 1, 1));
-// 1 Nov 00:30 IST is still 31 Oct UTC — already November's window
-assert.deepEqual(agedOutSince('month', new Date(Date.UTC(2026, 9, 31, 19, 0))), utc(1988, 11, 1));
+// ageOn still counts whole years on the IST date
+assert.equal(ageOn(utc(1988, 10, 6), istNoon(2026, 10, 6)), 38);
+assert.equal(ageOn(utc(1988, 10, 7), istNoon(2026, 10, 6)), 37);
+assert.equal(ageOn(null), null);
 
-// Mongo matches: archived = manual status OR DOB on/before cutoff; current = neither.
-// $nor keeps the current-members match from colliding with a filter's own $or (search).
-const archived = ageOverMatch(today);
-assert.deepEqual(archived, { $or: [{ status: AGE_OVER_STATUS }, { dateOfBirth: { $lte: utc(1988, 10, 6) } }] });
-assert.deepEqual(notAgeOverMatch(today), { $nor: archived.$or });
-const merged = { $or: [{ name: /x/ }], ...notAgeOverMatch(today) };
-assert.ok(merged.$or && merged.$nor);
+// Restriction flag
+if (!ARCHIVE_RESTRICTED) {
+  assert.deepEqual(currentMemberMatch(inTerm), {});
+  assert.equal(hiddenAsArchived({ role: 'district_admin' }, { status: AGE_OVER_STATUS }, inTerm), false);
+}
 
-// The restriction switch: off = archived members count and show for every role.
-const aged = { status: 'Active', dateOfBirth: utc(1980, 1, 1) };
-assert.deepEqual(currentMemberMatch(today), ARCHIVE_RESTRICTED ? notAgeOverMatch(today) : {});
-assert.equal(hiddenAsArchived({ role: 'district_admin' }, aged, today), ARCHIVE_RESTRICTED);
-assert.equal(hiddenAsArchived({ role: 'state_admin' }, aged, today), false);
-
-console.log('age-over check: OK');
+console.log('age-over checks passed');

@@ -33,7 +33,7 @@ export default function Reports() {
   return (
     <PageShell>
       <PageHero title="Reports" subtitle="Monthly reports from the state, districts and areas" icon={<ClipboardList className="size-6" />} />
-      <div className="container mx-auto space-y-4 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="space-y-4 sm:py-2">
         <Tabs value={tab} onValueChange={(v) => setParam("tab", v)}>
           <TabsList className={`grid w-full sm:w-auto ${isStateAdmin ? "grid-cols-3" : "grid-cols-2"}`}>
             <TabsTrigger value="mine" className="min-h-10">My Report</TabsTrigger>

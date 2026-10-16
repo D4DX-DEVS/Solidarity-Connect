@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { FEATURES } from "@/lib/features";
+import { DateOfBirthInput } from "@/components/shared/DateOfBirthInput";
 
 interface Member {
   _id: string;
@@ -113,15 +114,15 @@ const EditMemberDetails = () => {
           setSelectedDistrict(memberData.district?._id || "");
           setSelectedGroup(memberData.group?._id || "");
 
-          // Format date for the <input type="date"> field. Stored values that fall outside
+          // Format date for the date of birth field (YYYY-MM-DD). Stored values that fall outside
           // the 0000-9999 year range (a known data-corruption artifact from old migrations)
           // serialise to extended ISO like "+031227-12-31T18:30:00.000Z", which the native
-          // date input cannot render and `isISO8601()` rejects. Strip those to "" so we
+          // field cannot show and `isISO8601()` rejects. Strip those to "" so we
           // never re-send a value that will trip the backend validator on save.
           const dobRaw = memberData.dateOfBirth
             ? String(memberData.dateOfBirth).split('T')[0]
             : "";
-          // Native date input only accepts YYYY-MM-DD with a 4-digit year.
+          // Only YYYY-MM-DD with a 4-digit year.
           const dobForInput = /^\d{4}-\d{2}-\d{2}$/.test(dobRaw) ? dobRaw : "";
 
           // Populate form with existing data
@@ -375,13 +376,13 @@ const EditMemberDetails = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
-              <Input
+              <Label htmlFor="dateOfBirth">Date of Birth</Label>
+              <DateOfBirthInput
                 id="dateOfBirth"
-                type="date"
                 value={formData.dateOfBirth}
-                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                onChange={(dateOfBirth) => setFormData({ ...formData, dateOfBirth })}
               />
+              <p className="text-xs text-muted-foreground">Used to sign in.</p>
             </div>
 
             <div className="space-y-1.5">

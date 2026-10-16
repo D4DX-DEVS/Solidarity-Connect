@@ -15,7 +15,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body, query } from 'express-validator';
-import { AGE_OVER_STATUS, ageCutoff, ageOn, ageOverCutoff, ageOverMatch, agedOutSince, currentMemberMatch, hiddenAsArchived, isAgeOver, notAgeOverMatch } from '../utils/ageOver.js';
+import { AGE_OVER_STATUS, ageOn, ageOverMatch, ageOverRule, currentMemberMatch, hiddenAsArchived } from '../utils/ageOver.js';
 import { attachPersonLinks, leaderRecordError, loadPersonRecords, planPersonSync, savePersonEdit } from '../services/personRecords.js';
 
 const router = express.Router();
@@ -29,8 +29,9 @@ const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const ARCHIVE_SORTS = { name: { name: 1 }, oldest: { dateOfBirth: 1, name: 1 }, youngest: { dateOfBirth: -1, name: 1 } };
 // Archives filters. Role: any leader, non-leaders, or one role type (primary or extra).
 const ARCHIVE_ROLES = ['leader', 'none', 'state', 'district', 'area', 'unit', 'murabi', 'coordinator'];
-const ARCHIVE_AGES = ['38', '39', '40', '41', '42plus'];
-const ARCHIVE_PERIODS = ['month', 'year']; // aged out this month / this year
+// Birth year: "1986" = born that year, "upto-1983" = that year or earlier.
+const ARCHIVE_BORN = /^(upto-)?(\d{4})$/;
+const ARCHIVE_SOURCES = ['manual']; // status set to "Age over" by hand
 
 function archiveRoleMatch(role) {
   if (role === 'leader') return { isLeader: true };
@@ -38,10 +39,13 @@ function archiveRoleMatch(role) {
   return { isLeader: true, $or: [{ 'roleTag.type': role }, { 'extraRoleTags.type': role }] };
 }
 
-function archiveAgeMatch(age, now) {
-  if (age === '42plus') return { dateOfBirth: { $lte: ageCutoff(42, now) } };
-  const years = Number(age);
-  return { dateOfBirth: { $lte: ageCutoff(years, now), $gt: ageCutoff(years + 1, now) } };
+/** DOBs stored at UTC midnight; born in `year` = [1 Jan year, 1 Jan year+1). */
+const bornInYear = (year) => ({ $gte: new Date(Date.UTC(year, 0, 1)), $lt: new Date(Date.UTC(year + 1, 0, 1)) });
+
+function archiveBornMatch(born) {
+  const [, upto, year] = ARCHIVE_BORN.exec(born);
+  const y = Number(year);
+  return { dateOfBirth: upto ? { $lt: new Date(Date.UTC(y + 1, 0, 1)) } : bornInYear(y) };
 }
 
 // @route   GET /api/members
@@ -110,19 +114,15 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
       // State admin can see all members (no additional filter)
     }
 
-    // Archived (age over) members show here flagged ageOver (also on the Archives
-    // page); with ARCHIVE_RESTRICTED only the state admin's list keeps them.
+    // Archived (age over) members show here like any other member, untagged — only
+    // the Archives page calls them out; with ARCHIVE_RESTRICTED only the state admin's list keeps them.
     if (!skipScope && req.user.role !== 'state_admin') Object.assign(baseFilter, currentMemberMatch());
-    const now = new Date();
 
     // Build query filter (includes all filters for member list)
     let filter = { ...baseFilter };
 
-    // Apply additional filters for member list. "Age over" = computed archive rule;
-    // any other status lists current members only.
-    // $and keeps the archive $or clear of the search $or below.
-    if (status === 'Age over') filter.$and = [ageOverMatch(now)];
-    else if (status) Object.assign(filter, { status }, notAgeOverMatch(now));
+    // Apply additional filters for member list (stored status, as saved)
+    if (status) filter.status = status;
     if (district && req.user.role === 'state_admin') filter.district = district;
     if (group && ['state_admin', 'district_admin'].includes(req.user.role)) filter.group = group;
     if (isApproved !== undefined) filter.isApproved = isApproved === 'true';
@@ -200,7 +200,6 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     // Add transfer request status to each member
     const membersWithTransferStatus = result.docs.map(member => ({
       ...member.toObject(),
-      ageOver: isAgeOver(member, now),
       transferRequest: transferRequestMap[member._id.toString()] || null
     }));
     // Role Management: admin logins on the same phone, and where the leader roles are edited.
@@ -211,13 +210,8 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
     // Calculate statistics only when requested (skip on pagination to improve speed)
     let stats = [];
     if (includeStats !== 'false') {
-      // Per-status counts are current members only; archived ones count once, as ageOver.
-      const cutoff = ageOverCutoff(now);
-      const archived = { $or: [
-        { $eq: ['$status', AGE_OVER_STATUS] },
-        { $and: [{ $eq: [{ $type: '$dateOfBirth' }, 'date'] }, { $lte: ['$dateOfBirth', cutoff] }] }
-      ] };
-      const current = (s) => ({ $sum: { $cond: [{ $and: [{ $eq: ['$status', s] }, { $not: [archived] }] }, 1, 0] } });
+      // Per stored status; the date-of-birth age-over rule only shows on the Archives page.
+      const current = (s) => ({ $sum: { $cond: [{ $eq: ['$status', s] }, 1, 0] } });
       stats = await Member.aggregate([
         { $match: statsFilter },
         {
@@ -229,7 +223,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
             abroad: current('Abroad'),
             applicant: current('Applicant'),
             dismissed: current('Dismissed'),
-            ageOver: { $sum: { $cond: [archived, 1, 0] } },
+            ageOver: current(AGE_OVER_STATUS),
             approved: { $sum: { $cond: ['$isApproved', 1, 0] } },
             pending: { $sum: { $cond: [{ $not: '$isApproved' }, 1, 0] } }
           }
@@ -277,7 +271,7 @@ router.get('/', authenticate, paginationValidation, async (req, res) => {
 });
 
 // @route   GET /api/members/archives
-// @desc    Archived (age over) members — aged 38 and above, or status set to "Age over"
+// @desc    Archived (age over) members — born in or before this term's cutoff year, or status set to "Age over"
 // @access  Private (state_admin)
 router.get('/archives',
   authenticate,
@@ -288,20 +282,21 @@ router.get('/archives',
   query('district').optional().isMongoId().withMessage('Invalid district'),
   query('group').optional().isMongoId().withMessage('Invalid area'),
   query('role').optional().isIn(ARCHIVE_ROLES).withMessage('Invalid role'),
-  query('age').optional().isIn(ARCHIVE_AGES).withMessage('Invalid age'),
-  query('period').optional().isIn(ARCHIVE_PERIODS).withMessage('Invalid period'),
+  query('born').optional().matches(ARCHIVE_BORN).withMessage('Invalid birth year'),
+  query('source').optional().isIn(ARCHIVE_SOURCES).withMessage('Invalid source'),
   query('search').optional().isString().trim().isLength({ max: 100 }).withMessage('Search is too long'),
   handleValidationErrors,
   async (req, res) => {
     try {
       const now = new Date();
-      const { district, group, role, age, period, search = '', sort = 'name' } = req.query;
+      const { district, group, role, born, source, search = '', sort = 'name' } = req.query;
       // ?district[]=a&district[]=b passes isMongoId per item — one value each
-      if ([district, group, role, age, period].some((v) => v !== undefined && typeof v !== 'string')) {
+      if ([district, group, role, born, source].some((v) => v !== undefined && typeof v !== 'string')) {
         return res.status(400).json({ success: false, message: 'Invalid filter' });
       }
       const page = parseInt(req.query.page, 10) || 1;
       const limit = parseInt(req.query.limit, 10) || 20;
+      const rule = ageOverRule(now);
 
       // Summary counts follow the place filters only, so the cards stay put while filtering further
       const scope = {};
@@ -309,15 +304,20 @@ router.get('/archives',
       if (group) scope.group = new mongoose.Types.ObjectId(group);
       const and = [ageOverMatch(now)];
       if (role) and.push(archiveRoleMatch(role));
-      if (age) and.push(archiveAgeMatch(age, now));
-      if (period) and.push({ dateOfBirth: { $gte: agedOutSince(period, now) } });
+      if (born) and.push(archiveBornMatch(born));
+      if (source === 'manual') and.push({ status: AGE_OVER_STATUS });
       if (search.length >= 2) {
         const pattern = new RegExp(escapeRegex(search), 'i');
         and.push({ $or: [{ name: pattern }, { phone: pattern }] });
       }
       const filter = { ...scope, $and: and };
 
-      const onOrAfter = (since) => ({ $cond: [{ $gte: ['$dateOfBirth', since] }, 1, 0] });
+      // Newly age over this term = born in the cutoff year itself
+      const termYear = rule.cutoffBirthYear;
+      const inTermYear = termYear === null ? 0 : { $cond: [{ $and: [
+        { $gte: ['$dateOfBirth', new Date(Date.UTC(termYear, 0, 1))] },
+        { $lt: ['$dateOfBirth', new Date(Date.UTC(termYear + 1, 0, 1))] },
+      ] }, 1, 0] };
       const [result, [summary]] = await Promise.all([Member.paginate(filter, {
         page,
         limit,
@@ -335,9 +335,8 @@ router.get('/archives',
             _id: null,
             total: { $sum: 1 },
             leaders: { $sum: { $cond: ['$isLeader', 1, 0] } },
-            // A missing DOB sorts below any date, so status-only archives never count here
-            thisMonth: { $sum: onOrAfter(agedOutSince('month', now)) },
-            thisYear: { $sum: onOrAfter(agedOutSince('year', now)) }
+            thisTerm: { $sum: inTermYear },
+            manual: { $sum: { $cond: [{ $eq: ['$status', AGE_OVER_STATUS] }, 1, 0] } }
           }
         }
       ])]);
@@ -350,9 +349,10 @@ router.get('/archives',
         summary: {
           total: summary?.total ?? 0,
           leaders: summary?.leaders ?? 0,
-          thisMonth: summary?.thisMonth ?? 0,
-          thisYear: summary?.thisYear ?? 0
+          thisTerm: summary?.thisTerm ?? 0,
+          manual: summary?.manual ?? 0
         },
+        rule,
         pagination: {
           currentPage: result.page,
           totalPages: result.totalPages,
@@ -462,7 +462,7 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
 
     res.status(200).json({
       success: true,
-      data: { ...member.toObject(), ageOver: isAgeOver(member) }
+      data: member.toObject()
     });
 
   } catch (error) {

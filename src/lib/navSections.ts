@@ -26,7 +26,7 @@ export const SECTIONS: NavSection[] = [
     title: "Management",
     items: [
       { label: "Members", path: "/members", icon: Users, roles: ["state_admin", "district_admin", "group_admin"] },
-      // Members aged 38 and above (age over) — moved out of Members, state admin only
+      // Age-over members (by birth year and term) — state admin only
       { label: "Archives", path: "/archives", icon: Archive, roles: ["state_admin"] },
       { label: "Admins", path: "/state-admin/users", icon: UserCog, roles: ["state_admin"] },
       { label: "Transfers", path: "/state-admin/transfer-approvals", icon: ArrowRightLeft, roles: ["state_admin", "district_admin"] },

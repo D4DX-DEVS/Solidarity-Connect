@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Building2, Download, Landmark, LockOpen, MapPin } from "lucide-react";
 import { MetricCard, SectionCard } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,13 @@ import { ErrorState } from "@/components/shared/StateMessage";
 import { useToast } from "@/hooks/use-toast";
 import { useDistricts } from "@/hooks/useDistricts";
 import { exportConsolidated } from "@/lib/exportConsolidated";
-import { consolidatedSections } from "@/lib/consolidatedSummary";
+import { consolidatedSections, unitColumnsOf } from "@/lib/consolidatedSummary";
 import { currentIstPeriod, fromMonthValue, periodLabel, toMonthValue, yearSpanLabel } from "@/lib/reportForm";
 import { monthlyReportService, type Consolidated, type ConsolidatedSpan } from "@/services/monthlyReportService";
 import { ConsolidatedBreakdown, ReportStatus, RowActions, type UnlockTarget } from "./ConsolidatedBreakdown";
 import { ReportTotals } from "./ReportTotals";
 import { ReportDetailDialog } from "./ReportDetailDialog";
+import { UnitBreakdown } from "./UnitBreakdown";
 
 const YEARS_SHOWN = 3;
 
@@ -87,6 +88,20 @@ export function ConsolidatedTab({ month, onMonthChange, span, onSpanChange, isSt
   const narrowed = isStateAdmin && district !== "all";
   const ownArea = view === "area" ? data?.districts[0]?.areas[0] : undefined;
   const scopeName = ownArea?.name ?? (view === "district" || narrowed ? data?.districts[0]?.name : "State");
+  const sections = data ? consolidatedSections(data, { includeState: !narrowed }) : [];
+  // An area sees its per-unit sections unit by unit, under that section's totals
+  const ownUnits = ownArea?.report.units ?? [];
+  const unitDetails: Record<string, ReactNode> = {};
+  for (const section of sections) {
+    const columns = section.key.startsWith("area-") ? unitColumnsOf(section.items, ownUnits) : [];
+    if (columns.length === 0) continue;
+    unitDetails[section.key] = (
+      <div className="space-y-1.5 pt-1">
+        <p className="text-xs font-medium text-muted-foreground">{data?.span === "year" ? "By unit, all months added up" : "By unit"}</p>
+        <UnitBreakdown columns={columns} units={ownUnits.filter(u => columns.some(c => u.numbers[c.id] !== undefined))} caption={`${section.title} by unit`} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -171,7 +186,8 @@ export function ConsolidatedTab({ month, onMonthChange, span, onSpanChange, isSt
             ) : undefined}
           >
             <ReportTotals
-              sections={consolidatedSections(data, { includeState: !narrowed })}
+              sections={sections}
+              details={unitDetails}
               actions={data.state && !narrowed ? {
                 "state-0": <RowActions data={data} level="state" report={data.state} name="State report" onView={setDetailId} onUnlock={setUnlockTarget} />,
               } : undefined}

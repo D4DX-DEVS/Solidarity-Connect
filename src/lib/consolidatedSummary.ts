@@ -1,5 +1,5 @@
 import { LEVEL_LABELS, groupBySection } from "@/lib/reportForm";
-import type { Consolidated, NumberColumn } from "@/services/monthlyReportService";
+import type { Consolidated, NumberColumn, UnitNumbers } from "@/services/monthlyReportService";
 
 export interface TotalItem extends NumberColumn {
   /** null while nothing behind it has been submitted. */
@@ -43,6 +43,12 @@ export function consolidatedSections(data: Consolidated, { includeState }: { inc
       ? sectionsFrom(columns.state, data.state.submitted ? data.state.numbers : null, { title: LEVEL_LABELS.state, source: "State report", key: "state" })
       : []),
   ];
+}
+
+/** The columns a set of units was given numbers for, in the form's order. */
+export function unitColumnsOf<T extends NumberColumn>(columns: T[], units: UnitNumbers[]): T[] {
+  const answered = new Set(units.flatMap(u => Object.keys(u.numbers)));
+  return columns.filter(c => answered.has(String(c.id)));
 }
 
 /** Top-level items numbered in order, each with the follow-up counts shown under it. */

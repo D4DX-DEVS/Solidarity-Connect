@@ -29,7 +29,7 @@ export interface DashboardReport {
   year: number;
   /** 1-12 */
   month: number;
-  /** ISO; the last editable moment (deadline day of the next month, IST). */
+  /** ISO; when it is due (deadline day of the next month, IST). It stays editable longer: 3 months in all. */
   deadline: string;
   /** The month is over and its report is due (1st to the deadline); false while it is still running. */
   closing: boolean;

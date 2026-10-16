@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { FLAT_ON_PHONE } from "@/components/app/AppShell";
 
 interface ChartCardProps {
   title: string;
@@ -20,6 +21,8 @@ interface ChartCardProps {
   className?: string;
   /** e.g. "p-0" for a table that should run edge to edge. */
   contentClassName?: string;
+  /** Phones: no card frame — for content that is itself a list of cards. */
+  flatOnPhone?: boolean;
   children: ReactNode;
 }
 
@@ -36,6 +39,7 @@ export function ChartCard({
   skeletonClassName = "h-56",
   className,
   contentClassName,
+  flatOnPhone,
   children,
 }: ChartCardProps) {
   let body: ReactNode = children;
@@ -63,15 +67,15 @@ export function ChartCard({
   }
 
   return (
-    <Card className={cn("flex h-full flex-col rounded-2xl", className)}>
-      <CardHeader className="flex-row items-start justify-between gap-3 space-y-0 p-4 pb-2 sm:p-5 sm:pb-2">
+    <Card className={cn("flex h-full flex-col rounded-2xl", flatOnPhone && FLAT_ON_PHONE, className)}>
+      <CardHeader className={cn("flex-row items-start justify-between gap-3 space-y-0 p-4 pb-2 sm:p-5 sm:pb-2", flatOnPhone && "max-sm:px-0 max-sm:pt-0")}>
         <div className="min-w-0 space-y-1">
           <CardTitle className="text-sm font-semibold tracking-tight sm:text-base">{title}</CardTitle>
           {description ? <CardDescription className="text-xs sm:text-sm">{description}</CardDescription> : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
       </CardHeader>
-      <CardContent className={cn("flex-1 p-4 pt-2 sm:p-5 sm:pt-2", !loading && !error && !empty && contentClassName)}>{body}</CardContent>
+      <CardContent className={cn("flex-1 p-4 pt-2 sm:p-5 sm:pt-2", !loading && !error && !empty && contentClassName, flatOnPhone && "max-sm:px-0 max-sm:pb-0")}>{body}</CardContent>
     </Card>
   );
 }

@@ -6,7 +6,8 @@ import District from '../models/District.js';
 import Group from '../models/Group.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import { REPORT_LEVELS, normaliseFormFields, sumColumns } from '../services/monthlyReports/fields.js';
-import { validateAnswers, changedFieldIds } from '../services/monthlyReports/answers.js';
+import { validateAnswers, changedFieldIds, canUpgradeForm, entriesKeyOf } from '../services/monthlyReports/answers.js';
+import Member from '../models/Member.js';
 import { parsePeriod, parseYear, monthsElapsed, editState, currentPeriod } from '../services/monthlyReports/period.js';
 import { consolidate, consolidateYear } from '../services/monthlyReports/consolidate.js';
 import {
@@ -44,6 +45,53 @@ function formSummary(form) {
     publishedAt: form.publishedAt || null,
     updatedAt: form.updatedAt,
   };
+}
+
+/**
+ * The form a report is shown and saved on. A new report takes the latest version;
+ * a submitted one keeps the version it was filled on, except that while it can be
+ * edited it moves to a newer version that keeps every one of its questions
+ * (e.g. the unit section turned per-unit), so edits get the current form.
+ */
+async function formForReport(level, form, report, editable) {
+  if (!report?.submittedAt || report.formVersion === form.version) return publishedForm(level, form.version);
+  const own = await publishedForm(level, report.formVersion);
+  if (!editable) return own;
+  const latest = await publishedForm(level, form.version);
+  return latest && own && canUpgradeForm(own.fields, latest.fields) ? latest : own;
+}
+
+/**
+ * Per-unit sections: names to offer in the unit picker (the units on the area's
+ * member records plus every unit this scope has named in a report, so a unit
+ * added by hand is offered again) and the names from the scope's last report
+ * that listed any, to start a new month with.
+ */
+async function entryHints(scope, fields, period) {
+  const headings = (fields || []).filter(f => f.type === 'heading' && f.repeat);
+  if (headings.length === 0) return { suggestions: [], previous: {} };
+  const [memberUnits, reportedUnits, last] = await Promise.all([
+    scope.area ? Member.distinct('address', { group: scope.area }) : Promise.resolve([]),
+    Promise.all(headings.map(h => MonthlyReport.distinct(`answers.${entriesKeyOf(h.id)}.name`, { scopeKey: scope.scopeKey }))),
+    MonthlyReport.findOne({
+      scopeKey: scope.scopeKey,
+      $or: [{ year: { $lt: period.year } }, { year: period.year, month: { $lt: period.month } }],
+      $and: [{ $or: headings.map(h => ({ [`answers.${entriesKeyOf(h.id)}.0`]: { $exists: true } })) }],
+    }).sort({ year: -1, month: -1 }).select('answers').lean(),
+  ]);
+  // One spelling per name, case-insensitively; the first seen wins
+  const byKey = new Map();
+  for (const u of [...memberUnits, ...reportedUnits.flat()]) {
+    const name = typeof u === 'string' ? u.trim().replace(/\s+/g, ' ') : '';
+    if (name && !byKey.has(name.toLowerCase())) byKey.set(name.toLowerCase(), name);
+  }
+  const suggestions = [...byKey.values()].sort((a, b) => a.localeCompare(b));
+  const previous = {};
+  for (const h of headings) {
+    const entries = last?.answers?.[entriesKeyOf(h.id)];
+    if (Array.isArray(entries)) previous[h.id] = entries.map(e => e?.name).filter(Boolean);
+  }
+  return { suggestions, previous };
 }
 
 function reportView(report) {
@@ -172,9 +220,9 @@ router.get('/mine', async (req, res) => {
       ReportForm.findOne({ level: scope.level }).lean(),
       withPeople(MonthlyReport.findOne({ scopeKey: scope.scopeKey, year: period.year, month: period.month })).lean(),
     ]);
-    const version = report?.submittedAt ? report.formVersion : form.version;
-    const published = await publishedForm(scope.level, version);
-    const state = editState({ ...period, deadlineDay: form.deadlineDay, unlockedUntil: report?.unlockedUntil });
+    const state = editState({ ...period, unlockedUntil: report?.unlockedUntil });
+    const published = await formForReport(scope.level, form, report, scope.canFill && !state.locked && !state.future);
+    const hints = published && scope.canFill ? await entryHints(scope, published.fields, period) : { suggestions: [], previous: {} };
 
     res.json({
       success: true,
@@ -190,6 +238,8 @@ router.get('/mine', async (req, res) => {
         editableUntil: state.editableUntil,
         form: published ? { version: published.version, title: published.title, fields: published.fields } : null,
         report: reportView(report),
+        entrySuggestions: hints.suggestions,
+        previousEntries: hints.previous,
       },
     });
   } catch (error) {
@@ -210,7 +260,7 @@ router.put('/mine', async (req, res) => {
 
     const form = await ReportForm.findOne({ level: scope.level }).lean();
     const existing = await MonthlyReport.findOne({ scopeKey: scope.scopeKey, ...period });
-    const state = editState({ ...period, deadlineDay: form.deadlineDay, unlockedUntil: existing?.unlockedUntil });
+    const state = editState({ ...period, unlockedUntil: existing?.unlockedUntil });
     if (state.future) return fail(res, 400, 'You cannot report a month that has not started');
     if (state.locked) return fail(res, 423, 'This month is locked. Ask a higher level to unlock it.');
 
@@ -219,9 +269,9 @@ router.put('/mine', async (req, res) => {
       return fail(res, 409, 'Another admin saved this report while you were editing. Reload to see their changes.');
     }
 
-    const version = submitted ? existing.formVersion : form.version;
-    const published = await publishedForm(scope.level, version);
+    const published = await formForReport(scope.level, form, existing, true);
     if (!published) return fail(res, 400, 'The report form has not been published yet');
+    const version = published.version;
 
     const { answers, numbers, errors } = validateAnswers(published.fields, req.body?.answers, { isAllowedFileUrl });
     if (errors.length > 0) return fail(res, 400, errors[0].message, { errors });
@@ -248,6 +298,7 @@ router.put('/mine', async (req, res) => {
     } else {
       const changed = changedFieldIds(existing.answers, answers);
       if (changed.length > 0) {
+        existing.formVersion = version; // may move to a compatible newer form (formForReport)
         existing.answers = answers;
         existing.markModified('answers');
         existing.numbers = numbers;
@@ -339,15 +390,15 @@ router.get('/consolidated', async (req, res) => {
     if (!areaOnly) scopes.push({ level: 'district', district: { $in: districtIds } });
     if (all) scopes.push({ level: 'state' });
     const reports = await MonthlyReport.find({ ...period, $or: scopes })
-      .select('level district area month submittedAt lastEditedAt unlockedUntil numbers').lean();
+      .select('level district area month submittedAt lastEditedAt unlockedUntil numbers answers').lean();
 
     const months = yearly ? monthsElapsed(period.year) : 1;
     const tree = yearly
       ? consolidateYear({ districts, areas, reports, includeState: all, months })
       : consolidate({ districts, areas, reports, includeState: all });
-    // A year has no single deadline to unlock; reports are unlocked month by month.
-    const forms = yearly ? [] : await ReportForm.find().select('level deadlineDay').lean();
-    const deadlines = Object.fromEntries(forms.map(f => [f.level, editState({ ...period, deadlineDay: f.deadlineDay }).deadline]));
+    // A year has no single lock time to unlock; reports are unlocked month by month.
+    const lockTime = yearly ? null : editState(period).deadline;
+    const deadlines = lockTime ? Object.fromEntries(REPORT_LEVELS.map(level => [level, lockTime])) : {};
 
     const [stateColumns, districtColumns, areaColumns] = await Promise.all([
       all ? numberColumns('state', tree.totals.state) : [],
@@ -407,7 +458,7 @@ router.post('/unlock', async (req, res) => {
       target = { scopeKey: `area:${scopeId}`, district: group.district, area: scopeId };
     }
 
-    if (editState({ ...period, deadlineDay: 28 }).future) return fail(res, 400, 'That month has not started yet');
+    if (editState(period).future) return fail(res, 400, 'That month has not started yet');
 
     const now = new Date();
     const until = new Date(now.getTime() + UNLOCK_DAYS * 24 * 60 * 60 * 1000);

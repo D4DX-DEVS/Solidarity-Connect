@@ -61,7 +61,6 @@ interface Member {
   roleTag?: MemberRoleTag | null;
   extraRoleTags?: MemberRoleTag[];
   isApproved: boolean;
-  ageOver?: boolean; // 38+ or status "Age over"
   createdAt: string;
   transferRequest?: {
     status: 'pending' | 'district_approved';
@@ -305,7 +304,6 @@ const Members = () => {
     { title: "Inactive", value: statistics.inactive, status: "Inactive" },
     { title: "Abroad", value: statistics.abroad, status: "Abroad" },
     { title: "Dismissed", value: statistics.dismissed, status: "Dismissed" },
-    { title: "Age over", value: statistics.ageOver ?? 0, status: "Age over" },
   ];
 
   return (
@@ -376,7 +374,6 @@ const Members = () => {
                   <SelectItem value="Inactive">Inactive</SelectItem>
                   <SelectItem value="Abroad">Abroad</SelectItem>
                   <SelectItem value="Applicant">Applicant</SelectItem>
-                  <SelectItem value="Age over">Age over</SelectItem>
                   <SelectItem value="Dismissed">Dismissed</SelectItem>
                 </SelectContent>
               </Select>
@@ -456,11 +453,7 @@ const Members = () => {
                 <div className="flex justify-between items-center mb-1.5">
                   <div className="flex min-w-0 items-center gap-2">
                     <h3 className="truncate font-semibold text-sm sm:text-base">{member.name}</h3>
-                    {member.ageOver ? (
-                      <Badge variant="secondary" className="shrink-0 px-2 py-0 text-[11px] bg-amber-100 text-amber-800">
-                        Age over
-                      </Badge>
-                    ) : member.status === "Active" ? (
+                    {member.status === "Active" ? (
                       <span
                         className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500"
                         title="Active"

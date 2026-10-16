@@ -32,6 +32,10 @@ export interface ReportField {
   /** Number fields: add up in consolidation and show to members. */
   sum?: boolean;
   condition?: FieldCondition;
+  /** Headings: the questions under it are answered once per named entry (an area's units). */
+  repeat?: boolean;
+  /** Headings with repeat: what one entry is called ("Unit"). */
+  itemLabel?: string;
 }
 
 export interface FileAnswer {
@@ -41,8 +45,16 @@ export interface FileAnswer {
   size?: number;
 }
 
-export type AnswerValue = string | number | string[] | FileAnswer | null | undefined;
+/** One named entry of a per-unit section: { name, f<id>: answer, … }. */
+export interface RepeatEntry {
+  name: string;
+  [key: string]: AnswerValue;
+}
+
+export type AnswerValue = string | number | string[] | FileAnswer | RepeatEntry[] | null | undefined;
 export type Answers = Record<string, AnswerValue>;
+/** Keyed by errorKey(fieldId, entry). */
+export type ReportErrors = Record<string, string>;
 
 export const LEVEL_LABELS: Record<ReportLevel, string> = { state: "State", district: "District", area: "Area" };
 
@@ -76,6 +88,14 @@ export const OPERATOR_LABELS: Record<ConditionOperator, string> = {
 export const VALUELESS_OPERATORS: ConditionOperator[] = ["is_empty", "is_not_empty"];
 
 export const answerKey = (fieldId: number) => `f${fieldId}`;
+/** Where a per-unit section keeps its entries (mirrors the server's entriesKeyOf). */
+export const entriesKey = (headingId: number) => `g${headingId}`;
+/** Error slot of a question, or of one entry's answer to it (heading id + entry = that entry's name). */
+export const errorKey = (fieldId: number, entry?: number) => (entry === undefined ? String(fieldId) : `${fieldId}@${entry}`);
+
+export const itemLabelOf = (heading: ReportField) => heading.itemLabel || "Unit";
+/** Most entries a per-unit section takes (the server enforces the same). */
+export const MAX_ENTRIES = 50;
 
 export const isEmptyAnswer = (value: AnswerValue): boolean =>
   value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
@@ -156,26 +176,147 @@ export function fieldError(field: ReportField, value: AnswerValue): string | nul
   }
 }
 
-/** Errors for every shown field, keyed by field id. */
-export function validateReport(fields: ReportField[], answers: Answers): Record<number, string> {
-  const errors: Record<number, string> = {};
+/** Question id → id of the repeating heading it sits under (only questions in per-unit sections). */
+export function repeatedFieldIds(fields: ReportField[]): Map<number, number> {
+  const map = new Map<number, number>();
+  let current: number | null = null;
+  for (const f of fields) {
+    if (f.type === "heading") current = f.repeat ? f.id : null;
+    else if (current !== null) map.set(f.id, current);
+  }
+  return map;
+}
+
+/** The questions of one per-unit section, in order. */
+export const sectionFields = (fields: ReportField[], headingId: number): ReportField[] => {
+  const repeated = repeatedFieldIds(fields);
+  return fields.filter(f => repeated.get(f.id) === headingId);
+};
+
+export function entriesOf(answers: Answers, headingId: number): RepeatEntry[] {
+  const value = answers[entriesKey(headingId)];
+  return Array.isArray(value) && value.every(v => typeof v === "object" && v !== null) ? (value as RepeatEntry[]) : [];
+}
+
+/** Whether a question of a per-unit section shows for this entry (rules see the other answers plus the entry). */
+export const isEntryFieldVisible = (field: ReportField, answers: Answers, entry: RepeatEntry) =>
+  isFieldVisible(field, { ...answers, ...entry });
+
+/** Sum of each number question over the entries, for the entries that answered it. */
+export function entryTotals(section: ReportField[], answers: Answers, entries: RepeatEntry[]): Map<number, number> {
+  const totals = new Map<number, number>();
+  for (const entry of entries) {
+    for (const field of section) {
+      if (field.type !== "number" || !isEntryFieldVisible(field, answers, entry)) continue;
+      const raw = entry[answerKey(field.id)];
+      const n = Number(raw);
+      if (isEmptyAnswer(raw) || !Number.isFinite(n)) continue;
+      totals.set(field.id, (totals.get(field.id) ?? 0) + n);
+    }
+  }
+  return totals;
+}
+
+/** Copy each per-unit number total into its own answer, as the server stores it, so later rules see it. */
+export function syncEntryTotals(fields: ReportField[], answers: Answers): Answers {
+  const out: Answers = { ...answers };
+  for (const heading of fields.filter(f => f.type === "heading" && f.repeat)) {
+    const section = sectionFields(fields, heading.id);
+    const totals = entryTotals(section, out, entriesOf(out, heading.id));
+    for (const field of section) {
+      if (field.type !== "number") continue;
+      if (totals.has(field.id)) out[answerKey(field.id)] = totals.get(field.id);
+      else delete out[answerKey(field.id)];
+    }
+  }
+  return out;
+}
+
+/**
+ * Start every per-unit section with entries: last month's unit names when there are
+ * some, else one empty unit. A report filled before the section went per-unit
+ * becomes one unnamed unit holding its totals.
+ */
+export function withEntries(fields: ReportField[], answers: Answers, previous: Record<string, string[]> = {}): Answers {
+  const out: Answers = { ...answers };
+  for (const heading of fields.filter(f => f.type === "heading" && f.repeat)) {
+    if (entriesOf(out, heading.id).length > 0) continue;
+    const section = sectionFields(fields, heading.id);
+    const legacy: RepeatEntry = { name: "" };
+    for (const field of section) {
+      const value = out[answerKey(field.id)];
+      if (!isEmptyAnswer(value)) legacy[answerKey(field.id)] = value;
+    }
+    const names = previous[String(heading.id)] ?? [];
+    out[entriesKey(heading.id)] = Object.keys(legacy).length > 1 || names.length === 0
+      ? [legacy]
+      : names.map(name => ({ name }));
+  }
+  return out;
+}
+
+/** Errors for every shown field (and every unit's answers), keyed by errorKey. */
+export function validateReport(fields: ReportField[], answers: Answers): ReportErrors {
+  const errors: ReportErrors = {};
+  const repeated = repeatedFieldIds(fields);
   for (const field of visibleFields(fields, answers)) {
+    if (field.type === "heading") {
+      if (field.repeat) validateEntries(field, sectionFields(fields, field.id), answers, errors);
+      continue;
+    }
+    if (repeated.has(field.id)) continue;
     const error = fieldError(field, answers[answerKey(field.id)]);
-    if (error) errors[field.id] = error;
+    if (error) errors[errorKey(field.id)] = error;
   }
   return errors;
 }
 
-/** Answers ready to send: only shown fields, numbers as numbers, text trimmed. */
+function validateEntries(heading: ReportField, section: ReportField[], answers: Answers, errors: ReportErrors) {
+  const entries = entriesOf(answers, heading.id);
+  if (entries.length === 0) {
+    errors[errorKey(heading.id)] = `Add at least one ${itemLabelOf(heading).toLowerCase()}`;
+    return;
+  }
+  const seen = new Set<string>();
+  entries.forEach((entry, i) => {
+    const name = String(entry.name ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+    if (!name) errors[errorKey(heading.id, i)] = "Enter a name";
+    else if (seen.has(name)) errors[errorKey(heading.id, i)] = "This name is already listed";
+    seen.add(name);
+    for (const field of section) {
+      if (!isEntryFieldVisible(field, answers, entry)) continue;
+      const error = fieldError(field, entry[answerKey(field.id)]);
+      if (error) errors[errorKey(field.id, i)] = error;
+    }
+  });
+}
+
+function submitValue(field: ReportField, value: AnswerValue): AnswerValue {
+  return field.type === "number" ? Number(value) : typeof value === "string" ? value.trim() : value;
+}
+
+/** Answers ready to send: only shown fields, numbers as numbers, text trimmed. Per-unit totals are the server's to work out. */
 export function answersForSubmit(fields: ReportField[], answers: Answers): Answers {
   const out: Answers = {};
+  const repeated = repeatedFieldIds(fields);
   for (const field of visibleFields(fields, answers)) {
-    if (field.type === "heading") continue;
+    if (field.type === "heading") {
+      if (!field.repeat) continue;
+      const section = sectionFields(fields, field.id);
+      out[entriesKey(field.id)] = entriesOf(answers, field.id).map((entry) => {
+        const sent: RepeatEntry = { name: String(entry.name ?? "").trim().replace(/\s+/g, " ") };
+        for (const f of section) {
+          const value = entry[answerKey(f.id)];
+          if (isEntryFieldVisible(f, answers, entry) && !isEmptyAnswer(value)) sent[answerKey(f.id)] = submitValue(f, value);
+        }
+        return sent;
+      });
+      continue;
+    }
+    if (repeated.has(field.id)) continue;
     const value = answers[answerKey(field.id)];
     if (isEmptyAnswer(value)) continue;
-    out[answerKey(field.id)] = field.type === "number"
-      ? Number(value)
-      : typeof value === "string" ? value.trim() : value;
+    out[answerKey(field.id)] = submitValue(field, value);
   }
   return out;
 }
@@ -183,7 +324,7 @@ export function answersForSubmit(fields: ReportField[], answers: Answers): Answe
 /** An answer as display text (files and lists flattened). */
 export function formatAnswer(field: ReportField, value: AnswerValue): string {
   if (isEmptyAnswer(value)) return "—";
-  if (Array.isArray(value)) return value.join(", ");
+  if (Array.isArray(value)) return value.map(v => (typeof v === "string" ? v : v.name)).join(", ");
   if (typeof value === "object" && value) return value.name || "File";
   if (field.type === "yesno") return value === "yes" ? "Yes" : "No";
   return String(value);

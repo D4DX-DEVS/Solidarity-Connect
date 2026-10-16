@@ -50,6 +50,10 @@ export interface MyReport {
   editableUntil: string;
   form: PublishedForm | null;
   report: MonthlyReport | null;
+  /** Unit names on the area's member records, offered while naming units. */
+  entrySuggestions?: string[];
+  /** Per-unit heading id → unit names from the last report that listed units. */
+  previousEntries?: Record<string, string[]>;
 }
 
 export interface ReportFormDraft {
@@ -74,6 +78,14 @@ export interface ReportSummary {
   numbers: Record<string, number>;
   /** Year view: how many of the year's months this scope submitted. */
   monthsSubmitted?: number;
+  /** Area reports: each unit with its own numbers (a year adds each unit's months up). */
+  units?: UnitNumbers[];
+}
+
+export interface UnitNumbers {
+  name: string;
+  /** Numbers keyed by field id. */
+  numbers: Record<string, number>;
 }
 
 export interface AreaRow {
@@ -141,7 +153,7 @@ export interface ReportDetail {
 }
 
 /** Error thrown by apiCall, with the server's per-field errors when it sent them. */
-export type ReportApiError = Error & { status?: number; data?: { errors?: { fieldId: number; message: string }[] } };
+export type ReportApiError = Error & { status?: number; data?: { errors?: { fieldId: number; entry?: number; message: string }[] } };
 
 const period = (year: number, month: number) => `year=${year}&month=${month}`;
 

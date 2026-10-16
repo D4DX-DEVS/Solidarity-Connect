@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "6ac377e3cfc2da1cd9c5abfc",
+    "user": "6a757b16228bc0865b0d82c9",
+    "personalTarget": "6ac377e3cfc2da1cd9c5abe2",
+    "status": "not_started",
+    "__v": 0,
+    "createdAt": "2026-10-05T10:11:47.282Z",
+    "updatedAt": "2026-10-05T10:11:47.282Z"
+  },
+  {
+    "_id": "6ac4c925cfc2da1cd9c5c326",
+    "user": "6a757b16228bc0865b0d82c9",
+    "personalTarget": "6ac4c925cfc2da1cd9c5c30c",
+    "status": "not_started",
+    "__v": 0,
+    "createdAt": "2026-10-06T10:10:45.791Z",
+    "updatedAt": "2026-10-06T10:10:45.791Z"
+  },
+  {
+    "_id": "6ac378decfc2da1cd9c5ac72",
+    "user": "6a757b17228bc0865b0d82cf",
+    "personalTarget": "6ac378ddcfc2da1cd9c5ac35",
+    "status": "not_started",
+    "__v": 0,
+    "createdAt": "2026-10-05T10:15:58.179Z",
+    "updatedAt": "2026-10-05T10:15:58.179Z"
+  },
+  {
+    "_id": "6ac378decfc2da1cd9c5ac73",
+    "user": "6a757b17228bc0865b0d82d6",
+    "personalTarget": "6ac378ddcfc2da1cd9c5ac35",
+    "status": "not_started",
+    "__v": 0,
+    "createdAt": "2026-10-05T10:15:58.179Z",
+    "updatedAt": "2026-10-05T10:15:58.179Z"
+  },
+  {
+    "_id": "6ac378decfc2da1cd9c5ac74",
+    "user": "6a757b17228bc0865b0d82da",
+    "personalTarget": "6ac378ddcfc2da1cd9c5ac35",
+    "status": "not_started",
+    "__v": 0,
+    "createdAt": "2026-10-05T10:15:58.180Z",
+    "updatedAt": "2026-10-05T10:15:58.180Z"
+  }
+]

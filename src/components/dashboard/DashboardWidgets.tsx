@@ -28,10 +28,10 @@ interface OverviewCardProps {
 /* Toolbar: monthly report chip + member search                       */
 /* ------------------------------------------------------------------ */
 
-/** The viewer's own report as a word: in, locked (deadline passed), time left once the month is over, else the due date. */
+/** The viewer's own report as a word: in, overdue (due date passed), time left once the month is over, else the due date. */
 function reportChipStatus(report: DashboardReport): { text: string; tone: string } {
   if (report.own?.submitted) return { text: "Submitted", tone: "text-success" };
-  if (daysLeft(report.deadline) < 0) return { text: "Locked", tone: "text-muted-foreground" };
+  if (daysLeft(report.deadline) < 0) return { text: "Overdue", tone: "text-destructive" };
   if (report.closing) return { text: timeLeftLabel(report.deadline), tone: "text-amber-700 dark:text-amber-400" };
   return { text: `Due ${deadlineLabel(report.deadline)}`, tone: "text-foreground" };
 }
@@ -214,8 +214,8 @@ export function KpiSparkCard({ title, value, detail, icon: Icon, tone, spark, sp
               {delta ? <DeltaPill added={delta.added} pct={delta.pct} windowDays={deltaWindowDays} /> : null}
             </div>
             <p className="mt-0.5 truncate text-[11px] text-muted-foreground sm:text-xs">{detail}</p>
-            {/* Fixed-height slot: bottoms stay aligned whether or not a card has a sparkline */}
-            <div className="mt-auto h-7 pt-1">
+            {/* Fixed-height slot keeps bottoms aligned from sm up; phones drop it when there is no line, so cards stay compact */}
+            <div className={cn("mt-auto h-7 pt-1", !(spark && spark.length > 1) && "max-sm:hidden")}>
               {spark && spark.length > 1 ? <Sparkline data={spark} color={sparkColor} /> : null}
             </div>
           </>

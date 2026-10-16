@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarDays,
   Check,
   ChevronRight,
   Loader2,
   LockKeyhole,
   ChevronsUpDown,
-  MessageCircle,
   ShieldCheck,
   Smartphone,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import {
   isValidPhoneNumber,
   parsePhoneNumberFromString,
   type CountryCode,
-} from "libphonenumber-js/mobile"; // mobile-only metadata: landlines can't receive a WhatsApp code
+} from "libphonenumber-js/mobile"; // mobile-only metadata: sign-in numbers are mobiles
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -37,18 +37,22 @@ import { getRoleDisplay } from "@/lib/adminKinds";
 import { getHomeRouteByRole } from "@/lib/roleRoutes";
 import { cn } from "@/lib/utils";
 import { loginAPI } from "@/utils/api";
+import { dobToIso, formatDobInput } from "@/lib/dob";
 
 /**
  * Phone-first sign-in, mobile-first layout.
  *
- *   phone → code (WhatsApp) → pick an account
+ *   mobile number + date of birth → pick an account
  *
- * One code covers the whole number; every account on it is listed to enter.
+ * The date of birth on the member record unlocks the whole number; every account
+ * on it (member, admin roles) is listed to enter.
  */
-type Step = "phone" | "otp" | "accounts";
+type Step = "phone" | "accounts";
 
-const OTP_LENGTH = 4;
-const RESEND_SECONDS = 60;
+/** The shared QA number signs in with 00/00/0000 (loginService TEST_DOB). */
+const TEST_PHONE = "9876543210";
+const TEST_DOB_LABEL = "00/00/0000";
+const TEST_DOB = "0000-00-00";
 
 const serif = { fontFamily: '"Fraunces", Georgia, serif' } as const;
 
@@ -61,13 +65,14 @@ function getErrorMessage(error: unknown): string {
   return "Something went wrong. Please try again.";
 }
 
-const STEP_ORDER: Step[] = ["phone", "otp", "accounts"];
+const STEP_ORDER: Step[] = ["phone", "accounts"];
 
 const FLOW = [
-  { title: "Enter your number", sub: "The one on WhatsApp" },
-  { title: "Type the code", sub: "It arrives in seconds" },
+  { title: "Number and date of birth", sub: "As on your member profile" },
   { title: "Pick your account", sub: "Every role, one login" },
 ];
+
+
 
 /** Corridors we serve most; pinned above the full list so nobody scrolls for them. */
 const PINNED: CountryCode[] = ["IN", "AE", "SA", "QA", "KW", "OM", "BH", "MY", "SG", "GB", "US", "AU"];
@@ -100,16 +105,13 @@ const Login = () => {
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [country, setCountry] = useState<CountryCode>("IN"); // ponytail: IN default; locale sniffing guessed wrong on mobile
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [dob, setDob] = useState("");
   const [accounts, setAccounts] = useState<LoginAccount[]>([]);
   const [ticket, setTicket] = useState("");
   const [loading, setLoading] = useState(false);
   const [enteringId, setEnteringId] = useState<string | null>(null);
-  const [isTestPhone, setIsTestPhone] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(0);
   const [countryOpen, setCountryOpen] = useState(false);
 
-  const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const navigate = useNavigate();
   const { login, isAuthenticated, userRole } = useAuth();
   const { toast } = useToast();
@@ -123,20 +125,10 @@ const Login = () => {
   const dial = getCountryCallingCode(country);
   const phoneIsValid = isValidPhoneNumber(phone, country);
   const fullPhone = `${dial}${phone}`;
-  const otpValue = otp.join("");
+  const isTestPhone = country === "IN" && phone === TEST_PHONE;
+  const dobIso = isTestPhone && dob === TEST_DOB_LABEL ? TEST_DOB : dobToIso(dob);
+  const dobComplete = dob.length === 10;
   const stepIndex = STEP_ORDER.indexOf(step);
-
-  // Resend cooldown ticker.
-  useEffect(() => {
-    if (secondsLeft <= 0) return;
-    const id = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => window.clearTimeout(id);
-  }, [secondsLeft]);
-
-  // Focus the first code box as soon as the code step opens.
-  useEffect(() => {
-    if (step === "otp") otpRefs.current[0]?.focus();
-  }, [step]);
 
   const failWith = useCallback(
     (error: unknown) => {
@@ -144,24 +136,6 @@ const Login = () => {
     },
     [toast]
   );
-
-  const sendCode = async (resend = false) => {
-    if (!phoneIsValid || loading) return;
-
-    setLoading(true);
-    try {
-      const result = await loginAPI.sendOTP(fullPhone, resend);
-      setIsTestPhone(Boolean(result.data?.isTestPhone));
-      setOtp(Array(OTP_LENGTH).fill(""));
-      setSecondsLeft(RESEND_SECONDS);
-      setStep("otp");
-      toast({ title: resend ? "Code resent" : "Code sent", description: result.message });
-    } catch (error) {
-      failWith(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   /** Enter a specific account: swap the ticket for a real session and route in. */
   const enterAccount = useCallback(
@@ -182,12 +156,12 @@ const Login = () => {
     [failWith, login, navigate]
   );
 
-  const verifyCode = async (code: string) => {
-    if (code.length !== OTP_LENGTH || loading) return;
+  const signIn = async () => {
+    if (!phoneIsValid || !dobIso || loading) return;
 
     setLoading(true);
     try {
-      const result = await loginAPI.verifyOTP(fullPhone, code);
+      const result = await loginAPI.verifyDob(fullPhone, dobIso);
       const found = (result.data?.accounts || []) as LoginAccount[];
       const issuedTicket: string = result.data?.ticket;
 
@@ -202,61 +176,28 @@ const Login = () => {
       setStep("accounts");
     } catch (error) {
       failWith(error);
-      setOtp(Array(OTP_LENGTH).fill(""));
-      otpRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpChange = (index: number, raw: string) => {
-    const digits = raw.replace(/\D/g, "");
-    if (!digits) {
-      setOtp((prev) => prev.map((d, i) => (i === index ? "" : d)));
-      return;
-    }
-
-    // Handles both single keystrokes and a pasted / autofilled full code.
-    const next = [...otp];
-    for (let i = 0; i < digits.length && index + i < OTP_LENGTH; i += 1) {
-      next[index + i] = digits[i];
-    }
-    setOtp(next);
-
-    const filledTo = Math.min(index + digits.length, OTP_LENGTH - 1);
-    otpRefs.current[filledTo]?.focus();
-
-    const joined = next.join("");
-    if (joined.length === OTP_LENGTH && !joined.includes("")) {
-      void verifyCode(joined);
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Backspace" && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-    if (event.key === "ArrowLeft" && index > 0) otpRefs.current[index - 1]?.focus();
-    if (event.key === "ArrowRight" && index < OTP_LENGTH - 1) otpRefs.current[index + 1]?.focus();
+  const submitOnEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      void verifyCode(otpValue);
+      void signIn();
     }
   };
 
   const resetToPhone = () => {
     setStep("phone");
-    setOtp(Array(OTP_LENGTH).fill(""));
     setAccounts([]);
     setTicket("");
-    setSecondsLeft(0);
   };
 
   const heading = useMemo(() => {
-    if (step === "phone") return { title: "Sign in", sub: "We'll send a one-time code to your WhatsApp." };
-    if (step === "otp") return { title: "Check WhatsApp", sub: `Code sent to +${dial} ${phone}.` };
+    if (step === "phone") return { title: "Sign in", sub: "Use your mobile number and date of birth." };
     return { title: "Choose an account", sub: "This number holds more than one role." };
-  }, [step, phone, dial]);
+  }, [step]);
 
   return (
     <div className="min-h-[100dvh] bg-[#f6f2ec] text-stone-900 lg:grid lg:grid-cols-[47%_1fr] xl:grid-cols-[44%_1fr]">
@@ -351,7 +292,7 @@ const Login = () => {
         <div className="relative z-10 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-5 py-4 backdrop-blur">
           <ShieldCheck className="h-5 w-5 shrink-0 text-[#f0574f]" />
           <p className="text-[13px] leading-relaxed text-stone-400">
-            Codes are single-use and expire shortly after they&rsquo;re sent.
+            Your date of birth must match your member profile. Too many wrong tries lock the number for a while.
           </p>
         </div>
       </aside>
@@ -389,7 +330,7 @@ const Login = () => {
                 className="-ml-2 mb-4 inline-flex w-fit items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900 disabled:opacity-50"
               >
                 <ArrowLeft className="h-4 w-4" />
-                {step === "otp" ? "Change number" : "Start over"}
+                Start over
               </button>
             )}
 
@@ -478,12 +419,7 @@ const Login = () => {
                           }
                           setPhone(raw.replace(/\D/g, "").slice(0, 15));
                         }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            void sendCode();
-                          }
-                        }}
+                        onKeyDown={submitOnEnter}
                         maxLength={15}
                         className="h-14 rounded-2xl border-stone-200 bg-white pl-[7.75rem] text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
                       />
@@ -495,87 +431,49 @@ const Login = () => {
                     )}
                   </div>
 
-                  <Button
-                    onClick={() => void sendCode()}
-                    disabled={!phoneIsValid || loading}
-                    className="h-14 w-full rounded-2xl text-base font-semibold shadow-[0_10px_24px_-10px_rgba(226,54,54,0.55)] transition-all hover:shadow-[0_14px_30px_-10px_rgba(226,54,54,0.6)] active:scale-[0.99] disabled:shadow-none"
-                  >
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {loading ? "Sending code…" : "Send code"}
-                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-                  </Button>
-
-                  <div className="flex items-start gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3.5">
-                    <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                    <p className="text-xs leading-relaxed text-stone-600">
-                      Your code arrives on <span className="font-semibold text-stone-800">WhatsApp</span>. Make sure
-                      this number is active on WhatsApp.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {step === "otp" && (
-                <div className="space-y-6">
-                  <fieldset>
-                    <legend className="sr-only">Enter the {OTP_LENGTH}-digit code</legend>
-                    <div className="flex justify-between gap-3 sm:justify-start">
-                      {otp.map((digit, index) => (
-                        <Input
-                          key={index}
-                          ref={(el) => {
-                            otpRefs.current[index] = el;
-                          }}
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete={index === 0 ? "one-time-code" : "off"}
-                          value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
-                          disabled={loading}
-                          className={cn(
-                            "h-[66px] w-full max-w-[76px] flex-1 rounded-2xl border-stone-200 bg-white text-center text-2xl font-bold text-stone-900 shadow-sm transition-all",
-                            "focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10",
-                            digit && "border-primary/40 bg-primary/[0.03]"
-                          )}
-                        />
-                      ))}
+                  <div className="space-y-2">
+                    <label htmlFor="login-dob" className="text-[13px] font-semibold text-stone-600">
+                      Date of birth
+                    </label>
+                    <div className="relative">
+                      <CalendarDays className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                      <Input
+                        id="login-dob"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="bday"
+                        placeholder="DD/MM/YYYY"
+                        value={dob}
+                        onChange={(e) => setDob(formatDobInput(e.target.value))}
+                        onKeyDown={submitOnEnter}
+                        maxLength={10}
+                        aria-invalid={dobComplete && !dobIso}
+                        aria-describedby="login-dob-hint"
+                        className="h-14 rounded-2xl border-stone-200 bg-white pl-11 text-base font-medium tracking-wide shadow-sm transition-shadow focus-visible:border-primary/50 focus-visible:ring-4 focus-visible:ring-primary/10"
+                      />
                     </div>
-                  </fieldset>
+                    {dobComplete && !dobIso ? (
+                      <p id="login-dob-hint" className="text-xs font-medium text-destructive">Enter a real date as DD/MM/YYYY.</p>
+                    ) : (
+                      <p id="login-dob-hint" className="text-xs text-stone-500">Day, month and year, as on your member profile.</p>
+                    )}
+                  </div>
 
                   {isTestPhone && (
                     <p className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
-                      Test number — use code <span className="font-bold">1234</span>.
+                      Test number — date of birth <span className="font-bold">{TEST_DOB_LABEL}</span>.
                     </p>
                   )}
 
                   <Button
-                    onClick={() => void verifyCode(otpValue)}
-                    disabled={otpValue.length !== OTP_LENGTH || loading}
-                    className="h-14 w-full rounded-2xl text-base font-semibold shadow-[0_10px_24px_-10px_rgba(226,54,54,0.55)] transition-all active:scale-[0.99] disabled:shadow-none"
+                    onClick={() => void signIn()}
+                    disabled={!phoneIsValid || !dobIso || loading}
+                    className="h-14 w-full rounded-2xl text-base font-semibold shadow-[0_10px_24px_-10px_rgba(226,54,54,0.55)] transition-all hover:shadow-[0_14px_30px_-10px_rgba(226,54,54,0.6)] active:scale-[0.99] disabled:shadow-none"
                   >
                     {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {loading ? "Verifying…" : "Verify"}
+                    {loading ? "Signing in…" : "Sign in"}
+                    {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </Button>
-
-                  <div className="text-center text-sm text-stone-500">
-                    {secondsLeft > 0 ? (
-                      <span>
-                        Resend available in{" "}
-                        <span className="font-semibold tabular-nums text-stone-700">{secondsLeft}s</span>
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => void sendCode(true)}
-                        disabled={loading}
-                        className="font-semibold text-primary transition-colors hover:text-primary/80 disabled:opacity-50"
-                      >
-                        Resend code
-                      </button>
-                    )}
-                  </div>
                 </div>
               )}
 
@@ -627,7 +525,7 @@ const Login = () => {
             <div className="pt-8 lg:hidden">
               <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400">
                 <LockKeyhole className="h-3 w-3" />
-                <span>Secure sign-in · codes are single-use</span>
+                <span>Secure sign-in · wrong tries lock the number</span>
               </div>
             </div>
           </div>

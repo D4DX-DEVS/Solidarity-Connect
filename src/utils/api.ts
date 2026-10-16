@@ -142,10 +142,16 @@ export const authAPI = {
 };
 
 /**
- * Phone-first sign-in: one WhatsApp code per number, then pick which of that
- * number's accounts to enter. Replaces the old pick-a-role-then-send-a-code flow.
+ * Phone-first sign-in: mobile number + date of birth, then pick which of that
+ * number's accounts to enter. (sendOTP/verifyOTP: the older WhatsApp code, unused by the app.)
  */
 export const loginAPI = {
+  verifyDob: (phone: string, dob: string) =>
+    apiCall('/auth/login/verify-dob', {
+      method: 'POST',
+      body: JSON.stringify({ phone, dob }),
+    }),
+
   sendOTP: (phone: string, resend = false) =>
     apiCall('/auth/login/send-otp', {
       method: 'POST',

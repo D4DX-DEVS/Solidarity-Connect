@@ -132,6 +132,7 @@ const Dashboard = () => {
             title="Group Performance"
             description="Members, active rate and admin status by group"
             contentClassName="p-0 pt-0 sm:p-0 sm:pt-0"
+            flatOnPhone
           >
             <HierarchyScorecard rows={groupRows} level="area" />
           </ChartCard>

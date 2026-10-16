@@ -1,0 +1,160 @@
+[
+  {
+    "_id": "6a757b16228bc0865b0d82c9",
+    "name": "Muhammed Ilyas",
+    "phone": "9995707129",
+    "role": "district_admin",
+    "adminKind": "area",
+    "district": "6a141d94a19e59c11ba29be4",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_members",
+      "manage_groups",
+      "approve_transfers",
+      "send_notifications",
+      "view_reports",
+      "bulk_import",
+      "manage_meetings",
+      "manage_baithul_maal"
+    ],
+    "isLeader": false,
+    "roleTag": {
+      "listingOrder": null,
+      "roleDescription": "ALAPPUZHA"
+    },
+    "extraRoleTags": [],
+    "createdAt": "2026-08-07T06:28:38.888Z",
+    "updatedAt": "2026-08-19T05:43:01.084Z",
+    "__v": 0,
+    "lastLogin": "2026-08-19T05:43:01.082Z"
+  },
+  {
+    "_id": "6a757b17228bc0865b0d82cf",
+    "name": "Muhammed Ilyas",
+    "phone": "9995707129",
+    "role": "group_admin",
+    "adminKind": "area",
+    "district": "6a141d94a19e59c11ba29be4",
+    "group": "6a141d98a19e59c11ba29c13",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_members",
+      "view_reports",
+      "bulk_import",
+      "manage_baithul_maal"
+    ],
+    "isLeader": false,
+    "roleTag": {
+      "type": "area",
+      "name": "Muhammed Ilyas",
+      "roleDescription": "ALAPPUZHA"
+    },
+    "extraRoleTags": [],
+    "createdAt": "2026-08-07T06:28:39.007Z",
+    "updatedAt": "2026-08-19T09:44:25.897Z",
+    "__v": 0,
+    "lastLogin": "2026-08-19T09:44:25.896Z"
+  },
+  {
+    "_id": "6a757b17228bc0865b0d82da",
+    "name": "Muhammed Ilyas",
+    "phone": "9995707129",
+    "role": "group_admin",
+    "adminKind": "coordinator",
+    "district": "6a141d94a19e59c11ba29be4",
+    "group": "6a141d98a19e59c11ba29c13",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_members",
+      "view_reports",
+      "bulk_import",
+      "manage_baithul_maal"
+    ],
+    "isLeader": false,
+    "roleTag": {
+      "type": "coordinator",
+      "name": "Muhammed Ilyas",
+      "areaId": "6a141d98a19e59c11ba29c13",
+      "roleDescription": "ALAPPUZHA"
+    },
+    "extraRoleTags": [],
+    "createdAt": "2026-08-07T06:28:39.253Z",
+    "updatedAt": "2026-08-12T06:17:28.675Z",
+    "__v": 0,
+    "lastLogin": "2026-08-10T06:42:55.396Z"
+  },
+  {
+    "_id": "6a757b17228bc0865b0d82d6",
+    "name": "Muhammed Ilyas",
+    "phone": "9995707129",
+    "role": "group_admin",
+    "adminKind": "murabi",
+    "district": "6a141d94a19e59c11ba29be4",
+    "group": "6a141d98a19e59c11ba29c13",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_members",
+      "view_reports",
+      "bulk_import",
+      "manage_baithul_maal"
+    ],
+    "isLeader": false,
+    "roleTag": {
+      "type": "murabi",
+      "name": "Muhammed Ilyas",
+      "areaId": "6a141d98a19e59c11ba29c13",
+      "roleDescription": "ALAPPUZHA"
+    },
+    "extraRoleTags": [],
+    "createdAt": "2026-08-07T06:28:39.128Z",
+    "updatedAt": "2026-08-12T15:23:34.965Z",
+    "__v": 0,
+    "lastLogin": "2026-08-12T15:23:34.959Z"
+  },
+  {
+    "_id": "6a757b16228bc0865b0d82c3",
+    "name": "Muhammed Ilyas",
+    "phone": "9995707129",
+    "role": "state_admin",
+    "adminKind": "area",
+    "isActive": true,
+    "otp": {
+      "attempts": 0
+    },
+    "permissions": [
+      "manage_users",
+      "manage_members",
+      "manage_districts",
+      "manage_groups",
+      "approve_transfers",
+      "send_notifications",
+      "view_reports",
+      "bulk_import",
+      "manage_meetings",
+      "manage_baithul_maal"
+    ],
+    "isLeader": false,
+    "roleTag": {
+      "listingOrder": null,
+      "roleDescription": "ALAPPUZHA"
+    },
+    "extraRoleTags": [],
+    "createdAt": "2026-08-07T06:28:38.729Z",
+    "updatedAt": "2026-10-01T05:41:14.625Z",
+    "__v": 0,
+    "lastLogin": "2026-10-01T05:41:14.625Z",
+    "district": "6a141d94a19e59c11ba29be4"
+  }
+]

@@ -1,0 +1,28 @@
+[
+  {
+    "_id": "6a7eba1f389f6324f847b0eb",
+    "name": "muhammed ilyas mk",
+    "phone": "+919995707129",
+    "district": "6a141d94a19e59c11ba29be4",
+    "group": "6a141d98a19e59c11ba29c18",
+    "status": "Active",
+    "baithulMaal": {
+      "monthlyAmount": 0,
+      "totalPaid": 0
+    },
+    "isLeader": false,
+    "roleTag": {
+      "listingOrder": null
+    },
+    "isApproved": true,
+    "createdBy": "6a757b16228bc0865b0d82c3",
+    "joinedDate": "2026-08-14T06:47:59.614Z",
+    "lastActive": "2026-08-14T06:47:59.614Z",
+    "extraRoleTags": [],
+    "createdAt": "2026-08-14T06:47:59.617Z",
+    "updatedAt": "2026-08-19T09:31:32.380Z",
+    "__v": 0,
+    "updatedBy": "6a757b17228bc0865b0d82cf",
+    "avatar": "https://d4dx-storage.blr1.cdn.digitaloceanspaces.com/solidarity-uploads/afa4c5901bc6a33e11cc27c1ca815856.png"
+  }
+]

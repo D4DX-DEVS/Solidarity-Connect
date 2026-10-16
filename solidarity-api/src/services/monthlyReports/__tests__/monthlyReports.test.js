@@ -1,7 +1,7 @@
 import { normaliseFormFields, sumColumns } from '../fields.js';
-import { validateAnswers, isFieldVisible, changedFieldIds } from '../answers.js';
-import { deadlineFor, editState, parsePeriod, parseYear, monthsElapsed } from '../period.js';
-import { consolidate, consolidateYear } from '../consolidate.js';
+import { validateAnswers, isFieldVisible, changedFieldIds, canUpgradeForm, repeatedFieldIds } from '../answers.js';
+import { deadlineFor, editState, lockTimeFor, parsePeriod, parseYear, monthsElapsed } from '../period.js';
+import { consolidate, consolidateYear, unitsOf } from '../consolidate.js';
 import { DEFAULT_FORMS } from '../defaultForms.js';
 
 const num = (id, extra = {}) => ({ id, type: 'number', label: `N${id}`, required: true, sum: true, ...extra });
@@ -145,18 +145,35 @@ describe('period', () => {
     expect(parsePeriod({ year: { $gt: 1 }, month: '1' }).error).toBeDefined();
   });
 
-  test('deadline is 23:59:59 IST on the deadline day of the next month', () => {
+  test('due date (dashboard reminder) is 23:59:59 IST on the deadline day of the next month', () => {
     expect(deadlineFor(2026, 9, 10).toISOString()).toBe('2026-10-10T18:29:59.999Z');
     expect(deadlineFor(2026, 12, 10).toISOString()).toBe('2027-01-10T18:29:59.999Z');
   });
 
-  test('editState: open, locked, unlocked, future', () => {
-    const now = new Date('2026-10-06T06:00:00Z'); // 6 Oct IST
-    expect(editState({ year: 2026, month: 9, deadlineDay: 10, now })).toMatchObject({ locked: false, future: false });
-    expect(editState({ year: 2026, month: 8, deadlineDay: 10, now })).toMatchObject({ locked: true });
-    expect(editState({ year: 2026, month: 8, deadlineDay: 10, now, unlockedUntil: new Date('2026-10-09T00:00:00Z') }))
+  test('a month locks at the end of the second month after it, 23:59:59 IST', () => {
+    expect(lockTimeFor(2026, 8).toISOString()).toBe('2026-10-31T18:29:59.999Z');
+    expect(lockTimeFor(2026, 10).toISOString()).toBe('2026-12-31T18:29:59.999Z');
+    expect(lockTimeFor(2026, 11).toISOString()).toBe('2027-01-31T18:29:59.999Z');
+  });
+
+  test('editState: in October, August to October are open; July is locked', () => {
+    const now = new Date('2026-10-16T06:00:00Z'); // 16 Oct IST
+    expect(editState({ year: 2026, month: 10, now })).toMatchObject({ locked: false, future: false });
+    expect(editState({ year: 2026, month: 9, now })).toMatchObject({ locked: false });
+    expect(editState({ year: 2026, month: 8, now })).toMatchObject({ locked: false });
+    expect(editState({ year: 2026, month: 7, now })).toMatchObject({ locked: true, future: false });
+    expect(editState({ year: 2026, month: 11, now })).toMatchObject({ locked: true, future: true });
+  });
+
+  test('editState: the window ends with the IST month, and an unlock reopens a locked month', () => {
+    const lastMoment = new Date('2026-10-31T18:29:00Z'); // 31 Oct 23:59 IST
+    const nextMorning = new Date('2026-10-31T18:31:00Z'); // 1 Nov 00:01 IST
+    expect(editState({ year: 2026, month: 8, now: lastMoment }).locked).toBe(false);
+    expect(editState({ year: 2026, month: 8, now: nextMorning }).locked).toBe(true);
+    expect(editState({ year: 2025, month: 12, now: new Date('2027-01-05T06:00:00Z') }).locked).toBe(true);
+    expect(editState({ year: 2026, month: 11, now: new Date('2027-01-05T06:00:00Z') }).locked).toBe(false);
+    expect(editState({ year: 2026, month: 7, now: new Date('2026-10-16T06:00:00Z'), unlockedUntil: new Date('2026-10-20T00:00:00Z') }))
       .toMatchObject({ locked: false });
-    expect(editState({ year: 2026, month: 11, deadlineDay: 10, now })).toMatchObject({ locked: true, future: true });
   });
 });
 
@@ -271,6 +288,57 @@ describe('consolidateYear', () => {
   });
 });
 
+describe('consolidated units', () => {
+  const districts = [{ _id: 'd1', name: 'Kozhikode' }];
+  const areas = [{ _id: 'a1', name: 'Medical College', district: 'd1' }, { _id: 'a2', name: 'Feroke', district: 'd1' }];
+  const sub = new Date('2026-10-02T00:00:00Z');
+  const n = (pairs) => pairs.map(([fieldId, value]) => ({ fieldId, value }));
+  const october = {
+    _id: 'r1', level: 'area', district: 'd1', area: 'a1', month: 10, submittedAt: sub, numbers: n([[2, 5], [3, 2]]),
+    answers: {
+      f2: 5, f3: 2, f5: 2,
+      g1: [{ name: 'Kovoor', f2: 3, f3: 1, f4: 'notes' }, { name: 'Palazhi', f2: 2, f3: 1 }],
+    },
+  };
+
+  test('unitsOf: each named entry with its numbers, text answers left out', () => {
+    expect(unitsOf(october.answers)).toEqual([
+      { name: 'Kovoor', numbers: { 2: 3, 3: 1 } },
+      { name: 'Palazhi', numbers: { 2: 2, 3: 1 } },
+    ]);
+    expect(unitsOf({ f2: 1 })).toEqual([]);
+    expect(unitsOf(undefined)).toEqual([]);
+  });
+
+  test('a unit named in two sections is one row', () => {
+    expect(unitsOf({ g1: [{ name: 'Kovoor', f2: 3 }], g6: [{ name: 'kovoor ', f7: 4 }] })).toEqual([
+      { name: 'Kovoor', numbers: { 2: 3, 7: 4 } },
+    ]);
+  });
+
+  test('month: area rows carry their units; unsubmitted and district rows do not', () => {
+    const stub = { _id: 'r2', level: 'area', district: 'd1', area: 'a2', submittedAt: null, numbers: [], answers: { g1: [{ name: 'X', f2: 9 }] } };
+    const district = { _id: 'r3', level: 'district', district: 'd1', submittedAt: sub, numbers: n([[1, 1]]), answers: {} };
+    const [koz] = consolidate({ districts, areas, reports: [october, stub, district], includeState: false }).districts;
+    expect(koz.areas.find(a => a.id === 'a1').report.units.map(u => u.name)).toEqual(['Kovoor', 'Palazhi']);
+    expect(koz.areas.find(a => a.id === 'a2').report.units).toEqual([]);
+    expect(koz.report.units).toBeUndefined();
+  });
+
+  test('year: the same unit across months is added up by name', () => {
+    const november = {
+      ...october, _id: 'r4', month: 11,
+      answers: { g1: [{ name: 'kovoor', f2: 1 }, { name: 'Chevayur', f2: 4, f3: 2 }] },
+    };
+    const [koz] = consolidateYear({ districts, areas, reports: [october, november], includeState: false, months: 11 }).districts;
+    expect(koz.areas.find(a => a.id === 'a1').report.units).toEqual([
+      { name: 'Kovoor', numbers: { 2: 4, 3: 1 } },
+      { name: 'Palazhi', numbers: { 2: 2, 3: 1 } },
+      { name: 'Chevayur', numbers: { 2: 4, 3: 2 } },
+    ]);
+  });
+});
+
 describe('DEFAULT_FORMS', () => {
   test('each seeded form is valid', () => {
     for (const level of ['state', 'district', 'area']) {
@@ -302,5 +370,90 @@ describe('sumColumns', () => {
   test('skips non-summed fields and leaves section null before any heading', () => {
     const columns = sumColumns([num(1), num(2, { sum: false }), { id: 3, type: 'text', label: 'Note' }]);
     expect(columns).toEqual([{ id: 1, label: 'N1', section: null, parentId: null }]);
+  });
+});
+
+describe('per-unit sections (repeat headings)', () => {
+  const fields = [
+    { id: 7, type: 'heading', label: 'Unit', repeat: true, itemLabel: 'Unit' },
+    num(8),
+    num(9, { condition: { fieldId: 8, operator: 'greater_than', value: '0' } }),
+    { id: 1, type: 'heading', label: 'Area' },
+    num(2),
+    num(3, { condition: { fieldId: 8, operator: 'greater_than', value: '4' } }),
+  ];
+
+  test('normaliseFormFields keeps repeat and itemLabel on headings only', () => {
+    const { fields: cleaned, error } = normaliseFormFields(
+      [{ id: 1, type: 'heading', label: 'Unit', repeat: true, itemLabel: ' Unit ' }, num(2), { id: 3, type: 'heading', label: 'Area', repeat: 'yes' }],
+      { savedIds: [], nextFieldId: 1 },
+    );
+    expect(error).toBeUndefined();
+    expect(cleaned[0]).toEqual({ id: 1, type: 'heading', label: 'Unit', repeat: true, itemLabel: 'Unit' });
+    expect(cleaned[2].repeat).toBeUndefined();
+  });
+
+  test('a rule outside the section may use a per-unit number (its total) but not other types', () => {
+    const ok = normaliseFormFields(fields, { savedIds: [], nextFieldId: 1 });
+    expect(ok.error).toBeUndefined();
+    const bad = normaliseFormFields([
+      { id: 1, type: 'heading', label: 'Unit', repeat: true },
+      { id: 2, type: 'text', label: 'Venue' },
+      { id: 3, type: 'heading', label: 'Area' },
+      num(4, { condition: { fieldId: 2, operator: 'is_not_empty' } }),
+    ], { savedIds: [], nextFieldId: 1 });
+    expect(bad.error).toMatch(/per-unit/);
+  });
+
+  test('stores each named unit and the totals as the section answers', () => {
+    const { answers, numbers, errors } = validateAnswers(fields, {
+      g7: [{ name: ' Kovoor ', f8: 3, f9: 1 }, { name: 'Palazhi', f8: '2', f9: 4, junk: 1 }],
+      f8: 999, // a client-sent total is ignored
+      f2: 1,
+      f3: 6,
+    });
+    expect(errors).toEqual([]);
+    expect(answers.g7).toEqual([{ name: 'Kovoor', f8: 3, f9: 1 }, { name: 'Palazhi', f8: 2, f9: 4 }]);
+    expect(answers).toMatchObject({ f8: 5, f9: 5, f2: 1, f3: 6 });
+    expect(numbers).toEqual([{ fieldId: 8, value: 5 }, { fieldId: 9, value: 5 }, { fieldId: 2, value: 1 }, { fieldId: 3, value: 6 }]);
+  });
+
+  test('shown-when rules inside a unit read that unit; outside they read the total', () => {
+    const { answers, errors } = validateAnswers(fields, {
+      g7: [{ name: 'A', f8: 0, f9: 7 }, { name: 'B', f8: 1 }],
+      f2: 0,
+      f3: 1,
+    });
+    // A held no meeting, so its f9 is hidden and dropped; B must answer f9
+    expect(errors).toEqual([expect.objectContaining({ fieldId: 9, entry: 1, message: expect.stringMatching(/^B: /) })]);
+    expect(answers.g7[0]).toEqual({ name: 'A', f8: 0 });
+    // Total f8 = 1, not more than 4: f3 is hidden
+    expect(answers.f3).toBeUndefined();
+  });
+
+  test('needs at least one unit, a name on each, and no name twice', () => {
+    expect(validateAnswers(fields, { f2: 1 }).errors[0]).toMatchObject({ fieldId: 7, message: expect.stringMatching(/at least one unit/) });
+    const { errors } = validateAnswers(fields, { g7: [{ name: '', f8: 0 }, { name: 'x', f8: 0 }, { name: 'X', f8: 0 }], f2: 0 });
+    expect(errors.map(e => [e.fieldId, e.entry])).toEqual([[7, 0], [7, 2]]);
+  });
+
+  test('repeatedFieldIds maps questions to their repeating heading', () => {
+    expect([...repeatedFieldIds(fields)]).toEqual([[8, 7], [9, 7]]);
+  });
+
+  test('changedFieldIds names the heading when the unit list changes', () => {
+    expect(changedFieldIds({ g7: [{ name: 'A', f8: 1 }], f8: 1 }, { g7: [{ name: 'A', f8: 2 }], f8: 2 })).toEqual([7, 8]);
+  });
+
+  test('canUpgradeForm: a newer form must keep every answered question and its type', () => {
+    const v3 = [{ id: 7, type: 'heading', label: 'Unit' }, num(8), num(2)];
+    const v4 = [{ id: 7, type: 'heading', label: 'Unit', repeat: true }, num(8), num(2), num(11)];
+    expect(canUpgradeForm(v3, v4)).toBe(true);
+    expect(canUpgradeForm(v3, [num(8)])).toBe(false);
+    expect(canUpgradeForm(v3, [num(8), { id: 2, type: 'text', label: 'x' }])).toBe(false);
+  });
+
+  test('the seeded area form fills units one by one', () => {
+    expect(DEFAULT_FORMS.area.fields[0]).toMatchObject({ id: 7, type: 'heading', repeat: true });
   });
 });

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Shield, Star, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
 import { useAuth } from "@/contexts/AuthContext";
-import { usersAPI, leadersAPI, membersAPI, districtsAPI } from "@/utils/api";
+import { usersAPI, leadersAPI, membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 import { getRoleLabel } from "@/lib/adminKinds";
 import { LEADER_ROLE_TYPES, canManageLeaderTarget, canManageRoleType } from "@/lib/roleHierarchy";
 import { confirmAction } from "@/lib/confirm";
@@ -89,6 +90,11 @@ const RoleManagement = () => {
   // The leader directory is org-wide for every role; the user/member lists only narrow by district for state admins.
   const showDistrict = isLeadersView || isStateAdmin;
   const district = showDistrict ? list.getParam("district") : "";
+  // Area narrows within a district: the one picked, or a district admin's own (their lists are held to it).
+  const isDistrictAdmin = userRole === "district_admin";
+  const areaDistrict = district || (isDistrictAdmin && !isLeadersView ? authUser?.district?._id ?? "" : "");
+  const showArea = !!areaDistrict;
+  const group = showArea ? list.getParam("group") : "";
 
   const [users, setUsers] = useState<UserWithLeader[]>([]);
   const [loading, setLoading] = useState(true);   // initial full-screen load
@@ -130,6 +136,7 @@ const RoleManagement = () => {
       if (search) params.search = search;
       if (leaderStatus) params.isLeader = leaderStatus === "yes" ? "true" : "false";
       if (district) params.district = district;
+      if (group) params.group = group;
 
       let result;
       if (isMemberView) {
@@ -170,7 +177,7 @@ const RoleManagement = () => {
         setFetching(false);
       }
     }
-  }, [list.page, list.pageSize, search, leaderStatus, district, roleFilter, isMemberView, byPerson, toast]);
+  }, [list.page, list.pageSize, search, leaderStatus, district, group, roleFilter, isMemberView, byPerson, toast]);
 
   useEffect(() => {
     if (!isLeadersView) {
@@ -189,6 +196,16 @@ const RoleManagement = () => {
     });
   }, [showDistrict]);
 
+  // Area options for the chosen district. directory=true: the read-only picker, so a
+  // district admin browsing the org-wide Leaders view sees other districts' areas too.
+  const { data: areas = [] } = useQuery({
+    queryKey: ["role-management", "areas", areaDistrict],
+    queryFn: async () =>
+      ((await groupsAPI.getGroups({ limit: 500, district: areaDistrict, directory: "true" })).data || []) as { _id: string; name: string }[],
+    enabled: showArea,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const fetchLeaders = useCallback(async () => {
     const requestId = ++leadersRequestRef.current;
     setLeadersLoading(true);
@@ -197,6 +214,7 @@ const RoleManagement = () => {
       const params: Record<string, string> = { limit: "1000" };
       if (levelFilter) params.roleType = levelFilter;
       if (district) params.districtId = district;
+      if (group) params.groupId = group;
       if (search) params.search = search;
 
       const result = await leadersAPI.getLeaders(params);
@@ -213,7 +231,7 @@ const RoleManagement = () => {
     } finally {
       if (requestId === leadersRequestRef.current) setLeadersLoading(false);
     }
-  }, [levelFilter, district, search, toast]);
+  }, [levelFilter, district, group, search, toast]);
 
   useEffect(() => {
     if (isLeadersView) {
@@ -297,7 +315,7 @@ const RoleManagement = () => {
     return () => {
       const q = phoneSearchKey(user.phone);
       setSearchDraft(q);
-      setParams({ role: view === defaultRole ? "" : view, q, leader: "", district: "" });
+      setParams({ role: view === defaultRole ? "" : view, q, leader: "", district: "", group: "" });
     };
   };
 
@@ -307,11 +325,11 @@ const RoleManagement = () => {
     isMemberView ? user.status || "Member" : user.role ? getRoleLabel(user.role, user.adminKind) : "Member";
 
   const leaderDirectoryCount = leaderGroups.reduce((sum, group) => sum + group.leaders.length, 0);
-  const activeFilterCount = [district, !isLeadersView && leaderStatus, isLeadersView && levelFilter].filter(Boolean).length;
+  const activeFilterCount = [district, group, !isLeadersView && leaderStatus, isLeadersView && levelFilter].filter(Boolean).length;
   const filtersActive = activeFilterCount > 0 || !!search;
   const clearFilters = () => {
     setSearchDraft("");
-    setParams({ q: "", district: "", leader: "", level: "" });
+    setParams({ q: "", district: "", group: "", leader: "", level: "" });
   };
   const countLabel = isLeadersView
     ? leadersLoading && leaderGroups.length === 0 ? undefined : `${leaderTotal} ${leaderTotal === 1 ? "leader" : "leaders"}`
@@ -442,7 +460,13 @@ const RoleManagement = () => {
           district={showDistrict ? {
             value: district || ALL,
             options: [{ value: ALL, label: "All Districts" }, ...districts.map((d) => ({ value: d._id, label: d.name }))],
-            onChange: (v) => setParam("district", v === ALL ? "" : v),
+            // A new district empties the area pick — it belonged to the old one
+            onChange: (v) => setParams({ district: v === ALL ? "" : v, group: "" }),
+          } : undefined}
+          area={showArea ? {
+            value: group || ALL,
+            options: [{ value: ALL, label: "All Areas" }, ...areas.map((a) => ({ value: a._id, label: a.name }))],
+            onChange: (v) => setParam("group", v === ALL ? "" : v),
           } : undefined}
           leaderStatus={isLeadersView ? undefined : { value: leaderStatus || ALL, options: LEADER_STATUS_OPTIONS, onChange: (v) => setParam("leader", v === ALL ? "" : v) }}
           countLabel={countLabel}
