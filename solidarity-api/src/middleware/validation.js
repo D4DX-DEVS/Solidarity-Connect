@@ -20,6 +20,17 @@ export const phoneInputValidation = body('phone')
   .matches(/^([6-9]\d{9}|\+91[6-9]\d{9})$/)
   .withMessage('Please enter a valid 10-digit phone number (e.g., 9876543210)');
 
+// Members may live abroad: Indian 10-digit (optionally +91), or +country-coded
+// E.164 digits. Same rule as Member.phone; the form validates per country first.
+const MEMBER_PHONE = /^([6-9]\d{9}|\+91[6-9]\d{9}|\+(?!91)\d{11,15})$/;
+const MEMBER_PHONE_MESSAGE = 'Please enter a valid mobile number with country code (e.g., +919876543210, +971501234567)';
+
+export const memberPhoneValidation = body('phone')
+  .notEmpty()
+  .withMessage('Phone number is required *')
+  .matches(MEMBER_PHONE)
+  .withMessage(MEMBER_PHONE_MESSAGE);
+
 export const phoneValidation = body('phone')
   .matches(/^\+91[6-9]\d{9}$/)
   .withMessage('Please enter a valid Indian phone number');
@@ -61,7 +72,7 @@ export const verifyOTPValidation = [
 // Custom validation for member creation that handles role-based requirements
 export const createMemberValidation = [
   nameValidation,
-  phoneInputValidation,
+  memberPhoneValidation,
   emailValidation,
   // District and group validation - conditional based on user role
   body('district')
@@ -110,8 +121,8 @@ export const updateMemberValidation = [
   nameValidation.optional(),
   body('phone')
     .optional({ checkFalsy: true })
-    .matches(/^([6-9]\d{9}|\+91[6-9]\d{9})$/)
-    .withMessage('Please enter a valid 10-digit phone number (e.g., 9876543210)'),
+    .matches(MEMBER_PHONE)
+    .withMessage(MEMBER_PHONE_MESSAGE),
   emailValidation,
   body('district')
     .optional({ checkFalsy: true })

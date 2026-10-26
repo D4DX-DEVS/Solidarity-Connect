@@ -7,7 +7,7 @@ import { OTP_DIGITS } from '../services/msghexService.js';
 import { loginValidation, verifyOTPValidation } from '../middleware/validation.js';
 import { authenticate } from '../middleware/auth.js';
 import User from '../models/User.js';
-import Member from '../models/Member.js';
+import Member, { SIGN_IN_STATUSES, canMemberSignIn } from '../models/Member.js';
 import MemberAuth from '../models/MemberAuth.js';
 
 const router = express.Router();
@@ -329,8 +329,7 @@ router.post('/switch-role', [
     let phone;
     if (decoded.userType === 'member') {
       const memberAuth = await MemberAuth.findById(decoded.id).populate('member', 'phone status isApproved');
-      if (!memberAuth || !memberAuth.isActive || !memberAuth.member ||
-          memberAuth.member.status !== 'Active' || !memberAuth.member.isApproved) {
+      if (!memberAuth || !memberAuth.isActive || !canMemberSignIn(memberAuth.member)) {
         return res.status(401).json({
           success: false,
           message: 'Current session identity is no longer valid.'
@@ -354,7 +353,7 @@ router.post('/switch-role', [
     if (targetRole === 'member') {
       const member = await Member.findOne({
         phone: { $in: phoneVariants },
-        status: 'Active',
+        status: { $in: SIGN_IN_STATUSES },
         isApproved: true
       })
         .populate('district', 'name')
@@ -371,11 +370,10 @@ router.post('/switch-role', [
       if (!memberAuth) {
         memberAuth = await MemberAuth.createForMember(member._id);
       }
+      // isActive was copied from the status when the row was made; the status checked above is current
       if (!memberAuth.isActive) {
-        return res.status(403).json({
-          success: false,
-          message: 'Member account is inactive.'
-        });
+        memberAuth.isActive = true;
+        await memberAuth.save({ validateModifiedOnly: true });
       }
 
       memberAuth.lastLogin = new Date();

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import Member from '../models/Member.js';
+import Member, { SIGN_IN_STATUSES } from '../models/Member.js';
 import MemberAuth from '../models/MemberAuth.js';
 import LoginOtp from '../models/LoginOtp.js';
 import LoginAttempt from '../models/LoginAttempt.js';
@@ -121,7 +121,7 @@ export async function listAccounts(phone) {
 
   const member = await Member.findOne({
     phone: { $in: variants },
-    status: 'Active',
+    status: { $in: SIGN_IN_STATUSES },
     isApproved: true,
   })
     .populate('district', 'name')
@@ -318,14 +318,18 @@ export async function verifyLoginDob(phone, dob) {
     return { success: false, status: 429, message: `Too many wrong tries. Try again in ${wait} minute${wait === 1 ? '' : 's'}.` };
   }
 
-  const accounts = await listAccounts(bare);
-  if (accounts.length === 0) {
+  const [accounts, members] = await Promise.all([
+    listAccounts(bare),
+    Member.find({ phone: { $in: phoneVariants(bare) } }).select('dateOfBirth status isApproved').lean(),
+  ]);
+  if (accounts.length === 0 && members.length === 0) {
     return { success: false, status: 404, message: 'This number is not registered. Please contact your administrator.' };
   }
 
-  const members = await Member.find({ phone: { $in: phoneVariants(bare) } }).select('dateOfBirth').lean();
   const dobs = new Set(members.map((m) => dobKey(m.dateOfBirth)).filter(Boolean));
   if (bare === TEST_PHONE) dobs.add(TEST_DOB);
+  // A member whose status does not allow sign-in (Inactive, Dismissed, …) and no admin login
+  const blocked = accounts.length === 0 ? blockedMessage(members) : null;
   if (dobs.size === 0) {
     return {
       success: false,
@@ -347,7 +351,18 @@ export async function verifyLoginDob(phone, dob) {
   }
 
   if (attempt) await attempt.deleteOne();
+  // Only after the date of birth matches, so a stranger cannot read someone's status
+  if (blocked) return { success: false, status: 403, message: blocked };
   return { success: true, message: 'Verified.', accounts, ticket: signTicket(bare) };
+}
+
+/** Why a registered number cannot sign in, in words for the member. */
+function blockedMessage(members) {
+  const member = members[0];
+  if (!member) return 'This number is not registered. Please contact your administrator.';
+  if (!member.isApproved) return 'Your membership is waiting for approval. Please contact your administrator.';
+  if (member.status === 'Inactive') return 'Your membership is Inactive, so you cannot sign in yet. Ask your admin to make it Active.';
+  return `Your membership status is "${member.status}", so you cannot sign in. Please contact your administrator.`;
 }
 
 function signAdminToken(user) {
@@ -378,7 +393,7 @@ export async function selectAccount(phone, accountId, accountType) {
     const member = await Member.findOne({
       _id: accountId,
       phone: { $in: variants },
-      status: 'Active',
+      status: { $in: SIGN_IN_STATUSES },
       isApproved: true,
     })
       .populate('district', 'name')
@@ -392,10 +407,8 @@ export async function selectAccount(phone, accountId, accountType) {
     if (!memberAuth) {
       memberAuth = await MemberAuth.createForMember(member._id);
     }
-    if (!memberAuth.isActive) {
-      return { success: false, status: 403, message: 'This member account is inactive.' };
-    }
-
+    // isActive was copied from the status when the row was made; the status checked above is current
+    memberAuth.isActive = true;
     memberAuth.lastLogin = new Date();
     await memberAuth.save({ validateModifiedOnly: true });
 
