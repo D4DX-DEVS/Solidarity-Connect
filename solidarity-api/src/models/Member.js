@@ -207,6 +207,12 @@ memberSchema.virtual('displayName').get(function() {
   return this.name;
 });
 
+/** Member statuses that may sign in (user rule 2026-10-16): Abroad members are still members. */
+export const SIGN_IN_STATUSES = ['Active', 'Abroad'];
+
+/** Whether an approved member's status lets them sign in. */
+export const canMemberSignIn = (member) => Boolean(member?.isApproved && SIGN_IN_STATUSES.includes(member.status));
+
 // Method to check if member is active
 memberSchema.methods.isActiveMember = function() {
   return this.status === 'Active' && this.isApproved;

@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import otpService from '../services/otpService.js';
+import { phoneVariants } from '../services/loginService.js';
 import Member from '../models/Member.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
@@ -540,7 +540,7 @@ router.post('/', authenticate, requireRole(['state_admin']), autoAssignDistrictG
     // Match all stored formats (+91-prefixed and 10-digit) so the same person
     // can't be added twice with a different phone format.
     const existingMember = await Member.findOne({
-      phone: { $in: otpService.getPhoneVariants(memberData.phone) }
+      phone: { $in: phoneVariants(memberData.phone) }
     });
     if (existingMember) {
       return res.status(400).json({
@@ -616,7 +616,7 @@ router.put('/:id', authenticate, requireRole(['state_admin']), autoAssignDistric
     // If phone is being updated, check for duplicates (all stored formats)
     if (updateData.phone && updateData.phone !== member.phone) {
       const existingMember = await Member.findOne({
-        phone: { $in: otpService.getPhoneVariants(updateData.phone) },
+        phone: { $in: phoneVariants(updateData.phone) },
         _id: { $ne: member._id }
       });
       

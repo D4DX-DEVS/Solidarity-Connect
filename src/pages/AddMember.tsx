@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { membersAPI, districtsAPI, groupsAPI } from "@/utils/api";
 import { FEATURES } from "@/lib/features";
 import { DateOfBirthInput } from "@/components/shared/DateOfBirthInput";
+import { PhoneNumberInput, phoneNumberError } from "@/components/shared/PhoneNumberInput";
 
 interface UserContext {
   userRole: string;
@@ -166,10 +167,11 @@ const AddMember = () => {
     }
     
     // Validate phone number format
-    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    const phoneError = phoneNumberError(formData.phone);
+    if (phoneError) {
       toast({
         title: "Invalid Phone Number",
-        description: "Phone number must be 10 digits starting with 6, 7, 8, or 9",
+        description: phoneError,
         variant: "destructive"
       });
       return;
@@ -276,24 +278,11 @@ const AddMember = () => {
 
               <div className="space-y-2">
                 <label htmlFor="member-phone" className="text-sm font-medium text-foreground">Phone Number *</label>
-                <Input
+                <PhoneNumberInput
                   id="member-phone"
-                  type="tel"
-                  placeholder="9876543210"
-                  required
-                  maxLength={10}
                   value={formData.phone}
-                  onChange={(e) => {
-                    const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
-                    setFormData({ ...formData, phone: cleaned });
-                  }}
+                  onChange={(phone) => setFormData((prev) => ({ ...prev, phone }))}
                 />
-                {formData.phone && formData.phone.length !== 10 ? (
-                  <p className="text-xs text-destructive">Please enter 10 digits.</p>
-                ) : null}
-                {formData.phone && formData.phone.length === 10 && !/^[6-9]/.test(formData.phone) ? (
-                  <p className="text-xs text-destructive">Phone number must start with 6, 7, 8, or 9.</p>
-                ) : null}
               </div>
 
               <div className="space-y-2">

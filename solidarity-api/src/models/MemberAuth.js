@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { canMemberSignIn } from './Member.js';
 
 const memberAuthSchema = new mongoose.Schema({
   member: {
@@ -158,7 +159,7 @@ memberAuthSchema.statics.createForMember = async function(memberId) {
   const memberAuth = new this({
     member: memberId,
     phone: member.phone,
-    isActive: member.status === 'Active' && member.isApproved
+    isActive: canMemberSignIn(member)
   });
   
   return await memberAuth.save();

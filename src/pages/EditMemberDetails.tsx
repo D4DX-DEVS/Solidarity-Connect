@@ -12,6 +12,7 @@ import { membersAPI, districtsAPI } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { FEATURES } from "@/lib/features";
 import { DateOfBirthInput } from "@/components/shared/DateOfBirthInput";
+import { PhoneNumberInput, phoneNumberError } from "@/components/shared/PhoneNumberInput";
 
 interface Member {
   _id: string;
@@ -129,7 +130,7 @@ const EditMemberDetails = () => {
           setFormData({
             name: memberData.name || "",
             email: memberData.email || "",
-            phone: memberData.phone ? memberData.phone.replace('+91', '') : "", // Remove +91 for editing
+            phone: memberData.phone || "",
             address: memberData.address || "",
             status: memberData.status || "",
             dateOfBirth: dobForInput,
@@ -164,11 +165,6 @@ const EditMemberDetails = () => {
     }
   }, [id, navigate, toast]);
 
-  // Members abroad are stored with a foreign country code (+971…, +974…). The
-  // 10-digit Indian input can't represent those, so the number is shown read-only
-  // and left out of the update instead of blocking every other edit.
-  const intlPhone = !!member?.phone && !/^(\+91)?[6-9]\d{9}$/.test(member.phone);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -181,10 +177,11 @@ const EditMemberDetails = () => {
       return;
     }
 
-    if (!intlPhone && !/^[6-9]\d{9}$/.test(formData.phone)) {
+    const phoneError = phoneNumberError(formData.phone);
+    if (phoneError) {
       toast({
         title: "Invalid Phone Number",
-        description: "Phone number must be 10 digits starting with 6, 7, 8, or 9",
+        description: phoneError,
         variant: "destructive"
       });
       return;
@@ -195,7 +192,6 @@ const EditMemberDetails = () => {
     try {
       // Clean the form data - remove empty optional fields
       const cleanedData: Partial<typeof formData> & { district?: string; group?: string } = { ...formData };
-      if (intlPhone) delete cleanedData.phone;
       if (!cleanedData.email) delete cleanedData.email;
       // Only forward a DOB that is a valid YYYY-MM-DD; anything else (including
       // corrupted stored values the input couldn't render) is dropped so the
@@ -340,28 +336,11 @@ const EditMemberDetails = () => {
 
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone Number *</Label>
-              <Input
+              <PhoneNumberInput
                 id="phone"
-                type="tel"
-                placeholder="9876543210"
-                maxLength={intlPhone ? undefined : 10}
                 value={formData.phone}
-                disabled={intlPhone}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/\D/g, "").slice(0, 10);
-                  setFormData({ ...formData, phone: cleaned });
-                }}
-                required
+                onChange={(phone) => setFormData((prev) => ({ ...prev, phone }))}
               />
-              {intlPhone ? (
-                <p className="text-xs text-muted-foreground">International number — can't be changed here.</p>
-              ) : null}
-              {!intlPhone && formData.phone && formData.phone.length !== 10 ? (
-                <p className="text-xs text-destructive">Please enter 10 digits.</p>
-              ) : null}
-              {!intlPhone && formData.phone && formData.phone.length === 10 && !/^[6-9]/.test(formData.phone) ? (
-                <p className="text-xs text-destructive">Phone number must start with 6, 7, 8, or 9.</p>
-              ) : null}
             </div>
 
             <div className="space-y-1.5">

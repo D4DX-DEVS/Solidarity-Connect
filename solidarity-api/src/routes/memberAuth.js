@@ -5,7 +5,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import path from 'path';
 import crypto from 'crypto';
 import MemberAuth from '../models/MemberAuth.js';
-import Member from '../models/Member.js';
+import Member, { canMemberSignIn } from '../models/Member.js';
 import BaithulMaalPayment from '../models/BaithulMaalPayment.js';
 import Meeting from '../models/Meeting.js';
 import Notification from '../models/Notification.js';
@@ -100,7 +100,7 @@ const authenticateMember = async (req, res, next) => {
       });
     }
 
-    if (!memberAuth.member || !memberAuth.member.isApproved || memberAuth.member.status !== 'Active') {
+    if (!canMemberSignIn(memberAuth.member)) {
       return res.status(401).json({
         success: false,
         message: 'Member account not approved or inactive'
