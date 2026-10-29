@@ -594,7 +594,7 @@ const UserManagement = () => {
         </div>
       )}
 
-      <SectionCard title="Search & Filters" description="Search by person and narrow by role, status, district, or group.">
+      <SectionCard title="Search & Filters" description="Search by person and narrow by role, status, district, or area.">
             <div className="flex flex-col gap-3">
               {/* Search + filter row: 2-per-row grid on mobile/tablet, all inline from lg up */}
               <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:gap-2">
@@ -668,10 +668,10 @@ const UserManagement = () => {
                     disabled={loadingFilterGroups}
                   >
                     <SelectTrigger className="w-full lg:w-52 lg:flex-none">
-                      <SelectValue placeholder={loadingFilterGroups ? "Loading…" : "All Groups"} />
+                      <SelectValue placeholder={loadingFilterGroups ? "Loading…" : "All Areas"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Groups</SelectItem>
+                      <SelectItem value="all">All Areas</SelectItem>
                       {filterGroups.map((g) => (
                         <SelectItem key={g._id} value={g._id}>
                           {g.name}
@@ -731,7 +731,7 @@ const UserManagement = () => {
                   )}
                   {groupFilter !== "all" && (
                     <Badge variant="secondary" className="gap-1 cursor-pointer" onClick={() => setGroupFilter("all")}>
-                      {filterGroups.find((g) => g._id === groupFilter)?.name ?? "Group"} ×
+                      {filterGroups.find((g) => g._id === groupFilter)?.name ?? "Area"} ×
                     </Badge>
                   )}
                 </div>
@@ -860,7 +860,7 @@ const UserManagement = () => {
                       <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Phone"><Phone className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.phone}</div>
                       {user.email && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Email"><Mail className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.email}</div>}
                       {user.district && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="District"><Building2 className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.district.name}</div>}
-                      {user.group && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Group"><Users className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.group.name}</div>}
+                      {user.group && <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Area"><Users className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{user.group.name}</div>}
                       <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Created"><CalendarDays className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{new Date(user.createdAt).toLocaleDateString()}</div>
                       {user.lastLogin && (
                         <div className="flex shrink-0 items-center gap-1 rounded-full bg-muted/65 px-1.5 py-0.5 sm:gap-1.5 sm:px-2 sm:py-1" title="Last login"><Clock3 className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" />{new Date(user.lastLogin).toLocaleDateString()}</div>

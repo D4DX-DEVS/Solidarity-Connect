@@ -36,6 +36,7 @@ import Reports from "./pages/Reports";
 
 import AdminMeetingsView from "./pages/AdminMeetingsView";
 import MemberDashboard from "./pages/MemberDashboard";
+import MemberCardPage from "./pages/MemberCardPage";
 import UserManagement from "./pages/UserManagement";
 import RoleManagement from "./pages/RoleManagement";
 import Leaders from "./pages/Leaders";
@@ -117,6 +118,7 @@ const App = () => (
             {/* Age-over members (by birth year and term) — state admin only */}
             <Route path="/archives" element={<ProtectedRoute requiredRoles={['state_admin']}><Archives /></ProtectedRoute>} />
             <Route path="/member/:id" element={<ProtectedRoute><MemberDetail /></ProtectedRoute>} />
+            <Route path="/member/:id/card" element={<ProtectedRoute requiredRoles={['state_admin', 'district_admin', 'group_admin']}><MemberCardPage /></ProtectedRoute>} />
             {/* Adding/editing members is state-admin only; district and area admins view */}
             <Route path="/member/:id/edit" element={<ProtectedRoute requiredRoles={['state_admin']}><EditMemberDetails /></ProtectedRoute>} />
             <Route path="/add-member" element={<ProtectedRoute requiredRoles={['state_admin']}><AddMember /></ProtectedRoute>} />

@@ -5,6 +5,7 @@ import Member from '../models/Member.js';
 import MemberAuth from '../models/MemberAuth.js';
 import User from '../models/User.js';
 import Request from '../models/Request.js';
+import { sendBucketImage } from '../services/spaces.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
@@ -422,6 +423,54 @@ router.get('/user-context', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * Why `user` may not view `member` (district and group populated), or null when they may.
+ * Area-level admins cover every group in their area, not just their own group.
+ */
+const memberViewError = (user, member) => {
+  if (user.role === 'group_admin') {
+    const areaName = isAreaLevelAdmin(user) ? user.roleTag?.roleDescription : null;
+    let allowed = user.group && member.group?._id.toString() === user.group._id.toString();
+
+    if (!allowed && areaName && user.district) {
+      allowed = member.district?._id.toString() === user.district._id.toString()
+        && (member.group?.name || '').toLowerCase() === areaName.toLowerCase();
+    }
+
+    if (!allowed) return 'Access denied. You can only view members from your group.';
+  }
+
+  if (user.role === 'district_admin' && member.district._id.toString() !== user.district._id.toString()) {
+    return 'Access denied. You can only view members from your district.';
+  }
+  return null;
+};
+
+// @route   GET /api/members/:id/card-photo
+// @desc    A member's profile photo for their membership card (same access as viewing them)
+// @access  Private
+router.get('/:id/card-photo', authenticate, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
+  try {
+    const member = await Member.findById(req.params.id)
+      .populate('district', 'name code')
+      .populate('group', 'name code district');
+
+    if (!member || hiddenFrom(req.user, member)) {
+      return res.status(404).json(ARCHIVED_NOT_FOUND);
+    }
+
+    const denied = memberViewError(req.user, member);
+    if (denied) {
+      return res.status(403).json({ success: false, message: denied });
+    }
+
+    await sendBucketImage(res, member.avatar);
+  } catch (error) {
+    console.error('Member card photo error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load profile photo' });
+  }
+});
+
 // @route   GET /api/members/:id
 // @desc    Get single member by ID
 // @access  Private
@@ -437,30 +486,9 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       return res.status(404).json(ARCHIVED_NOT_FOUND);
     }
 
-    // Check access permissions
-    if (req.user.role === 'group_admin') {
-      // Area-level admins cover every group in their area, not just their own group
-      const areaName = isAreaLevelAdmin(req.user) ? req.user.roleTag?.roleDescription : null;
-      let allowed = req.user.group && member.group?._id.toString() === req.user.group._id.toString();
-
-      if (!allowed && areaName && req.user.district) {
-        allowed = member.district?._id.toString() === req.user.district._id.toString()
-          && (member.group?.name || '').toLowerCase() === areaName.toLowerCase();
-      }
-
-      if (!allowed) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only view members from your group.'
-        });
-      }
-    }
-
-    if (req.user.role === 'district_admin' && member.district._id.toString() !== req.user.district._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view members from your district.'
-      });
+    const denied = memberViewError(req.user, member);
+    if (denied) {
+      return res.status(403).json({ success: false, message: denied });
     }
 
     res.status(200).json({

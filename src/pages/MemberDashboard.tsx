@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { memberAuthAPI } from "@/utils/api";
 import { MemberAreaReport } from "@/components/reports/MemberAreaReport";
+import { MemberCardPanel } from "@/components/member-card/MemberCardPanel";
 import { downloadFile } from "@/utils/downloadFile";
 import { useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -69,6 +70,7 @@ import {
   Link2,
   LogOut,
   Menu,
+  IdCard,
 } from "lucide-react";
 
 interface MemberProfile {
@@ -404,6 +406,8 @@ const MemberDashboard = () => {
         return <Leaders embedded />;
       case "members":
         return <MemberDirectory embedded />;
+      case "card":
+        return <MemberCardPanel profile={profile.profile} photoUploading={avatarUploading} onPhotoSelected={uploadAvatar} />;
       default:
         return renderOverviewContent();
     }
@@ -624,6 +628,10 @@ const MemberDashboard = () => {
                 }}
               >
                 Request name/phone change
+              </button>
+              <button className="flex items-center gap-1 text-xs text-primary hover:underline" onClick={() => setActiveView("card")}>
+                <IdCard className="h-3.5 w-3.5" />
+                Download member card
               </button>
             </div>
           </div>
@@ -1159,7 +1167,7 @@ const MemberDashboard = () => {
             </>
           ) : (
             <p className="min-w-0 flex-1 truncate text-base font-bold">
-              {{ profile: "My Profile", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders", members: "Members" }[activeView] || ""}
+              {{ profile: "My Profile", meetings: "Meetings", baithul: "Baithul Maal", orgfiles: "Files", notifications: "Notifications", leaders: "Leaders", members: "Members", card: "Member Card" }[activeView] || ""}
             </p>
           )}
           <Button
@@ -1259,6 +1267,9 @@ const MemberDashboard = () => {
                 </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setActiveView("profile")}>
                     <User className="mr-2 h-4 w-4" />My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveView("card")}>
+                    <IdCard className="mr-2 h-4 w-4" />Member Card
                   </DropdownMenuItem>
                   {/* ponytail: Leaders removed — it's a tab in the bottom bar already */}
                   <DropdownMenuSeparator />

@@ -368,10 +368,10 @@ const Members = () => {
               {(userRole === "state_admin" || userRole === "district_admin") && (
                 <Select value={selectedGroup || "all"} onValueChange={(value) => setSelectedGroup(value === "all" ? "" : value)}>
                   <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
-                    <SelectValue placeholder="All Groups" />
+                    <SelectValue placeholder="All Areas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
+                    <SelectItem value="all">All Areas</SelectItem>
                     {groups.map((group) => (
                       <SelectItem key={group._id} value={group._id}>
                         {group.name} ({group.code})

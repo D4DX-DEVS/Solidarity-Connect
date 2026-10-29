@@ -7,6 +7,8 @@ import { SectionCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import DistrictDialog from "@/components/DistrictDialog";
+import ExportMenu from "@/components/master-data/ExportMenu";
+import { exportDistricts } from "@/lib/masterDataExport";
 import { useDistricts, useConfirmDeleteDistrict } from "@/hooks/useDistricts";
 import { usePendingDeletes } from "@/lib/undoDelete";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
@@ -61,10 +63,22 @@ const DistrictsPanel = () => {
         title="District Management"
         description="Create, edit, or delete districts."
         action={
-          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddDistrict}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add District
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportMenu
+              itemLabel="districts"
+              disabled={districtsLoading || districtTotal === 0}
+              onExport={(format) =>
+                exportDistricts(
+                  { sort: 'name', isActive: true, ...(districtQuery ? { search: districtQuery } : {}) },
+                  format
+                )
+              }
+            />
+            <Button className="bg-primary hover:bg-primary/90" onClick={handleAddDistrict}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add District
+            </Button>
+          </div>
         }
       >
         <div className="relative">

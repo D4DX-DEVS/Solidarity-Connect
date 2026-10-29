@@ -9,6 +9,8 @@ import { SectionCard } from "@/components/app/AppShell";
 import DataPagination from "@/components/app/DataPagination";
 import { ListSkeleton } from "@/components/ui/loading-skeletons";
 import GroupDialog from "@/components/GroupDialog";
+import ExportMenu from "@/components/master-data/ExportMenu";
+import { exportAreas } from "@/lib/masterDataExport";
 import { useGroups, useConfirmDeleteGroup } from "@/hooks/useGroups";
 import { usePendingDeletes } from "@/lib/undoDelete";
 import { useDebouncedParam, useListParams } from "@/hooks/useListParams";
@@ -95,14 +97,31 @@ const AreasPanel = ({ districts, districtLocked = false }: AreasPanelProps) => {
         title={districtLocked && districts[0] ? `${districts[0].name} Areas` : "Area Management"}
         description={districtLocked ? "Manage the areas in your district." : "Manage areas under each district."}
         action={
-          <Button
-            className="bg-primary hover:bg-primary/90"
-            onClick={handleAddGroup}
-            disabled={districts.length === 0}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Area
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportMenu
+              itemLabel="areas"
+              disabled={groupsLoading || groupTotal === 0}
+              onExport={(format) =>
+                exportAreas(
+                  {
+                    sort: 'name',
+                    isActive: true,
+                    ...(selectedDistrictFilter ? { district: selectedDistrictFilter } : {}),
+                    ...(areaQuery ? { search: areaQuery } : {})
+                  },
+                  format
+                )
+              }
+            />
+            <Button
+              className="bg-primary hover:bg-primary/90"
+              onClick={handleAddGroup}
+              disabled={districts.length === 0}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Area
+            </Button>
+          </div>
         }
       >
         {districtLocked ? (

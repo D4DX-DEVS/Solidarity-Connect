@@ -13,8 +13,6 @@ interface ReportFormViewProps {
   onChange?: (answers: Answers) => void;
   errors?: ReportErrors;
   disabled?: boolean;
-  /** Unit names to offer in per-unit sections. */
-  entrySuggestions?: string[];
 }
 
 interface Section {
@@ -44,7 +42,7 @@ function cellSpan(type: ReportField["type"]): string {
 }
 
 /** A report form: editable when `onChange` is given, otherwise the answers as text. */
-export function ReportFormView({ fields, answers, onChange, errors = {}, disabled, entrySuggestions }: ReportFormViewProps) {
+export function ReportFormView({ fields, answers, onChange, errors = {}, disabled }: ReportFormViewProps) {
   const sections = toSections(visibleFields(fields, answers));
   const readOnly = !onChange;
 
@@ -69,7 +67,6 @@ export function ReportFormView({ fields, answers, onChange, errors = {}, disable
                 : undefined}
               errors={errors}
               disabled={disabled}
-              suggestions={entrySuggestions}
             />
           ) : readOnly ? (
             <div className="divide-y">

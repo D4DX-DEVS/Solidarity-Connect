@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { Archive, ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, Home, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock, type LucideIcon } from "lucide-react";
+import { Archive, ArrowLeft, Edit, Phone, Mail, Calendar, Droplet, Briefcase, GraduationCap, Home, MapPin, User, Wallet, Download, CheckCircle, XCircle, Clock, IdCard, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -439,17 +439,18 @@ const MemberDetail = () => {
             <div className="flex items-center gap-1.5 sm:gap-2">
             <span className="shrink-0">{renderMemberStatus(member.status)}</span>
             <div className="ml-auto flex min-w-0 items-center gap-1.5 sm:gap-2 [&_button]:h-8 [&_button]:px-2 [&_button]:text-xs [&_svg]:mr-1 [&_svg]:h-3.5 [&_svg]:w-3.5 sm:[&_button]:h-9 sm:[&_button]:px-3 sm:[&_button]:text-sm sm:[&_svg]:mr-2 sm:[&_svg]:h-4 sm:[&_svg]:w-4">
+              {/* Under sm only Certificate keeps its label so up to five buttons fit one row */}
               <a href={`tel:${member.phone}`}>
                 <Button size="sm" variant="outline">
-                  <Phone className="mr-2 h-4 w-4" />
-                  Call
+                  <Phone className="mr-2 h-4 w-4 max-sm:!mr-0" />
+                  <span className="max-sm:sr-only">Call</span>
                 </Button>
               </a>
               {member.email ? (
                 <a href={`mailto:${member.email}`}>
                   <Button size="sm" variant="outline">
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email
+                    <Mail className="mr-2 h-4 w-4 max-sm:!mr-0" />
+                    <span className="max-sm:sr-only">Email</span>
                   </Button>
                 </a>
               ) : null}
@@ -457,10 +458,14 @@ const MemberDetail = () => {
                 <Download className="mr-2 h-4 w-4" />
                 <span className="truncate">{downloadingCert ? "Downloading..." : "Certificate"}</span>
               </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/card`)}>
+                <IdCard className="mr-2 h-4 w-4 max-sm:!mr-0" />
+                <span className="max-sm:sr-only">Member Card</span>
+              </Button>
               {canEditMember && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/member/${member._id}/edit`)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit
+                  <Edit className="mr-2 h-4 w-4 max-sm:!mr-0" />
+                  <span className="max-sm:sr-only">Edit</span>
                 </Button>
               )}
             </div>

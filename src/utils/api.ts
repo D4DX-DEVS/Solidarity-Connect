@@ -95,6 +95,18 @@ export const multipartApiCall = async (endpoint: string, formData: FormData) => 
   return data;
 };
 
+// Binary GET (e.g. an image) with the session token; null when the server answers 404
+export const blobApiCall = async (endpoint: string): Promise<Blob | null> => {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, { headers });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.blob();
+};
+
 // Auth API calls
 export const authAPI = {
   sendOTP: (phone: string, userType: string) => 
@@ -192,6 +204,9 @@ export const memberAuthAPI = {
     }),
 
   getProfile: () => apiCall('/member-auth/profile'),
+
+  // Own profile photo as image bytes, for drawing the member card; null when there is none
+  getCardPhoto: () => blobApiCall('/member-auth/card-photo'),
 
   getMeetings: (params?: QueryParams) =>
     apiCall(`/member-auth/meetings${toQuery(params)}`),
@@ -316,6 +331,9 @@ export const membersAPI = {
     apiCall(`/members/${id}`, {
       method: 'DELETE',
     }),
+
+  // A member's profile photo as image bytes, for their membership card; null when there is none
+  getCardPhoto: (id: string) => blobApiCall(`/members/${id}/card-photo`),
 
   getUserContext: () => apiCall('/members/user-context'),
 
