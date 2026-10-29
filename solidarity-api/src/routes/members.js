@@ -2,6 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { phoneVariants } from '../services/loginService.js';
 import Member from '../models/Member.js';
+import MemberAuth from '../models/MemberAuth.js';
+import User from '../models/User.js';
+import Request from '../models/Request.js';
+import { sendBucketImage } from '../services/spaces.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
@@ -419,6 +423,54 @@ router.get('/user-context', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * Why `user` may not view `member` (district and group populated), or null when they may.
+ * Area-level admins cover every group in their area, not just their own group.
+ */
+const memberViewError = (user, member) => {
+  if (user.role === 'group_admin') {
+    const areaName = isAreaLevelAdmin(user) ? user.roleTag?.roleDescription : null;
+    let allowed = user.group && member.group?._id.toString() === user.group._id.toString();
+
+    if (!allowed && areaName && user.district) {
+      allowed = member.district?._id.toString() === user.district._id.toString()
+        && (member.group?.name || '').toLowerCase() === areaName.toLowerCase();
+    }
+
+    if (!allowed) return 'Access denied. You can only view members from your group.';
+  }
+
+  if (user.role === 'district_admin' && member.district._id.toString() !== user.district._id.toString()) {
+    return 'Access denied. You can only view members from your district.';
+  }
+  return null;
+};
+
+// @route   GET /api/members/:id/card-photo
+// @desc    A member's profile photo for their membership card (same access as viewing them)
+// @access  Private
+router.get('/:id/card-photo', authenticate, objectIdValidation('id'), handleValidationErrors, async (req, res) => {
+  try {
+    const member = await Member.findById(req.params.id)
+      .populate('district', 'name code')
+      .populate('group', 'name code district');
+
+    if (!member || hiddenFrom(req.user, member)) {
+      return res.status(404).json(ARCHIVED_NOT_FOUND);
+    }
+
+    const denied = memberViewError(req.user, member);
+    if (denied) {
+      return res.status(403).json({ success: false, message: denied });
+    }
+
+    await sendBucketImage(res, member.avatar);
+  } catch (error) {
+    console.error('Member card photo error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load profile photo' });
+  }
+});
+
 // @route   GET /api/members/:id
 // @desc    Get single member by ID
 // @access  Private
@@ -434,30 +486,9 @@ router.get('/:id', authenticate, objectIdValidation('id'), handleValidationError
       return res.status(404).json(ARCHIVED_NOT_FOUND);
     }
 
-    // Check access permissions
-    if (req.user.role === 'group_admin') {
-      // Area-level admins cover every group in their area, not just their own group
-      const areaName = isAreaLevelAdmin(req.user) ? req.user.roleTag?.roleDescription : null;
-      let allowed = req.user.group && member.group?._id.toString() === req.user.group._id.toString();
-
-      if (!allowed && areaName && req.user.district) {
-        allowed = member.district?._id.toString() === req.user.district._id.toString()
-          && (member.group?.name || '').toLowerCase() === areaName.toLowerCase();
-      }
-
-      if (!allowed) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied. You can only view members from your group.'
-        });
-      }
-    }
-
-    if (req.user.role === 'district_admin' && member.district._id.toString() !== req.user.district._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. You can only view members from your district.'
-      });
+    const denied = memberViewError(req.user, member);
+    if (denied) {
+      return res.status(403).json({ success: false, message: denied });
     }
 
     res.status(200).json({
@@ -550,10 +581,12 @@ router.post('/', authenticate, requireRole(['state_admin']), autoAssignDistrictG
     }
 
     // Prepare member data with baithulMaal
-    const { monthlyBaithulMaal, ...restMemberData } = memberData;
-    
+    const { monthlyBaithulMaal, isActive, ...restMemberData } = memberData;
+
     const memberPayload = {
       ...restMemberData,
+      // Add form sends an Active/Inactive toggle; the schema defaults to Inactive
+      status: restMemberData.status || (isActive === false ? 'Inactive' : 'Active'),
       createdBy: req.user._id,
       isApproved: true // Only state admins reach here, and they auto-approve
     };
@@ -862,11 +895,31 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
 
     // Only state admin can delete members - no additional permission checks needed
 
-    await Member.findByIdAndDelete(req.params.id);
+    const phones = phoneVariants(member.phone);
+    if (phones.includes(req.user.phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own member record'
+      });
+    }
+
+    // Admin logins belong to the person by phone, so they go with the last member record on it
+    const otherMemberOnPhone = await Member.exists({ _id: { $ne: member._id }, phone: { $in: phones } });
+    const adminLogins = otherMemberOnPhone ? [] : await User.find({ phone: { $in: phones } }).select('_id');
+
+    await Member.findByIdAndDelete(member._id);
+    await Promise.all([
+      // MemberAuth.phone is unique: a leftover row would block sign-in if this number is added again
+      MemberAuth.deleteOne({ member: member._id }),
+      User.deleteMany({ _id: { $in: adminLogins.map((u) => u._id) } }),
+      TransferRequest.deleteMany({ member: member._id, status: { $in: ['pending', 'district_approved'] } }),
+      Request.deleteMany({ member: member._id, status: 'pending' }),
+    ]);
 
     res.status(200).json({
       success: true,
-      message: 'Member deleted successfully'
+      message: 'Member deleted successfully',
+      data: { adminLoginsRemoved: adminLogins.length }
     });
 
   } catch (error) {

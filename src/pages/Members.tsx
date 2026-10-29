@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2 } from "lucide-react";
+import { Search, Users, Edit, ArrowRightLeft, Wallet, Clock, Plus, Phone, Mail, MapPin, Home, ShieldCheck, Download, Loader2, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -15,6 +15,8 @@ import HeaderWithLogout from "@/components/HeaderWithLogout";
 import TransferMemberDialog from "@/components/TransferMemberDialog";
 import BaithulMaalDialog from "@/components/BaithulMaalDialog";
 import { FEATURES } from "@/lib/features";
+import { confirmAction } from "@/lib/confirm";
+import { undoableDelete, usePendingDeletes } from "@/lib/undoDelete";
 import {
   MEMBER_EXPORT_COL_WIDTHS,
   MEMBER_EXPORT_HEADERS,
@@ -87,8 +89,26 @@ const Members = () => {
   const { toast } = useToast();
   // Adding/editing members is state-admin only; district and area admins view.
   const canManageMembers = userRole === 'state_admin';
-  const actionCount = 2 + (canManageMembers ? 1 : 0) + (FEATURES.baithulMaal ? 1 : 0);
-  const actionGridCols = actionCount === 4 ? "grid-cols-4" : actionCount === 3 ? "grid-cols-3" : "grid-cols-2";
+  const actionCount = 2 + (canManageMembers ? 2 : 0) + (FEATURES.baithulMaal ? 1 : 0);
+  const actionGridCols = actionCount === 5 ? "grid-cols-5" : actionCount === 4 ? "grid-cols-4" : actionCount === 3 ? "grid-cols-3" : "grid-cols-2";
+  const pendingDeletes = usePendingDeletes();
+
+  const handleDeleteMember = async (member: Member) => {
+    const confirmed = await confirmAction({
+      title: "Delete this member?",
+      description: "Their member record, app sign-in, admin logins on this phone and pending requests are removed permanently.",
+      itemName: member.name,
+      undoable: true,
+    });
+    if (!confirmed) return;
+    undoableDelete({
+      id: member._id,
+      title: "Member deleted",
+      description: member.name,
+      commit: () => membersAPI.deleteMember(member._id),
+      onCommitted: () => setRefreshKey((prev) => prev + 1),
+    });
+  };
 
   const [statistics, setStatistics] = useState({
     total: 0,
@@ -191,7 +211,7 @@ const Members = () => {
     placeholderData: keepPreviousData,
   });
 
-  const members: Member[] = membersResult?.data || [];
+  const members: Member[] = (membersResult?.data || []).filter((m: Member) => !pendingDeletes.has(m._id));
 
   useEffect(() => {
     if (membersError) {
@@ -348,10 +368,10 @@ const Members = () => {
               {(userRole === "state_admin" || userRole === "district_admin") && (
                 <Select value={selectedGroup || "all"} onValueChange={(value) => setSelectedGroup(value === "all" ? "" : value)}>
                   <SelectTrigger className="h-9 px-2 text-xs gap-1 sm:h-11 sm:px-4 sm:text-sm">
-                    <SelectValue placeholder="All Groups" />
+                    <SelectValue placeholder="All Areas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
+                    <SelectItem value="all">All Areas</SelectItem>
                     {groups.map((group) => (
                       <SelectItem key={group._id} value={group._id}>
                         {group.name} ({group.code})
@@ -598,6 +618,20 @@ const Members = () => {
                     <Users className="h-4 w-4 text-blue-600" />
                     <span className="text-xs">Details</span>
                   </Button>
+                  {canManageMembers && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 px-1 sm:px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteMember(member);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="text-xs">Delete</span>
+                  </Button>
+                  )}
                 </div>
               </div>
             </Card>

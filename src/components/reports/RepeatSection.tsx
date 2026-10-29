@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { confirmAction } from "@/lib/confirm";
 import { undoableDelete } from "@/lib/undoDelete";
 import { ReportFieldInput } from "./ReportFieldInput";
-import { UnitNamePicker } from "./UnitNamePicker";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   MAX_ENTRIES, answerKey, entryTotals, errorKey, formatAnswer, isEmptyAnswer, isEntryFieldVisible, itemLabelOf,
   type Answers, type RepeatEntry, type ReportErrors, type ReportField,
@@ -21,14 +22,12 @@ interface RepeatSectionProps {
   onEntriesChange?: (entries: RepeatEntry[]) => void;
   errors?: ReportErrors;
   disabled?: boolean;
-  /** Units to offer in the picker (area's member records + units named in earlier reports). */
-  suggestions?: string[];
 }
 
 const GRID = "grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 lg:grid-cols-4";
 
 /** A section filled once per named entry (an area's units), with + Add and the running totals. */
-export function RepeatSection({ heading, fields, answers, entries, onEntriesChange, errors = {}, disabled, suggestions = [] }: RepeatSectionProps) {
+export function RepeatSection({ heading, fields, answers, entries, onEntriesChange, errors = {}, disabled }: RepeatSectionProps) {
   const listId = useId();
   const item = itemLabelOf(heading);
   const totals = entryTotals(fields, answers, entries);
@@ -85,15 +84,16 @@ export function RepeatSection({ heading, fields, answers, entries, onEntriesChan
                 <Label htmlFor={nameId} className="text-sm font-medium">
                   {item} {i + 1} name<span className="ml-0.5 text-destructive" aria-hidden>*</span>
                 </Label>
-                <UnitNamePicker
+                <Input
                   id={nameId}
+                  className={cn("h-11", nameError && "border-destructive")}
+                  placeholder={`Type ${item.toLowerCase()} name`}
                   value={entry.name}
-                  onChange={(name) => update(i, { name })}
-                  suggestions={suggestions}
-                  taken={entries.filter((_, j) => j !== i).map(e => e.name)}
-                  item={item}
-                  invalid={Boolean(nameError)}
-                  describedBy={nameError ? `${nameId}-error` : undefined}
+                  onChange={(e) => update(i, { name: e.target.value })}
+                  maxLength={100}
+                  autoComplete="off"
+                  aria-invalid={Boolean(nameError)}
+                  aria-describedby={nameError ? `${nameId}-error` : undefined}
                   disabled={disabled}
                 />
                 {nameError ? <p id={`${nameId}-error`} role="alert" className="text-xs font-medium text-destructive">{nameError}</p> : null}

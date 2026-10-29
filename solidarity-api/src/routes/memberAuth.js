@@ -1,7 +1,8 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { sendBucketImage, spacesClient, spacesPublicBases } from '../services/spaces.js';
 import path from 'path';
 import crypto from 'crypto';
 import MemberAuth from '../models/MemberAuth.js';
@@ -1086,6 +1087,19 @@ router.get('/members', authenticateMember, async (req, res) => {
   }
 });
 
+// @route   GET /api/member-auth/card-photo
+// @desc    The member's own profile photo, served by us so the member card can draw it
+//          (the bucket sends no CORS headers). Reads our bucket only — never fetches the URL.
+// @access  Private (Member)
+router.get('/card-photo', authenticateMember, async (req, res) => {
+  try {
+    await sendBucketImage(res, req.member.avatar);
+  } catch (error) {
+    console.error('Member card photo error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load profile photo' });
+  }
+});
+
 // @route   POST /api/member-auth/uploads
 // @desc    Upload a file to DigitalOcean Spaces (member)
 // @access  Private (Member)
@@ -1095,39 +1109,23 @@ router.post('/uploads', authenticateMember, memberUpload.single('file'), async (
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const s3 = new S3Client({
-      endpoint: process.env.DO_SPACES_ENDPOINT,
-      region: 'us-east-1',
-      credentials: {
-        accessKeyId: process.env.DO_SPACES_KEY,
-        secretAccessKey: process.env.DO_SPACES_SECRET
-      },
-      forcePathStyle: false
-    });
-
-    const bucket = process.env.DO_SPACES_BUCKET;
     const folder = process.env.DO_SPACES_FOLDER || 'targets';
-    const cdnEndpoint = process.env.DO_SPACES_CDN_ENDPOINT;
     const uniqueId = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(req.file.originalname);
     const key = `${folder}/${uniqueId}${ext}`;
 
-    await s3.send(new PutObjectCommand({
-      Bucket: bucket,
+    await spacesClient().send(new PutObjectCommand({
+      Bucket: process.env.DO_SPACES_BUCKET,
       Key: key,
       Body: req.file.buffer,
       ContentType: req.file.mimetype,
       ACL: 'public-read'
     }));
 
-    const cdnBase = cdnEndpoint
-      ? cdnEndpoint.replace(/\/$/, '')
-      : `https://${bucket}.${process.env.DO_SPACES_ENDPOINT?.replace('https://', '')}`;
-
     res.status(200).json({
       success: true,
       data: {
-        url: `${cdnBase}/${key}`,
+        url: `${spacesPublicBases()[0]}/${key}`,
         originalName: req.file.originalname,
         mimetype: req.file.mimetype,
         size: req.file.size,

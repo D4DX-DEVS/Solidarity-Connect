@@ -3,7 +3,7 @@ import { FEATURES } from "@/lib/features";
 import {
   LayoutDashboard, Users, UserCog, ArrowRightLeft, Shield, FileCheck,
   FolderOpen, Database, Wallet, Bell, Calendar,
-  Star, Archive, ClipboardList,
+  Star, Archive, ClipboardList, IdCard,
 } from "lucide-react";
 
 export interface NavItem {
@@ -77,6 +77,7 @@ export const MEMBER_SECTIONS: NavSection[] = [
       { label: "Leaders", path: "/leaders", icon: Star },
       { label: "Files & Documents", path: "/org-files", icon: FolderOpen },
       { label: "Profile", path: "/member-dashboard?view=profile", icon: UserCog },
+      { label: "Member Card", path: "/member-dashboard?view=card", icon: IdCard },
     ],
   },
 ];

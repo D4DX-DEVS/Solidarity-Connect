@@ -210,7 +210,6 @@ export function MyReportTab({ month, onMonthChange }: { month: string; onMonthCh
                   onChange={setAnswers}
                   errors={errors}
                   disabled={saving}
-                  entrySuggestions={data.entrySuggestions}
                 />
                 <div className="sticky bottom-20 z-10 flex justify-end gap-2 md:bottom-4">
                   {editing ? (
