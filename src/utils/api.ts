@@ -312,6 +312,11 @@ export const membersAPI = {
       body: JSON.stringify(memberData),
     }),
 
+  deleteMember: (id: string) =>
+    apiCall(`/members/${id}`, {
+      method: 'DELETE',
+    }),
+
   getUserContext: () => apiCall('/members/user-context'),
 
   updateMemberLeader: (memberId: string, data: { isLeader: boolean; roleTag?: { type?: string; name?: string; listingOrder?: number | null }; extraRoles?: { type?: string; name?: string; listingOrder?: number | null }[] }) =>

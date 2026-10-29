@@ -2,6 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { phoneVariants } from '../services/loginService.js';
 import Member from '../models/Member.js';
+import MemberAuth from '../models/MemberAuth.js';
+import User from '../models/User.js';
+import Request from '../models/Request.js';
 import Group from '../models/Group.js';
 import District from '../models/District.js';
 import TransferRequest from '../models/TransferRequest.js';
@@ -550,10 +553,12 @@ router.post('/', authenticate, requireRole(['state_admin']), autoAssignDistrictG
     }
 
     // Prepare member data with baithulMaal
-    const { monthlyBaithulMaal, ...restMemberData } = memberData;
-    
+    const { monthlyBaithulMaal, isActive, ...restMemberData } = memberData;
+
     const memberPayload = {
       ...restMemberData,
+      // Add form sends an Active/Inactive toggle; the schema defaults to Inactive
+      status: restMemberData.status || (isActive === false ? 'Inactive' : 'Active'),
       createdBy: req.user._id,
       isApproved: true // Only state admins reach here, and they auto-approve
     };
@@ -862,11 +867,31 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
 
     // Only state admin can delete members - no additional permission checks needed
 
-    await Member.findByIdAndDelete(req.params.id);
+    const phones = phoneVariants(member.phone);
+    if (phones.includes(req.user.phone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own member record'
+      });
+    }
+
+    // Admin logins belong to the person by phone, so they go with the last member record on it
+    const otherMemberOnPhone = await Member.exists({ _id: { $ne: member._id }, phone: { $in: phones } });
+    const adminLogins = otherMemberOnPhone ? [] : await User.find({ phone: { $in: phones } }).select('_id');
+
+    await Member.findByIdAndDelete(member._id);
+    await Promise.all([
+      // MemberAuth.phone is unique: a leftover row would block sign-in if this number is added again
+      MemberAuth.deleteOne({ member: member._id }),
+      User.deleteMany({ _id: { $in: adminLogins.map((u) => u._id) } }),
+      TransferRequest.deleteMany({ member: member._id, status: { $in: ['pending', 'district_approved'] } }),
+      Request.deleteMany({ member: member._id, status: 'pending' }),
+    ]);
 
     res.status(200).json({
       success: true,
-      message: 'Member deleted successfully'
+      message: 'Member deleted successfully',
+      data: { adminLoginsRemoved: adminLogins.length }
     });
 
   } catch (error) {
