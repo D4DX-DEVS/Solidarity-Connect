@@ -636,7 +636,8 @@ const OrgFiles = () => {
           </DialogHeader>
           {previewFile && (() => {
             const mime = previewFile.mimetype || "";
-            const url = previewFile.url;
+            // Files are served same-origin at /cdn/…; the Office viewer needs a full public URL.
+            const url = new URL(previewFile.url, window.location.origin).href;
             if (mime.startsWith("image/")) {
               return <img src={url} alt={previewFile.title} className="min-h-0 flex-1 object-contain" />;
             }

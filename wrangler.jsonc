@@ -1,0 +1,51 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // One Worker: the Express API (solidarity-api, on D1 via the mongoose shim) at
+  // /api, /cdn and /health, and the Vite SPA (dist/) as static assets.
+  "name": "solidarity",
+  "main": "solidarity-api/worker/index.js",
+  "compatibility_date": "2026-11-05",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "alias": {
+    // Models and routes import "mongoose"; in the Worker that is the D1-backed shim.
+    "mongoose": "./solidarity-api/worker/mongoose/index.js",
+    // Files live in R2 (services/storage.js); keep the S3 SDK out of the bundle.
+    "@aws-sdk/client-s3": "./solidarity-api/worker/stubs/aws-s3.js",
+    // body-parser's iconv-lite 0.4 calls its browser-stubbed "./streams" once
+    // process.versions.node exists (nodejs_compat); 0.6 guards that.
+    "iconv-lite": "./solidarity-api/node_modules/iconv-lite-06"
+  },
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/cdn/*", "/health"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "solidarity",
+      "database_id": "4baf5a23-b213-4779-85c3-3c5fff765ff3",
+      "migrations_dir": "solidarity-api/worker/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "solidarity-files"
+    }
+  ],
+  // Per client IP (CF-Connecting-IP), see solidarity-api/src/app.js. namespace_id is
+  // account-wide, so keep these unique among the account's Workers.
+  "ratelimits": [
+    { "name": "API_LIMITER", "namespace_id": "47201", "simple": { "limit": 600, "period": 60 } },
+    { "name": "AUTH_LIMITER", "namespace_id": "47202", "simple": { "limit": 30, "period": 60 } }
+  ],
+  "vars": {
+    "NODE_ENV": "production"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

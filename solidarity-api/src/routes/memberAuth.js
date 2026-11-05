@@ -1,8 +1,8 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { sendBucketImage, spacesClient, spacesPublicBases } from '../services/spaces.js';
+import { sendBucketImage } from '../services/spaces.js';
+import { putObject, publicUrlFor } from '../services/storage.js';
 import path from 'path';
 import crypto from 'crypto';
 import MemberAuth from '../models/MemberAuth.js';
@@ -25,6 +25,7 @@ import { body, validationResult } from 'express-validator';
 import { matchesLeaderRoleType } from '../middleware/auth.js';
 import { attachLeaderUnits } from '../services/leaderUnits.js';
 import { currentMemberMatch } from '../utils/ageOver.js';
+import { decodeUploadName } from '../utils/fileName.js';
 
 // Multer in-memory storage for file uploads
 const memberUpload = multer({
@@ -1114,19 +1115,13 @@ router.post('/uploads', authenticateMember, memberUpload.single('file'), async (
     const ext = path.extname(req.file.originalname);
     const key = `${folder}/${uniqueId}${ext}`;
 
-    await spacesClient().send(new PutObjectCommand({
-      Bucket: process.env.DO_SPACES_BUCKET,
-      Key: key,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      ACL: 'public-read'
-    }));
+    await putObject(key, req.file.buffer, req.file.mimetype);
 
     res.status(200).json({
       success: true,
       data: {
-        url: `${spacesPublicBases()[0]}/${key}`,
-        originalName: req.file.originalname,
+        url: publicUrlFor(key),
+        originalName: decodeUploadName(req.file.originalname),
         mimetype: req.file.mimetype,
         size: req.file.size,
         key

@@ -49,3 +49,8 @@ migration-failures.md
 migration-failures.json
 migration-data.xlsx
 new members.json
+
+# Cloudflare Workers
+.dev.vars
+.dev.vars.*
+.wrangler/

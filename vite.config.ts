@@ -139,7 +139,9 @@ export default defineConfig(({ mode }) => ({
         ],
         // Offline fallback — serve /index.html for navigation requests
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api\//],
+        // Same-origin server paths: /cdn/* serves uploaded files (opened in iframes and
+        // new tabs, which are navigations) — never answer those with the app shell.
+        navigateFallbackDenylist: [/^\/api\//, /^\/cdn\//, /^\/health$/],
         cleanupOutdatedCaches: true,
       },
       devOptions: {

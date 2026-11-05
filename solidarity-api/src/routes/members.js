@@ -21,6 +21,7 @@ import {
 import { body, query } from 'express-validator';
 import { AGE_OVER_STATUS, ageOn, ageOverMatch, ageOverRule, currentMemberMatch, hiddenAsArchived } from '../utils/ageOver.js';
 import { attachPersonLinks, leaderRecordError, loadPersonRecords, planPersonSync, savePersonEdit } from '../services/personRecords.js';
+import { locationOf, refreshMemberStats } from '../services/memberStats.js';
 
 const router = express.Router();
 
@@ -677,7 +678,8 @@ router.put('/:id', authenticate, requireRole(['state_admin']), autoAssignDistric
 
     // Handle baithulMaal update
     const { monthlyBaithulMaal, ...restUpdateData } = updateData;
-    
+    const before = locationOf(member);
+
     // Update member
     Object.assign(member, restUpdateData);
     member.updatedBy = req.user._id;
@@ -693,6 +695,8 @@ router.put('/:id', authenticate, requireRole(['state_admin']), autoAssignDistric
     }
 
     await member.save();
+    // Area, district, status or Baithul Maal may have changed: recount both sides.
+    await refreshMemberStats(before, member);
 
     // Populate the updated member
     await member.populate([
@@ -762,10 +766,12 @@ router.patch('/:id/move',
         return res.status(400).json({ success: false, message: 'This member has an open transfer request — wait for the State Admin to decide it first' });
       }
 
+      const before = locationOf(member);
       member.group = group._id;
       if (req.body.unit) member.address = req.body.unit;
       member.updatedBy = req.user._id;
       await member.save();
+      await refreshMemberStats(before, member);
 
       await member.populate([
         { path: 'district', select: 'name code' },
@@ -915,6 +921,7 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
       TransferRequest.deleteMany({ member: member._id, status: { $in: ['pending', 'district_approved'] } }),
       Request.deleteMany({ member: member._id, status: 'pending' }),
     ]);
+    await refreshMemberStats(member);
 
     res.status(200).json({
       success: true,
@@ -965,6 +972,7 @@ router.post('/:id/approve', authenticate, requireRole(['state_admin', 'district_
     }
 
     await member.save();
+    await refreshMemberStats(member);
 
     await member.populate([
       { path: 'district', select: 'name code' },

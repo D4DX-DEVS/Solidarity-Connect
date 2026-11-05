@@ -10,6 +10,7 @@ import {
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
 import { hiddenAsArchived } from '../utils/ageOver.js';
+import { locationOf, refreshMemberStats } from '../services/memberStats.js';
 
 const router = express.Router();
 
@@ -414,8 +415,11 @@ router.post('/:id/approve',
 
       const { comment } = req.body;
 
-      // Approve request
+      // Approve request (edits, transfers and status changes are applied to the member)
+      const memberId = request.member?._id || request.member;
+      const before = locationOf(request.member);
       await request.approve(req.user._id, comment);
+      const after = memberId ? await Member.findById(memberId).select('group district').lean() : null;
 
       // Populate the approved request
       await request.populate([
@@ -423,6 +427,7 @@ router.post('/:id/approve',
         { path: 'requestedBy', select: 'name phone role' },
         { path: 'approvedBy', select: 'name phone role' }
       ]);
+      await refreshMemberStats(before, after);
 
       res.status(200).json({
         success: true,

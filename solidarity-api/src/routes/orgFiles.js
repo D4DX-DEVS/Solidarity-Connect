@@ -1,26 +1,14 @@
 import express from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { putObject, deleteObject, publicUrlFor } from '../services/storage.js';
 import OrgFile from '../models/OrgFile.js';
 import { authenticate, requireRole, isAreaLevelAdmin } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
 import path from 'path';
 import crypto from 'crypto';
+import { decodeUploadName } from '../utils/fileName.js';
 
 const router = express.Router();
-
-// Fix multer/busboy reading non-ASCII filenames as Latin-1 instead of UTF-8
-const decodeOriginalName = (filename) => {
-  try {
-    const bytes = Buffer.from(filename, 'latin1');
-    const decoded = bytes.toString('utf8');
-    // Only use the decoded version if it looks like valid non-ASCII Unicode
-    // (i.e. if any byte was >= 0x80, the Latin-1 round-trip will differ)
-    return Buffer.from(decoded, 'utf8').compare(bytes) !== 0 ? decoded : filename;
-  } catch {
-    return filename;
-  }
-};
 
 // Multer in-memory storage (same as uploads.js)
 const storage = multer.memoryStorage();
@@ -45,16 +33,6 @@ const upload = multer({
       cb(new Error(`File type ${file.mimetype} is not allowed`));
     }
   }
-});
-
-const getS3Client = () => new S3Client({
-  endpoint: process.env.DO_SPACES_ENDPOINT,
-  region: 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.DO_SPACES_KEY,
-    secretAccessKey: process.env.DO_SPACES_SECRET
-  },
-  forcePathStyle: false
 });
 
 // Helper: is this user an area-level admin? (area proper, or murabi/coordinator —
@@ -104,28 +82,15 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const s3 = getS3Client();
-    const bucket = process.env.DO_SPACES_BUCKET;
     const folder = 'org-files';
-    const cdnEndpoint = process.env.DO_SPACES_CDN_ENDPOINT;
 
     const uniqueId = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(req.file.originalname);
     const key = `${folder}/${uniqueId}${ext}`;
 
-    await s3.send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      ACL: 'public-read'
-    }));
+    await putObject(key, req.file.buffer, req.file.mimetype);
 
-    const cdnBase = cdnEndpoint
-      ? cdnEndpoint.replace(/\/$/, '')
-      : `https://${bucket}.${process.env.DO_SPACES_ENDPOINT?.replace('https://', '')}`;
-
-    const fileUrl = `${cdnBase}/${key}`;
+    const fileUrl = publicUrlFor(key);
 
     const orgFile = new OrgFile({
       title: req.body.title,
@@ -135,7 +100,7 @@ router.post('/', authenticate, requireRole('state_admin'), upload.single('file')
       link: req.body.link || undefined,
       url: fileUrl,
       filename: key,
-      originalName: decodeOriginalName(req.file.originalname),
+      originalName: decodeUploadName(req.file.originalname),
       mimetype: req.file.mimetype,
       size: req.file.size,
       uploadedBy: req.user._id
@@ -261,11 +226,7 @@ router.delete('/:id', authenticate, requireRole('state_admin'), async (req, res)
 
     // Attempt to delete from S3 (non-fatal if it fails)
     try {
-      const s3 = getS3Client();
-      await s3.send(new DeleteObjectCommand({
-        Bucket: process.env.DO_SPACES_BUCKET,
-        Key: orgFile.filename
-      }));
+      if (orgFile.filename) await deleteObject(orgFile.filename);
     } catch (s3Err) {
       console.warn('S3 delete warning:', s3Err.message);
     }

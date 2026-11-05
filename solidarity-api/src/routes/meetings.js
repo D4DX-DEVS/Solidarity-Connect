@@ -17,6 +17,7 @@ import { body, query } from 'express-validator';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { decodeUploadName } from '../utils/fileName.js';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -737,7 +738,7 @@ router.post('/monthly', authenticate, requireRole(['state_admin', 'district_admi
     if (req.file) {
       uploadedFile = {
         filename: req.file.filename,
-        originalName: req.file.originalname,
+        originalName: decodeUploadName(req.file.originalname),
         mimetype: req.file.mimetype,
         size: req.file.size,
         uploadedBy: req.user._id,
@@ -1325,7 +1326,7 @@ router.post('/:id/sessions/:sessionId/upload',
       // Add file to session attachments
       const attachment = {
         filename: req.file.filename,
-        originalName: req.file.originalname,
+        originalName: decodeUploadName(req.file.originalname),
         mimetype: req.file.mimetype,
         size: req.file.size,
         uploadedBy: req.user._id

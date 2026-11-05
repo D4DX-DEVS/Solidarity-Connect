@@ -130,3 +130,5 @@ Thumbs.db
 # Build files
 dist/
 build/
+# Mongo/D1 export snapshots: full member data (phones, dates of birth). Never commit.
+backups/

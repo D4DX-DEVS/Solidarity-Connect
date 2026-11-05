@@ -12,6 +12,7 @@ import {
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
 import { hiddenAsArchived } from '../utils/ageOver.js';
+import { refreshMemberStats } from '../services/memberStats.js';
 
 const router = express.Router();
 
@@ -389,6 +390,14 @@ router.post('/:id/approve', authenticate, authorize(['manage_members']), approva
     }
 
     await transferRequest.approve(req.user, comments);
+
+    // The final approval moves the member: recount the areas and districts on both sides.
+    if (transferRequest.status === 'completed') {
+      await refreshMemberStats(
+        { group: transferRequest.currentGroup, district: transferRequest.currentDistrict },
+        { group: transferRequest.targetGroup, district: transferRequest.targetDistrict }
+      );
+    }
 
     const msg = req.user.role === 'state_admin'
       ? 'Transfer completed — member has been moved'

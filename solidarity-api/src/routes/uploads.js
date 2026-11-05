@@ -1,9 +1,10 @@
 import express from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { putObject, publicUrlFor } from '../services/storage.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 import path from 'path';
 import crypto from 'crypto';
+import { decodeUploadName } from '../utils/fileName.js';
 
 const router = express.Router();
 
@@ -32,19 +33,6 @@ const upload = multer({
   }
 });
 
-// Build DO Spaces S3 client from env vars
-const getS3Client = () => {
-  return new S3Client({
-    endpoint: process.env.DO_SPACES_ENDPOINT,
-    region: 'us-east-1', // DO Spaces uses us-east-1 in the SDK even though the region is set via endpoint
-    credentials: {
-      accessKeyId: process.env.DO_SPACES_KEY,
-      secretAccessKey: process.env.DO_SPACES_SECRET
-    },
-    forcePathStyle: false
-  });
-};
-
 // @route   POST /api/uploads
 // @desc    Upload a file to DigitalOcean Spaces
 // @access  Private (State, District, or Group Admin only)
@@ -54,38 +42,22 @@ router.post('/', authenticate, requireRole(['state_admin', 'district_admin', 'gr
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const s3 = getS3Client();
-    const bucket = process.env.DO_SPACES_BUCKET;
     const folder = process.env.DO_SPACES_FOLDER || 'announcements';
-    const cdnEndpoint = process.env.DO_SPACES_CDN_ENDPOINT;
 
     // Generate a unique filename
     const uniqueId = crypto.randomBytes(16).toString('hex');
     const ext = path.extname(req.file.originalname);
     const key = `${folder}/${uniqueId}${ext}`;
 
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-      ACL: 'public-read'
-    });
+    await putObject(key, req.file.buffer, req.file.mimetype);
 
-    await s3.send(command);
-
-    // Build CDN URL
-    const cdnBase = cdnEndpoint
-      ? cdnEndpoint.replace(/\/$/, '')
-      : `https://${bucket}.${process.env.DO_SPACES_ENDPOINT?.replace('https://', '')}`;
-
-    const fileUrl = `${cdnBase}/${key}`;
+    const fileUrl = publicUrlFor(key);
 
     res.status(200).json({
       success: true,
       data: {
         url: fileUrl,
-        originalName: req.file.originalname,
+        originalName: decodeUploadName(req.file.originalname),
         mimetype: req.file.mimetype,
         size: req.file.size,
         key
