@@ -7,6 +7,7 @@ import {
   handleValidationErrors
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
+import { refreshMemberStats } from '../services/memberStats.js';
 
 const router = express.Router();
 
@@ -277,6 +278,8 @@ router.put('/member/:id',
 
       member.updatedBy = req.user._id;
       await member.save();
+      // The area's stored Baithul Maal total sums monthlyAmount.
+      await refreshMemberStats(member);
 
       // Populate the updated member
       await member.populate([

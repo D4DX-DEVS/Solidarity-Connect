@@ -914,6 +914,8 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
     const adminLogins = otherMemberOnPhone ? [] : await User.find({ phone: { $in: phones } }).select('_id');
 
     await Member.findByIdAndDelete(member._id);
+    // Recount as soon as the member is gone, so a failed cleanup below can't leave counts stale.
+    await refreshMemberStats(member);
     await Promise.all([
       // MemberAuth.phone is unique: a leftover row would block sign-in if this number is added again
       MemberAuth.deleteOne({ member: member._id }),
@@ -921,7 +923,6 @@ router.delete('/:id', authenticate, requireRole(['state_admin']), objectIdValida
       TransferRequest.deleteMany({ member: member._id, status: { $in: ['pending', 'district_approved'] } }),
       Request.deleteMany({ member: member._id, status: 'pending' }),
     ]);
-    await refreshMemberStats(member);
 
     res.status(200).json({
       success: true,

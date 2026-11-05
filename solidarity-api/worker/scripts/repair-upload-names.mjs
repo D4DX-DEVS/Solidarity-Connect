@@ -42,7 +42,8 @@ for (const table of tables) {
     const fixed = repair(JSON.parse(row.doc), changes);
     if (!changes.length) continue;
     for (const c of changes) console.log(`${table} ${row._id}: ${c}`);
-    updates.push(`UPDATE "${table}" SET doc = ${sqlString(JSON.stringify(fixed))} WHERE _id = ${sqlString(row._id)};`);
+    // Only if nobody saved the document since we read it; a rerun picks up any skipped row.
+    updates.push(`UPDATE "${table}" SET doc = ${sqlString(JSON.stringify(fixed))} WHERE _id = ${sqlString(row._id)} AND doc = ${sqlString(row.doc)};`);
   }
 }
 console.log(`${updates.length} document(s) to repair${dryRun ? ' (dry run)' : ''}`);

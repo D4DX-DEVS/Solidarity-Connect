@@ -12,7 +12,7 @@ import {
 } from '../middleware/validation.js';
 import { body } from 'express-validator';
 import { hiddenAsArchived } from '../utils/ageOver.js';
-import { refreshMemberStats } from '../services/memberStats.js';
+import { currentLocation, refreshMemberStats } from '../services/memberStats.js';
 
 const router = express.Router();
 
@@ -389,11 +389,16 @@ router.post('/:id/approve', authenticate, authorize(['manage_members']), approva
       return res.status(403).json({ success: false, message: 'You do not have permission to approve this transfer at this stage' });
     }
 
+    // Where the member really is now (it may differ from the request's snapshot if the
+    // member was edited while the request was open).
+    const before = await currentLocation(transferRequest.member);
+
     await transferRequest.approve(req.user, comments);
 
     // The final approval moves the member: recount the areas and districts on both sides.
     if (transferRequest.status === 'completed') {
       await refreshMemberStats(
+        before,
         { group: transferRequest.currentGroup, district: transferRequest.currentDistrict },
         { group: transferRequest.targetGroup, district: transferRequest.targetDistrict }
       );
