@@ -5,7 +5,13 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  // Cloudflare Worker build (`npm run build:worker`): the Worker serves the API on the
+  // same origin, so the app must call /api — never an API URL from a local .env file
+  // (a real environment variable outranks every .env file in Vite).
+  if (mode === "worker") process.env.VITE_API_URL = "/api";
+
+  return {
   server: {
     host: "::",
     port: 8080,
@@ -155,4 +161,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}));
+  };
+});
